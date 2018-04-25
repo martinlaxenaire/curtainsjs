@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<!-- Metas -->
+		<title>Curtains.js | Multiple textures example</title>
+	    <meta name="description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
+	    <link rel="canonical" href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-textures/index.html" />
+
+	    <!-- Facebook OG -->
+	    <meta property="og:title" content="Curtains.js | Multiple textures example" />
+	    <meta property="og:type" content="website" />
+	    <meta property="og:description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
+	    <meta property="og:url" content="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-textures/index.html" />
+	    <meta property="og:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg"/>
+
+	    <!-- Twitter card -->
+	    <meta name="twitter:card" content="summary_large_image">
+	    <meta name="twitter:site" content="@webdesign_ml">
+		<meta name="twitter:creator" content="@webdesign_ml">
+		<meta name="twitter:title" content="Curtains.js | Multiple textures example" />
+		<meta name="twitter:description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
+		<meta name="twitter:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg" />
+
+		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400" rel="stylesheet">
+		<link rel="stylesheet" href="style.css" type="text/css" />
+	</head>
+	<body>
+        <div id="page-wrap">
+
+			<div id="canvas"></div>
+
+			<div class="flex-wrapper multi-textures" data-vs-id="multiple-textures-vs" data-fs-id="multiple-textures-fs">
+				<span>Click me !</span>
+				<!-- notice here we are using the data-sampler attribute to name our sampler uniforms -->
+				<img src="images/displacement.jpg" data-sampler="displacement" />
+				<img src="images/plane-texture-1.jpg" data-sampler="firstTexture" />
+				<img src="images/plane-texture-2.jpg" data-sampler="secondTexture" />
+			</div>
+		</div>
+
+        <script id="multiple-textures-vs" type="x-shader/x-vertex">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+
+			// default mandatory variables
+			attribute vec3 aVertexPosition;
+			attribute vec2 aTextureCoord;
+
+			uniform mat4 uMVMatrix;
+    		uniform mat4 uPMatrix;
+
+			// custom variables
+			varying vec3 vVertexPosition;
+			varying vec2 vTextureCoord;
+
+			// custom uniforms
+			uniform float uTransitionTimer;
+			uniform vec2 uResolution;
+
+
+			void main() {
+
+				vec3 vertexPosition = aVertexPosition;
+
+			   	gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+
+			   	// varyings
+			   	vTextureCoord = aTextureCoord;
+			   	vVertexPosition = vertexPosition;
+			}
+        </script>
+        <script id="multiple-textures-fs" type="x-shader/x-fragment">
+
+			// based on http://xdpixel.com/procedurally-generating-noise-in-a-shader/
+
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+
+			varying vec3 vVertexPosition;
+			varying vec2 vTextureCoord;
+
+			// custom uniforms
+			uniform float uTransitionTimer;
+			uniform vec2 uResolution;
+
+			// our textures samplers
+			// notice how it matches our data-sampler attributes
+			uniform sampler2D firstTexture;
+			uniform sampler2D secondTexture;
+			uniform sampler2D displacement;
+
+			void main( void ) {
+				// our texture coords
+				vec2 textureCoords = vec2(vTextureCoord.x, vTextureCoord.y);
+
+				// our displacement texture
+				vec4 displacement = texture2D(displacement, textureCoords);
+
+				// slides transitions based on displacement and transition timer
+				vec2 firstDisplacementCoords = textureCoords + displacement.r * ((cos(uTransitionTimer / (120.0 / 3.141592)) + 1.0) / 2.0);
+				vec4 firstDistortedColor = texture2D(firstTexture, firstDisplacementCoords);
+
+				// same as above but we substract the effect
+				vec2 secondDisplacementCoords = textureCoords - displacement.r * ((cos((uTransitionTimer + 120.0) / (120.0 / 3.141592)) + 1.0) / 2.0);
+				vec4 secondDistortedColor = texture2D(secondTexture, secondDisplacementCoords);
+
+				// mix both texture
+				vec4 finalColor = mix(firstDistortedColor, secondDistortedColor, ((cos(uTransitionTimer / (120.0 / 3.141592)) + 1.0) / 2.0));
+
+				// handling premultiplied alpha
+				finalColor = vec4(finalColor.rgb * finalColor.a, finalColor.a);
+
+				gl_FragColor = finalColor;
+			}
+        </script>
+
+
+		<script src="../../build/curtains.js" type="text/javascript"></script>
+        <script src="js/multiple.textures.setup.js" type="text/javascript"></script>
+
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-29368338-1"></script>
+		<script>
+		  	window.dataLayer = window.dataLayer || [];
+		  	function gtag(){dataLayer.push(arguments);}
+		  	gtag('js', new Date());
+
+		  	gtag('config', 'UA-29368338-1');
+		</script>
+
+	</body>
+</html>

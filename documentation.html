@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
+		<!-- Metas -->
+		<title>Curtains.js | Documentation</title>
+	    <meta name="description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
+	    <link rel="canonical" href="https://www.martin-laxenaire.fr/libs/curtainsjs/documentation.html" />
+
+	    <!-- Facebook OG -->
+	    <meta property="og:title" content="Curtains.js | Documentation" />
+	    <meta property="og:type" content="website" />
+	    <meta property="og:description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
+	    <meta property="og:url" content="https://www.martin-laxenaire.fr/libs/curtainsjs/documentation.html" />
+	    <meta property="og:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg"/>
+
+	    <!-- Twitter card -->
+	    <meta name="twitter:card" content="summary_large_image">
+	    <meta name="twitter:site" content="@webdesign_ml">
+		<meta name="twitter:creator" content="@webdesign_ml">
+		<meta name="twitter:title" content="Curtains.js | Documentation" />
+		<meta name="twitter:description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
+		<meta name="twitter:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg" />
+
+
+		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
+		<link rel="stylesheet" href="style.css" type="text/css" />
+	</head>
+	<body>
+        <div id="page-wrap">
+
+			<div id="canvas"></div>
+
+			<div id="content">
+
+				<header id="header">
+					<div class="wrapper">
+						<div id="header-wrapper" class="flex-wrapper">
+							<div id="header-title">
+								<a href="index.html" title="Home">curtains.js</a>
+							</div>
+							<nav id="main-menu">
+								<ul class="flex-wrapper">
+									<li>
+										<a href="get-started.html">Get started</a>
+									</li>
+									<li>
+										<a href="documentation.html" class="active">Docs</a>
+									</li>
+									<li>
+										<a href="download.html">Download</a>
+									</li>
+								</ul>
+							</nav>
+						</div>
+					</div>
+				</header>
+
+				<section class="content-section">
+
+					<div class="text-section">
+						<h1>Documentation</h1>
+					</div>
+
+					<div class="text-section">
+						<div class="inner-section">
+							<h2>Curtains object</h2>
+							<h3>Instanciate</h3>
+							<p>
+								You will have to create a Curtains object first that will handle the scene containing all your planes. It will also create the WebGL context, append the canvas and handle the requestAnimationFrame loop. You just have to pass the ID of the HTML element that will wrap the canvas :
+							</p>
+							<p>
+<pre>
+<code>
+var curtains = new Curtains("canvas"); // "canvas" is the ID of our HTML element
+</code>
+</pre>
+							</p>
+							<h3>Methods</h3>
+							<ul>
+								<li>
+									<p>
+										<strong>addPlane</strong>(planeElement, params) :<br />
+										<em>planeElements</em> (HTML element) : a HTML element<br />
+										<em>params</em> (object) : an object containing the plane parameters (see the Plane object).
+									</p>
+									<p>
+										This function will add one or more planes to our Curtains wrapper.
+									</p>
+								</li>
+								<li>
+									<p>
+										<strong>dispose</strong>() :
+									</p>
+									<p>
+										This function will cancel the requestAnimationFrame loop and delete the WebGL context.
+									</p>
+								</li>
+							</ul>
+						</div>
+
+						<div class="inner-section">
+							<h2>Plane object</h2>
+							<p>
+								Those are the planes we will be manipulating. They are instanciate internally each time you call the addPlane method on the parent Curtains object.
+							</p>
+
+							<h3>Properties</h3>
+							<ul>
+								<li>
+									<strong>vertexShaderID</strong> (string) : the vertex shader ID. If ommited, will look for a data attribute data-vs-id on the plane HTML element. Will throw an error if nothing specified.
+								</li>
+								<li>
+									<strong>fragmentShaderID</strong> (string) : the fragment shader ID. If ommited, will look for a data attribute data-fs-id on the plane HTML element. Will throw an error if nothing specified.
+								</li>
+
+								<li>
+									<strong>widthSegments</strong> (integer, optionnal) : plane definition along the X axis (1 by default).
+								</li>
+								<li>
+									<strong>heightSegments</strong> (integer, optionnal) : plane definition along the Y axis (1 by default).
+								</li>
+
+								<li>
+									<strong>mimicCSS</strong> (bool, optionnal) : define if the plane should copy it's HTML element position (true by default).
+								</li>
+								<li>
+									<strong>imageCover</strong> (bool, optionnal) : define if the images must imitate css background-cover or just fit the plane (true by default).
+								</li>
+								<li>
+									<strong>crossOrigin</strong> (string, optionnal) : define the cross origin process to load images if any.
+								</li>
+								<li>
+									<strong>fov</strong> (integer, optionnal) : define the perspective field of view (default to 75).
+								</li>
+
+								<li>
+									<strong>uniforms</strong> (object, otpionnal): the uniforms that will be passed to the shaders (if no uniforms specified there won't be any interaction with the plane). Each uniform should have three properties : a name (string), a type (string, see <a href="https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html" title="all uniforms types" target="_blank">here</a>) and a value.
+								</li>
+							</ul>
+							<h3>Parameters basic example</h3>
+							<p>
+							<pre>
+<code>
+var params = {
+    vertexShaderID: "plane-vs", // our vertex shader ID
+    fragmentShaderID: "plane-fs", // our framgent shader ID
+    uniforms: {
+        time: {
+            name: "uTime", // uniform name that will be passed to our shaders
+            type: "1f", // this means our uniform is a float
+            value: 0,
+        },
+    }
+}
+</code>
+							</pre>
+							</p>
+
+							<h3>Methods</h3>
+							<ul>
+								<li>
+									<p>
+										<strong>loadImages</strong>(imgElements) :<br />
+										<em>imgElements</em> (HTML image elements) : a collection of HTML image elements to load into your plane.
+									</p>
+									<p>
+										This function is automatically called internally on a new Plane instanciation, but you can use it if you want to create an empty plane and then assign it some textures later. See  <a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">asynchronous textures loading</a> example.
+									</p>
+								</li>
+
+								<li>
+									<p>
+										<strong>onLoading</strong>() :
+									</p>
+									<p>
+										This function will be fired each time an image of the plane has been loaded. Useful to handle a loader.
+									</p>
+								</li>
+								<li>
+									<p>
+										<strong>onReady</strong>() :
+									</p>
+									<p>
+										This function will be called once our plane is all set up and ready to be drawn. This is where you may want to add event listener to interact with it or update its uniforms.
+									</p>
+								</li>
+								<li>
+									<p>
+										<strong>onRender</strong>() :
+									</p>
+									<p>
+										This function will be triggered at each requestAnimationFrame call. Useful to update a time uniform, change plane rotation, scale, etc.
+									</p>
+								</li>
+
+								<li>
+									<p>
+										<strong>setPerspective</strong>(fieldOfView, nearPlane, farPlane) :<br />
+										<em>fieldOfView</em> (integer) : the perspective field of view. Should be greater than 0 and lower than 180. Default to 75.<br />
+										<em>nearPlane</em> (float) : closest point where a mesh vertex is displayed. Default to 0.1.<br />
+										<em>farPlane</em> (float) : farthest point where a mesh vertex is displayed. Default to 150.
+									</p>
+									<p>
+										Reset the perspective. The smaller the field of view, the more perspective.
+									</p>
+								</li>
+
+								<li>
+									<p>
+										<strong>setScale</strong>(scaleX, scaleY) :<br />
+										<em>scaleX</em> (float) : the scale to set along the X axis.<br />
+										<em>scaleY</em> (float) : the scale to set along the Y axis.
+									</p>
+									<p>
+										Set the plane new scale.
+									</p>
+								</li>
+
+								<li>
+									<p>
+										<strong>setRotation</strong>(angleX, angleY, angleZ) :<br />
+										<em>angleX</em> (float) : the angle in radians to rotate around the X axis.<br />
+										<em>angleY</em> (float) : the angle in radians to rotate around the Y axis.<br />
+										<em>angleZ</em> (float) : the angle in radians to rotate around the Z axis.
+									</p>
+									<p>
+										Set the plane rotation.
+									</p>
+								</li>
+
+								<li>
+									<p>
+										<strong>setRelativePosition</strong>(translationX, translationY) :<br />
+										<em>translationX</em> (float) : the translation value to apply on the X axis in pixel.<br />
+										<em>translationY</em> (float) : the translation value to apply on the Y axis in pixel.
+									</p>
+									<p>
+										Set the plane translation based on pixel units.
+									</p>
+								</li>
+
+								<li>
+									<p>
+										<strong>mouseToPlaneCoords</strong>(xMousePosition, yMousePosition) :<br />
+										<em>xMousePosition</em> (float) : mouse event clientX value.<br />
+										<em>yMousePosition</em> (float) : mouse event clientY value.
+									</p>
+									<p>
+										Get the mouse coordinates relative to the plane clip space values. Use it to send to a uniform and interact with your plane. A plane coordinates ranges from (-1, 1) in the top left corner to (1, -1) in the bottom right corner, which means the values along the Y axis are inverted.
+									</p>
+								</li>
+							</ul>
+						</div>
+					</div>
+
+				</section>
+			</div>
+		</div>
+
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-29368338-1"></script>
+		<script>
+		  	window.dataLayer = window.dataLayer || [];
+		  	function gtag(){dataLayer.push(arguments);}
+		  	gtag('js', new Date());
+
+		  	gtag('config', 'UA-29368338-1');
+		</script>
+
+	</body>
+</html>

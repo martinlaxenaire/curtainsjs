@@ -1,0 +1,149 @@
+@media screen {
+
+    html, body {
+        min-height: 100%;
+    }
+
+    body {
+        margin: 0;
+        font-size: 18px;
+        font-family: 'PT Sans', Verdana, sans-serif;
+        background: #ffffff;
+        line-height: 1.4;
+
+        overflow: hidden;
+    }
+
+    /*** layout ***/
+
+    .flex-wrapper {
+        display: -webkit-box;
+        display: -moz-box;
+        display: -ms-flexbox;
+        display: flexbox;
+        display: -moz-flex;
+        display: -o-flex;
+        display: -webkit-flex;
+        display: -ms-flex;
+        display: flex;
+        -moz-flex-wrap: wrap;
+        -ms-flex-wrap: wrap;
+        -o-flex-wrap: wrap;
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+    }
+
+    #page-wrap {
+        width: 100%;
+        height: 100vh;
+
+        overflow: hidden;
+        background: black;
+    }
+
+    #content {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    #page-wrap.load-images #content {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    #load-images-wrapper {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+
+        z-index: 30;
+
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+    }
+
+    #page-wrap.load-images #load-images-wrapper {
+        display: none;
+    }
+
+    #load-images {
+        cursor: pointer;
+        display: inline-block;
+        padding: 0.25em 0.5em;
+        background: black;
+        color: white;
+    }
+
+    /*** canvas ***/
+
+    #canvas {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+
+        z-index: 10;
+    }
+
+
+    .async-textures {
+        position: absolute;
+        top: 15%;
+        right: 15%;
+        bottom: 15%;
+        left: 15%;
+        z-index: 15;
+
+        cursor: pointer;
+        font-size: 3em;
+        color: white;
+
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+
+    }
+
+    .async-textures img {
+        display: none;
+    }
+
+
+    #async-textures-wrapper {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+
+        z-index: 5;
+    }
+
+    #async-textures-wrapper img {
+        display: block;
+        position: absolute;
+        min-width: 100%;
+        min-height: 100%;
+        width: auto;
+        height: auto;
+
+        transition: opacity 1s ease-in;
+    }
+
+    #async-textures-wrapper img:last-child {
+        opacity: 0;
+    }
+
+    #async-textures-wrapper.second-image-shown img:first-child {
+        opacity: 0;
+    }
+
+    #async-textures-wrapper.second-image-shown img:last-child {
+        opacity: 1;
+    }
+
+}

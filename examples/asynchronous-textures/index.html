@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<!-- Metas -->
+		<title>Curtains.js | Asynchronous textures example</title>
+	    <meta name="description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
+	    <link rel="canonical" href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/asynchronous-textures/index.html" />
+
+	    <!-- Facebook OG -->
+	    <meta property="og:title" content="Curtains.js | Asynchronous textures example" />
+	    <meta property="og:type" content="website" />
+	    <meta property="og:description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
+	    <meta property="og:url" content="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/asynchronous-textures/index.html" />
+	    <meta property="og:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg"/>
+
+	    <!-- Twitter card -->
+	    <meta name="twitter:card" content="summary_large_image">
+	    <meta name="twitter:site" content="@webdesign_ml">
+		<meta name="twitter:creator" content="@webdesign_ml">
+		<meta name="twitter:title" content="Curtains.js | Asynchronous textures example" />
+		<meta name="twitter:description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
+		<meta name="twitter:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg" />
+
+
+		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400" rel="stylesheet">
+		<link rel="stylesheet" href="style.css" type="text/css" />
+	</head>
+	<body>
+        <div id="page-wrap">
+
+			<div id="canvas"></div>
+
+			<div id="content">
+				<!-- notice this plane does not contain any image -->
+				<div class="flex-wrapper async-textures" data-vs-id="async-textures-vs" data-fs-id="async-textures-fs">
+					<span>Click me !</span>
+				</div>
+			</div>
+
+
+			<div id="async-textures-wrapper">
+				<!-- we will use those images as textures -->
+				<img src="images/plane-texture-1.jpg" data-sampler="firstTexture" />
+				<img src="images/plane-texture-2.jpg" data-sampler="secondTexture" />
+			</div>
+
+
+			<div id="load-images-wrapper" class="flex-wrapper">
+				<span id="load-images">Click to load plane images and render it</span>
+			</div>
+
+
+		</div>
+
+        <script id="async-textures-vs" type="x-shader/x-vertex">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+
+			// default mandatory variables
+			attribute vec3 aVertexPosition;
+			attribute vec2 aTextureCoord;
+
+			uniform mat4 uMVMatrix;
+    		uniform mat4 uPMatrix;
+
+			// custom variables
+			varying vec3 vVertexPosition;
+			varying vec2 vTextureCoord;
+
+			uniform float uTransitionTimer;
+
+
+			void main() {
+
+				vec3 vertexPosition = aVertexPosition;
+
+				// a float varying from -1.5 to 1.5
+				float waveCoords = ((uTransitionTimer / 60.0) * 3.5) - 1.75;
+
+				// distance from the waveCoords to the vertex coordinates
+				float distanceToWave = distance(vec2(vertexPosition.x, 0.0), vec2(waveCoords, 0.0));
+
+				// nice little wave animation from left to right or right to left depending on the timer
+				vertexPosition.z = cos(clamp(distanceToWave, 0.0, 0.75) * 3.141592) - cos(0.75 * 3.141592);
+
+			   	gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+
+			   	// varyings
+			   	vTextureCoord = aTextureCoord;
+			   	vVertexPosition = vertexPosition;
+			}
+        </script>
+        <script id="async-textures-fs" type="x-shader/x-fragment">
+
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+
+			varying vec3 vVertexPosition;
+			varying vec2 vTextureCoord;
+
+			uniform float uTransitionTimer;
+
+			uniform sampler2D firstTexture;
+			uniform sampler2D secondTexture;
+
+			void main( void ) {
+
+				// texture coords
+				vec2 textureCoords = vec2(vTextureCoord.x, vTextureCoord.y);
+
+				// set our textures
+				vec4 firstTextureColor = texture2D(firstTexture, textureCoords);
+				vec4 secondTextureColor = texture2D(secondTexture, textureCoords);
+
+				// mix our textures based on our transition timer
+				vec4 finalColor = mix(firstTextureColor, secondTextureColor, clamp((2.0 - vTextureCoord.x) * (uTransitionTimer / 60.0), 0.0, 1.0));
+
+				// handling premultiplied alpha
+				finalColor = vec4(finalColor.rgb * finalColor.a, finalColor.a);
+
+				gl_FragColor = finalColor;
+			}
+        </script>
+
+
+		<script src="../../build/curtains.js" type="text/javascript"></script>
+        <script src="js/async.textures.setup.js" type="text/javascript"></script>
+
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-29368338-1"></script>
+		<script>
+		  	window.dataLayer = window.dataLayer || [];
+		  	function gtag(){dataLayer.push(arguments);}
+		  	gtag('js', new Date());
+
+		  	gtag('config', 'UA-29368338-1');
+		</script>
+
+	</body>
+</html>

@@ -1,0 +1,82 @@
+@media screen {
+
+    html, body {
+        min-height: 100%;
+    }
+
+    body {
+        margin: 0;
+        font-size: 18px;
+        font-family: 'PT Sans', Verdana, sans-serif;
+        background: #ffffff;
+        line-height: 1.4;
+
+        overflow: hidden;
+    }
+
+    /*** layout ***/
+
+    .flex-wrapper {
+        display: -webkit-box;
+        display: -moz-box;
+        display: -ms-flexbox;
+        display: flexbox;
+        display: -moz-flex;
+        display: -o-flex;
+        display: -webkit-flex;
+        display: -ms-flex;
+        display: flex;
+        -moz-flex-wrap: wrap;
+        -ms-flex-wrap: wrap;
+        -o-flex-wrap: wrap;
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+    }
+
+    #page-wrap {
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /*** canvas ***/
+
+    #canvas {
+        height: 100vh;
+        width: 100vw;
+
+        z-index: 10;
+    }
+
+    .multi-textures {
+        position: absolute;
+        top: 5%;
+        right: 5%;
+        bottom: 5%;
+        left: 5%;
+        z-index: 15;
+
+        cursor: pointer;
+        font-size: 3em;
+        color: white;
+
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+
+    }
+
+    .multi-textures img {
+        display: none;
+    }
+
+}
+
+
+@media screen and (max-width: 1000px) {
+
+    .multi-textures {
+        font-size: 2em;
+    }
+
+}

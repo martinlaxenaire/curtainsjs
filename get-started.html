@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<!-- Metas -->
+		<title>Curtains.js | Get Started</title>
+	    <meta name="description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
+	    <link rel="canonical" href="https://www.martin-laxenaire.fr/libs/curtainsjs/get-started.html" />
+
+	    <!-- Facebook OG -->
+	    <meta property="og:title" content="Curtains.js | Get Started" />
+	    <meta property="og:type" content="website" />
+	    <meta property="og:description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
+	    <meta property="og:url" content="https://www.martin-laxenaire.fr/libs/curtainsjs/get-started.html" />
+	    <meta property="og:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg"/>
+
+	    <!-- Twitter card -->
+	    <meta name="twitter:card" content="summary_large_image">
+	    <meta name="twitter:site" content="@webdesign_ml">
+		<meta name="twitter:creator" content="@webdesign_ml">
+		<meta name="twitter:title" content="Curtains.js | Get Started" />
+		<meta name="twitter:description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
+		<meta name="twitter:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg" />
+
+
+		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
+		<link rel="stylesheet" href="style.css" type="text/css" />
+	</head>
+	<body>
+        <div id="page-wrap">
+
+			<div id="canvas"></div>
+
+			<div id="content">
+
+				<header id="header">
+					<div class="wrapper">
+						<div id="header-wrapper" class="flex-wrapper">
+							<div id="header-title">
+								<a href="index.html" title="Home">curtains.js</a>
+							</div>
+							<nav id="main-menu">
+								<ul class="flex-wrapper">
+									<li>
+										<a href="get-started.html" class="active">Get started</a>
+									</li>
+									<li>
+										<a href="documentation.html">Docs</a>
+									</li>
+									<li>
+										<a href="download.html">Download</a>
+									</li>
+								</ul>
+							</nav>
+						</div>
+					</div>
+				</header>
+
+				<section class="content-section">
+					<div class="wrapper">
+
+						<div class="text-section inner-section">
+							<h1>Get started</h1>
+						</div>
+
+						<nav class="text-section inner-section">
+							<ol>
+								<li>
+									<a href="#basic-setup" title="Basic setup example">Basic setup example</a>
+								</li>
+								<li>
+									<a href="#image-uniform-sampler" title="Images uniform sampler names">Images uniform sampler names</a>
+								</li>
+								<li>
+									<a href="#performance-tips" title="Performance tips">Performance tips</a>
+								</li>
+								<li>
+									<a href="#useful-examples" title="Useful examples">Useful examples</a>
+								</li>
+							</ol>
+						</nav>
+
+						<div id="basic-setup" class="text-section inner-section">
+							<h2>Basic setup example</h2>
+							<p>
+								<a href="examples/basic-plane/index.html" title="See it live" target="_blank">See it live</a>
+							</p>
+							<h3>HTML</h3>
+							<p>
+								The HTML set up is pretty easy. Just create a div that will hold your canvas and a div that will hold your images.
+							</p>
+							<p>
+								<pre>
+<code>
+&lt;body&gt;
+
+    &lt;!-- div that will hold our WebGL canvas --&gt;
+    &lt;div id="canvas"&gt;&lt;/div&gt;
+
+    &lt;!-- div used to create our plane --&gt;
+    &lt;div class="plane"&gt;
+
+        &lt;!-- image that will be used as texture by our plane --&gt;
+        &lt;img src="path/to/my-image.jpg" /&gt;
+    &lt;/div&gt;
+
+&lt;/body&gt;
+</code>
+								</pre>
+							</p>
+							<h3>CSS</h3>
+							<p>
+								The CSS is also very easy. Make sure the div that will wrap the canvas fits the document, and apply any size you want to your plane div element.
+							</p>
+							<p>
+								<pre>
+<code>
+body {
+    /* make the body fits our viewport */
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+#canvas {
+    /* make the canvas wrapper fits the document */
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.plane {
+    /* define the size of your plane */
+    width: 80%;
+    height: 80vh;
+    margin: 10vh auto;
+}
+
+.plane img {
+    /* hide the img element */
+    display: none;
+}
+</code>
+								</pre>
+							</p>
+							<h3>Javascript</h3>
+							<p>
+								There's a bit more work in the javascript part : we need to instanciate our WebGL context, create a plane with basic uniforms parameters and use it.
+							</p>
+							<p>
+								<pre>
+<code>
+window.onload = function() {
+    // get our canvas wrapper
+    var canvasContainer = document.getElementById("canvas");
+
+    // set up our WebGL context and append the canvas to our wrapper
+    var webGLCurtain = new Curtains("canvas");
+
+    // get our plane element
+    var planeElement = document.getElementsByClassName("plane")[0];
+
+    // set our initial parameters (basic uniforms)
+    var params = {
+        vertexShaderID: "plane-vs", // our vertex shader ID
+        fragmentShaderID: "plane-fs", // our framgent shader ID
+        uniforms: {
+            time: {
+                name: "uTime", // uniform name that will be passed to our shaders
+                type: "1f", // this means our uniform is a float
+                value: 0,
+            },
+        }
+    }
+
+    // create our plane mesh
+    var plane = webGLCurtain.addPlane(planeElement, params);
+
+    // use the onRender method of our plane fired at each requestAnimationFrame call
+    plane.onRender(function() {
+        plane.uniforms.time.value++; // update our time uniform value
+    });
+
+}
+</code>
+								</pre>
+							</p>
+							<h3>Shaders</h3>
+							<p>
+								Here are some basic vertex and fragment shaders. Just put it inside your body tag, right before you include the library.
+							</p>
+							<p>
+								<pre>
+<code>
+&lt;!-- vertex shader --&gt;
+&lt;script id="plane-vs" type="x-shader/x-vertex"&gt;
+    #ifdef GL_ES
+    precision mediump float;
+    #endif
+
+    // those are the mandatory attributes that the lib sets
+    attribute vec3 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    // those are mandatory uniforms that the lib sets and that contain our model view and projection matrix
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+
+    // if you want to pass your vertex and texture coords to the fragment shader
+    varying vec3 vVertexPosition;
+    varying vec2 vTextureCoord;
+
+    void main() {
+        vec3 vertexPosition = aVertexPosition;
+        gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+
+        // set the varyings
+        vTextureCoord = aTextureCoord;
+        vVertexPosition = vertexPosition;
+    }
+&lt;/script&gt;
+
+&lt;!-- fragment shader --&gt;
+&lt;script id="plane-fs" type="x-shader/x-fragment"&gt;
+    #ifdef GL_ES
+    precision mediump float;
+    #endif
+
+    // get our varyings
+    varying vec3 vVertexPosition;
+    varying vec2 vTextureCoord;
+
+    // the uniform we declared inside our javascript
+    uniform float uTime;
+
+    // our texture sampler (default name, to use a different name please refer to the documentation)
+    uniform sampler2D uSampler0;
+
+    void main() {
+        vec2 textureCoord = vec2(vTextureCoord.x, vTextureCoord.y);
+
+        // displace our pixels along the X axis based on our time uniform
+        // textures coords are ranging from 0.0 to 1.0 on both axis
+        textureCoord.x += sin(textureCoord.y * 25.0) * cos(textureCoord.x * 25.0) * (cos(uTime / 50.0)) / 25.0;
+
+        gl_FragColor = texture2D(uSampler0, textureCoord);
+    }
+&lt;/script&gt;
+</code>
+								</pre>
+							</p>
+							<p>
+								Et voilà !
+							</p>
+						</div>
+						<div id="images-uniforms-samplers" class="text-section inner-section">
+							<h2>Images uniform sampler names</h2>
+							<p>
+								Let's say you want to build a slideshow with 3 images and a displacement image to create a nice transition effect.<br />
+								By default, the textures uniforms sampler will be named upon their indexes inside your plane element. If you got something like that :
+							</p>
+							<p>
+								<pre>
+<code>
+&lt;!-- div used to create our plane --&gt;
+&lt;div class="plane"&gt;
+
+    &lt;!-- images that will be used as textures by our plane --&gt;
+    &lt;img src="path/to/displacement.jpg" /&gt;
+    &lt;img src="path/to/my-image-1.jpg" /&gt;
+    &lt;img src="path/to/my-image-2.jpg" /&gt;
+    &lt;img src="path/to/my-image-3.jpg" /&gt;
+
+&lt;/div&gt;
+</code>
+</pre>
+							</p>
+							<p>
+								Then, in your shaders, your textures samplers would have to be declared that way :
+							</p>
+							<p>
+								<pre>
+<code>
+uniform sampler2D uSampler0 // bound to displacement.jpg
+uniform sampler2D uSampler1 // bound to my-image-1.jpg
+uniform sampler2D uSampler2 // bound to my-image-2.jpg
+uniform sampler2D uSampler3 // bound to my-image-3.jpg
+</code>
+</pre>
+							</p>
+							<p>
+								It is handy but you could also get easily confused.<br />
+								By using a data-sampler attribute on the &lt;img /&gt; tag, you could specify a custom uniform sampler name to use in your shader. With the example above, this would become :
+							</p>
+							<p>
+								<pre>
+<code>
+&lt;!-- div used to create our plane --&gt;
+&lt;div class="plane"&gt;
+
+    &lt;!-- images that will be used as textures by our plane --&gt;
+    &lt;img src="path/to/displacement.jpg" data-sampler="uDisplacement" /&gt;
+    &lt;img src="path/to/my-image-1.jpg" data-sampler="uSlide1" /&gt;
+    &lt;img src="path/to/my-image-2.jpg" data-sampler="uSlide2" /&gt;
+    &lt;img src="path/to/my-image-3.jpg" data-sampler="uLastSlide" /&gt;
+
+&lt;/div&gt;
+</code>
+</pre>
+							</p>
+							<p>
+								<pre>
+<code>
+uniform sampler2D uDisplacement // bound to displacement.jpg
+uniform sampler2D uSlide1       // bound to my-image-1.jpg
+uniform sampler2D uSlide2       // bound to my-image-2.jpg
+uniform sampler2D uLastSlide    // bound to my-image-3.jpg
+</code>
+</pre>
+						</div>
+						<div id="performance-tips" class="text-section inner-section">
+							<h2>Performance tips</h2>
+							<ul>
+								<li>
+									Be careful with each plane definition. A lot of vertices implies a big impact on performance. If you plan to use more than one plane, try to reduce the number of vertices.
+								</li>
+								<li>
+									Try not to use too much uniforms as they are updated at every draw call.
+								</li>
+								<li>
+									If you use multiple planes with multiple textures, you should set the dimensions of your plane to fit the aspect ratio of your images in CSS (you could use the padding-bottom hack, see the <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">multiple planes</a> example HTML & CSS) and set the imageCover plane property to false when adding it.
+								</li>
+							</ul>
+						</div>
+						<div id="useful-examples" class="text-section inner-section">
+							<h2>Useful examples</h2>
+							<p>
+								Check their source code :
+							</p>
+							<p>
+								<a href="examples/vertex-coords-helper/index.html" title="Simple plane" target="_blank">Vertex coordinates helper</a><br />
+								<a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
+								<a href="examples/multiple-textures/index.html" title="Multiple textures" target="_blank">Multiple textures</a><br />
+								<a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
+								<a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a>
+							</p>
+						</div>
+
+					</div>
+				</section>
+			</div>
+		</div>
+
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-29368338-1"></script>
+		<script>
+		  	window.dataLayer = window.dataLayer || [];
+		  	function gtag(){dataLayer.push(arguments);}
+		  	gtag('js', new Date());
+
+		  	gtag('config', 'UA-29368338-1');
+		</script>
+
+	</body>
+</html>

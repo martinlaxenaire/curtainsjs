@@ -1,0 +1,188 @@
+@media screen {
+
+    html, body {
+        min-height: 100%;
+    }
+
+    body {
+        margin: 0;
+        font-size: 18px;
+        font-family: 'PT Sans', Verdana, sans-serif;
+        background: #ffffff;
+        line-height: 1.4;
+    }
+
+    /*** layout ***/
+
+    .flex-wrapper {
+        display: -webkit-box;
+        display: -moz-box;
+        display: -ms-flexbox;
+        display: flexbox;
+        display: -moz-flex;
+        display: -o-flex;
+        display: -webkit-flex;
+        display: -ms-flex;
+        display: flex;
+        -moz-flex-wrap: wrap;
+        -ms-flex-wrap: wrap;
+        -o-flex-wrap: wrap;
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+    }
+
+    .landscape-wrapper {
+        position: relative;
+        height: 0;
+        width: 100%;
+        overflow: hidden;
+        padding-bottom: 66.6%;
+    }
+
+    .landscape-inner {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+    #page-wrap {
+        position: relative;
+    }
+
+    /*** canvas ***/
+
+    #canvas {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 10;
+
+        opacity: 0;
+
+        transition: opacity 0.5s ease-in;
+    }
+
+    .planes-loaded #canvas {
+        opacity: 1;
+    }
+
+    /*** content ***/
+
+    #content {
+        position: relative;
+        z-index: 15;
+
+
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 40px 0;
+    }
+
+    #planes {
+        overflow: hidden;
+        opacity: 0;
+
+        transition: opacity 0.5s ease-in;
+    }
+
+    .planes-loaded #planes {
+        opacity: 1;
+    }
+
+    .plane-wrapper {
+        width: 50%;
+        float: left;
+        position: relative;
+    }
+
+    .plane-title {
+        background: #ee6557;
+        color: white;
+        position: absolute;
+        top: 0.25em;
+        left: 0;
+        font-size: 2em;
+        font-weight: bold;
+        display: inline-block;
+        padding: 0.125em 0.25em;
+    }
+
+    .plane-inner {
+        padding: 40px;
+        box-sizing: border-box;
+    }
+
+    .plane {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+    .plane img {
+        display: none;
+    }
+
+
+    #add-more-planes-wrapper {
+        text-align: center;
+        margin-top: 40px;
+    }
+
+    #add-more-planes {
+        cursor: pointer;
+        background: #ee6557;
+        color: white;
+        display: inline-block;
+        padding: 0.25em 0.5em;
+    }
+
+    #add-more-planes:hover {
+        background: black;
+    }
+
+}
+
+
+
+
+@media screen and (max-width: 1320px) {
+
+    #content {
+        margin: 0 20px;
+    }
+
+    .plane-title {
+        top: 0;
+        font-size: 1.5em;
+    }
+
+    .plane-inner {
+        padding: 20px;
+    }
+
+}
+
+
+@media screen and (max-width: 840px) {
+
+    #content {
+        margin: 0 10px;
+    }
+
+    .plane-wrapper {
+        width: 100%;
+        float: none;
+        margin-bottom: 10px;
+    }
+
+    .plane-inner {
+        padding: 10px;
+    }
+
+}

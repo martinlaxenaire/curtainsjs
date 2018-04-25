@@ -1,0 +1,50 @@
+@media screen {
+
+    html, body {
+        min-height: 100%;
+    }
+
+    body {
+        margin: 0;
+        font-size: 18px;
+        font-family: Verdana, sans-serif;
+        background: #ffffff;
+        line-height: 1.4;
+
+        overflow: hidden;
+    }
+
+    #page-wrap {
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /*** canvas ***/
+
+    #canvas {
+        height: 100vh;
+        width: 100vw;
+        position: absolute;
+    }
+
+
+    .plane {
+        width: 75%;
+        margin: 1em auto;
+        height: calc(100vh - 7.2em);
+    }
+
+    .plane img {
+        display: none;
+    }
+
+    #mouse-coords-helper-wrapper {
+        height: 4.2em;
+        max-width: 1300px;
+        padding: 0 10px;
+        margin: 0 auto 1em auto;
+    }
+
+
+}
