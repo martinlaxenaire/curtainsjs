@@ -33,17 +33,13 @@
     <pre>
 <code>
 &lt;body&gt;
-
     &lt;!-- div that will hold our WebGL canvas --&gt;
     &lt;div id="canvas"&gt;&lt;/div&gt;
-
     &lt;!-- div used to create our plane --&gt;
     &lt;div class="plane"&gt;
-
         &lt;!-- image that will be used as texture by our plane --&gt;
             &lt;img src="path/to/my-image.jpg" /&gt;
         &lt;/div&gt;
-
 &lt;/body&gt;
 </code>
     </pre>
@@ -97,13 +93,10 @@ body {
 window.onload = function() {
     // get our canvas wrapper
     var canvasContainer = document.getElementById("canvas");
-
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
-
     // get our plane element
     var planeElement = document.getElementsByClassName("plane")[0];
-
     // set our initial parameters (basic uniforms)
     var params = {
         vertexShaderID: "plane-vs", // our vertex shader ID
@@ -116,10 +109,8 @@ window.onload = function() {
             },
         }
     }
-
     // create our plane mesh
     var plane = webGLCurtain.addPlane(planeElement, params);
-
     // use the onRender method of our plane fired at each requestAnimationFrame call
     plane.onRender(function() {
         plane.uniforms.time.value++; // update our time uniform value
@@ -141,52 +132,40 @@ window.onload = function() {
     #ifdef GL_ES
     precision mediump float;
     #endif
-
     // those are the mandatory attributes that the lib sets
     attribute vec3 aVertexPosition;
     attribute vec2 aTextureCoord;
-
     // those are mandatory uniforms that the lib sets and that contain our model view and projection matrix
     uniform mat4 uMVMatrix;
     uniform mat4 uPMatrix;
-
     // if you want to pass your vertex and texture coords to the fragment shader
     varying vec3 vVertexPosition;
     varying vec2 vTextureCoord;
-
     void main() {
         vec3 vertexPosition = aVertexPosition;
         gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
-
         // set the varyings
         vTextureCoord = aTextureCoord;
         vVertexPosition = vertexPosition;
     }
 &lt;/script&gt;
-
 &lt;!-- fragment shader --&gt;
 &lt;script id="plane-fs" type="x-shader/x-fragment"&gt;
     #ifdef GL_ES
     precision mediump float;
     #endif
-
     // get our varyings
     varying vec3 vVertexPosition;
     varying vec2 vTextureCoord;
-
     // the uniform we declared inside our javascript
     uniform float uTime;
-
     // our texture sampler (default name, to use a different name please refer to the documentation)
     uniform sampler2D uSampler0;
-
     void main() {
         vec2 textureCoord = vec2(vTextureCoord.x, vTextureCoord.y);
-
         // displace our pixels along the X axis based on our time uniform
         // textures coords are ranging from 0.0 to 1.0 on both axis
         textureCoord.x += sin(textureCoord.y * 25.0) * cos(textureCoord.x * 25.0) * (cos(uTime / 50.0)) / 25.0;
-
         gl_FragColor = texture2D(uSampler0, textureCoord);
     }
 &lt;/script&gt;
@@ -206,13 +185,11 @@ window.onload = function() {
 <code>
 &lt;!-- div used to create our plane --&gt;
 &lt;div class="plane"&gt;
-
     &lt;!-- images that will be used as textures by our plane --&gt;
     &lt;img src="path/to/displacement.jpg" /&gt;
     &lt;img src="path/to/my-image-1.jpg" /&gt;
     &lt;img src="path/to/my-image-2.jpg" /&gt;
     &lt;img src="path/to/my-image-3.jpg" /&gt;
-
 &lt;/div&gt;
 </code>
 </pre>
@@ -239,13 +216,11 @@ uniform sampler2D uSampler3 // bound to my-image-3.jpg
 <code>
 &lt;!-- div used to create our plane --&gt;
 &lt;div class="plane"&gt;
-
     &lt;!-- images that will be used as textures by our plane --&gt;
     &lt;img src="path/to/displacement.jpg" data-sampler="uDisplacement" /&gt;
     &lt;img src="path/to/my-image-1.jpg" data-sampler="uSlide1" /&gt;
     &lt;img src="path/to/my-image-2.jpg" data-sampler="uSlide2" /&gt;
     &lt;img src="path/to/my-image-3.jpg" data-sampler="uLastSlide" /&gt;
-
 &lt;/div&gt;
 </code>
 </pre>
