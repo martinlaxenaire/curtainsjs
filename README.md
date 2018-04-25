@@ -23,7 +23,7 @@
 </p>
 <h2>Basic setup example</h2>
 <p>
-    <a href="examples/basic-plane/index.html" title="See it live" target="_blank">See it live</a>
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/basic-plane/index.html" title="See it live">See it live</a>
 </p>
 <h3>HTML</h3>
 <p>
