@@ -357,8 +357,10 @@ function Plane(curtainWrapper, plane, params) {
         return false;
     }
 
+    var glContext = this.wrapper.glContext;
+
     // create shader program
-    this.program = this.wrapper.glContext.createProgram();
+    this.program = glContext.createProgram();
 
     this.shaders = {};
 
@@ -366,8 +368,8 @@ function Plane(curtainWrapper, plane, params) {
     this.shaders.fragmentShaderCode = document.getElementById(fsId).innerHTML;
 
     // Create shaders,
-    this.shaders.vertexShader = this.wrapper._createShader(this.shaders.vertexShaderCode, this.wrapper.glContext.VERTEX_SHADER);
-    this.shaders.fragmentShader = this.wrapper._createShader(this.shaders.fragmentShaderCode, this.wrapper.glContext.FRAGMENT_SHADER);
+    this.shaders.vertexShader = this.wrapper._createShader(this.shaders.vertexShaderCode, glContext.VERTEX_SHADER);
+    this.shaders.fragmentShader = this.wrapper._createShader(this.shaders.fragmentShaderCode, glContext.FRAGMENT_SHADER);
 
     if(!this.shaders.vertexShader || !this.shaders.fragmentShader) {
         console.warn("Unable to find the vertex or fragment shader");
@@ -376,19 +378,19 @@ function Plane(curtainWrapper, plane, params) {
     }
 
 
-    this.wrapper.glContext.attachShader(this.program, this.shaders.vertexShader);
-    this.wrapper.glContext.attachShader(this.program, this.shaders.fragmentShader);
-    this.wrapper.glContext.linkProgram(this.program);
+    glContext.attachShader(this.program, this.shaders.vertexShader);
+    glContext.attachShader(this.program, this.shaders.fragmentShader);
+    glContext.linkProgram(this.program);
 
     // Check the shader program creation status,
-    if (!this.wrapper.glContext.getProgramParameter(this.program, this.wrapper.glContext.LINK_STATUS)) {
+    if (!glContext.getProgramParameter(this.program, glContext.LINK_STATUS)) {
        console.warn("Unable to initialize the shader program.");
        this.wrapper.container.classList.add('no-webgl-curtains');
        return false;
     }
 
     // Set the current shader in use,
-    this.wrapper.glContext.useProgram(this.program);
+    glContext.useProgram(this.program);
 
     this.matrix = {};
     // projection and model view matrix
@@ -409,8 +411,8 @@ function Plane(curtainWrapper, plane, params) {
      }
 
      // matrix uniforms
-     this.matrix.pMatrixUniform = this.wrapper.glContext.getUniformLocation(this.program, "uPMatrix");
-     this.matrix.mvMatrixUniform = this.wrapper.glContext.getUniformLocation(this.program, "uMVMatrix");
+     this.matrix.pMatrixUniform = glContext.getUniformLocation(this.program, "uPMatrix");
+     this.matrix.mvMatrixUniform = glContext.getUniformLocation(this.program, "uMVMatrix");
 
 
      // set default attributes
@@ -509,28 +511,29 @@ params :
 ***/
 Plane.prototype._setPlaneDefinition = function(widthSegments, heightSegments) {
 
+    var glContext = this.wrapper.glContext;
     // ensure we are using the right program
-    this.wrapper.glContext.useProgram(this.program);
+    glContext.useProgram(this.program);
     // here we are setting texture sampler uniform under the hood
     // we will link it later
     for(var i = 0; i < this.textures.length; i++) {
         if(this.images[i].sampler) {
             var samplerUniform = this.images[i].sampler;
             this.uniforms[samplerUniform] = {};
-            this.uniforms[samplerUniform].location = this.wrapper.glContext.getUniformLocation(this.program, samplerUniform);
+            this.uniforms[samplerUniform].location = glContext.getUniformLocation(this.program, samplerUniform);
             this.uniforms[samplerUniform].coreUniform = true;
 
             // Indiquer au shader que nous avons lié la texture à l'unité de texture 0
-            this.wrapper.glContext.uniform1i(this.uniforms[samplerUniform].location, this.textures[i].index);
+            glContext.uniform1i(this.uniforms[samplerUniform].location, this.textures[i].index);
         }
         else {
             this.uniforms["sampler" + this.textures[i].index] = {};
             // inside the shaders, the samplers will be named "uSampler" + index of the image inside the plane
-            this.uniforms["sampler" + this.textures[i].index].location = this.wrapper.glContext.getUniformLocation(this.program, "uSampler" + i);
+            this.uniforms["sampler" + this.textures[i].index].location = glContext.getUniformLocation(this.program, "uSampler" + i);
             this.uniforms["sampler" + this.textures[i].index].coreUniform = true;
 
             // Indiquer au shader que nous avons lié la texture à l'unité de texture 0
-            this.wrapper.glContext.uniform1i(this.uniforms["sampler" + this.textures[i].index].location, this.textures[i].index);
+            glContext.uniform1i(this.uniforms["sampler" + this.textures[i].index].location, this.textures[i].index);
         }
     }
 
@@ -697,13 +700,15 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
 
     var returnedVertices = this._setPlaneVertices(widthSegments, heightSegments);
 
+    var glContext = this.wrapper.glContext;
+
     // first the plane vertices
     this.geometry.vertices = returnedVertices.vertices;
 
-    this.geometry.verticesBuffer = this.wrapper.glContext.createBuffer();
-    this.wrapper.glContext.bindBuffer(this.wrapper.glContext.ARRAY_BUFFER, this.geometry.verticesBuffer);
+    this.geometry.verticesBuffer = glContext.createBuffer();
+    glContext.bindBuffer(glContext.ARRAY_BUFFER, this.geometry.verticesBuffer);
 
-    this.wrapper.glContext.bufferData(this.wrapper.glContext.ARRAY_BUFFER, new Float32Array(this.geometry.vertices), this.wrapper.glContext.STATIC_DRAW);
+    glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(this.geometry.vertices), glContext.STATIC_DRAW);
 
     this.geometry.verticesBuffer.itemSize = 3;
     this.geometry.verticesBuffer.numberOfItems = this.geometry.vertices.length / this.geometry.verticesBuffer.itemSize;
@@ -712,10 +717,10 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
     this.material = {};
     this.material.uvs = returnedVertices.uvs;
 
-    this.material.texCoordBuffer = this.wrapper.glContext.createBuffer();
-    this.wrapper.glContext.bindBuffer(this.wrapper.glContext.ARRAY_BUFFER, this.material.texCoordBuffer);
+    this.material.texCoordBuffer = glContext.createBuffer();
+    glContext.bindBuffer(glContext.ARRAY_BUFFER, this.material.texCoordBuffer);
 
-    this.wrapper.glContext.bufferData(this.wrapper.glContext.ARRAY_BUFFER, new Float32Array(this.material.uvs), this.wrapper.glContext.STATIC_DRAW);
+    glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(this.material.uvs), glContext.STATIC_DRAW);
 
     this.material.texCoordBuffer.itemSize = 3;
     this.material.texCoordBuffer.numberOfItems = this.material.uvs.length / this.material.texCoordBuffer.itemSize;
@@ -741,17 +746,19 @@ Plane.prototype._bindPlaneBuffers = function() {
 
     this._isProgramInitialized();
 
+    var glContext = this.wrapper.glContext;
+
     // Set the vertices buffer (I know it's already bound, but that's where it normally
    // belongs in the workflow),
-   this.wrapper.glContext.bindBuffer(this.wrapper.glContext.ARRAY_BUFFER, this.geometry.verticesBuffer);
+   glContext.bindBuffer(glContext.ARRAY_BUFFER, this.geometry.verticesBuffer);
    // Set where the vertexPosition attribute gets its data,
-   this.wrapper.glContext.vertexAttribPointer(this.attributes.vertexPosition, this.geometry.verticesBuffer.itemSize, this.wrapper.glContext.FLOAT, false, 0, 0);
-   this.wrapper.glContext.enableVertexAttribArray(this.attributes.vertexPosition);
+   glContext.vertexAttribPointer(this.attributes.vertexPosition, this.geometry.verticesBuffer.itemSize, glContext.FLOAT, false, 0, 0);
+   glContext.enableVertexAttribArray(this.attributes.vertexPosition);
 
    // Set where the texture coord attribute gets its data,
-   this.wrapper.glContext.bindBuffer(this.wrapper.glContext.ARRAY_BUFFER, this.material.texCoordBuffer);
-   this.wrapper.glContext.vertexAttribPointer(this.attributes.textureCoord, this.material.texCoordBuffer.itemSize, this.wrapper.glContext.FLOAT, false, 0, 0);
-   this.wrapper.glContext.enableVertexAttribArray(this.attributes.textureCoord);
+   glContext.bindBuffer(glContext.ARRAY_BUFFER, this.material.texCoordBuffer);
+   glContext.vertexAttribPointer(this.attributes.textureCoord, this.material.texCoordBuffer.itemSize, glContext.FLOAT, false, 0, 0);
+   glContext.enableVertexAttribArray(this.attributes.textureCoord);
 }
 
 
@@ -796,56 +803,58 @@ params :
 ***/
 Plane.prototype._handleUniformSetting = function(uniformType, uniformLocation, uniformValue) {
 
+    var glContext = this.wrapper.glContext;
+
     if(uniformType == "1i") {
-        this.wrapper.glContext.uniform1i(uniformLocation, uniformValue);
+        glContext.uniform1i(uniformLocation, uniformValue);
     }
     else if(uniformType == "1iv") {
-        this.wrapper.glContext.uniform1iv(uniformLocation, uniformValue);
+        glContext.uniform1iv(uniformLocation, uniformValue);
     }
     else if(uniformType == "1f") {
-        this.wrapper.glContext.uniform1f(uniformLocation, uniformValue);
+        glContext.uniform1f(uniformLocation, uniformValue);
     }
     else if(uniformType == "1fv") {
-        this.wrapper.glContext.uniform1fv(uniformLocation, uniformValue);
+        glContext.uniform1fv(uniformLocation, uniformValue);
     }
 
     else if(uniformType == "2i") {
-        this.wrapper.glContext.uniform2i(uniformLocation, uniformValue[0], uniformValue[1]);
+        glContext.uniform2i(uniformLocation, uniformValue[0], uniformValue[1]);
     }
     else if(uniformType == "2iv") {
-        this.wrapper.glContext.uniform2iv(uniformLocation, uniformValue);
+        glContext.uniform2iv(uniformLocation, uniformValue);
     }
     else if(uniformType == "2f") {
-        this.wrapper.glContext.uniform2f(uniformLocation, uniformValue[0], uniformValue[1]);
+        glContext.uniform2f(uniformLocation, uniformValue[0], uniformValue[1]);
     }
     else if(uniformType == "2fv") {
-        this.wrapper.glContext.uniform2fv(uniformLocation, uniformValue);
+        glContext.uniform2fv(uniformLocation, uniformValue);
     }
 
     else if(uniformType == "3i") {
-        this.wrapper.glContext.uniform3i(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2]);
+        glContext.uniform3i(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2]);
     }
     else if(uniformType == "3iv") {
-        this.wrapper.glContext.uniform3iv(uniformLocation, uniformValue);
+        glContext.uniform3iv(uniformLocation, uniformValue);
     }
     else if(uniformType == "3f") {
-        this.wrapper.glContext.uniform3f(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2]);
+        glContext.uniform3f(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2]);
     }
     else if(uniformType == "3fv") {
-        this.wrapper.glContext.uniform3fv(uniformLocation, uniformValue);
+        glContext.uniform3fv(uniformLocation, uniformValue);
     }
 
     else if(uniformType == "4i") {
-        this.wrapper.glContext.uniform4i(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2], uniformValue[3]);
+        glContext.uniform4i(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2], uniformValue[3]);
     }
     else if(uniformType == "4iv") {
-        this.wrapper.glContext.uniform4iv(uniformLocation, uniformValue);
+        glContext.uniform4iv(uniformLocation, uniformValue);
     }
     else if(uniformType == "4f") {
-        this.wrapper.glContext.uniform4f(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2], uniformValue[3]);
+        glContext.uniform4f(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2], uniformValue[3]);
     }
     else if(uniformType == "4fv") {
-        this.wrapper.glContext.uniform4fv(uniformLocation, uniformValue);
+        glContext.uniform4fv(uniformLocation, uniformValue);
     }
 
     else {
@@ -937,39 +946,6 @@ Plane.prototype._updateUniforms = function() {
 
 
 /***
-Simple matrix addition helper
-
-params :
-    @a (array): first matrix
-    @b (array): second matrix
-
-    returns :
-        @out: matrix after addition
-***/
-Plane.prototype._addMatrix = function(a, b) {
-    var out = [];
-
-    out[0] = a[0] + b[0];
-    out[1] = a[1] + b[1];
-    out[2] = a[2] + b[2];
-    out[3] = a[3] + b[3];
-    out[4] = a[4] + b[4];
-    out[5] = a[5] + b[5];
-    out[6] = a[6] + b[6];
-    out[7] = a[7] + b[7];
-    out[8] = a[8] + b[8];
-    out[9] = a[9] + b[9];
-    out[10] = a[10] + b[10];
-    out[11] = a[11] + b[11];
-    out[12] = a[12] + b[12];
-    out[13] = a[13] + b[13];
-    out[14] = a[14] + b[14];
-    out[15] = a[15] + b[15];
-    return out;
-}
-
-
-/***
 Simple matrix multiplication helper
 
 params :
@@ -1011,65 +987,6 @@ Plane.prototype._multiplyMatrix = function(a, b) {
     out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
     out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
     out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-
-    return out;
-}
-
-
-/***
-Simple matrix invert helper
-
-params :
-    @a (array): matrix to invert
-
-    returns :
-        @out: inverted matrix
-***/
-Plane.prototype._invertMatrix = function(a) {
-    var out = [];
-
-    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
-    var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
-    var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
-    var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
-
-    var b00 = a00 * a11 - a01 * a10;
-    var b01 = a00 * a12 - a02 * a10;
-    var b02 = a00 * a13 - a03 * a10;
-    var b03 = a01 * a12 - a02 * a11;
-    var b04 = a01 * a13 - a03 * a11;
-    var b05 = a02 * a13 - a03 * a12;
-    var b06 = a20 * a31 - a21 * a30;
-    var b07 = a20 * a32 - a22 * a30;
-    var b08 = a20 * a33 - a23 * a30;
-    var b09 = a21 * a32 - a22 * a31;
-    var b10 = a21 * a33 - a23 * a31;
-    var b11 = a22 * a33 - a23 * a32;
-
-    // Calculate the determinant
-    var det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-
-    if (!det) {
-        return null;
-    }
-    det = 1.0 / det;
-
-    out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-    out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-    out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-    out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-    out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-    out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-    out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-    out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-    out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-    out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-    out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-    out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-    out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-    out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-    out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-    out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
 
     return out;
 }
@@ -1203,8 +1120,6 @@ Plane.prototype.setTranslation = function(translationX, translationY, translatio
     this.wrapper._isInitialized();
 
     this._isProgramInitialized();
-
-    this.wrapper.glContext.useProgram(this.program);
 
     translationX = translationX || 0;
     translationY = translationY || 0;
@@ -1518,21 +1433,23 @@ Plane.prototype._createTexturesFromImages = function() {
 
     this.wrapper._isInitialized();
 
+    var glContext = this.wrapper.glContext;
+
     for(var i = 0; i < this.images.length; i++) {
         // Create a texture object that will contain the image.
-        var texture = this.wrapper.glContext.createTexture();
+        var texture = glContext.createTexture();
 
         // Bind the texture the target (TEXTURE_2D) of the active texture unit.
-        this.wrapper.glContext.bindTexture(this.wrapper.glContext.TEXTURE_2D, texture);
+        glContext.bindTexture(glContext.TEXTURE_2D, texture);
 
         // Flip the image's Y axis to match the WebGL texture coordinate space.
-        this.wrapper.glContext.pixelStorei(this.wrapper.glContext.UNPACK_FLIP_Y_WEBGL, true);
+        glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, true);
 
         // Set the parameters so we can render any size image.
-        this.wrapper.glContext.texParameteri(this.wrapper.glContext.TEXTURE_2D, this.wrapper.glContext.TEXTURE_WRAP_S, this.wrapper.glContext.CLAMP_TO_EDGE);
-        this.wrapper.glContext.texParameteri(this.wrapper.glContext.TEXTURE_2D, this.wrapper.glContext.TEXTURE_WRAP_T, this.wrapper.glContext.CLAMP_TO_EDGE);
-        this.wrapper.glContext.texParameteri(this.wrapper.glContext.TEXTURE_2D, this.wrapper.glContext.TEXTURE_MIN_FILTER, this.wrapper.glContext.LINEAR);
-        this.wrapper.glContext.texParameteri(this.wrapper.glContext.TEXTURE_2D, this.wrapper.glContext.TEXTURE_MAG_FILTER, this.wrapper.glContext.LINEAR);
+        glContext.texParameteri(glContext.TEXTURE_2D, glContext.TEXTURE_WRAP_S, glContext.CLAMP_TO_EDGE);
+        glContext.texParameteri(glContext.TEXTURE_2D, glContext.TEXTURE_WRAP_T, glContext.CLAMP_TO_EDGE);
+        glContext.texParameteri(glContext.TEXTURE_2D, glContext.TEXTURE_MIN_FILTER, glContext.LINEAR);
+        glContext.texParameteri(glContext.TEXTURE_2D, glContext.TEXTURE_MAG_FILTER, glContext.LINEAR);
 
 
         texture.index = this.wrapper.loadingManager.texturesLoaded;
@@ -1568,15 +1485,16 @@ Plane.prototype._adjustTextureSize = function(index) {
     // we write it at the right size and position in a canvas and then use that canvas as a texture
     var image = this.images[index];
 
-    if(!this.imageCover) {
-        this.wrapper.glContext.useProgram(this.program);
-        // Indiquer à WebGL que nous voulons affecter l'unité de texture i
-        // tell WebGL we want to affect the texture at the plane's index unit
-        this.wrapper.glContext.activeTexture(this.wrapper.glContext.TEXTURE0 + this.textures[index].index);
-        // bind the texture to the plane's index unit
-        this.wrapper.glContext.bindTexture(this.wrapper.glContext.TEXTURE_2D, this.textures[index]);
+    var glContext = this.wrapper.glContext;
 
-        this.wrapper.glContext.texImage2D(this.wrapper.glContext.TEXTURE_2D, 0, this.wrapper.glContext.RGBA, this.wrapper.glContext.RGBA, this.wrapper.glContext.UNSIGNED_BYTE, image);
+    if(!this.imageCover) {
+        glContext.useProgram(this.program);
+        // tell WebGL we want to affect the texture at the plane's index unit
+        glContext.activeTexture(glContext.TEXTURE0 + this.textures[index].index);
+        // bind the texture to the plane's index unit
+        glContext.bindTexture(glContext.TEXTURE_2D, this.textures[index]);
+
+        glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, image);
     }
     else {
         var drawCanvas = document.createElement("canvas");
@@ -1605,13 +1523,12 @@ Plane.prototype._adjustTextureSize = function(index) {
         drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
         drawCtx.drawImage( image, (imgXPos / 2), (imgYPos / 2), drawCanvas.width - imgXPos, drawCanvas.height - imgYPos);
 
-        this.wrapper.glContext.useProgram(this.program);
-        // Indiquer à WebGL que nous voulons affecter l'unité de texture i
+        glContext.useProgram(this.program);
         // tell WebGL we want to affect the texture at the plane's index unit
-        this.wrapper.glContext.activeTexture(this.wrapper.glContext.TEXTURE0 + this.textures[index].index);
+        glContext.activeTexture(glContext.TEXTURE0 + this.textures[index].index);
         // bind the texture to the plane's index unit
-        this.wrapper.glContext.bindTexture(this.wrapper.glContext.TEXTURE_2D, this.textures[index]);
+        glContext.bindTexture(glContext.TEXTURE_2D, this.textures[index]);
 
-        this.wrapper.glContext.texImage2D(this.wrapper.glContext.TEXTURE_2D, 0, this.wrapper.glContext.RGBA, this.wrapper.glContext.RGBA, this.wrapper.glContext.UNSIGNED_BYTE, drawCanvas);
+        glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, drawCanvas);
     }
 }
