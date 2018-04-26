@@ -49,70 +49,64 @@ window.onload = function(){
     }
 
     var webGLCurtain = new Curtains("canvas");
-    console.log(webGLCurtain);
 
     var planeElements = document.getElementsByClassName("curtain");
 
     if(planeElements.length > 0) {
 
-        var planeParams = [
-            {
-                widthSegments: 50,
-                heightSegments: 37,
-                //fov: 15,
-                imageCover: false,
-                uniforms: {
-                    resolution: {
-                        name: "uResolution",
-                        type: "2f",
-                        value: [planeElements[0].offsetWidth, planeElements[0].offsetHeight],
-                    },
-                    mouseTime: {
-                        name: "uMouseTime",
-                        type: "1f",
-                        value: 0,
-                    },
-                    mousePosition: {
-                        name: "uMousePosition",
-                        type: "2f",
-                        value: [mousePosition.x, mousePosition.y],
-                    },
-                    mouseMoveStrength: {
-                        name: "uMouseMoveStrength",
-                        type: "1f",
-                        value: 0,
-                    },
+        var planeParams = {
+            widthSegments: 50,
+            heightSegments: 37,
+            //fov: 15,
+            imageCover: false,
+            uniforms: {
+                resolution: {
+                    name: "uResolution",
+                    type: "2f",
+                    value: [planeElements[0].offsetWidth, planeElements[0].offsetHeight],
+                },
+                mouseTime: {
+                    name: "uMouseTime",
+                    type: "1f",
+                    value: 0,
+                },
+                mousePosition: {
+                    name: "uMousePosition",
+                    type: "2f",
+                    value: [mousePosition.x, mousePosition.y],
+                },
+                mouseMoveStrength: {
+                    name: "uMouseMoveStrength",
+                    type: "1f",
+                    value: 0,
                 },
             },
-        ];
+        };
 
-        for(let i = 0; i < planeElements.length; i++) {
-            planes.push(webGLCurtain.addPlane(planeElements[i], planeParams[i]));
-        }
+        var plane = webGLCurtain.addPlane(planeElements[0], planeParams)
 
-        planes[0].onReady(function() {
+        plane.onReady(function() {
             planeElements[0].classList.add("curtain-ready");
-            planes[0].setPerspective(15);
+            plane.setPerspective(15);
 
             var wrapper = document.getElementById("page-wrap");
 
             wrapper.addEventListener("mousemove", function(e) {
-                handleMovement(e, planes[0]);
+                handleMovement(e, plane);
             });
 
             wrapper.addEventListener("touchmove", function(e) {
-                handleMovement(e, planes[0]);
+                handleMovement(e, plane);
             });
 
             window.onresize = function() {
-                //console.log(planes[0]);
-                planes[0].uniforms.resolution.value = [planes[0].htmlElement.offsetWidth, planes[0].htmlElement.offsetHeight];
+                plane.uniforms.resolution.value = [plane.htmlElement.offsetWidth, plane.htmlElement.offsetHeight];
             }
 
         }).onRender(function() {
-            planes[0].uniforms.mouseTime.value++;
+            plane.uniforms.mouseTime.value++;
 
-            planes[0].uniforms.mouseMoveStrength.value = mouseDelta;
+            plane.uniforms.mouseMoveStrength.value = mouseDelta;
             mouseDelta = Math.max(0, mouseDelta * 0.995);
         });
     }
