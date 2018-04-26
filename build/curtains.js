@@ -1521,7 +1521,7 @@ Plane.prototype._adjustTextureSize = function(index) {
         }
 
         drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-        drawCtx.drawImage( image, (imgXPos / 2), (imgYPos / 2), drawCanvas.width - imgXPos, drawCanvas.height - imgYPos);
+        drawCtx.drawImage( image, (imgXPos / 2), (imgYPos / 2), drawCanvas.width - (imgXPos * 2), drawCanvas.height - (imgYPos * 2));
 
         glContext.useProgram(this.program);
         // tell WebGL we want to affect the texture at the plane's index unit
