@@ -232,7 +232,7 @@ Curtains.prototype._readyToDraw = function() {
     this.glContext.blendFunc(this.glContext.SRC_ALPHA, this.glContext.ONE_MINUS_SRC_ALPHA);
     this.glContext.enable(this.glContext.BLEND);
 
-    console.log("Curtains.js - v1.0");
+    console.log("curtains.js - v1.0");
 
     var self = this;
     function animatePlanes() {
@@ -1521,7 +1521,7 @@ Plane.prototype._adjustTextureSize = function(index) {
         }
 
         drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-        drawCtx.drawImage( image, (imgXPos / 2), (imgYPos / 2), drawCanvas.width - (imgXPos * 2), drawCanvas.height - (imgYPos * 2));
+        drawCtx.drawImage( image, imgXPos, imgYPos, drawCanvas.width - (imgXPos * 2), drawCanvas.height - (imgYPos * 2));
 
         glContext.useProgram(this.program);
         // tell WebGL we want to affect the texture at the plane's index unit
