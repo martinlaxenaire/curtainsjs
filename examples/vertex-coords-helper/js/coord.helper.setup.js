@@ -5,16 +5,22 @@ window.onload = function(){
 
     // track the mouse positions to display them on screen
     var mousePosition = {
-        x: 0,
-        y: 0,
+        x: -10000,
+        y: -10000,
     };
 
-    // really basic params
-    // notice that we are not sending any uniforms as we dont need any
+    // really basic params and uniforms
     var params = {
         vertexShaderID: "coord-helper-vs",
         fragmentShaderID: "coord-helper-fs",
-        imageCover: false, // even if we won't use our black pixel, it would cover the whole plane
+        imageCover: false, // even if we won't use our black pixel, that way it would cover the whole plane
+        uniforms: {
+            mousePosition: { // our mouse position
+                name: "uMousePosition",
+                type: "2f",
+                value: [mousePosition.x, mousePosition.y],
+            },
+        }
     }
 
     // set up our WebGL context and append the canvas to our wrapper
@@ -56,8 +62,10 @@ window.onload = function(){
         // convert our mouse/touch position to coordinates relative to the vertices of the plane
         var mouseCoords = plane.mouseToPlaneCoords(mousePosition.x, mousePosition.y);
 
-        // usually we would pass those coords to the shaders via a uniform
-        // here we just want to display them
+        // update our mouse position uniform
+        plane.uniforms.mousePosition.value = [mouseCoords.x, mouseCoords.y];
+
+        // and display them
         document.getElementById("mouse-coords-helper-x").textContent = mouseCoords.x;
         document.getElementById("mouse-coords-helper-y").textContent = mouseCoords.y;
     }

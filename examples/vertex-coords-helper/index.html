@@ -83,15 +83,17 @@
 			varying vec3 vVertexPosition;
 			varying vec2 vTextureCoord;
 
+			uniform vec2 uMousePosition;
 
 			void main( void ) {
 
-				vec4 finalColor = vec4(1.0, 0.0, 0.0, 1.0);
+				vec4 finalColor = vec4(0.0, 0.0, 0.0, 1.0);
 
-				// red plane with black borders
-				if(vTextureCoord.x <= 0.05 || vTextureCoord.x >= 0.95 || vTextureCoord.y <= 0.05 || vTextureCoord.y >= 0.95) {
-					finalColor.rgb = vec3(0.0, 0.0, 0.0);
-				}
+				float distance = distance(vec2(vVertexPosition.x, vVertexPosition.y), uMousePosition);
+
+				finalColor.r = distance / 1.15;
+				finalColor.g = abs(0.5 - distance) / 1.25;
+				finalColor.b = abs(0.75 - distance) / 2.5 + 0.3;
 
 				gl_FragColor = finalColor;
 			}
