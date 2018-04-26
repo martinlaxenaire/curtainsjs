@@ -15,15 +15,15 @@
 </p>
 <h2>Examples</h2>
 <p>
-    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/vertex-coords-helper/index.html" title="Simple plane">Vertex coordinates helper</a><br />
-    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/simple-plane/index.html" title="Simple plane">Simple plane</a><br />
-    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-textures/index.html" title="Multiple textures">Multiple textures</a><br />
-    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-planes/index.html" title="Multiple planes">Multiple planes</a><br />
-    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/asynchronous-textures/index.html" title="Asynchronous textures loading">Asynchronous textures loading</a>
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/vertex-coords-helper/index.html" title="Simple plane" target="_blank">Vertex coordinates helper</a><br />
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-textures/index.html" title="Multiple textures" target="_blank">Multiple textures</a><br />
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a>
 </p>
 <h2>Basic setup example</h2>
 <p>
-    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/basic-plane/index.html" title="See it live">See it live</a>
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/basic-plane/index.html" title="See it live" target="_blank">See it live</a>
 </p>
 <h3>HTML</h3>
 <p>
@@ -115,7 +115,6 @@ window.onload = function() {
     plane.onRender(function() {
         plane.uniforms.time.value++; // update our time uniform value
     });
-
 }
 </code>
     </pre>
@@ -423,3 +422,17 @@ var params = {
         </p>
     </li>
 </ul>
+<h2>About</h2>
+<p>
+    This library is released under the MIT license which means it is free to use for personnal and commercial projects.
+</p>
+<p>
+    All images used in the examples were taken by <a href="https://marionbornaz.com/" title="Marion Bornaz" target="_blank">Marion Bornaz</a> during the <a href="https://www.miragefestival.com/" title="Mirage Festival" target="_blank">Mirage Festival</a>.
+</p>
+<p>
+    Many thanks to <a href="https://webglfundamentals.org/" title="webglfundamentals.org" target="_blank">webglfundamentals.org</a> tutorials which helped me a lot.
+</p>
+<p>
+    Author of this library is <a href="https://www.martin-laxenaire.fr/" title="Martin Laxenaire" target="_blank">Martin Laxenaire</a>, a french creative front-end developper based in Lyon.<br />
+    Found a bug ? Have questions ? Do not hesitate to <a href="mailto:martin.laxenaire@gmail.com" title="contact me">email me</a> or send me a tweet : <a href="https://twitter.com/webdesign_ml" target="_blank" title="My twitter">@webdesign_ml</a>.
+</p>
