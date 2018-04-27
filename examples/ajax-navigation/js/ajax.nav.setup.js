@@ -86,6 +86,9 @@ function portfolioNavigation() {
         });
     }
 
+    // a flag to know if we are currently in a transition between pages
+    // useful to attenuate our mouse effect
+    var isTransitioning = false;
 
     // handle the mouse move event
     function handleMovement(e, plane) {
@@ -117,8 +120,10 @@ function portfolioNavigation() {
 
         // update our mouse position uniform
         plane.uniforms.mousePosition.value = [mouseCoords.x, mouseCoords.y];
-        // increment our mouse timer
-        plane.uniforms.mouseMoveStrength.value = Math.min(plane.uniforms.mouseMoveStrength.value + 0.05, 1);
+        // increment our mouse timer only if we are not transition
+        if(!isTransitioning) {
+            plane.uniforms.mouseMoveStrength.value = Math.min(plane.uniforms.mouseMoveStrength.value + 0.05, 1);
+        }
     }
 
     // handle all the navigation process
@@ -190,6 +195,9 @@ function portfolioNavigation() {
                 document.body.classList.remove("go-to-project");
                 document.body.classList.add("single-project-shown");
 
+                // reset our transition flag
+                isTransitioning = false;
+
                 // click event to go back to home
                 document.getElementById("close-project").addEventListener("click", goToHome, false);
             }, 1000);
@@ -224,6 +232,9 @@ function portfolioNavigation() {
                 document.body.classList.remove("go-to-home");
                 document.body.classList.remove("single-project-shown");
 
+                // reset our transition flag
+                isTransitioning = false;
+
                 // since the planes HTML elements were removed from our content by the previous AJAX call we need to reset their sizes
                 for(var i = 0; i < planes.length; i++) {
                     planes[i].planeResize();
@@ -236,6 +247,8 @@ function portfolioNavigation() {
 
         // this function will execute our AJAX call and run a callback function
         function handleAjaxCall(href, callback) {
+            // set our transition flag
+            isTransitioning = true;
 
             // handling ajax
             var xhr = new XMLHttpRequest();
