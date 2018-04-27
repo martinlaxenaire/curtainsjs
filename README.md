@@ -19,7 +19,8 @@
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-textures/index.html" title="Multiple textures" target="_blank">Multiple textures</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
-    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a>
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/ajax-navigation/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation</a>
 </p>
 <h2>Basic setup example</h2>
 <p>
@@ -374,7 +375,7 @@ var params = {
             <strong>planeResize</strong>() :
         </p>
         <p>
-            This method is called each time the WebGL canvas is resized, but if you remove the plane HTML element and append it again later (typically with an AJAX navigation), you would have to reset the plane size by calling it.
+            This method is called each time the WebGL canvas is resized, but if you remove the plane HTML element and append it again later (typically with an AJAX navigation, see the <a href="examples/ajax-navigation/index.html" title="AJAX navigation" target="_blank">AJAX navigation</a> example), you would have to reset the plane size by calling it.
         </p>
     </li>
     <li>
