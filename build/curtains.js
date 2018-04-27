@@ -1152,7 +1152,7 @@ Plane.prototype.setRelativePosition = function(translationX, translationY) {
         y: translationY
     };
 
-    this.setTranslation(relativePosition.x, relativePosition.y, plane.translation.z);
+    this.setTranslation(relativePosition.x, relativePosition.y, this.translation.z);
 }
 
 
