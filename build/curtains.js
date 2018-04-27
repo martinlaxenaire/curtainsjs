@@ -208,7 +208,7 @@ Curtains.prototype._reSize = function() {
         // resize the planes only if they are fully initiated
         for(var i = 0; i < this.planes.length; i++) {
             if(this.planes[i].canDraw) {
-                this.planes[i]._planeResize();
+                this.planes[i].planeResize();
             }
         }
     }
@@ -1186,8 +1186,8 @@ Plane.prototype.mouseToPlaneCoords = function(xMousePosition, yMousePosition) {
     var wrapperOffset = this.wrapper.container.getBoundingClientRect();
 
     var mousePosition = {
-        x: ((((xMousePosition - wrapperOffset.left) - (planeOffset.left + window.pageXOffset)) / this.htmlElement.clientWidth) * 2) - 1,
-        y: 1 - ((((yMousePosition - wrapperOffset.top) - (planeOffset.top + window.pageYOffset)) / this.htmlElement.clientHeight) * 2)
+        x: ((((xMousePosition - wrapperOffset.left) - (planeOffset.left + window.pageXOffset)) / this.size.width) * 2) - 1,
+        y: 1 - ((((yMousePosition - wrapperOffset.top) - (planeOffset.top + window.pageYOffset)) / this.size.height) * 2)
     }
 
     return mousePosition;
@@ -1198,7 +1198,7 @@ Plane.prototype.mouseToPlaneCoords = function(xMousePosition, yMousePosition) {
 This function takes the plane CSS positions and convert them to clip space coordinates, and then apply the corresponding translation
 ***/
 Plane.prototype._applyCSSPositions = function() {
-    var planeAspect = this.htmlElement.clientWidth / this.htmlElement.clientHeight;
+    var planeAspect = this.size.width / this.size.height;
 
     // plane position
     var cssPositions = {
@@ -1301,7 +1301,7 @@ Plane.prototype._setMVMatrix = function() {
 Handles each plane resizing
 used internally when our container is resized
 ***/
-Plane.prototype._planeResize = function() {
+Plane.prototype.planeResize = function() {
     // canvas aspect ratio
     var wrapperAspectRatio = this.wrapper.glCanvas.width / this.wrapper.glCanvas.height;
 
@@ -1312,37 +1312,64 @@ Plane.prototype._planeResize = function() {
     var planeWidth = this.htmlElement.clientWidth;
     var planeHeight = this.htmlElement.clientHeight;
 
-    // reset plane inner scale (ie its size relative to its container)
-    this.geometry.innerScale = {
-        x: planeWidth / this.wrapper.glCanvas.width,
-        y: planeHeight / this.wrapper.glCanvas.height
-    };
+    // if div is not in the DOM anymore, probably because there's been a ajax call in between
+    // we loop through the DOM looking if they are back
+    // if not, we just don't resize
+    // if yes, we reset the plane htmlElement
+    if(!planeWidth && !planeHeight) {
+        var potentialPlanes = document.getElementsByClassName(this.htmlElement.className);
+        if(potentialPlanes.length > 0) {
+            for(var i = 0; i < potentialPlanes.length; i++) {
+                if(potentialPlanes[i].isEqualNode(this.htmlElement)) {
+                    this.htmlElement = potentialPlanes[i];
 
-    // reset plane clip space
-    this.clipSpace = {
-        x:  ((this.geometry.innerScale.x - 1) * (wrapperAspectRatio / 2)) / this.scale.x,
-        y: ((1 - this.geometry.innerScale.y) / 2) / this.scale.y,
-        width: wrapperAspectRatio,
-        height: 2,
-    }
-
-    if(this.mimicCSS) {
-        this._applyCSSPositions();
-    }
-    else {
-        this.setTranslation( this.translation.x, this.translation.y, this.translation.z);
-    }
-
-    // resize all textures only if plane size has changed
-    if(planeWidth !== this.size.width || planeHeight !== this.size.height) {
-        for(var i = 0; i < this.images.length; i++) {
-            this._adjustTextureSize(i);
+                    planeWidth = this.htmlElement.clientWidth;
+                    planeHeight = this.htmlElement.clientHeight;
+                }
+            }
         }
     }
 
-    this.size = {
-        width: planeWidth,
-        height: planeHeight,
+    // resize plane only if it is in the DOM
+    if(planeWidth && planeHeight) {
+
+        var shouldResizeTextures = false;
+        if(planeWidth !== this.size.width || planeHeight !== this.size.height) {
+            shouldResizeTextures = true;
+        }
+
+        this.size = {
+            width: planeWidth,
+            height: planeHeight,
+        }
+
+        // reset plane inner scale (ie its size relative to its container)
+        this.geometry.innerScale = {
+            x: planeWidth / this.wrapper.glCanvas.width,
+            y: planeHeight / this.wrapper.glCanvas.height
+        };
+
+        // reset plane clip space
+        this.clipSpace = {
+            x:  ((this.geometry.innerScale.x - 1) * (wrapperAspectRatio / 2)) / this.scale.x,
+            y: ((1 - this.geometry.innerScale.y) / 2) / this.scale.y,
+            width: wrapperAspectRatio,
+            height: 2,
+        }
+
+        if(this.mimicCSS) {
+            this._applyCSSPositions();
+        }
+        else {
+            this.setTranslation(this.translation.x, this.translation.y, this.translation.z);
+        }
+
+        // resize all textures only if plane size has changed
+        if(shouldResizeTextures) {
+            for(var i = 0; i < this.images.length; i++) {
+                this._adjustTextureSize(i);
+            }
+        }
     }
 }
 
@@ -1500,8 +1527,8 @@ Plane.prototype._adjustTextureSize = function(index) {
         var drawCanvas = document.createElement("canvas");
         var drawCtx = drawCanvas.getContext("2d");
 
-        drawCanvas.width  = this.htmlElement.clientWidth;
-        drawCanvas.height = this.htmlElement.clientHeight;
+        drawCanvas.width  = this.size.width;
+        drawCanvas.height = this.size.height;
 
         var imgWidth = image.width;
         var imgHeight = image.height;
