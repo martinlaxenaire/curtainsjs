@@ -200,6 +200,15 @@ var params = {
 
 								<li>
 									<p>
+										<strong>planeResize</strong>() :
+									</p>
+									<p>
+										This method is called each time the WebGL canvas is resized, but if you remove the plane HTML element and append it again later (typically with an AJAX navigation), you would have to reset the plane size by calling it. 
+									</p>
+								</li>
+
+								<li>
+									<p>
 										<strong>setPerspective</strong>(fieldOfView, nearPlane, farPlane) :<br />
 										<em>fieldOfView</em> (integer) : the perspective field of view. Should be greater than 0 and lower than 180. Default to 75.<br />
 										<em>nearPlane</em> (float) : closest point where a mesh vertex is displayed. Default to 0.1.<br />
