@@ -39,8 +39,8 @@
 
 			<div id="mouse-coords-helper-wrapper">
 				Mouse position relative to plane :<br />
-				X: <span id="mouse-coords-helper-x"></span><br />
-				Y: <span id="mouse-coords-helper-y"></span>
+				X: <span id="mouse-coords-helper-x">0</span><br />
+				Y: <span id="mouse-coords-helper-y">0</span>
 			</div>
 		</div>
 
@@ -73,9 +73,6 @@
 			}
         </script>
         <script id="coord-helper-fs" type="x-shader/x-fragment">
-
-			// based on http://xdpixel.com/procedurally-generating-noise-in-a-shader/
-
 			#ifdef GL_ES
 			precision mediump float;
 			#endif

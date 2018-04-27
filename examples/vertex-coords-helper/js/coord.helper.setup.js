@@ -5,8 +5,8 @@ window.onload = function(){
 
     // track the mouse positions to display them on screen
     var mousePosition = {
-        x: -10000,
-        y: -10000,
+        x: 0,
+        y: 0,
     };
 
     // really basic params and uniforms
