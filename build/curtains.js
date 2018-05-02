@@ -1414,7 +1414,13 @@ Plane.prototype.loadImages = function(imagesArray) {
     var waitForImagesInterval = setInterval(function() {
         if(self.images.length == imagesArray.length) {
             clearInterval(waitForImagesInterval);
-            self._reorderImages(imagesArray);
+            // if there's more than 1 image we need to reorder our images array
+            if(imagesArray.length > 1) {
+                self._reorderImages(imagesArray);
+            }
+            else {
+                self._createTexturesFromImages();
+            }
         }
     }, 100);
 
