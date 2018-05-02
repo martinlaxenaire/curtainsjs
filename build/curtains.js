@@ -713,6 +713,12 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
     this.geometry.verticesBuffer.itemSize = 3;
     this.geometry.verticesBuffer.numberOfItems = this.geometry.vertices.length / this.geometry.verticesBuffer.itemSize;
 
+    // Set where the vertexPosition attribute gets its data,
+    glContext.vertexAttribPointer(this.attributes.vertexPosition, this.geometry.verticesBuffer.itemSize, glContext.FLOAT, false, 0, 0);
+    glContext.enableVertexAttribArray(this.attributes.vertexPosition);
+
+
+
     // now the texture UVs coordinates
     this.material = {};
     this.material.uvs = returnedVertices.uvs;
@@ -724,6 +730,9 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
 
     this.material.texCoordBuffer.itemSize = 3;
     this.material.texCoordBuffer.numberOfItems = this.material.uvs.length / this.material.texCoordBuffer.itemSize;
+
+    glContext.vertexAttribPointer(this.attributes.textureCoord, this.material.texCoordBuffer.itemSize, glContext.FLOAT, false, 0, 0);
+    glContext.enableVertexAttribArray(this.attributes.textureCoord);
 
 
     // everything is set up, we can draw the plane now
@@ -748,17 +757,11 @@ Plane.prototype._bindPlaneBuffers = function() {
 
     var glContext = this.wrapper.glContext;
 
-    // Set the vertices buffer (I know it's already bound, but that's where it normally
-   // belongs in the workflow),
+    // Set the vertices buffer
    glContext.bindBuffer(glContext.ARRAY_BUFFER, this.geometry.verticesBuffer);
-   // Set where the vertexPosition attribute gets its data,
-   glContext.vertexAttribPointer(this.attributes.vertexPosition, this.geometry.verticesBuffer.itemSize, glContext.FLOAT, false, 0, 0);
-   glContext.enableVertexAttribArray(this.attributes.vertexPosition);
 
    // Set where the texture coord attribute gets its data,
    glContext.bindBuffer(glContext.ARRAY_BUFFER, this.material.texCoordBuffer);
-   glContext.vertexAttribPointer(this.attributes.textureCoord, this.material.texCoordBuffer.itemSize, glContext.FLOAT, false, 0, 0);
-   glContext.enableVertexAttribArray(this.attributes.textureCoord);
 }
 
 
