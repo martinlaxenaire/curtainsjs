@@ -28,7 +28,7 @@
 </p>
 <h3>HTML</h3>
 <p>
-    The HTML set up is pretty easy. Just create a div that will hold your canvas and a div that will hold your images.
+    The HTML set up is pretty easy. Just create a div that will hold your canvas and a div that will hold your image.
 </p>
 <p>
     <pre>
@@ -39,8 +39,8 @@
     &lt;!-- div used to create our plane --&gt;
     &lt;div class="plane"&gt;
         &lt;!-- image that will be used as texture by our plane --&gt;
-            &lt;img src="path/to/my-image.jpg" /&gt;
-        &lt;/div&gt;
+        &lt;img src="path/to/my-image.jpg" /&gt;
+    &lt;/div&gt;
 &lt;/body&gt;
 </code>
     </pre>
@@ -265,11 +265,11 @@ var curtains = new Curtains("canvas"); // "canvas" is the ID of our HTML element
     <li>
         <p>
             <strong>addPlane</strong>(planeElement, params) :<br />
-            <em>planeElements</em> (HTML element) : a HTML element<br />
+            <em>planeElement</em> (HTML element) : a HTML element<br />
             <em>params</em> (object) : an object containing the plane parameters (see the Plane object).
         </p>
         <p>
-            This function will add one or more planes to our Curtains wrapper.
+            This function will add a plane to our Curtains wrapper.
         </p>
     </li>
     <li>
@@ -375,15 +375,15 @@ var params = {
             <strong>planeResize</strong>() :
         </p>
         <p>
-            This method is called each time the WebGL canvas is resized, but if you remove the plane HTML element and append it again later (typically with an AJAX navigation, see the <a href="examples/ajax-navigation/index.html" title="AJAX navigation" target="_blank">AJAX navigation</a> example), you would have to reset the plane size by calling it.
+            This method is called internally each time the WebGL canvas is resized, but if you remove the plane HTML element and append it again later (typically with an AJAX navigation, see the <a href="examples/ajax-navigation/index.html" title="AJAX navigation" target="_blank">AJAX navigation</a> example), you would have to manually reset the plane size by calling it.
         </p>
     </li>
     <li>
         <p>
             <strong>setPerspective</strong>(fieldOfView, nearPlane, farPlane) :<br />
             <em>fieldOfView</em> (integer) : the perspective field of view. Should be greater than 0 and lower than 180. Default to 75.<br />
-            <em>nearPlane</em> (float) : closest point where a mesh vertex is displayed. Default to 0.1.<br />
-            <em>farPlane</em> (float) : farthest point where a mesh vertex is displayed. Default to 150.
+            <em>nearPlane</em> (float, optionnal) : closest point where a mesh vertex is displayed. Default to 0.1.<br />
+            <em>farPlane</em> (float, optionnal) : farthest point where a mesh vertex is displayed. Default to 150 (two times the field of view).
         </p>
         <p>
             Reset the perspective. The smaller the field of view, the more perspective.
