@@ -265,10 +265,8 @@ Curtains.prototype._drawScene = function() {
     for(var i = 0; i < this.planes.length; i++) {
         var plane = this.planes[i];
 
-        // check if we are using the correct webgl program and if everything is ready (because of asynchronous)
-        if(this.glContext.isProgram(plane.program) && plane.canDraw) {
-
-            this.glContext.useProgram(plane.program);
+        // check if everything is ready (because of asynchronous creation and loading)
+        if(plane.canDraw) {
 
             // execute our plane onRender callback
             if(plane.onRenderCallback) {
@@ -283,7 +281,7 @@ Curtains.prototype._drawScene = function() {
             }
 
 
-            // update all uniforms set up by user
+            // update all uniforms set up by the user
             plane._updateUniforms();
 
             // bind buffers
