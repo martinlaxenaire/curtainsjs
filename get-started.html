@@ -332,6 +332,9 @@ uniform sampler2D uLastSlide    // bound to my-image-3.jpg
 									Be careful with each plane definition. A lot of vertices implies a big impact on performance. If you plan to use more than one plane, try to reduce the number of vertices.
 								</li>
 								<li>
+									Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size.
+								</li>
+								<li>
 									Try not to use too much uniforms as they are updated at every draw call.
 								</li>
 								<li>
