@@ -17,7 +17,7 @@
 <p>
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/vertex-coords-helper/index.html" title="Simple plane" target="_blank">Vertex coordinates helper</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
-    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-textures/index.html" title="Multiple textures" target="_blank">Multiple textures</a><br />
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-textures/index.html" title="Multiple textures" target="_blank">Multiple textures with a displacement shader</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/ajax-navigation/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation</a>
@@ -235,21 +235,6 @@ uniform sampler2D uLastSlide    // bound to my-image-3.jpg
 </code>
 </pre>
 </div>
-<h2>Performance tips</h2>
-<ul>
-    <li>
-        Be careful with each plane definition. A lot of vertices implies a big impact on performance. If you plan to use more than one plane, try to reduce the number of vertices.
-    </li>
-    <li>
-        Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size.
-    </li>
-    <li>
-        Try not to use too much uniforms as they are updated at every draw call.
-    </li>
-    <li>
-        If you use multiple planes with multiple textures, you should set the dimensions of your plane to fit the aspect ratio of your images in CSS (you could use the padding-bottom hack, see the <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">multiple planes</a> example HTML & CSS) and set the imageCover plane property to false when adding it.
-    </li>
-</ul>
 <h2>Documentation</h2>
 <h3>Curtains object</h3>
 <h4>Instanciate</h4>
@@ -432,6 +417,31 @@ var params = {
         <p>
             Get the mouse coordinates relative to the plane clip space values. Use it to send to a uniform and interact with your plane. A plane coordinates ranges from (-1, 1) in the top left corner to (1, -1) in the bottom right corner, which means the values along the Y axis are inverted.
         </p>
+    </li>
+</ul>
+<h2>Performance tips</h2>
+<ul>
+    <li>
+        Be careful with each plane definition. A lot of vertices implies a big impact on performance. If you plan to use more than one plane, try to reduce the number of vertices.
+    </li>
+    <li>
+        Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size.
+    </li>
+    <li>
+        Try to use as less javascript as possible in the onRender() planes methods as this get executed at each draw call. Try not to use too much uniforms as they are updated at every draw call as well.
+    </li>
+    <li>
+        If you use multiple planes with multiple textures, you should set the dimensions of your plane to fit the aspect ratio of your images in CSS (you could use the padding-bottom hack, see the <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">multiple planes</a> example HTML & CSS) and set the imageCover plane property to false when adding it.
+    </li>
+</ul>
+<h2>Changelog</h2>
+<h3>Version 1.1</h3>
+<ul>
+    <li>
+        WebGL context viewport size now based on drawingBufferWidth and drawingBufferHeight.
+    </li>
+    <li>
+        Cleaned and refactored code in order to add support for lost and restored context events.
     </li>
 </ul>
 <h2>About</h2>

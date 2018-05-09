@@ -1,7 +1,7 @@
 /***
     Little WebGL helper to apply images as textures of planes
     Author: Martin Laxenaire https://www.martin-laxenaire.fr/
-    Version: 1.0
+    Version: 1.1
 
     Compatibility
     PC: Chrome (65.0), Firefox (59.0.2), Microsoft Edge (41)
@@ -50,11 +50,7 @@ Curtains.prototype._init = function() {
 
     this.glCanvas = document.createElement("canvas");
 
-    // reset webgl context so we won't lose other ones
-    if(this.glContext) {
-        this.glContext.getExtension('WEBGL_lose_context').loseContext();
-        this.glContext = null;
-    }
+    // set our webgl context
     this.glContext = this.glCanvas.getContext("webgl", { alpha: true }) || this.glCanvas.getContext("experimental-webgl");
 
     // set our canvas sizes
@@ -62,7 +58,11 @@ Curtains.prototype._init = function() {
     this.glCanvas.height = this.container.clientHeight;
 
     // set our context viewport
-    this.glContext.viewport(0, 0, this.glCanvas.width, this.glCanvas.height);
+    this.glContext.viewport(0, 0, this.glContext.drawingBufferWidth, this.glContext.drawingBufferHeight);
+
+    // handling context
+    this.glCanvas.addEventListener("webglcontextlost", this._contextLost.bind(this), false);
+    this.glCanvas.addEventListener("webglcontextrestored", this._contextRestored.bind(this), false);
 
     // we can start rendering now
     this._readyToDraw();
@@ -81,6 +81,47 @@ Curtains.prototype._isInitialized = function() {
     }
 };
 
+
+
+/*** HANDLING CONTEXT ***/
+
+/***
+Called when the WebGL context is lost
+***/
+Curtains.prototype._contextLost = function(event) {
+    event.preventDefault();
+
+    // cancel requestAnimationFrame
+    if(this.requestAnimationFrameID) {
+        window.cancelAnimationFrame(this.requestAnimationFrameID);
+    }
+};
+
+
+/***
+Called when the WebGL context is restored
+***/
+Curtains.prototype._contextRestored = function() {
+    // we need to reset everything : planes programs, shaders, buffers and textures !
+    for(var i = 0; i < this.planes.length; i++) {
+        var plane = this.planes[i];
+
+        plane._restoreContext();
+    }
+
+    // requestAnimationFrame again
+    var self = this;
+    function animatePlanes() {
+
+        self._drawScene();
+
+        self.requestAnimationFrameID = window.requestAnimationFrame(animatePlanes);
+    }
+
+    animatePlanes();
+};
+
+
 /***
 Dispose everything
 ***/
@@ -89,7 +130,6 @@ Curtains.prototype.dispose = function() {
 
     if(this.glContext) {
         this.glContext.getExtension('WEBGL_lose_context').loseContext();
-        this.glContext = null;
     }
 }
 
@@ -151,13 +191,6 @@ Curtains.prototype.addPlane = function(planeHtmlElement, params) {
         console.warn("This plane does not contain any image element. You may want to add some later with the loadImages method.");
     }
 
-    // set plane uniforms
-    if(!params.uniforms) {
-        params.uniforms = {};
-        console.warn("You are setting a plane without uniforms, you won't be able to interact with it. Please check your addPlane method for : ", plane.htmlElement);
-    }
-    plane._setUniforms(params.uniforms);
-
     return plane;
 };
 
@@ -183,8 +216,8 @@ Curtains.prototype._createShader = function(shaderCode, shaderType) {
     this.glContext.shaderSource(shader, shaderCode);
     this.glContext.compileShader(shader);
 
-    if (!this.glContext.getShaderParameter(shader, this.glContext.COMPILE_STATUS)) {
-        console.log("Errors occurred while compiling the shader:\n" + this.glContext.getShaderInfoLog(shader));
+    if (!this.glContext.getShaderParameter(shader, this.glContext.COMPILE_STATUS) && !this.glContext.isContextLost()) {
+        console.warn("Errors occurred while compiling the shader:\n" + this.glContext.getShaderInfoLog(shader));
         this.container.classList.add('no-webgl-curtains');
         return null;
     }
@@ -203,7 +236,7 @@ Curtains.prototype._reSize = function() {
         this.glCanvas.width  = Math.floor(this.container.clientWidth);
         this.glCanvas.height = Math.floor(this.container.clientHeight);
 
-        this.glContext.viewport(0, 0, this.glCanvas.width, this.glCanvas.height);
+        this.glContext.viewport(0, 0, this.glContext.drawingBufferWidth, this.glContext.drawingBufferHeight);
 
         // resize the planes only if they are fully initiated
         for(var i = 0; i < this.planes.length; i++) {
@@ -291,7 +324,7 @@ Curtains.prototype._drawScene = function() {
             this.glContext.uniformMatrix4fv(plane.matrix.mvMatrixUniform, false, plane.matrix.mvMatrix);
 
             // the draw call!
-            this.glContext.drawArrays(this.glContext.TRIANGLES, 0, plane.geometry.verticesBuffer.numberOfItems);
+            this.glContext.drawArrays(this.glContext.TRIANGLES, 0, plane.geometry.bufferInfos.numberOfItems);
         }
     }
 
@@ -346,7 +379,29 @@ function Plane(curtainWrapper, plane, params) {
     // set default fov
     this.fov = params.fov || 75;
 
+    // set our basic initial infos
+    this.size = {
+        width: this.htmlElement.clientWidth || this.wrapper.glCanvas.width,
+        height: this.htmlElement.clientHeight || this.wrapper.glCanvas.height,
+    }
 
+    this.scale = {
+        x: 1,
+        y: 1
+    }
+
+    this.rotation = {
+        x: 0,
+        y: 0,
+        z: 0,
+    }
+
+    this.relativeTranslation = {
+        x: 0,
+        y: 0,
+    }
+
+    // handling shaders
     var vsId = params.vertexShaderID || plane.getAttribute("data-vs-id");
     var fsId = params.fragmentShaderID || plane.getAttribute("data-fs-id");
 
@@ -355,15 +410,85 @@ function Plane(curtainWrapper, plane, params) {
         return false;
     }
 
-    var glContext = this.wrapper.glContext;
-
-    // create shader program
-    this.program = glContext.createProgram();
-
     this.shaders = {};
 
     this.shaders.vertexShaderCode = document.getElementById(vsId).innerHTML;
     this.shaders.fragmentShaderCode = document.getElementById(fsId).innerHTML;
+
+    // set up shaders, program and attributes
+    this._setupPlane();
+
+
+    // handle uniforms
+    if(!params.uniforms) {
+        params.uniforms = {};
+        console.warn("You are setting a plane without uniforms, you won't be able to interact with it. Please check your addPlane method for : ", this.htmlElement);
+    }
+
+    this.uniforms = {};
+
+    // first we create our uniforms objects
+    var self = this;
+    if(params.uniforms) {
+        Object.keys(params.uniforms).map(function(objectKey, index) {
+            var uniform = params.uniforms[objectKey];
+
+            // fill our uniform object
+            self.uniforms[objectKey] = {
+                name: uniform.name,
+                type: uniform.type,
+                value: uniform.value,
+                coreUniform: false,
+            }
+        });
+    }
+    // then we set the plane uniforms locations
+    this._setUniforms(this.uniforms);
+
+     return this;
+}
+
+
+/***
+Used internally handle context restore
+***/
+Plane.prototype._restoreContext = function() {
+    this.canDraw = false;
+
+    // remove and reset everything that depends on the context
+    this.shaders.vertexShader = null;
+    this.shaders.fragmentShader = null;
+
+    this.program = null;
+
+    this.matrix = null;
+
+    this.attributes = null;
+
+    this.textures = [];
+
+    this.geometry.bufferInfos = null;
+    this.material.bufferInfos = null;
+
+    // reset plane shaders, programs and attributes
+    this._setupPlane();
+
+    // reset plane uniforms
+    this._setUniforms(this.uniforms);
+
+    // reset textures
+    this._createTexturesFromImages();
+}
+
+
+/***
+Used internally to set up shaders, program and attributes
+***/
+Plane.prototype._setupPlane = function() {
+    var glContext = this.wrapper.glContext;
+
+    // create shader program
+    this.program = glContext.createProgram();
 
     // Create shaders,
     this.shaders.vertexShader = this.wrapper._createShader(this.shaders.vertexShaderCode, glContext.VERTEX_SHADER);
@@ -381,7 +506,7 @@ function Plane(curtainWrapper, plane, params) {
     glContext.linkProgram(this.program);
 
     // Check the shader program creation status,
-    if (!glContext.getProgramParameter(this.program, glContext.LINK_STATUS)) {
+    if (!glContext.getProgramParameter(this.program, glContext.LINK_STATUS) && !glContext.isContextLost()) {
        console.warn("Unable to initialize the shader program.");
        this.wrapper.container.classList.add('no-webgl-curtains');
        return false;
@@ -402,12 +527,6 @@ function Plane(curtainWrapper, plane, params) {
 
      this.matrix.pMatrix = this._setPerspectiveMatrix(this.fov, 0.1, this.fov * 2);
 
-     // set up scale
-     this.scale = {
-         x: 1,
-         y: 1
-     }
-
      // matrix uniforms
      this.matrix.pMatrixUniform = glContext.getUniformLocation(this.program, "uPMatrix");
      this.matrix.mvMatrixUniform = glContext.getUniformLocation(this.program, "uMVMatrix");
@@ -420,9 +539,7 @@ function Plane(curtainWrapper, plane, params) {
      }
 
      this._setAttributes(defaultAttributes);
-
-     return this;
-}
+};
 
 
 /***
@@ -447,22 +564,6 @@ params :
 Plane.prototype.onLoading = function(callback) {
     if(callback) {
         this.onPlaneLoadingCallback = callback;
-    }
-
-    return this;
-}
-
-
-/***
-This is called when all plane textures have been loaded. Used to set plane's definition (ie width and height segments)
-TODO really needed ??!
-
-params :
-    @callback (function) : a function to execute
-***/
-Plane.prototype.planeTexturesLoaded = function(callback) {
-    if(callback) {
-        this._texturesLoadedCallback = callback;
     }
 
     return this;
@@ -521,7 +622,7 @@ Plane.prototype._setPlaneDefinition = function(widthSegments, heightSegments) {
             this.uniforms[samplerUniform].location = glContext.getUniformLocation(this.program, samplerUniform);
             this.uniforms[samplerUniform].coreUniform = true;
 
-            // Indiquer au shader que nous avons lié la texture à l'unité de texture 0
+            // tell the shader we bound the texture to our indexed texture unit
             glContext.uniform1i(this.uniforms[samplerUniform].location, this.textures[i].index);
         }
         else {
@@ -530,7 +631,7 @@ Plane.prototype._setPlaneDefinition = function(widthSegments, heightSegments) {
             this.uniforms["sampler" + this.textures[i].index].location = glContext.getUniformLocation(this.program, "uSampler" + i);
             this.uniforms["sampler" + this.textures[i].index].coreUniform = true;
 
-            // Indiquer au shader que nous avons lié la texture à l'unité de texture 0
+            // tell the shader we bound the texture to our indexed texture unit
             glContext.uniform1i(this.uniforms["sampler" + this.textures[i].index].location, this.textures[i].index);
         }
     }
@@ -644,15 +745,22 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
     widthSegments = Math.floor(widthSegments) || 1; // 1 is default definition
     heightSegments = Math.floor(heightSegments) || 1;
 
-    planeWidth = this.htmlElement.clientWidth || this.wrapper.glCanvas.width;
-    planeHeight = this.htmlElement.clientHeight || this.wrapper.glCanvas.height;
+    var planeWidth = this.htmlElement.clientWidth || this.wrapper.glCanvas.width;
+    var planeHeight = this.htmlElement.clientHeight || this.wrapper.glCanvas.height;
 
-    this.size = {
-        width: planeWidth,
-        height: planeHeight,
+    // if this our first time we need to create our geometry and material objects
+    if(!this.geometry && !this.material) {
+        var returnedVertices = this._setPlaneVertices(widthSegments, heightSegments);
+
+        // first the plane vertices
+        this.geometry = {};
+        this.geometry.vertices = returnedVertices.vertices;
+
+        // now the texture UVs coordinates
+        this.material = {};
+        this.material.uvs = returnedVertices.uvs;
     }
 
-    this.geometry = {};
 
     // set plane scale relative to its canvas parent
     this.geometry.innerScale = {
@@ -667,17 +775,6 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
         y: ((1 - this.geometry.innerScale.y) / 2) / this.scale.y,
         width: this.wrapper.glCanvas.width / this.wrapper.glCanvas.height,
         height: 2,
-    }
-
-    this.rotation = {
-        x: 0,
-        y: 0,
-        z: 0,
-    }
-
-    this.relativeTranslation = {
-        x: 0,
-        y: 0,
     }
 
     // we translate our plane from 0 to -this.fov / 2 on the Z axis
@@ -696,40 +793,38 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
         this._adjustTextureSize(i);
     }
 
-    var returnedVertices = this._setPlaneVertices(widthSegments, heightSegments);
-
     var glContext = this.wrapper.glContext;
 
-    // first the plane vertices
-    this.geometry.vertices = returnedVertices.vertices;
 
-    this.geometry.verticesBuffer = glContext.createBuffer();
-    glContext.bindBuffer(glContext.ARRAY_BUFFER, this.geometry.verticesBuffer);
+
+    this.geometry.bufferInfos = {};
+
+    this.geometry.bufferInfos.id = glContext.createBuffer();
+    glContext.bindBuffer(glContext.ARRAY_BUFFER, this.geometry.bufferInfos.id);
 
     glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(this.geometry.vertices), glContext.STATIC_DRAW);
 
-    this.geometry.verticesBuffer.itemSize = 3;
-    this.geometry.verticesBuffer.numberOfItems = this.geometry.vertices.length / this.geometry.verticesBuffer.itemSize;
+    this.geometry.bufferInfos.itemSize = 3;
+    this.geometry.bufferInfos.numberOfItems = this.geometry.vertices.length / this.geometry.bufferInfos.itemSize;
 
     // Set where the vertexPosition attribute gets its data,
-    glContext.vertexAttribPointer(this.attributes.vertexPosition, this.geometry.verticesBuffer.itemSize, glContext.FLOAT, false, 0, 0);
+    glContext.vertexAttribPointer(this.attributes.vertexPosition, this.geometry.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
     glContext.enableVertexAttribArray(this.attributes.vertexPosition);
 
 
 
-    // now the texture UVs coordinates
-    this.material = {};
-    this.material.uvs = returnedVertices.uvs;
 
-    this.material.texCoordBuffer = glContext.createBuffer();
-    glContext.bindBuffer(glContext.ARRAY_BUFFER, this.material.texCoordBuffer);
+    this.material.bufferInfos = {};
+
+    this.material.bufferInfos.id = glContext.createBuffer();
+    glContext.bindBuffer(glContext.ARRAY_BUFFER, this.material.bufferInfos.id);
 
     glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(this.material.uvs), glContext.STATIC_DRAW);
 
-    this.material.texCoordBuffer.itemSize = 3;
-    this.material.texCoordBuffer.numberOfItems = this.material.uvs.length / this.material.texCoordBuffer.itemSize;
+    this.material.bufferInfos.itemSize = 3;
+    this.material.bufferInfos.numberOfItems = this.material.uvs.length / this.material.bufferInfos.itemSize;
 
-    glContext.vertexAttribPointer(this.attributes.textureCoord, this.material.texCoordBuffer.itemSize, glContext.FLOAT, false, 0, 0);
+    glContext.vertexAttribPointer(this.attributes.textureCoord, this.material.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
     glContext.enableVertexAttribArray(this.attributes.textureCoord);
 
 
@@ -756,10 +851,10 @@ Plane.prototype._bindPlaneBuffers = function() {
     var glContext = this.wrapper.glContext;
 
     // Set the vertices buffer
-   glContext.bindBuffer(glContext.ARRAY_BUFFER, this.geometry.verticesBuffer);
+   glContext.bindBuffer(glContext.ARRAY_BUFFER, this.geometry.bufferInfos.id);
 
    // Set where the texture coord attribute gets its data,
-   glContext.bindBuffer(glContext.ARRAY_BUFFER, this.material.texCoordBuffer);
+   glContext.bindBuffer(glContext.ARRAY_BUFFER, this.material.bufferInfos.id);
 }
 
 
@@ -859,7 +954,7 @@ Plane.prototype._handleUniformSetting = function(uniformType, uniformLocation, u
     }
 
     else {
-        console.log("This uniform type is not handled : ", uniformType);
+        console.warn("This uniform type is not handled : ", uniformType);
     }
 }
 
@@ -879,28 +974,19 @@ Plane.prototype._setUniforms = function(uniforms) {
     // ensure we are using the right program
     this.wrapper.glContext.useProgram(this.program);
 
-    if(!this.uniforms) this.uniforms = {};
-
-
-
-
     var self = this;
     // set our uniforms if we got some
     if(uniforms) {
         Object.keys(uniforms).map(function(objectKey, index) {
             var uniform = uniforms[objectKey];
+            if(!uniform.coreUniform) {
 
-            // fill our uniform object
-            self.uniforms[objectKey] = {
-                location: self.wrapper.glContext.getUniformLocation(self.program, uniform.name),
-                name: uniform.name,
-                type: uniform.type,
-                value: uniform.value,
-                coreUniform: false,
+                // set our uniform location
+                self.uniforms[objectKey].location = self.wrapper.glContext.getUniformLocation(self.program, uniform.name);
+
+                // set the uniforms
+                self._handleUniformSetting(uniform.type, self.uniforms[objectKey].location, uniform.value);
             }
-
-            // set the uniforms
-            self._handleUniformSetting(uniform.type, self.uniforms[objectKey].location, uniform.value);
         });
     }
 }
@@ -1494,11 +1580,6 @@ Plane.prototype._createTexturesFromImages = function() {
 
     // set the plane definition (ie vertices & uvs)
     this._setPlaneDefinition(this.definition.width, this.definition.height);
-
-    // fire the textures loaded callback
-    if(this._texturesLoadedCallback) {
-        this._texturesLoadedCallback();
-    }
 }
 
 

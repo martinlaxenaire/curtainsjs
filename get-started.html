@@ -335,8 +335,8 @@ uniform sampler2D uLastSlide    // bound to my-image-3.jpg
 									Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size.
 								</li>
 								<li>
-									Try not to use too much uniforms as they are updated at every draw call.
-								</li>
+							        Try to use as less javascript as possible in the onRender() planes methods as this get executed at each draw call. Try not to use too much uniforms as they are updated at every draw call as well.
+							    </li>
 								<li>
 									If you use multiple planes with multiple textures, you should set the dimensions of your plane to fit the aspect ratio of your images in CSS (you could use the padding-bottom hack, see the <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">multiple planes</a> example HTML & CSS) and set the imageCover plane property to false when adding it.
 								</li>
@@ -350,7 +350,7 @@ uniform sampler2D uLastSlide    // bound to my-image-3.jpg
 							<p>
 								<a href="examples/vertex-coords-helper/index.html" title="Simple plane" target="_blank">Vertex coordinates helper</a><br />
 								<a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
-								<a href="examples/multiple-textures/index.html" title="Multiple textures" target="_blank">Multiple textures</a><br />
+								<a href="examples/multiple-textures/index.html" title="Multiple textures" target="_blank">Multiple textures with a displacement shader</a><br />
 								<a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
 								<a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
 								<a href="examples/ajax-navigation/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation</a>
