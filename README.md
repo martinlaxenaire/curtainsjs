@@ -308,10 +308,10 @@ window.onload = function() {
         document.getElementbyId("start-playing").addEventListener("click", function() {
             plane.playVideos();
         });
-        }).onRender(function() {
-            // use the onRender method of our plane fired at each requestAnimationFrame call
-            plane.uniforms.time.value++; // update our time uniform value
-        });
+    }).onRender(function() {
+        // use the onRender method of our plane fired at each requestAnimationFrame call
+        plane.uniforms.time.value++; // update our time uniform value
+    });
 }
 </code>
 </pre>
