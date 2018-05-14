@@ -325,6 +325,102 @@ uniform sampler2D uLastSlide    // bound to my-image-3.jpg
 </code>
 </pre>
 						</div>
+
+						<div id="videos-textures" class="text-section inner-section">
+							<h2>Using videos as textures</h2>
+							<p>
+								Yes, videos as textures are supported ! However there are a few downsides you need to know.<br />
+								First, the videos will <strong>always fit the plane</strong> : your plane's size ratio would have to be the same as your videos so they won't appear distorted (you can handle that with CSS).<br />
+								<strong>We can't autoplay videos without a user gesture on most mobile devices</strong>. Unless you don't care about mobile users, you will have to start the videos playback after a user interaction like a click event.<br />
+								Besides that, videos are really easy to use (and can be mixed with images as well). Let's see how we can handle them :
+							</p>
+							<h3>HTML</h3>
+							<p>
+								<pre>
+<code>
+&lt;!-- div used to create our plane --&gt;
+&lt;div class="plane"&gt;
+
+    &lt;!-- video that will be used as a texture by our plane --&gt;
+    &lt;video src="path/to/my-video.mp4"&gt;&lt;/video&gt;
+
+&lt;/div&gt;
+</code>
+</pre>
+							</p>
+							<p>
+								Like with images, you can use a data-sampler attribute to set a uniform sampler name. You can use one or more videos, or mixed them with images if you want :
+							</p>
+							<p>
+								<pre>
+<code>
+&lt;!-- div used to create our plane --&gt;
+&lt;div class="plane"&gt;
+
+    &lt;!-- elements that will be used as textures by our plane --&gt;
+    &lt;img src="path/to/displacement.jpg" data-sampler="displacement" /&gt;
+    &lt;video src="path/to/my-video-1.mp4" data-sampler="firstVideo"&gt;&lt;/video&gt;
+    &lt;video src="path/to/my-video-2.mp4" data-sampler="secondVideo"&gt;&lt;/video&gt;
+
+&lt;/div&gt;
+</code>
+</pre>
+							</p>
+							<h3>Javascript</h3>
+							<p>
+								There's only one change inside our javascript : we need to tell our plane when to start playing the videos. We've got a playVideos() method that we will put inside an event listener in our onReady() method :
+							</p>
+							<p>
+								<pre>
+<code>
+window.onload = function() {
+    // get our canvas wrapper
+    var canvasContainer = document.getElementById("canvas");
+
+    // set up our WebGL context and append the canvas to our wrapper
+    var webGLCurtain = new Curtains("canvas");
+
+    // get our plane element
+    var planeElement = document.getElementsByClassName("plane")[0];
+
+    // set our initial parameters (basic uniforms)
+    var params = {
+        vertexShaderID: "plane-vs", // our vertex shader ID
+        fragmentShaderID: "plane-fs", // our framgent shader ID
+        uniforms: {
+            time: {
+                name: "uTime", // uniform name that will be passed to our shaders
+                type: "1f", // this means our uniform is a float
+                value: 0,
+            },
+        }
+    }
+
+    // create our plane mesh
+    var plane = webGLCurtain.addPlane(planeElement, params);
+
+    plane.onReady(function() {
+
+        // set an event listener to start our playback
+        document.getElementbyId("start-playing").addEventListener("click", function() {
+            plane.playVideos();
+        });
+
+    }).onRender(function() {
+
+        // use the onRender method of our plane fired at each requestAnimationFrame call
+        plane.uniforms.time.value++; // update our time uniform value
+    });
+
+}
+</code>
+</pre>
+							</p>
+							<p>
+								And that's it. Check the video examples (and source codes) if you want to see what's possible.
+							</p>
+						</div>
+
 						<div id="performance-tips" class="text-section inner-section">
 							<h2>Performance tips</h2>
 							<ul>
@@ -332,10 +428,10 @@ uniform sampler2D uLastSlide    // bound to my-image-3.jpg
 									Be careful with each plane definition. A lot of vertices implies a big impact on performance. If you plan to use more than one plane, try to reduce the number of vertices.
 								</li>
 								<li>
-									Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size.
+									Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size. It goes the same for videos of course : try to keep them as light as possible.
 								</li>
 								<li>
-							        Try to use as less javascript as possible in the onRender() planes methods as this get executed at each draw call. Try not to use too much uniforms as they are updated at every draw call as well.
+							        Try to use as less javascript as possible in the onRender() planes methods as this get executed at each draw call. Try not to use too many uniforms as they are updated at every draw call as well.
 							    </li>
 								<li>
 									If you use multiple planes with multiple textures, you should set the dimensions of your plane to fit the aspect ratio of your images in CSS (you could use the padding-bottom hack, see the <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">multiple planes</a> example HTML & CSS) and set the imageCover plane property to false when adding it.
@@ -347,13 +443,19 @@ uniform sampler2D uLastSlide    // bound to my-image-3.jpg
 							<p>
 								Check their source code :
 							</p>
+							<h3>Images</h3>
 							<p>
-								<a href="examples/vertex-coords-helper/index.html" title="Simple plane" target="_blank">Vertex coordinates helper</a><br />
+								<a href="examples/vertex-coords-helper/index.html" title="Vertex coordinates helper" target="_blank">Vertex coordinates helper</a><br />
 								<a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
 								<a href="examples/multiple-textures/index.html" title="Multiple textures" target="_blank">Multiple textures with a displacement shader</a><br />
 								<a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
 								<a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
 								<a href="examples/ajax-navigation/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation</a>
+							</p>
+							<h3>Videos</h3>
+							<p>
+								<a href="examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a><br />
+								<a href="examples/multiple-video-textures/index.html" title="Multiple video textures" target="_blank">Multiple video textures with a displacement shader</a><br />
 							</p>
 						</div>
 

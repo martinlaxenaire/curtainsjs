@@ -1,0 +1,122 @@
+@media screen {
+
+    html, body {
+        min-height: 100%;
+    }
+
+    body {
+        margin: 0;
+        font-size: 18px;
+        font-family: 'PT Sans', Verdana, sans-serif;
+        background: #ffffff;
+        line-height: 1.4;
+
+        overflow: hidden;
+    }
+
+    .flex-wrapper {
+        display: -webkit-box;
+        display: -moz-box;
+        display: -ms-flexbox;
+        display: flexbox;
+        display: -moz-flex;
+        display: -o-flex;
+        display: -webkit-flex;
+        display: -ms-flex;
+        display: flex;
+        -moz-flex-wrap: wrap;
+        -ms-flex-wrap: wrap;
+        -o-flex-wrap: wrap;
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+    }
+
+    #page-wrap {
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /*** canvas ***/
+
+    #canvas {
+        height: 100vh;
+        width: 100vw;
+
+        opacity: 0;
+        transition: opacity 0.5s ease-in;
+    }
+
+    .video-started #canvas {
+        opacity: 1;
+    }
+
+    .curtain-wrapper {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 15;
+    }
+
+    .curtain {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+    .curtain img, .curtain video {
+        display: none;
+    }
+
+
+    #enter-site-wrapper {
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 30;
+
+        opacity: 0;
+        transition: opacity 0.5s ease-in;
+    }
+
+    .curtains-ready #enter-site-wrapper {
+        opacity: 1;
+    }
+
+    .curtains-ready.video-started #enter-site-wrapper {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    #enter-site {
+        padding: 20px;
+        color: white;
+        background: #ee6557;
+        max-width: 200px;
+        text-align: center;
+        cursor: pointer;
+    }
+
+}
+
+@media screen and (max-aspect-ratio: 1920/1080) {
+    .curtain-wrapper {
+        height: calc(100vh * 0.8);
+        width: calc(177vh * 0.8);
+    }
+}
+@media screen and (min-aspect-ratio: 1920/1080) {
+    .curtain-wrapper {
+        width: calc(100vw * 0.8);
+        height: calc(56.25vw * 0.8);
+    }
+}

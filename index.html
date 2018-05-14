@@ -61,7 +61,7 @@
 
 				<section id="intro" class="flex-wrapper">
 					<h1>curtains.js</h1>
-					<h2>easy WebGL tool to animate images</h2>
+					<h2>easy WebGL tool to animate images and videos</h2>
 
 					<div class="curtain" data-vs-id="intro-vs" data-fs-id="intro-fs">
 						<img data-sampler="curtainSampler" src="images/intro-background.jpg" />
@@ -76,7 +76,7 @@
 								Shaders are the next front-end web developpment big thing, with the ability to create very powerful 3D interactions and animations. A lot of very good javascript libraries already handle WebGL but with most of them it's kind of a headache to position your meshes relative to the DOM elements of your web page.
 							</p>
 							<p>
-								curtains.js was created with just that issue in mind. It is a small vanilla WebGL javascript library that converts HTML elements containing images into 3D WebGL textured planes, allowing you to animate them via shaders.<br />
+								curtains.js was created with just that issue in mind. It is a small vanilla WebGL javascript library that converts HTML elements containing images and videos into 3D WebGL textured planes, allowing you to animate them via shaders.<br />
 								You can define each plane size and position via CSS, which makes it super easy to add WebGL responsive planes all over your pages.
 							</p>
 						</div>
@@ -84,19 +84,25 @@
 						<div class="text-section">
 							<h2>Download</h2>
 							<p>
-								<a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v1.0">curtains.js v1.1 (52Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v1.0">curtains.min.js v1.1 (20Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+								<a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v1.2">curtains.js v1.2 (60Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v1.2">curtains.min.js v1.2 (24Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
 							</p>
 						</div>
 
 						<div class="text-section">
 							<h2>Examples</h2>
+							<h3>Images</h3>
 							<p>
-								<a href="examples/vertex-coords-helper/index.html" title="Simple plane" target="_blank">Vertex coordinates helper</a><br />
+								<a href="examples/vertex-coords-helper/index.html" title="Vertex coordinates helper" target="_blank">Vertex coordinates helper</a><br />
 								<a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
 								<a href="examples/multiple-textures/index.html" title="Multiple textures" target="_blank">Multiple textures with a displacement shader</a><br />
 								<a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
 								<a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
 								<a href="examples/ajax-navigation/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation</a>
+							</p>
+							<h3>Videos</h3>
+							<p>
+								<a href="examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a><br />
+								<a href="examples/multiple-video-textures/index.html" title="Multiple video textures" target="_blank">Multiple video textures with a displacement shader</a><br />
 							</p>
 						</div>
 
@@ -112,6 +118,18 @@
 
 						<div class="text-section">
 							<h2>Changelog</h2>
+							<h3>Version 1.2</h3>
+							<ul>
+								<li>
+									Added support for videos as textures.
+								</li>
+								<li>
+									Sort planes by their vertices length in order to avoid redundant buffer binding calls during draw loop.
+								</li>
+								<li>
+							        Refactored and cleaned code.
+							    </li>
+							</ul>
 							<h3>Version 1.1</h3>
 							<ul>
 								<li>
@@ -130,10 +148,7 @@
 									Tests, tests and more tests.
 								</li>
 								<li>
-									Implement videos as textures.
-								</li>
-								<li>
-									Plane removal via a removePlane method on the Curtains object.
+									Improve performance if possible.
 								</li>
 								<li>
 									...
@@ -149,6 +164,9 @@
 							</p>
 							<p>
 								All images used in the examples were taken by <a href="https://marionbornaz.com/" title="Marion Bornaz" target="_blank">Marion Bornaz</a> during the <a href="https://www.miragefestival.com/" title="Mirage Festival" target="_blank">Mirage Festival</a>.
+							</p>
+							<p>
+								All examples video footages were shot by <a href="http://analogueprod.com/" title="Analogue Production" target="_blank">Analogue Production</a>.
 							</p>
 							<p>
 								Many thanks to <a href="https://webglfundamentals.org/" title="webglfundamentals.org" target="_blank">webglfundamentals.org</a> tutorials which helped me a lot.

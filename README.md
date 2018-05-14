@@ -3,7 +3,7 @@
     Shaders are the next front-end web developpment big thing, with the ability to create very powerful 3D interactions and animations. A lot of very good javascript libraries already handle WebGL but with most of them it's kind of a headache to position your meshes relative to the DOM elements of your web page.
 </p>
 <p>
-    curtains.js was created with just that issue in mind. It is a small vanilla WebGL javascript library that converts HTML elements containing images into 3D WebGL textured planes, allowing you to animate them via shaders.<br />
+    curtains.js was created with just that issue in mind. It is a small vanilla WebGL javascript library that converts HTML elements containing images and videos into 3D WebGL textured planes, allowing you to animate them via shaders.<br />
     You can define each plane size and position via CSS, which makes it super easy to add WebGL responsive planes all over your pages.
 </p>
 <h2>Knowledge and technical requirements</h2>
@@ -14,13 +14,19 @@
     If you've never heard about shaders, you may want to learn a bit more about them on <a href="https://thebookofshaders.com/" title="The Book of Shaders" >The Book of Shaders</a> for example. You will have to understand what are the vertex and fragment shaders, the use of uniforms as well as the GLSL syntax basics.
 </p>
 <h2>Examples</h2>
+<h3>Images</h3>
 <p>
-    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/vertex-coords-helper/index.html" title="Simple plane" target="_blank">Vertex coordinates helper</a><br />
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/vertex-coords-helper/index.html" title="Vertex coordinates helper" target="_blank">Vertex coordinates helper</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-textures/index.html" title="Multiple textures" target="_blank">Multiple textures with a displacement shader</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/ajax-navigation/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation</a>
+</p>
+<h3>Video</h3>
+<p>
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a><br />
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-video-textures/index.html" title="Multiple video textures" target="_blank">Multiple video textures with a displacement shader</a>
 </p>
 <h2>Basic setup example</h2>
 <p>
@@ -234,7 +240,86 @@ uniform sampler2D uSlide2       // bound to my-image-2.jpg
 uniform sampler2D uLastSlide    // bound to my-image-3.jpg
 </code>
 </pre>
-</div>
+<h2>Using videos as textures</h2>
+<p>
+    Yes, videos as textures are supported ! However there are a few downsides you need to know.<br />
+    First, the videos will <strong>always fit the plane</strong> : your plane's size ratio would have to be the same as your videos so they won't appear distorted (you can handle that with CSS).<br />
+    <strong>We can't autoplay videos without a user gesture on most mobile devices</strong>. Unless you don't care about mobile users, you will have to start the videos playback after a user interaction like a click event.<br />
+    Besides that, videos are really easy to use (and can be mixed with images as well). Let's see how we can handle them :
+</p>
+<h3>HTML</h3>
+<p>
+    <pre>
+<code>
+&lt;!-- div used to create our plane --&gt;
+&lt;div class="plane"&gt;
+    &lt;!-- video that will be used as a texture by our plane --&gt;
+    &lt;video src="path/to/my-video.mp4"&gt;&lt;/video&gt;
+&lt;/div&gt;
+</code>
+</pre>
+</p>
+<p>
+    Like with images, you can use a data-sampler attribute to set a uniform sampler name. You can use one or more videos, or mixed them with images if you want :
+</p>
+<p>
+    <pre>
+<code>
+&lt;!-- div used to create our plane --&gt;
+&lt;div class="plane"&gt;
+    &lt;!-- elements that will be used as textures by our plane --&gt;
+    &lt;img src="path/to/displacement.jpg" data-sampler="displacement" /&gt;
+    &lt;video src="path/to/my-video-1.mp4" data-sampler="firstVideo"&gt;&lt;/video&gt;
+    &lt;video src="path/to/my-video-2.mp4" data-sampler="secondVideo"&gt;&lt;/video&gt;
+&lt;/div&gt;
+</code>
+</pre>
+</p>
+<h3>Javascript</h3>
+<p>
+    There's only one change inside our javascript : we need to tell our plane when to start playing the videos. We've got a playVideos() method that we will put inside an event listener in our onReady() method :
+</p>
+<p>
+        <pre>
+<code>
+window.onload = function() {
+    // get our canvas wrapper
+    var canvasContainer = document.getElementById("canvas");
+    // set up our WebGL context and append the canvas to our wrapper
+    var webGLCurtain = new Curtains("canvas");
+    // get our plane element
+    var planeElement = document.getElementsByClassName("plane")[0];
+    // set our initial parameters (basic uniforms)
+    var params = {
+        vertexShaderID: "plane-vs", // our vertex shader ID
+        fragmentShaderID: "plane-fs", // our framgent shader ID
+        uniforms: {
+            time: {
+                name: "uTime", // uniform name that will be passed to our shaders
+                type: "1f", // this means our uniform is a float
+                value: 0,
+            },
+        }
+    }
+    // create our plane mesh
+    var plane = webGLCurtain.addPlane(planeElement, params);
+    plane.onReady(function() {
+        // set an event listener to start our playback
+        document.getElementbyId("start-playing").addEventListener("click", function() {
+            plane.playVideos();
+        });
+        }).onRender(function() {
+            // use the onRender method of our plane fired at each requestAnimationFrame call
+            plane.uniforms.time.value++; // update our time uniform value
+        });
+}
+</code>
+</pre>
+</p>
+<p>
+    And that's it. Check the video examples (and source codes) if you want to see what's possible.
+</p>
+
 <h2>Documentation</h2>
 <h3>Curtains object</h3>
 <h4>Instanciate</h4>
@@ -336,6 +421,15 @@ var params = {
     </li>
     <li>
         <p>
+            <strong>loadVideos</strong>(videoElements) :<br />
+            <em>videoElements</em> (HTML video elements) : a collection of HTML video elements to load into your plane.
+        </p>
+        <p>
+            This function is automatically called internally on a new Plane instanciation. It works exactly the same as the loadImages() method.
+        </p>
+    </li>
+    <li>
+        <p>
             <strong>onLoading</strong>() :
         </p>
         <p>
@@ -356,6 +450,14 @@ var params = {
         </p>
         <p>
             This function will be triggered at each requestAnimationFrame call. Useful to update a time uniform, change plane rotation, scale, etc.
+        </p>
+    </li>
+    <li>
+        <p>
+            <strong>playVideos</strong>() :<br />
+        </p>
+        <p>
+            This function will automatically start all of your plane videos playback. If you are not calling it after a user action it might not work on mobile.
         </p>
     </li>
     <li>
@@ -425,16 +527,28 @@ var params = {
         Be careful with each plane definition. A lot of vertices implies a big impact on performance. If you plan to use more than one plane, try to reduce the number of vertices.
     </li>
     <li>
-        Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size.
+        Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size. It goes the same for videos of course : try to keep them as light as possible.
     </li>
     <li>
-        Try to use as less javascript as possible in the onRender() planes methods as this get executed at each draw call. Try not to use too much uniforms as they are updated at every draw call as well.
+        Try to use as less javascript as possible in the onRender() planes methods as this get executed at each draw call. Try not to use too many uniforms as they are updated at every draw call as well.
     </li>
     <li>
         If you use multiple planes with multiple textures, you should set the dimensions of your plane to fit the aspect ratio of your images in CSS (you could use the padding-bottom hack, see the <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">multiple planes</a> example HTML & CSS) and set the imageCover plane property to false when adding it.
     </li>
 </ul>
 <h2>Changelog</h2>
+<h3>Version 1.2</h3>
+<ul>
+    <li>
+        Added support for videos as textures.
+    </li>
+    <li>
+        Sort planes by their vertices length in order to avoid redundant buffer binding calls during draw loop.
+    </li>
+    <li>
+        Refactored and cleaned code.
+    </li>
+</ul>
 <h3>Version 1.1</h3>
 <ul>
     <li>
@@ -450,6 +564,9 @@ var params = {
 </p>
 <p>
     All images used in the examples were taken by <a href="https://marionbornaz.com/" title="Marion Bornaz" target="_blank">Marion Bornaz</a> during the <a href="https://www.miragefestival.com/" title="Mirage Festival" target="_blank">Mirage Festival</a>.
+</p>
+<p>
+    All examples video footages were shot by <a href="http://analogueprod.com/" title="Analogue Production" target="_blank">Analogue Production</a>.
 </p>
 <p>
     Many thanks to <a href="https://webglfundamentals.org/" title="webglfundamentals.org" target="_blank">webglfundamentals.org</a> tutorials which helped me a lot.

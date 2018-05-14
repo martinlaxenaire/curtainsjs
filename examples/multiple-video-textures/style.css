@@ -1,0 +1,153 @@
+@media screen {
+
+    html, body {
+        min-height: 100%;
+    }
+
+    body {
+        margin: 0;
+        font-size: 18px;
+        font-family: 'PT Sans', Verdana, sans-serif;
+        background: #ffffff;
+        line-height: 1.4;
+
+        overflow: hidden;
+    }
+
+    /*** layout ***/
+
+    .flex-wrapper {
+        display: -webkit-box;
+        display: -moz-box;
+        display: -ms-flexbox;
+        display: flexbox;
+        display: -moz-flex;
+        display: -o-flex;
+        display: -webkit-flex;
+        display: -ms-flex;
+        display: flex;
+        -moz-flex-wrap: wrap;
+        -ms-flex-wrap: wrap;
+        -o-flex-wrap: wrap;
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+    }
+
+    #page-wrap {
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /*** canvas ***/
+
+    #canvas {
+        height: 100vh;
+        width: 100vw;
+
+        z-index: 10;
+
+        opacity: 0;
+        transition: opacity 0.5s ease-in;
+    }
+
+    .video-started #canvas {
+        opacity: 1;
+    }
+
+    .multi-textures-wrapper {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 15;
+    }
+
+    .multi-textures {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+
+
+        cursor: pointer;
+        font-size: 3em;
+        color: white;
+
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+
+        opacity: 0;
+        transition: opacity 0.5s ease-in;
+    }
+
+    .video-started .multi-textures {
+        opacity: 1;
+    }
+
+    .multi-textures img, .multi-textures video {
+        display: none;
+    }
+
+
+    #enter-site-wrapper {
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 30;
+
+        opacity: 0;
+        transition: opacity 0.5s ease-in;
+    }
+
+    .curtains-ready #enter-site-wrapper {
+        opacity: 1;
+    }
+
+    .curtains-ready.video-started #enter-site-wrapper {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    #enter-site {
+        padding: 20px;
+        color: white;
+        background: #ee6557;
+        max-width: 200px;
+        text-align: center;
+        cursor: pointer;
+    }
+
+}
+
+
+@media screen and (max-aspect-ratio: 1920/1080) {
+    .multi-textures-wrapper {
+        height: 100vh;
+        width: 177vh;
+    }
+}
+
+@media screen and (min-aspect-ratio: 1920/1080) {
+    .multi-textures-wrapper {
+        width: 100vw;
+        height: 56.25vw;
+    }
+}
+
+
+@media screen and (max-width: 1000px) {
+
+    .multi-textures {
+        font-size: 2em;
+    }
+
+}

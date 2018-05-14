@@ -186,6 +186,7 @@
         margin: 0;
         font-family: 'Abril Fatface', Verdana, sans-serif;
         font-weight: normal;
+        padding: 0 20px;
     }
 
     #intro h2 {
@@ -195,6 +196,8 @@
         z-index: 20;
         margin: 0;
         font-weight: normal;
+        padding: 0 20px;
+        text-align: center;
     }
 
     /*** content ***/
@@ -311,6 +314,10 @@
         right: 10px;
         bottom: 10px;
         left: 10px;
+    }
+
+    #intro h1 {
+        font-size: 2em;
     }
 
 }

@@ -175,6 +175,16 @@ var params = {
 
 								<li>
 									<p>
+										<strong>loadVideos</strong>(videoElements) :<br />
+										<em>videoElements</em> (HTML video elements) : a collection of HTML video elements to load into your plane.
+									</p>
+									<p>
+										This function is automatically called internally on a new Plane instanciation. It works exactly the same as the loadImages() method.
+									</p>
+								</li>
+
+								<li>
+									<p>
 										<strong>onLoading</strong>() :
 									</p>
 									<p>
@@ -195,6 +205,15 @@ var params = {
 									</p>
 									<p>
 										This function will be triggered at each requestAnimationFrame call. Useful to update a time uniform, change plane rotation, scale, etc.
+									</p>
+								</li>
+
+								<li>
+									<p>
+										<strong>playVideos</strong>() :<br />
+									</p>
+									<p>
+										This function will automatically start all of your plane videos playback. If you are not calling it after a user action it might not work on mobile.
 									</p>
 								</li>
 
