@@ -322,7 +322,7 @@ Curtains.prototype._readyToDraw = function() {
     this.glContext.blendFunc(this.glContext.SRC_ALPHA, this.glContext.ONE_MINUS_SRC_ALPHA);
     this.glContext.enable(this.glContext.BLEND);
 
-    console.log("curtains.js - v1.0");
+    console.log("curtains.js - v1.2");
 
     var self = this;
     function animatePlanes() {
