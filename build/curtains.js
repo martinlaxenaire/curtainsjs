@@ -501,7 +501,9 @@ function Plane(curtainWrapper, plane, params) {
     widthSegments = Math.floor(params.widthSegments) || 1; // 1 is default definition
     heightSegments = Math.floor(params.heightSegments) || 1;
 
-    this.wrapper._stackPlane(widthSegments * heightSegments);
+    // we need to sort planes by their definitions : widthSegments * heightSegments
+    // but we have to keep in mind that 10*15 and 15*10 are not the same vertices definion, so we add widthSegments to differenciate them
+    this.wrapper._stackPlane(widthSegments * heightSegments + widthSegments);
 
      return this;
 }
