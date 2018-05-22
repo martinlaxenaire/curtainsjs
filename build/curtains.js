@@ -1047,6 +1047,27 @@ Plane.prototype._setUniforms = function(uniforms) {
                 // set our uniform location
                 self.uniforms[objectKey].location = self.wrapper.glContext.getUniformLocation(self.program, uniform.name);
 
+                if(!uniform.type) {
+                    if(Array.isArray(uniform.value)) {
+                        if(uniform.value.length >= 4) {
+                            uniform.type = "4f";
+                            console.warn("No uniform type declared for " + uniform.name + ", applied a 4f (array of 4 floats) uniform type");
+                        }
+                        if(uniform.value.length == 3) {
+                            uniform.type = "3f";
+                            console.warn("No uniform type declared for " + uniform.name + ", applied a 3f (array of 3 floats) uniform type");
+                        }
+                        if(uniform.value.length == 2) {
+                            uniform.type = "2f";
+                            console.warn("No uniform type declared for " + uniform.name + ", applied a 2f (array of 2 floats) uniform type");
+                        }
+                    }
+                    else {
+                        uniform.type = "1f";
+                        console.warn("No uniform type declared for " + uniform.name + ", applied a 1f (float) uniform type");
+                    }
+                }
+
                 // set the uniforms
                 self._handleUniformSetting(uniform.type, self.uniforms[objectKey].location, uniform.value);
             }

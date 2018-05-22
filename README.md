@@ -362,10 +362,10 @@ var curtains = new Curtains("canvas"); // "canvas" is the ID of our HTML element
 <h4>Properties</h4>
 <ul>
     <li>
-        <strong>vertexShaderID</strong> (string) : the vertex shader ID. If ommited, will look for a data attribute data-vs-id on the plane HTML element. Will throw an error if nothing specified.
+        <strong>vertexShaderID</strong> (string) : the vertex shader ID. If ommited, will look for a data attribute data-vs-id on the plane HTML element. Will use a default vertex shader and throw a warning if nothing specified.
     </li>
     <li>
-        <strong>fragmentShaderID</strong> (string) : the fragment shader ID. If ommited, will look for a data attribute data-fs-id on the plane HTML element. Will throw an error if nothing specified.
+        <strong>fragmentShaderID</strong> (string) : the fragment shader ID. If ommited, will look for a data attribute data-fs-id on the plane HTML element. Will use a default fragment shader that draws only black pixels and throw a warning if nothing specified.
     </li>
     <li>
         <strong>widthSegments</strong> (integer, optionnal) : plane definition along the X axis (1 by default).
