@@ -428,6 +428,12 @@ function Plane(curtainWrapper, plane, params) {
         y: 1
     }
 
+    this.translation = {
+        x: 0,
+        y: 0,
+        z: 0
+    }
+
     this.rotation = {
         x: 0,
         y: 0,
@@ -1382,7 +1388,7 @@ Plane.prototype._applyCSSPositions = function() {
     };
 
     // set the translation
-    this.setTranslation(relativePosition.x, relativePosition.y, 0);
+    this.setTranslation(relativePosition.x, relativePosition.y, this.translation.z);
 }
 
 
