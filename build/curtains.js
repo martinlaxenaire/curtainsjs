@@ -451,26 +451,30 @@ function Plane(curtainWrapper, plane, params) {
 
     var vsIdHTML, fsIdHTML;
 
-    if(!vsId || !document.getElementById(vsId)) {
-        console.warn("No vertex shader provided, will use a default one");
-        vsIdHTML = "#ifdef GL_ES\nprecision mediump float;\n#endif\nattribute vec3 aVertexPosition;\nattribute vec2 aTextureCoord;\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nvarying vec3 vVertexPosition;\nvarying vec2 vTextureCoord;\nvoid main() {vTextureCoord = aTextureCoord;vVertexPosition = aVertexPosition;gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);}";
-    }
-    else {
-        vsIdHTML = document.getElementById(vsId).innerHTML;
+    if(!params.vertexShader) {
+        if(!vsId || !document.getElementById(vsId)) {
+            console.warn("No vertex shader provided, will use a default one");
+            vsIdHTML = "#ifdef GL_ES\nprecision mediump float;\n#endif\nattribute vec3 aVertexPosition;\nattribute vec2 aTextureCoord;\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nvarying vec3 vVertexPosition;\nvarying vec2 vTextureCoord;\nvoid main() {vTextureCoord = aTextureCoord;vVertexPosition = aVertexPosition;gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);}";
+        }
+        else {
+            vsIdHTML = document.getElementById(vsId).innerHTML;
+        }
     }
 
-    if(!fsId || !document.getElementById(fsId)) {
-        console.warn("No fragment shader provided, will use a default one");
-        fsIdHTML = "#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec3 vVertexPosition;\nvarying vec2 vTextureCoord;\nvoid main( void ) {gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);}";
-    }
-    else {
-        fsIdHTML = document.getElementById(fsId).innerHTML;
+    if(!params.fragmentShader) {
+        if(!fsId || !document.getElementById(fsId)) {
+            console.warn("No fragment shader provided, will use a default one");
+            fsIdHTML = "#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec3 vVertexPosition;\nvarying vec2 vTextureCoord;\nvoid main( void ) {gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);}";
+        }
+        else {
+            fsIdHTML = document.getElementById(fsId).innerHTML;
+        }
     }
 
     this.shaders = {};
 
-    this.shaders.vertexShaderCode = vsIdHTML;
-    this.shaders.fragmentShaderCode = fsIdHTML;
+    this.shaders.vertexShaderCode = params.vertexShader || vsIdHTML;
+    this.shaders.fragmentShaderCode = params.fragmentShader || fsIdHTML;
 
     // set up shaders, program and attributes
     this._setupPlane();
@@ -1775,7 +1779,7 @@ Plane.prototype._createTextures = function(textureType) {
     this[textureType + "sLoaded"] = true;
 
     // when everything is loaded set the plane definition (ie vertices & uvs)
-    if(this.imagesLoaded && this.videosLoaded) {
+    if(this.imagesLoaded && this.videosLoaded && this.wrapper.glContext.getProgramParameter(this.program, this.wrapper.glContext.LINK_STATUS)) {
         this._setPlaneDefinition(this.definition.width, this.definition.height);
     }
 }
