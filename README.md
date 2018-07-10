@@ -21,7 +21,8 @@
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-textures/index.html" title="Multiple textures" target="_blank">Multiple textures with a displacement shader</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
-    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/ajax-navigation/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation</a>
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/ajax-navigation/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation</a><br />
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/canvas-height-performance/index.html" title="Canvas size, performance and perspective" target="_blank">Canvas size, performance and perspective</a>
 </p>
 <h3>Video</h3>
 <p>
@@ -527,7 +528,18 @@ var params = {
         </p>
     </li>
 </ul>
-<h2>Performance tips</h2>
+<h2>Canvas height, perspective and performance</h2>
+<p>
+    The canvas size will directly impact the global perspective and performance.
+</p>
+<p>
+    The perspective is calculated based on each plane position inside the canvas as well as the canvas width and height. The center of the field of view will be located at the center of your canvas, which means that with tall or wide canvas you might end with exagerated perspectives.<br />
+    Also keep in mind that a wide or tall canvas will pretty much impact performance (thanks to <a href="https://github.com/ColinPeyrat" title="Colin Peyrat on GitHub" target="_blank">Colin Peyrat</a> for pointing that out).
+</p>
+<p>
+    There's a way to avoid these annoyances: set your canvas to fit the window size instead of the document size, and set the position of each plane based on the scroll inside your render loop. Check the <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/canvas-height-performance/index.html" title="Canvas size, performance and perspective" target="_blank">canvas size, performance and perspective</a> example if you want to see the differences.
+</p>
+<h2>Other performance tips</h2>
 <ul>
     <li>
         Be careful with each plane definition. A lot of vertices implies a big impact on performance. If you plan to use more than one plane, try to reduce the number of vertices.

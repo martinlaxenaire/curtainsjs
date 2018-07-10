@@ -1,0 +1,104 @@
+@media screen {
+
+    html, body {
+        min-height: 100%;
+    }
+
+    body {
+        margin: 0;
+        font-size: 18px;
+        font-family: 'PT Sans', Verdana, sans-serif;
+        background: #ffffff;
+        line-height: 1.4;
+    }
+
+    #page-wrap {
+        position: relative;
+    }
+
+    .wrapper {
+        max-width: calc(100% - 20px);
+        margin: 0 auto;
+    }
+
+    /*** canvas ***/
+
+    #canvas {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 10;
+    }
+
+    .perf-optimised #canvas {
+        position: fixed;
+        bottom: auto;
+        height: 100vh;
+    }
+
+    #header {
+        position: fixed;
+        background: white;
+        z-index: 20;
+        top: 0;
+        right: 0;
+        left: 0;
+
+    }
+
+    #header .wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        align-content: center;
+    }
+
+    #header h1 {
+        font-size: 1.25em;
+        margin: 1em 0;
+    }
+
+    #toggle-perf-optimisation {
+        display: inline-block;
+        margin-left: 1em;
+    }
+
+    #toggle-perf-optimisation span {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    #toggle-perf-optimisation span:hover {
+        text-decoration: none;
+    }
+
+    #canvas-height {
+        font-size: 0.8em;
+        text-decoration: none !important;
+        cursor: auto !important;
+    }
+
+    #planes {
+        overflow: hidden;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+    }
+
+    .planes-loaded #planes {
+        opacity: 1;
+    }
+
+    .plane {
+        width: calc(100% - 20px);
+        max-width: 1300px;
+        margin: 10vh auto;
+        height: 80vh;
+    }
+
+    .plane img {
+        display: none;
+    }
+
+}
