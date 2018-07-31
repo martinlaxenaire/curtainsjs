@@ -1026,6 +1026,16 @@ Plane.prototype._handleUniformSetting = function(uniformType, uniformLocation, u
         glContext.uniform4fv(uniformLocation, uniformValue);
     }
 
+    else if(uniformType == "mat2") {
+        glContext.uniformMatrix2fv(uniformLocation, false, uniformValue)
+    }
+    else if(uniformType == "mat3") {
+        glContext.uniformMatrix3fv(uniformLocation, false, uniformValue)
+    }
+    else if(uniformType == "mat4") {
+        glContext.uniformMatrix4fv(uniformLocation, false, uniformValue)
+    }
+
     else {
         console.warn("This uniform type is not handled : ", uniformType);
     }
@@ -1059,17 +1069,31 @@ Plane.prototype._setUniforms = function(uniforms) {
 
                 if(!uniform.type) {
                     if(Array.isArray(uniform.value)) {
-                        if(uniform.value.length >= 4) {
+                        if(uniform.value.length == 4) {
                             uniform.type = "4f";
                             console.warn("No uniform type declared for " + uniform.name + ", applied a 4f (array of 4 floats) uniform type");
                         }
-                        if(uniform.value.length == 3) {
+                        else if(uniform.value.length == 3) {
                             uniform.type = "3f";
                             console.warn("No uniform type declared for " + uniform.name + ", applied a 3f (array of 3 floats) uniform type");
                         }
-                        if(uniform.value.length == 2) {
+                        else if(uniform.value.length == 2) {
                             uniform.type = "2f";
                             console.warn("No uniform type declared for " + uniform.name + ", applied a 2f (array of 2 floats) uniform type");
+                        }
+                    }
+                    else if(uniform.value.constructor === Float32Array) {
+                        if(uniform.value.length == 16) {
+                            uniform.type = "mat4";
+                            console.warn("No uniform type declared for " + uniform.name + ", applied a mat4 (4x4 matrix array) uniform type");
+                        }
+                        else if(uniform.value.length == 9) {
+                            uniform.type = "mat3";
+                            console.warn("No uniform type declared for " + uniform.name + ", applied a mat3 (3x3 matrix array) uniform type");
+                        }
+                        else  if(uniform.value.length == 4) {
+                            uniform.type = "mat2";
+                            console.warn("No uniform type declared for " + uniform.name + ", applied a mat2 (2x2 matrix array) uniform type");
                         }
                     }
                     else {
