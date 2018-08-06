@@ -78,10 +78,10 @@
     /*** canvas ***/
 
     #canvas {
-        position: absolute;
+        position: fixed;
         top: 0;
         right: 0;
-        bottom: 0;
+        height: 100vh;
         left: 0;
 
         z-index: 10;
@@ -234,6 +234,35 @@
     }
 
 
+    /*** examples ***/
+
+    #showcase {
+        padding-top: 40px;
+    }
+
+    .websites-examples-gallery {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .website-example-item {
+        flex-basis: 50%;
+        overflow: hidden;
+    }
+
+    .website-example-cover {
+        position: relative;
+        width: 100%;
+        height: 0;
+        overflow: hidden;
+        padding-bottom: 56.833%;
+    }
+
+    .website-example-cover img {
+        opacity: 0;
+    }
+
 
 }
 
@@ -318,6 +347,14 @@
 
     #intro h1 {
         font-size: 2em;
+    }
+
+}
+
+@media screen and (max-width: 640px) {
+
+    .website-example-item {
+        flex-basis: 100%;
     }
 
 }

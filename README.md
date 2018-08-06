@@ -593,3 +593,17 @@ var params = {
     Author of this library is <a href="https://www.martin-laxenaire.fr/" title="Martin Laxenaire" target="_blank">Martin Laxenaire</a>, a french creative front-end developper based in Lyon.<br />
     Found a bug ? Have questions ? Do not hesitate to <a href="mailto:martin.laxenaire@gmail.com" title="contact me">email me</a> or send me a tweet : <a href="https://twitter.com/webdesign_ml" target="_blank" title="My twitter">@webdesign_ml</a>.
 </p>
+
+<h2>Showcase</h2>
+
+<p>
+    Here's a list of websites that use curtains.js with their own custom shaders:
+</p>
+<p>
+    <a href="https://nordik.org/" title="Nördik Impakt 2018" target="_blank">
+        Nördik Impakt 2018
+    </a><br />
+    <a href="http://lookbook-olaian.fr/" title="Olaian Lookbook" target="_blank">
+        Olaian Lookbook
+    </a>
+</p>

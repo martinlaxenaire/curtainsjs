@@ -48,13 +48,44 @@ window.onload = function(){
         }
     }
 
+
     var webGLCurtain = new Curtains("canvas");
 
     var planeElements = document.getElementsByClassName("curtain");
+    var examplePlanes = [];
+    var planesInitialOffset = [];
+
+
+    var exampleParams = {
+        vertexShaderID: "simple-shader-vs",
+        fragmentShaderID: "simple-shader-fs",
+        widthSegments: 10,
+        heightSegments: 1,
+        imageCover: false,
+        uniforms: {
+            time: {
+                name: "uTime",
+                type: "1f",
+                value: 0,
+            },
+        },
+    };
+
+
+    for(var i = 0; i < planeElements.length; i++) {
+        if(i > 0) {
+            examplePlanes.push(webGLCurtain.addPlane(planeElements[i], exampleParams));
+
+            handleExamples(i);
+        }
+
+        // store planes top positions
+        planesInitialOffset.push(planeElements[i].getBoundingClientRect().top + window.pageYOffset);
+    }
 
     if(planeElements.length > 0) {
 
-        var planeParams = {
+        var curtainPlaneParams = {
             widthSegments: 50,
             heightSegments: 37,
             //fov: 15,
@@ -83,32 +114,71 @@ window.onload = function(){
             },
         };
 
-        var plane = webGLCurtain.addPlane(planeElements[0], planeParams)
+        var curtainPlane = webGLCurtain.addPlane(planeElements[0], curtainPlaneParams);
 
-        plane.onReady(function() {
+        curtainPlane.onReady(function() {
             planeElements[0].classList.add("curtain-ready");
-            plane.setPerspective(15);
+            curtainPlane.setPerspective(10);
 
             var wrapper = document.getElementById("page-wrap");
 
             wrapper.addEventListener("mousemove", function(e) {
-                handleMovement(e, plane);
+                handleMovement(e, curtainPlane);
             });
 
             wrapper.addEventListener("touchmove", function(e) {
-                handleMovement(e, plane);
+                handleMovement(e, curtainPlane);
             });
 
             window.onresize = function() {
-                plane.uniforms.resolution.value = [plane.htmlElement.offsetWidth, plane.htmlElement.offsetHeight];
+                curtainPlane.uniforms.resolution.value = [curtainPlane.htmlElement.offsetWidth, curtainPlane.htmlElement.offsetHeight];
+
+                for(var i = 0; i < planeElements.length; i++) {
+                    planesInitialOffset[i] = planeElements[i].getBoundingClientRect().top + window.pageYOffset;
+                }
             }
 
         }).onRender(function() {
-            plane.uniforms.mouseTime.value++;
+            curtainPlane.uniforms.mouseTime.value++;
 
-            plane.uniforms.mouseMoveStrength.value = mouseDelta;
+            curtainPlane.uniforms.mouseMoveStrength.value = mouseDelta;
             mouseDelta = Math.max(0, mouseDelta * 0.995);
+
+            curtainPlane.setRelativePosition(curtainPlane.relativeTranslation.x, planesInitialOffset[0] - window.pageYOffset, curtainPlane.relativeTranslation.z);
         });
+
+    }
+
+
+
+    function handleExamples(index) {
+        var plane = examplePlanes[index - 1];
+
+        plane.onReady(function() {
+
+            plane.mouseOver = false;
+
+            planeElements[index].addEventListener("mouseenter", function(e) {
+                plane.mouseOver = true;
+            });
+
+            planeElements[index].addEventListener("mouseleave", function(e) {
+                plane.mouseOver = false;
+            });
+
+        }).onRender(function() {
+            //plane.uniforms.time.value++;
+            //if(index == 2) console.log(plane.uniforms.time.value);
+            if(plane.mouseOver) {
+                plane.uniforms.time.value = Math.min(45, plane.uniforms.time.value + 1);
+            }
+            else {
+                plane.uniforms.time.value = Math.max(0, plane.uniforms.time.value - 1);
+            }
+
+            plane.setRelativePosition(plane.relativeTranslation.x, planesInitialOffset[index] - window.pageYOffset, plane.relativeTranslation.z);
+        });
+
     }
 
 }

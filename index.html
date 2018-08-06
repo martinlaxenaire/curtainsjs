@@ -178,6 +178,37 @@
 							</p>
 						</div>
 
+
+
+						<div id="showcase" class="text-section">
+							<h2>Showcase</h2>
+
+							<p>
+								Here you'll find websites that use curtains.js with their own custom shaders:
+							</p>
+
+							<div class="websites-examples-gallery">
+
+								<a class="website-example-item" href="https://nordik.org/" title="Nördik Impakt 2018" target="_blank">
+									<div class="website-example-cover">
+										<div class="curtain">
+											<img src="images/curtains-js-nordik-impakt.jpg" alt="Nördik Impakt 2018" data-sampler="uExample" />
+										</div>
+									</div>
+								</a>
+
+
+								<a class="website-example-item" href="http://lookbook-olaian.fr/" title="Olaian Lookbook" target="_blank">
+									<div class="website-example-cover">
+										<div class="curtain">
+											<img src="images/curtains-js-olaian-lookbook.jpg" alt="Olaian Lookbook" data-sampler="uExample" />
+										</div>
+									</div>
+								</a>
+
+							</div>
+						</div>
+
 					</div>
 				</section>
 			</div>
@@ -261,6 +292,70 @@
 
 				// handling premultiplied alpha
 				finalColor = vec4(finalColor.rgb * finalColor.a, finalColor.a);
+
+				gl_FragColor = finalColor;
+			}
+        </script>
+
+
+		<script id="simple-shader-vs" type="x-shader/x-vertex">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+
+			// default mandatory variables
+			attribute vec3 aVertexPosition;
+			attribute vec2 aTextureCoord;
+
+			uniform mat4 uMVMatrix;
+    		uniform mat4 uPMatrix;
+
+			// custom variables
+			varying vec3 vVertexPosition;
+			varying vec2 vTextureCoord;
+
+			uniform float uTime;
+
+			void main() {
+				vec3 vertexPosition = aVertexPosition;
+
+				// a float varying from -1.5 to 1.5
+				float waveCoords = ((uTime / 45.0) * 3.5) - 1.75;
+
+				// distance from the waveCoords to the vertex coordinates
+				float distanceToWave = distance(vec2(vertexPosition.x, 0.0), vec2(waveCoords, 0.0));
+
+				//vertexPosition.z = -2.0;
+
+				// nice little wave animation from left to right or right to left depending on the timer
+				vertexPosition.z -= cos(clamp(distanceToWave, 0.0, 0.75) * 3.141592) - cos(0.75 * 3.141592) + (2.0 * sin(3.141592 * uTime / 90.0));
+
+			   	gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+
+			   	// varyings
+			   	vTextureCoord = aTextureCoord;
+			   	vVertexPosition = vertexPosition;
+			}
+        </script>
+        <script id="simple-shader-fs" type="x-shader/x-fragment">
+
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+
+			uniform float uTime;
+
+			varying vec3 vVertexPosition;
+			varying vec2 vTextureCoord;
+
+			uniform sampler2D uExample;
+
+
+			void main( void ) {
+
+				// get our texture coords
+				vec2 textureCoords = vec2(vTextureCoord.x, vTextureCoord.y);
+				vec4 finalColor = texture2D(uExample, textureCoords);
 
 				gl_FragColor = finalColor;
 			}
