@@ -527,6 +527,23 @@ var params = {
             Get the mouse coordinates relative to the plane clip space values. Use it to send to a uniform and interact with your plane. A plane coordinates ranges from (-1, 1) in the top left corner to (1, -1) in the bottom right corner, which means the values along the Y axis are inverted.
         </p>
     </li>
+    <li>
+        <p>
+            <strong>enableDepthTest</strong>(shouldEnableDepthTest) :<br />
+            <em>shouldEnableDepthTest</em> (bool) : enable or disable the depth test for that plane.
+        </p>
+        <p>
+            Switches on/off the depth test for that plane. You might want to disable the depth test if you got transparency issues.
+        </p>
+    </li>
+    <li>
+        <p>
+            <strong>moveToFront</strong>() :<br />
+        </p>
+        <p>
+            Let the plane overlay all other planes. Be careful as it is silently disabling depth test for that plane, you might want to switch it back on later.
+        </p>
+    </li>
 </ul>
 <h2>Canvas height, perspective and performance</h2>
 <p>
@@ -555,6 +572,15 @@ var params = {
     </li>
 </ul>
 <h2>Changelog</h2>
+<h3>Version 1.3</h3>
+<ul>
+    <li>
+        Added the possibility to set/unset depth test for each plane via a enableDepthTest() method. This might be useful to handle transparency problems.
+    </li>
+    <li>
+        Added a plane moveToFront() method so that a plane could overlay all other planes.
+    </li>
+</ul>
 <h3>Version 1.2</h3>
 <ul>
     <li>

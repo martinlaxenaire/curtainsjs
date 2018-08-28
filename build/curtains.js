@@ -225,6 +225,7 @@ Curtains.prototype._stackPlane = function(planeDefinition) {
         var stack = {
             definition: planeDefinition,
             planesIndex: [this.planes.length],
+            isReordering: false,
         }
 
         this.drawStack.push(stack);
@@ -244,6 +245,7 @@ Curtains.prototype._stackPlane = function(planeDefinition) {
             var stack = {
                 definition: planeDefinition,
                 planesIndex: [this.planes.length],
+                isReordering: false,
             }
 
             this.drawStack.push(stack);
@@ -305,6 +307,29 @@ Curtains.prototype._reSize = function() {
 }
 
 
+/***
+Called to set whether the renderer will handle depth test or not
+Depth test is enabled by default
+
+params :
+    @shouldHandleDepth (bool) : if we should enable or disable the depth test
+***/
+Curtains.prototype._handleDepth = function(shouldHandleDepth) {
+    this._isInitialized();
+
+    this._shouldHandleDepth = shouldHandleDepth;
+
+    if(shouldHandleDepth) {
+        // enable depth test
+        this.glContext.enable(this.glContext.DEPTH_TEST);
+    }
+    else {
+        // disable depth test
+        this.glContext.disable(this.glContext.DEPTH_TEST);
+    }
+}
+
+
 /*** DRAW EVERYTHING ***/
 
 /***
@@ -317,12 +342,14 @@ Curtains.prototype._readyToDraw = function() {
     // we are ready to go
     this.container.appendChild(this.glCanvas);
 
-    this.glContext.enable(this.glContext.DEPTH_TEST);
     // allows transparency
     this.glContext.blendFunc(this.glContext.SRC_ALPHA, this.glContext.ONE_MINUS_SRC_ALPHA);
     this.glContext.enable(this.glContext.BLEND);
 
-    console.log("curtains.js - v1.2");
+    // enable depth by default
+    this._handleDepth(true);
+
+    console.log("curtains.js - v1.3");
 
     var self = this;
     function animatePlanes() {
@@ -349,20 +376,34 @@ Curtains.prototype._drawScene = function() {
     this.glContext.clearDepth(1.0);
     //this.glContext.clear(this.glContext.COLOR_BUFFER_BIT | this.glContext.DEPTH_BUFFER_BIT);
 
+
+
     this._reSize();
 
     // loop on our stacked planes
     for(var i = 0; i < this.drawStack.length; i++) {
-        for(var j = 0; j < this.drawStack[i].planesIndex.length; j++) {
-            if(j == 0) {
-                // draw the plane and bind the buffers
-                this.planes[this.drawStack[i].planesIndex[j]]._drawPlane(true);
-            }
-            else {
-                // draw the plane without binding buffers
-                this.planes[this.drawStack[i].planesIndex[j]]._drawPlane(false);
+        if(!this.drawStack[i].isReordering) {
+            for(var j = 0; j < this.drawStack[i].planesIndex.length; j++) {
+
+                // set/unset the depth test if needed
+                if(this.planes[this.drawStack[i].planesIndex[j]].shouldUseDepthTest && !this._shouldHandleDepth) {
+                    this._handleDepth(true);
+                }
+                else if(!this.planes[this.drawStack[i].planesIndex[j]].shouldUseDepthTest && this._shouldHandleDepth) {
+                    this._handleDepth(false);
+                }
+
+                if(j == 0) {
+                    // draw the plane and bind the buffers
+                    this.planes[this.drawStack[i].planesIndex[j]]._drawPlane(true);
+                }
+                else {
+                    // draw the plane without binding buffers
+                    this.planes[this.drawStack[i].planesIndex[j]]._drawPlane(false);
+                }
             }
         }
+
     }
 
 }
@@ -416,6 +457,9 @@ function Plane(curtainWrapper, plane, params) {
 
     // set default fov
     this.fov = params.fov || 75;
+
+    // enable depth test by default
+    this.shouldUseDepthTest = true;
 
     // set our basic initial infos
     this.size = {
@@ -1417,6 +1461,70 @@ Plane.prototype._applyCSSPositions = function() {
 
     // set the translation
     this.setTranslation(relativePosition.x, relativePosition.y, this.translation.z);
+}
+
+
+
+/***
+This function set/unset the depth test for that plane
+
+params :
+    @shouldEnableDepthTest (bool): enable/disable depth test for that plane
+***/
+Plane.prototype.enableDepthTest = function(shouldEnableDepthTest) {
+    this.shouldUseDepthTest = shouldEnableDepthTest;
+}
+
+
+/***
+This function puts the plane at the end of the draw stack, allowing it to overlap any other plane
+***/
+Plane.prototype.moveToFront = function() {
+
+    this.enableDepthTest(false);
+
+    // get the right stack where our planed is stored
+    var definition = this.definition.width * this.definition.height + this.definition.width;
+    var drawStack = this.wrapper.drawStack;
+    var stack;
+    for(var i = 0; i < drawStack.length; i++) {
+        if(drawStack[i].definition == definition) {
+            stack = drawStack[i];
+        }
+    }
+
+    // start the reordering process (useful to prevent drawing while manipulating the stack)
+    stack.isReordering = true;
+
+    // get plane index
+    var index = this.index;
+
+    // no need to reorder if the stack has only one plane
+    if(stack.planesIndex.length > 0) {
+        // loop through the plane's stack, remove its index
+        for(var i = 0; i < stack.planesIndex.length; i++) {
+            if(stack.planesIndex[i] == index) {
+                stack.planesIndex.splice(i, 1);
+            }
+        }
+        // adds the plane index at the end of the stack depending on the depth test
+        stack.planesIndex.push(this.index);
+
+    }
+
+    // now we need to do the same with the draw stacks
+    if(drawStack.length > 0) {
+        for(var i = 0; i < drawStack.length; i++) {
+            if(drawStack[i].definition == definition) {
+                drawStack.splice(i, 1);
+            }
+        }
+        // adds the stack index at the end of the draw stacks
+        drawStack.push(stack);
+    }
+
+    // stack has been reordered
+    stack.isReordering = false;
 }
 
 
