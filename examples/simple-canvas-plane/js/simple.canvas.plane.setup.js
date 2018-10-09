@@ -103,6 +103,10 @@ function initCurtains() {
         // on resize, update the resolution uniform
         window.onresize = function() {
             simplePlane.uniforms.resolution.value = [pixelRatio * planeElements[0].clientWidth, pixelRatio * planeElements[0].clientHeight];
+
+            // resize our canvas
+            simpleCanvas.width = planeElements[0].clientWidth;
+            simpleCanvas.height = planeElements[0].clientHeight;
         }
 
     }).onRender(function() {
