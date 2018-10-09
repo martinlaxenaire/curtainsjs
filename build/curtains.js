@@ -1,7 +1,7 @@
 /***
-    Little WebGL helper to apply images as textures of planes
+    Little WebGL helper to apply images, videos or canvases as textures of planes
     Author: Martin Laxenaire https://www.martin-laxenaire.fr/
-    Version: 1.2
+    Version: 1.4
 
     Compatibility
     PC: Chrome (65.0), Firefox (59.0.2), Microsoft Edge (41)
@@ -55,8 +55,13 @@ Curtains.prototype._init = function() {
     this.glContext = this.glCanvas.getContext("webgl", { alpha: true }) || this.glCanvas.getContext("experimental-webgl");
 
     // set our canvas sizes
-    this.glCanvas.width = this.container.clientWidth;
-    this.glCanvas.height = this.container.clientHeight;
+    this.pixelRatio = window.devicePixelRatio || 1;
+
+    this.glCanvas.style.width  = Math.floor(this.container.clientWidth) + "px";
+    this.glCanvas.style.height = Math.floor(this.container.clientHeight) + "px";
+
+    this.glCanvas.width  = Math.floor(this.container.clientWidth) * this.pixelRatio;
+    this.glCanvas.height = Math.floor(this.container.clientHeight) * this.pixelRatio;
 
     // set our context viewport
     this.glContext.viewport(0, 0, this.glContext.drawingBufferWidth, this.glContext.drawingBufferHeight);
@@ -190,6 +195,12 @@ Curtains.prototype.addPlane = function(planeHtmlElement, params) {
         videosArray.push(plane.htmlElement.getElementsByTagName("video")[j]);
     }
 
+    // load canvases
+    var canvasesArray = [];
+    for(var j = 0; j < plane.htmlElement.getElementsByTagName("canvas").length; j++) {
+        canvasesArray.push(plane.htmlElement.getElementsByTagName("canvas")[j]);
+    }
+
     // load plane images
     if(imagesArray.length > 0) {
         plane.loadImages(imagesArray);
@@ -208,8 +219,17 @@ Curtains.prototype.addPlane = function(planeHtmlElement, params) {
         plane.videosLoaded = true;
     }
 
-    if(imagesArray.length == 0 && videosArray.length == 0) { // there's no images, send a warning
-        console.warn("This plane does not contain any image or video element. You may want to add some later with the loadImages or loadVideos method.");
+    // load plane canvases
+    if(canvasesArray.length > 0) {
+        plane.loadCanvases(canvasesArray);
+    }
+    else {
+        // no need to load any video right now
+        plane.canvasesLoaded = true;
+    }
+
+    if(imagesArray.length == 0 && videosArray.length == 0 && canvasesArray.length == 0) { // there's no images, no videos, no canvas, send a warning
+        console.warn("This plane does not contain any image, video or canvas element. You may want to add some later with the loadImages, loadVideos or loadCanvases method.");
     }
 
     return plane;
@@ -290,10 +310,15 @@ used internally in each requestAnimationFrame call
 ***/
 Curtains.prototype._reSize = function() {
     // if container size has changed
-    if(this.glCanvas.width !== Math.floor(this.container.clientWidth) || this.glCanvas.height !== Math.floor(this.container.clientHeight)) {
+    if(parseInt(this.glCanvas.style.width) !== Math.floor(this.container.clientWidth) || parseInt(this.glCanvas.style.height) !== Math.floor(this.container.clientHeight)) {
 
-        this.glCanvas.width  = Math.floor(this.container.clientWidth);
-        this.glCanvas.height = Math.floor(this.container.clientHeight);
+        this.pixelRatio = window.devicePixelRatio || 1;
+
+        this.glCanvas.style.width  = Math.floor(this.container.clientWidth) + "px";
+        this.glCanvas.style.height = Math.floor(this.container.clientHeight) + "px";
+
+        this.glCanvas.width  = Math.floor(this.container.clientWidth) * this.pixelRatio;
+        this.glCanvas.height = Math.floor(this.container.clientHeight) * this.pixelRatio;
 
         this.glContext.viewport(0, 0, this.glContext.drawingBufferWidth, this.glContext.drawingBufferHeight);
 
@@ -349,7 +374,7 @@ Curtains.prototype._readyToDraw = function() {
     // enable depth by default
     this._handleDepth(true);
 
-    console.log("curtains.js - v1.3");
+    console.log("curtains.js - v1.4");
 
     var self = this;
     function animatePlanes() {
@@ -429,6 +454,7 @@ function Plane(curtainWrapper, plane, params) {
     this.htmlElement = plane;
     this.images = [];
     this.videos = [];
+    this.canvases = [];
     this.textures = [];
 
     this.index = this.wrapper.planes.length;
@@ -463,8 +489,8 @@ function Plane(curtainWrapper, plane, params) {
 
     // set our basic initial infos
     this.size = {
-        width: this.htmlElement.clientWidth || this.wrapper.glCanvas.width,
-        height: this.htmlElement.clientHeight || this.wrapper.glCanvas.height,
+        width: (this.htmlElement.clientWidth * this.wrapper.pixelRatio || this.wrapper.glCanvas.width),
+        height: (this.htmlElement.clientHeight * this.wrapper.pixelRatio || this.wrapper.glCanvas.height),
     }
 
     this.scale = {
@@ -552,8 +578,8 @@ function Plane(curtainWrapper, plane, params) {
 
 
 
-    widthSegments = Math.floor(params.widthSegments) || 1; // 1 is default definition
-    heightSegments = Math.floor(params.heightSegments) || 1;
+    var widthSegments = Math.floor(params.widthSegments) || 1; // 1 is default definition
+    var heightSegments = Math.floor(params.heightSegments) || 1;
 
     // we need to sort planes by their definitions : widthSegments * heightSegments
     // but we have to keep in mind that 10*15 and 15*10 are not the same vertices definion, so we add widthSegments to differenciate them
@@ -860,8 +886,8 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
     widthSegments = Math.floor(widthSegments) || 1; // 1 is default definition
     heightSegments = Math.floor(heightSegments) || 1;
 
-    var planeWidth = this.htmlElement.clientWidth || this.wrapper.glCanvas.width;
-    var planeHeight = this.htmlElement.clientHeight || this.wrapper.glCanvas.height;
+    var planeWidth = (this.htmlElement.clientWidth * this.wrapper.pixelRatio || this.wrapper.glCanvas.width);
+    var planeHeight = (this.htmlElement.clientHeight * this.wrapper.pixelRatio || this.wrapper.glCanvas.height);
 
     // if this our first time we need to create our geometry and material objects
     if(!this.geometry && !this.material) {
@@ -892,8 +918,7 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
         height: 2,
     }
 
-    // we translate our plane from 0 to -this.fov / 2 on the Z axis
-    // this is the value that makes the plane fit our canvas based on our projection matrix
+    // apply our css positions
     if(this.mimicCSS) {
         this._applyCSSPositions();
     }
@@ -1410,8 +1435,8 @@ params :
 ***/
 Plane.prototype._documentToPlaneSpace = function(xPosition, yPosition) {
     var relativePosition = {
-        x: this.clipSpace.x + ((xPosition / this.wrapper.glCanvas.width) * this.clipSpace.width),
-        y: this.clipSpace.y - (yPosition / this.wrapper.glCanvas.height)
+        x: this.clipSpace.x + ((xPosition / (this.wrapper.glCanvas.width / this.wrapper.pixelRatio)) * this.clipSpace.width),
+        y: this.clipSpace.y - (yPosition / (this.wrapper.glCanvas.height / this.wrapper.pixelRatio))
     }
 
     return relativePosition;
@@ -1431,8 +1456,8 @@ Plane.prototype.mouseToPlaneCoords = function(xMousePosition, yMousePosition) {
     var wrapperOffset = this.wrapper.container.getBoundingClientRect();
 
     var mousePosition = {
-        x: ((((xMousePosition - wrapperOffset.left) - (planeOffset.left + window.pageXOffset)) / this.size.width) * 2) - 1,
-        y: 1 - ((((yMousePosition - wrapperOffset.top) - (planeOffset.top + window.pageYOffset)) / this.size.height) * 2)
+        x: ((((xMousePosition - wrapperOffset.left) - (planeOffset.left + window.pageXOffset)) / (this.size.width / this.wrapper.pixelRatio)) * 2) - 1,
+        y: 1 - ((((yMousePosition - wrapperOffset.top) - (planeOffset.top + window.pageYOffset)) / (this.size.height / this.wrapper.pixelRatio)) * 2)
     }
 
     return mousePosition;
@@ -1618,8 +1643,8 @@ Plane.prototype.planeResize = function() {
     this.matrix.pMatrix = this._setPerspectiveMatrix(this.fov, 0.1, this.fov * 2);
 
     // our plane width and height
-    var planeWidth = this.htmlElement.clientWidth;
-    var planeHeight = this.htmlElement.clientHeight;
+    var planeWidth = this.htmlElement.clientWidth * this.wrapper.pixelRatio;
+    var planeHeight = this.htmlElement.clientHeight * this.wrapper.pixelRatio;
 
     // if div is not in the DOM anymore, probably because there's been a ajax call in between
     // we loop through the DOM looking if they are back
@@ -1632,8 +1657,8 @@ Plane.prototype.planeResize = function() {
                 if(potentialPlanes[i].isEqualNode(this.htmlElement)) {
                     this.htmlElement = potentialPlanes[i];
 
-                    planeWidth = this.htmlElement.clientWidth;
-                    planeHeight = this.htmlElement.clientHeight;
+                    planeWidth = this.htmlElement.clientWidth * this.wrapper.pixelRatio;
+                    planeHeight = this.htmlElement.clientHeight * this.wrapper.pixelRatio;
                 }
             }
         }
@@ -1685,7 +1710,7 @@ Plane.prototype.planeResize = function() {
 
 
 
-/*** IMAGES AND VIDEOS LOADING ***/
+/*** IMAGES, VIDEOS AND CANVASES LOADING ***/
 
 /***
 This method handles the image loading process
@@ -1858,6 +1883,51 @@ Plane.prototype.playVideos = function() {
 }
 
 
+
+
+/***
+This method handles the canvas loading process
+uses an interval to check if we have loaded all the canvases
+
+params :
+    @canvasArray (array) : array of html canvas elements
+***/
+Plane.prototype.loadCanvases = function(canvasesArray) {
+    var canvas;
+    var self = this;
+
+    // reset our loading flag
+    this.canvasesLoaded = false;
+
+    for(var i = 0; i < canvasesArray.length; i++) {
+
+        canvas = canvasesArray[i];
+
+        canvas.sampler = canvasesArray[i].getAttribute("data-sampler") || null;
+
+        this.canvases.push(canvas);
+
+        // fire callback during load (useful for a loader)
+        if(this.onPlaneLoadingCallback) {
+
+            this.onPlaneLoadingCallback();
+        }
+    }
+
+    // we need to be sure that we have loaded all the images
+    var waitForVideosInterval = setInterval(function() {
+        if(self.canvases.length == canvasesArray.length) {
+            clearInterval(waitForVideosInterval);
+            // create our canvas textures
+            // the name "canvase" is a bit hacky but is due to its plural form
+            self._createTextures("canvase");
+        }
+    }, 100);
+
+    return this;
+}
+
+
 /*** HANDLING TEXTURES ***/
 
 /***
@@ -1886,7 +1956,7 @@ Plane.prototype._createTextures = function(textureType) {
         glContext.bindTexture(glContext.TEXTURE_2D, texture.glTexture);
 
         // If it's an image, flip its Y axis to match the WebGL texture coordinate space.
-        if(textureType == "image") {
+        if(textureType == "image" || textureType == "canvase") {
             glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, true);
         }
 
@@ -1911,7 +1981,7 @@ Plane.prototype._createTextures = function(textureType) {
     this[textureType + "sLoaded"] = true;
 
     // when everything is loaded set the plane definition (ie vertices & uvs)
-    if(this.imagesLoaded && this.videosLoaded && this.wrapper.glContext.getProgramParameter(this.program, this.wrapper.glContext.LINK_STATUS)) {
+    if(this.imagesLoaded && this.videosLoaded && this.canvasesLoaded && this.wrapper.glContext.getProgramParameter(this.program, this.wrapper.glContext.LINK_STATUS)) {
         this._setPlaneDefinition(this.definition.width, this.definition.height);
     }
 }
@@ -1927,8 +1997,6 @@ params :
 ***/
 Plane.prototype._adjustTextureSize = function(index) {
     this.wrapper._isInitialized();
-
-    var pixelRatio = window.devicePixelRatio || 1;
 
     // we will only resize image textures here because videos textures are created directly in the draw loop
     if(this.textures[index].type == "image") {
@@ -2022,6 +2090,9 @@ Plane.prototype._drawPlane = function(shouldBindBuffers) {
                     // if the video is paused, draw a 1*1 black pixel
                     glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, 1, 1, 0, glContext.RGBA, glContext.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
                 }
+            }
+            else if(this.textures[j].type == "canvase") {
+                glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, this.canvases[this.textures[j].typeIndex]);
             }
         }
 

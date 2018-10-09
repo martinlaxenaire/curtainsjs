@@ -29,6 +29,10 @@
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-video-textures/index.html" title="Multiple video textures" target="_blank">Multiple video textures with a displacement shader</a>
 </p>
+<h3>Canvas</h3>
+<p>
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a><br />
+</p>
 <h2>Basic setup example</h2>
 <p>
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/basic-plane/index.html" title="See it live" target="_blank">See it live</a>
@@ -437,6 +441,15 @@ var params = {
     </li>
     <li>
         <p>
+            <strong>loadCanvases</strong>(canvasElements) :<br />
+            <em>canvasElements</em> (HTML canvas elements) : a collection of HTML canvas elements to load into your plane.
+        </p>
+        <p>
+            This function is automatically called internally on a new Plane instanciation. It works exactly the same as the loadImages() method.
+        </p>
+    </li>
+    <li>
+        <p>
             <strong>onLoading</strong>() :
         </p>
         <p>
@@ -572,6 +585,15 @@ var params = {
     </li>
 </ul>
 <h2>Changelog</h2>
+<h3>Version 1.4</h3>
+<ul>
+    <li>
+        Added support for canvases as textures.
+    </li>
+    <li>
+        Improved pixel ratio handling.
+    </li>
+</ul>
 <h3>Version 1.3</h3>
 <ul>
     <li>
