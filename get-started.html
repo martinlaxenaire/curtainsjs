@@ -75,6 +75,12 @@
 									<a href="#image-uniform-sampler" title="Images uniform sampler names">Images uniform sampler names</a>
 								</li>
 								<li>
+									<a href="#videos-textures" title="Videos as textures">Videos as textures</a>
+								</li>
+								<li>
+									<a href="#canvases-textures" title="Canvas as texture">Canvas as texture</a>
+								</li>
+								<li>
 									<a href="#performance-tips" title="Performance tips">Performance tips</a>
 								</li>
 								<li>
@@ -421,6 +427,93 @@ window.onload = function() {
 							</p>
 						</div>
 
+						<div id="canvases-textures" class="text-section inner-section">
+							<h2>Using canvas as texture</h2>
+							<p>
+								Last but not least, you can use a canvas as a texture. It is once again really easy to use. You just have to insert a canvas tag inside your HTML, or eventually create it in your javascript and load it using the loadCanvases() method.
+							</p>
+							<h3>HTML</h3>
+							<p>
+								<pre>
+<code>
+&lt;!-- div used to create our plane --&gt;
+&lt;div class="plane"&gt;
+
+    &lt;!-- canvas that will be used as a texture by our plane --&gt;
+    &lt;canvas id="canvas-texture"&gt;&lt;/canvas&gt;
+
+&lt;/div&gt;
+</code>
+</pre>
+							</p>
+							<p>
+								You can use multiple canvases and data-sampler attributes as well, like you'd do with images or videos.
+							</p>
+							<h3>Javascript</h3>
+							<p>
+								The javascript code remains almost the same. We just set the size of our canvas, get its context and draw a simple rotating red rectangle inside our animation loop.
+							</p>
+							<p>
+								<pre>
+<code>
+window.onload = function() {
+    // get our canvas wrapper
+    var canvasContainer = document.getElementById("canvas");
+
+    // set up our WebGL context and append the canvas to our wrapper
+    var webGLCurtain = new Curtains("canvas");
+
+    // get our plane element
+    var planeElement = document.getElementsByClassName("plane")[0];
+
+    // set our initial parameters (basic uniforms)
+    var params = {
+        vertexShaderID: "plane-vs", // our vertex shader ID
+        fragmentShaderID: "plane-fs", // our framgent shader ID
+        uniforms: {
+            time: {
+                name: "uTime", // uniform name that will be passed to our shaders
+                type: "1f", // this means our uniform is a float
+                value: 0,
+            },
+        }
+    }
+
+    // create our plane mesh
+    var plane = webGLCurtain.addPlane(planeElement, params);
+
+	// our texture canvas
+    var textureCanvas = document.getElementById("canvas-texture");
+    var textureCanvasContext = textureCanvas.getContext("2d");
+
+	// set the size of our canvas
+    textureCanvas.width = planeElements[0].clientWidth;
+    textureCanvas.height = planeElements[0].clientHeight;
+
+    // use the onRender method of our plane fired at each requestAnimationFrame call
+    plane.onRender(function() {
+        plane.uniforms.time.value++; // update our time uniform value
+
+		// here we will handle our canvas texture animation
+        // clear scene
+        textureCanvasContext.clearRect(0, 0, textureCanvas.width, textureCanvas.height);
+
+        // continuously rotate the canvas
+        textureCanvasContext.translate(textureCanvas.width / 2, textureCanvas.height / 2);
+        textureCanvasContext.rotate(Math.PI / 360);
+        textureCanvasContext.translate(-textureCanvas.width / 2, -textureCanvas.height / 2);
+
+        // draw a red rectangle
+        textureCanvasContext.fillStyle = "#ff0000";
+        textureCanvasContext.fillRect(textureCanvas.width / 2 - textureCanvas.width / 8, textureCanvas.height / 2 - textureCanvas.height / 8, textureCanvas.width / 4, textureCanvas.height / 4);
+    });
+
+}
+</code>
+</pre>
+							</p>
+						</div>
+
 						<div id="performance-tips" class="text-section inner-section">
 							<h2>Canvas height, perspective and performance</h2>
 							<p>
@@ -468,6 +561,10 @@ window.onload = function() {
 							<p>
 								<a href="examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a><br />
 								<a href="examples/multiple-video-textures/index.html" title="Multiple video textures" target="_blank">Multiple video textures with a displacement shader</a><br />
+							</p>
+							<h3>Canvas</h3>
+							<p>
+								<a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a><br />
 							</p>
 						</div>
 
