@@ -233,6 +233,10 @@
         color: white;
     }
 
+    code {
+        display: inline-block;
+    }
+
 
     /*** examples ***/
 

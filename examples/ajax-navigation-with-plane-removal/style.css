@@ -1,0 +1,178 @@
+@media screen {
+
+    html, body {
+        min-height: 100%;
+    }
+
+    body {
+        margin: 0;
+        font-size: 18px;
+        font-family: 'PT Sans', Verdana, sans-serif;
+        background: #ffffff;
+        line-height: 1.4;
+        overflow-y: scroll;
+    }
+
+    /*** layout ***/
+
+    .wrapper {
+        max-width: 1440px;
+        margin: 0 auto;
+    }
+
+    #page-wrap {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        min-height: 100vh;
+    }
+
+    /*** canvas ***/
+
+    #canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+
+        z-index: 10;
+
+        transition: opacity 0.75s ease-in-out;
+    }
+
+    .page-transition #canvas {
+        opacity: 0;
+    }
+
+    /*** navigation ***/
+
+    #navigation {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 40px;
+        position: relative;
+        z-index: 15;
+    }
+
+    #navigation a {
+        margin: 0.5em 1em;
+        padding: 0.25em 0.5em;
+        background: #aaa;
+        color: white;
+        text-decoration: none;
+        text-transform: uppercase;
+    }
+
+    #navigation a:hover {
+        background: #333;
+    }
+
+    #navigation a.active {
+        background: #ee6557;
+    }
+
+    /*** content ***/
+
+    #content {
+        position: relative;
+        z-index: 10;
+
+        transition: opacity 0.75s ease-in-out;
+    }
+
+    .page-transition #content {
+        opacity: 0;
+    }
+
+
+    /*** archive ***/
+
+    #archive {
+        margin: 0 -20px;
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .archive-item {
+        padding: 0 20px;
+        position: relative;
+        flex-basis: 50%;
+        margin-bottom: 40px;
+        box-sizing: border-box;
+    }
+
+    .plane-wrapper {
+        position: relative;
+        overflow: hidden;
+        height: 0;
+        padding-bottom: 66.6%;
+    }
+
+    .plane {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+    .plane img {
+        display: none;
+    }
+
+}
+
+
+
+
+@media screen and (max-width: 1480px) {
+
+    body {
+        font-size: 17px;
+    }
+
+    .wrapper {
+        margin: 0 20px;
+    }
+
+}
+
+@media screen and (max-width: 1280px) {
+
+    body {
+        font-size: 16px;
+    }
+
+}
+
+
+@media screen and (max-width: 980px) {
+
+    body {
+        font-size: 15px;
+    }
+
+    .wrapper {
+        margin: 0 10px;
+    }
+
+    #archive {
+        margin: 0 -10px;
+    }
+
+    .archive-item {
+        padding: 0 10px;
+        margin-bottom: 20px;
+    }
+
+}
+
+
+@media screen and (max-width: 640px) {
+
+    .archive-item {
+        flex-basis: 100%;
+    }
+
+}

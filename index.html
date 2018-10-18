@@ -84,7 +84,7 @@
 						<div class="text-section">
 							<h2>Download</h2>
 							<p>
-								<a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v1.4">curtains.js v1.4 (70Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v1.4">curtains.min.js v1.4 (27Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+								<a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v1.5">curtains.js v1.5 (74Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v1.5">curtains.min.js v1.5 (29Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
 							</p>
 						</div>
 
@@ -98,6 +98,7 @@
 								<a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
 								<a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
 								<a href="examples/ajax-navigation/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation</a><br />
+								<a href="examples/ajax-navigation-with-plane-removal/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation with plane removal</a><br />
 								<a href="examples/canvas-height-performance/index.html" title="Canvas size, performance and perspective" target="_blank">Canvas size, performance and perspective</a>
 							</p>
 							<h3>Videos</h3>
@@ -122,7 +123,44 @@
 						</div>
 
 						<div class="text-section">
+							<h2>Installation</h2>
+							<div>
+								In a browser:
+								<pre>
+<code>
+&lt;script src="curtains.min.js"&gt;&lt;/script&gt;
+</code>
+								</pre>
+							</div>
+							<div>
+								Using npm:
+								<pre>
+<code>
+npm i curtainsjs
+</code>
+								</pre>
+							</div>
+							<div>
+								Load ES module:
+								<pre>
+<code>
+import {Curtains} from 'curtainsjs';
+</code>
+								</pre>
+							</div>
+						</div>
+
+						<div class="text-section">
 							<h2>Changelog</h2>
+							<h3>Version 1.5</h3>
+							<ul>
+								<li>
+									Added a removePlane() method to the Curtains object.
+								</li>
+								<li>
+									Slightly improved video textures performance.
+								</li>
+							</ul>
 							<h3>Version 1.4</h3>
 							<ul>
 								<li>

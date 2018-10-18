@@ -13,6 +13,31 @@
 <p>
     If you've never heard about shaders, you may want to learn a bit more about them on <a href="https://thebookofshaders.com/" title="The Book of Shaders" >The Book of Shaders</a> for example. You will have to understand what are the vertex and fragment shaders, the use of uniforms as well as the GLSL syntax basics.
 </p>
+<h2>Installation</h2>
+<div>
+    In a browser:
+    <pre>
+<code>
+&lt;script src="curtains.min.js"&gt;&lt;/script&gt;
+</code>
+    </pre>
+</div>
+<div>
+    Using npm:
+    <pre>
+<code>
+npm i curtainsjs
+</code>
+    </pre>
+</div>
+<div>
+    Load ES module:
+    <pre>
+<code>
+import {Curtains} from 'curtainsjs';
+</code>
+    </pre>
+</div>
 <h2>Examples</h2>
 <h3>Images</h3>
 <p>
@@ -22,6 +47,7 @@
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/ajax-navigation/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation</a><br />
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/ajax-navigation-with-plane-removal/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation with plane removal</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/canvas-height-performance/index.html" title="Canvas size, performance and perspective" target="_blank">Canvas size, performance and perspective</a>
 </p>
 <h3>Video</h3>
@@ -436,10 +462,19 @@ var curtains = new Curtains("canvas"); // "canvas" is the ID of our HTML element
     </li>
     <li>
         <p>
+            <strong>removePlane</strong>(plane) :<br />
+            <em>plane</em> (plane object) : the plane to remove<br />
+        </p>
+        <p>
+            This function will remove a plane from our Curtains object.
+        </p>
+    </li>
+    <li>
+        <p>
             <strong>dispose</strong>() :
         </p>
         <p>
-            This function will cancel the requestAnimationFrame loop and delete the WebGL context.
+            This function will cancel the requestAnimationFrame loop, remove all planes and delete the WebGL context.
         </p>
     </li>
 </ul>
@@ -669,6 +704,15 @@ var params = {
     </li>
 </ul>
 <h2>Changelog</h2>
+<h3>Version 1.5</h3>
+<ul>
+    <li>
+        Added a removePlane() method to the Curtains object.
+    </li>
+    <li>
+        Slightly improved video textures performance.
+    </li>
+</ul>
 <h3>Version 1.4</h3>
 <ul>
     <li>

@@ -74,11 +74,11 @@
 								You will have to create a Curtains object first that will handle the scene containing all your planes. It will also create the WebGL context, append the canvas and handle the requestAnimationFrame loop. You just have to pass the ID of the HTML element that will wrap the canvas :
 							</p>
 							<p>
-<pre>
+								<pre>
 <code>
 var curtains = new Curtains("canvas"); // "canvas" is the ID of our HTML element
 </code>
-</pre>
+								</pre>
 							</p>
 							<h3>Methods</h3>
 							<ul>
@@ -94,10 +94,19 @@ var curtains = new Curtains("canvas"); // "canvas" is the ID of our HTML element
 								</li>
 								<li>
 									<p>
+										<strong>removePlane</strong>(plane) :<br />
+										<em>plane</em> (plane object) : the plane to remove<br />
+									</p>
+									<p>
+										This function will remove a plane from our Curtains object.
+									</p>
+								</li>
+								<li>
+									<p>
 										<strong>dispose</strong>() :
 									</p>
 									<p>
-										This function will cancel the requestAnimationFrame loop and delete the WebGL context.
+										This function will cancel the requestAnimationFrame loop, remove all planes and delete the WebGL context.
 									</p>
 								</li>
 							</ul>

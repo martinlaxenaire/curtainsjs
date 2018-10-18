@@ -25,12 +25,12 @@ window.onload = function(){
 
         if(e.targetTouches) {
 
-            mousePosition.x = e.targetTouches[0].clientX;
-            mousePosition.y = e.targetTouches[0].clientY;
+            mousePosition.x = e.targetTouches[0].pageX;
+            mousePosition.y = e.targetTouches[0].pageY;
         }
         else {
-            mousePosition.x = e.clientX;
-            mousePosition.y = e.clientY;
+            mousePosition.x = e.pageX;
+            mousePosition.y = e.pageY;
         }
 
         if(plane) {
