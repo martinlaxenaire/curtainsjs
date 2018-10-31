@@ -5,3 +5,5 @@ context-lost
 /backups
 /npm
 /node_modules
+/promo
+/examples/video-performance-test

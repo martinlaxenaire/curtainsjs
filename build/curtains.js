@@ -1,7 +1,7 @@
 /***
     Little WebGL helper to apply images, videos or canvases as textures of planes
     Author: Martin Laxenaire https://www.martin-laxenaire.fr/
-    Version: 1.5
+    Version: 1.5.1
 
     Compatibility
     PC: Chrome (65.0), Firefox (59.0.2), Microsoft Edge (41)
@@ -305,6 +305,11 @@ Curtains.prototype.removePlane = function(plane) {
 
     // unbind and delete the textures
     for(var i = 0; i < plane.textures.length; i++) {
+        // if its a video texture, clear the update interval as well
+        if(plane.textures[i].type == "video" && plane.videos[plane.textures[i].typeIndex].updateInterval) {
+            clearInterval(plane.videos[plane.textures[i].typeIndex].updateInterval);
+        }
+
         this.glContext.activeTexture(this.glContext.TEXTURE0 + plane.textures[i].index);
         this.glContext.bindTexture(this.glContext.TEXTURE_2D, null);
         this.glContext.deleteTexture(plane.textures[i].glTexture);
@@ -1922,8 +1927,7 @@ Plane.prototype.loadVideos = function(videosArray) {
     // reset our loading flag
     this.videosLoaded = false;
 
-    for(var i = 0; i < videosArray.length; i++) {
-
+    function initVideo(plane, index) {
         video = document.createElement('video');
 
         video.preload = true;
@@ -1934,35 +1938,59 @@ Plane.prototype.loadVideos = function(videosArray) {
         video.width = 512;
         video.height = 512;
 
-        video.sampler = videosArray[i].getAttribute("data-sampler") || null;
+        video.sampler = videosArray[index].getAttribute("data-sampler") || null;
 
         video.crossOrigin = this.crossOrigin;
 
-        // keep track of the timestamp so we know if we should update the texture or not
-        video.timestamp = 0;
+        // our video has not yet started for the first time
+        video.firstStarted = false;
+
+        // at first we don't want to update frames since there's nothing to show
+        video.shouldUpdate = false;
+
+        video.addEventListener("play", function() {
+            var currentVideo = this;
+
+            // our video has finally started
+            currentVideo.firstStarted = true;
+
+            // if our update interval has not been started yet, we're launching it
+            // our 33ms interval should cover videos up to 30FPS
+            if(!currentVideo.updateInterval) {
+                currentVideo.updateInterval = setInterval(function() {
+                    // we should draw a new frame
+                    currentVideo.shouldUpdate = true;
+                }, 33);
+            }
+
+        });
 
         // handle only one src
-        if(videosArray[i].src) {
-            video.src = videosArray[i].src;
-            video.type = videosArray[i].type;
+        if(videosArray[index].src) {
+            video.src = videosArray[index].src;
+            video.type = videosArray[index].type;
         }
-        else if(videosArray[i].getElementsByTagName('source').length > 0) {
+        else if(videosArray[index].getElementsByTagName('source').length > 0) {
             // handle multiple sources
-            for(var j = 0; j < videosArray[i].getElementsByTagName('source').length; j++) {
+            for(var j = 0; j < videosArray[index].getElementsByTagName('source').length; j++) {
                 var source = document.createElement("source");
-                source.setAttribute("src", videosArray[i].getElementsByTagName('source')[j].src);
-                source.setAttribute("type", videosArray[i].getElementsByTagName('source')[j].type);
+                source.setAttribute("src", videosArray[index].getElementsByTagName('source')[j].src);
+                source.setAttribute("type", videosArray[index].getElementsByTagName('source')[j].type);
                 video.appendChild(source);
             }
         }
 
-        this.videos.push(video);
+        plane.videos.push(video);
 
         // fire callback during load (useful for a loader)
-        if(this.onPlaneLoadingCallback) {
+        if(plane.onPlaneLoadingCallback) {
 
-            this.onPlaneLoadingCallback();
+            plane.onPlaneLoadingCallback();
         }
+    }
+
+    for(var i = 0; i < videosArray.length; i++) {
+        initVideo(this, i);
     }
 
     // we need to be sure that we have loaded all the images
@@ -2021,6 +2049,8 @@ Plane.prototype.loadCanvases = function(canvasesArray) {
         canvas = canvasesArray[i];
 
         canvas.sampler = canvasesArray[i].getAttribute("data-sampler") || null;
+
+        canvas.shouldUpdate = true;
 
         this.canvases.push(canvas);
 
@@ -2188,25 +2218,35 @@ Plane.prototype._drawPlane = function(shouldBindBuffers) {
             this.onRenderCallback();
         }
 
-        // reset active textures so they won't be mixed up
-        for(var j = 0; j < this.textures.length; j++) {
-            glContext.activeTexture(glContext.TEXTURE0 + this.textures[j].index);
+        function drawTexture(glContext, plane, index) {
+            var texture = plane.textures[index];
+
+            glContext.activeTexture(glContext.TEXTURE0 + texture.index);
             // bind the texture to the plane's index unit
-            glContext.bindTexture(glContext.TEXTURE_2D, this.textures[j].glTexture);
+            glContext.bindTexture(glContext.TEXTURE_2D, texture.glTexture);
 
             // if our texture is a video we need to redraw it each time the frame has changed
-            if(this.textures[j].type == "video") {
-                if(this.videos[this.textures[j].typeIndex].timestamp !== this.videos[this.textures[j].typeIndex].currentTime) {
-                    // if the video current time has changed, draw a new video frame
-                    glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, this.videos[this.textures[j].typeIndex]);
+            if(texture.type == "video") {
+                if(plane.videos[texture.typeIndex].shouldUpdate) {
+                    // if our flag is set to true we draw the next frame
+                    glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, plane.videos[texture.typeIndex]);
 
-                    // update our timestamp property
-                    this.videos[this.textures[j].typeIndex].timestamp = this.videos[this.textures[j].typeIndex].currentTime;
+                    // reset our flag until next setInterval loop
+                    plane.videos[texture.typeIndex].shouldUpdate = false;
+                }
+                else if(!plane.videos[texture.typeIndex].firstStarted) {
+                    // if the video has not yet started for the first time (ie there's nothing to show) we just draw a black plane
+                    glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, 1, 1, 0, glContext.RGBA, glContext.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
                 }
             }
-            else if(this.textures[j].type == "canvase") {
-                glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, this.canvases[this.textures[j].typeIndex]);
+            else if(texture.type == "canvase" && plane.canvases[texture.typeIndex].shouldUpdate) {
+                glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, plane.canvases[texture.typeIndex]);
             }
+        }
+
+        // reset active textures so they won't be mixed up
+        for(var i = 0; i < this.textures.length; i++) {
+            drawTexture(glContext, this, i);
         }
 
 
