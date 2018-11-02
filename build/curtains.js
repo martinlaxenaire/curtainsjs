@@ -1,7 +1,7 @@
 /***
     Little WebGL helper to apply images, videos or canvases as textures of planes
     Author: Martin Laxenaire https://www.martin-laxenaire.fr/
-    Version: 1.5.1
+    Version: 1.5.2
 
     Compatibility
     PC: Chrome (65.0), Firefox (59.0.2), Microsoft Edge (41)
@@ -53,6 +53,12 @@ Curtains.prototype._init = function() {
 
     // set our webgl context
     this.glContext = this.glCanvas.getContext("webgl", { alpha: true }) || this.glCanvas.getContext("experimental-webgl");
+
+    // WebGL context could not be created
+    if(!this.glContext) {
+        console.warn("WebGL context could not be created");
+        return;
+    }
 
     // set our canvas sizes
     this.pixelRatio = window.devicePixelRatio || 1;
@@ -198,64 +204,72 @@ params :
 ***/
 Curtains.prototype.addPlane = function(planeHtmlElement, params) {
 
-    if(!planeHtmlElement || planeHtmlElement.length === 0) {
-        console.warn("The html element you specified does not currently exists in the DOM");
-        return false;
-    }
-
-    // init the plane
-    var plane = this._createPlane(planeHtmlElement, params);
-
-    // load images
-    var imagesArray = [];
-    for(var j = 0; j < plane.htmlElement.getElementsByTagName("img").length; j++) {
-        imagesArray.push(plane.htmlElement.getElementsByTagName("img")[j]);
-    }
-
-    // load videos
-    var videosArray = [];
-    for(var j = 0; j < plane.htmlElement.getElementsByTagName("video").length; j++) {
-        videosArray.push(plane.htmlElement.getElementsByTagName("video")[j]);
-    }
-
-    // load canvases
-    var canvasesArray = [];
-    for(var j = 0; j < plane.htmlElement.getElementsByTagName("canvas").length; j++) {
-        canvasesArray.push(plane.htmlElement.getElementsByTagName("canvas")[j]);
-    }
-
-    // load plane images
-    if(imagesArray.length > 0) {
-        plane.loadImages(imagesArray);
+    // if the WebGL context couldn't be created, return null
+    if(!this.glContext) {
+        console.warn("Unable to create a plane. The WebGl context couldn't be created");
+        return null;
     }
     else {
-        // no need to load any image right now
-        plane.imagesLoaded = true;
-    }
 
-    // load plane videos
-    if(videosArray.length > 0) {
-        plane.loadVideos(videosArray);
-    }
-    else {
-        // no need to load any video right now
-        plane.videosLoaded = true;
-    }
+        if(!planeHtmlElement || planeHtmlElement.length === 0) {
+            console.warn("The html element you specified does not currently exists in the DOM");
+            return false;
+        }
 
-    // load plane canvases
-    if(canvasesArray.length > 0) {
-        plane.loadCanvases(canvasesArray);
-    }
-    else {
-        // no need to load any video right now
-        plane.canvasesLoaded = true;
-    }
+        // init the plane
+        var plane = this._createPlane(planeHtmlElement, params);
 
-    if(imagesArray.length == 0 && videosArray.length == 0 && canvasesArray.length == 0) { // there's no images, no videos, no canvas, send a warning
-        console.warn("This plane does not contain any image, video or canvas element. You may want to add some later with the loadImages, loadVideos or loadCanvases method.");
-    }
+        // load images
+        var imagesArray = [];
+        for(var j = 0; j < plane.htmlElement.getElementsByTagName("img").length; j++) {
+            imagesArray.push(plane.htmlElement.getElementsByTagName("img")[j]);
+        }
 
-    return plane;
+        // load videos
+        var videosArray = [];
+        for(var j = 0; j < plane.htmlElement.getElementsByTagName("video").length; j++) {
+            videosArray.push(plane.htmlElement.getElementsByTagName("video")[j]);
+        }
+
+        // load canvases
+        var canvasesArray = [];
+        for(var j = 0; j < plane.htmlElement.getElementsByTagName("canvas").length; j++) {
+            canvasesArray.push(plane.htmlElement.getElementsByTagName("canvas")[j]);
+        }
+
+        // load plane images
+        if(imagesArray.length > 0) {
+            plane.loadImages(imagesArray);
+        }
+        else {
+            // no need to load any image right now
+            plane.imagesLoaded = true;
+        }
+
+        // load plane videos
+        if(videosArray.length > 0) {
+            plane.loadVideos(videosArray);
+        }
+        else {
+            // no need to load any video right now
+            plane.videosLoaded = true;
+        }
+
+        // load plane canvases
+        if(canvasesArray.length > 0) {
+            plane.loadCanvases(canvasesArray);
+        }
+        else {
+            // no need to load any video right now
+            plane.canvasesLoaded = true;
+        }
+
+        if(imagesArray.length == 0 && videosArray.length == 0 && canvasesArray.length == 0) { // there's no images, no videos, no canvas, send a warning
+            console.warn("This plane does not contain any image, video or canvas element. You may want to add some later with the loadImages, loadVideos or loadCanvases method.");
+        }
+
+        return plane;
+    }
 };
 
 
