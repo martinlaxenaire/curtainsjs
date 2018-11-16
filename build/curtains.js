@@ -1,7 +1,7 @@
 /***
     Little WebGL helper to apply images, videos or canvases as textures of planes
     Author: Martin Laxenaire https://www.martin-laxenaire.fr/
-    Version: 1.5.2
+    Version: 1.5.3
 
     Compatibility
     PC: Chrome (65.0), Firefox (59.0.2), Microsoft Edge (41)
@@ -1960,7 +1960,10 @@ Plane.prototype.loadVideos = function(videosArray) {
         video.firstStarted = false;
 
         // at first we don't want to update frames since there's nothing to show
-        video.shouldUpdate = false;
+        video.frameUpdate = false;
+
+        // a boolean if we want to stop updating our texture (if the plane is hidden for example)
+        video.shouldUpdate = true;
 
         video.addEventListener("play", function() {
             var currentVideo = this;
@@ -1973,7 +1976,7 @@ Plane.prototype.loadVideos = function(videosArray) {
             if(!currentVideo.updateInterval) {
                 currentVideo.updateInterval = setInterval(function() {
                     // we should draw a new frame
-                    currentVideo.shouldUpdate = true;
+                    currentVideo.frameUpdate = true;
                 }, 33);
             }
 
@@ -2241,12 +2244,12 @@ Plane.prototype._drawPlane = function(shouldBindBuffers) {
 
             // if our texture is a video we need to redraw it each time the frame has changed
             if(texture.type == "video") {
-                if(plane.videos[texture.typeIndex].shouldUpdate) {
+                if(plane.videos[texture.typeIndex].frameUpdate && plane.videos[texture.typeIndex].shouldUpdate) {
                     // if our flag is set to true we draw the next frame
                     glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, plane.videos[texture.typeIndex]);
 
                     // reset our flag until next setInterval loop
-                    plane.videos[texture.typeIndex].shouldUpdate = false;
+                    plane.videos[texture.typeIndex].frameUpdate = false;
                 }
                 else if(!plane.videos[texture.typeIndex].firstStarted) {
                     // if the video has not yet started for the first time (ie there's nothing to show) we just draw a black plane
