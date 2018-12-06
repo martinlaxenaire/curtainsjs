@@ -80,6 +80,14 @@ var curtains = new Curtains("canvas"); // "canvas" is the ID of our HTML element
 </code>
 								</pre>
 							</p>
+							<p>
+								You can pass a boolean as a second parameter to indicate whether you want to use the library in production mode. If set to true it will remove all console warnings. Default to false.
+							</p>
+							<pre>
+<code>
+var curtains = new Curtains("canvas", true); // use the library in "production" mode
+</code>
+							</pre>
 							<h3>Methods</h3>
 							<ul>
 								<li>
@@ -248,6 +256,16 @@ var params = {
 									</p>
 									<p>
 										This method is called internally each time the WebGL canvas is resized, but if you remove the plane HTML element and append it again later (typically with an AJAX navigation, see the <a href="examples/ajax-navigation/index.html" title="AJAX navigation" target="_blank">AJAX navigation</a> example), you would have to manually reset the plane size by calling it.
+									</p>
+								</li>
+
+								<li>
+									<p>
+										<strong>updatePosition</strong>() :
+									</p>
+									<p>
+										The planes positions are updated only when the canvas container is resized. But if you are updating your plane HTML element position without resizing the container (typically animating its CSS position or transform values), call this method in your animation loop at the same time.<br />
+										Only effective if the mimicCSS property is set to true.
 									</p>
 								</li>
 

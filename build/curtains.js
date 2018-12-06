@@ -1,7 +1,7 @@
 /***
     Little WebGL helper to apply images, videos or canvases as textures of planes
     Author: Martin Laxenaire https://www.martin-laxenaire.fr/
-    Version: 1.5.3
+    Version: 1.6
 
     Compatibility
     PC: Chrome (65.0), Firefox (59.0.2), Microsoft Edge (41)
@@ -19,7 +19,7 @@ params :
 returns :
     @this: our Curtains element
 ***/
-function Curtains(containerID) {
+function Curtains(containerID, production) {
 
     this.planes = [];
     this.drawStack = [];
@@ -28,8 +28,11 @@ function Curtains(containerID) {
     var container = containerID || "canvas";
     this.container = document.getElementById(container);
 
+    this.productionMode = production || false;
+
     if(!this.container) {
-        console.warn("You must specify a valid container ID");
+        if(!this.productionMode) console.warn("You must specify a valid container ID");
+
         return false;
     }
 
@@ -56,7 +59,8 @@ Curtains.prototype._init = function() {
 
     // WebGL context could not be created
     if(!this.glContext) {
-        console.warn("WebGL context could not be created");
+        if(!this.productionMode) console.warn("WebGL context could not be created");
+
         return;
     }
 
@@ -88,7 +92,8 @@ Used internally to check if our canvas and context have been created
 ***/
 Curtains.prototype._isInitialized = function() {
     if(!this.glCanvas || !this.glContext) {
-        console.warn("No WebGL canvas or context");
+        if(!this.productionMode) console.warn("No WebGL canvas or context");
+
         return false;
     }
 };
@@ -206,13 +211,15 @@ Curtains.prototype.addPlane = function(planeHtmlElement, params) {
 
     // if the WebGL context couldn't be created, return null
     if(!this.glContext) {
-        console.warn("Unable to create a plane. The WebGl context couldn't be created");
+        if(!this.productionMode) console.warn("Unable to create a plane. The WebGl context couldn't be created");
+
         return null;
     }
     else {
 
         if(!planeHtmlElement || planeHtmlElement.length === 0) {
-            console.warn("The html element you specified does not currently exists in the DOM");
+            if(!this.productionMode) console.warn("The html element you specified does not currently exists in the DOM");
+
             return false;
         }
 
@@ -264,7 +271,7 @@ Curtains.prototype.addPlane = function(planeHtmlElement, params) {
             plane.canvasesLoaded = true;
         }
 
-        if(imagesArray.length == 0 && videosArray.length == 0 && canvasesArray.length == 0) { // there's no images, no videos, no canvas, send a warning
+        if(imagesArray.length == 0 && videosArray.length == 0 && canvasesArray.length == 0 && !this.productionMode) { // there's no images, no videos, no canvas, send a warning
             console.warn("This plane does not contain any image, video or canvas element. You may want to add some later with the loadImages, loadVideos or loadCanvases method.");
         }
 
@@ -430,7 +437,8 @@ Curtains.prototype._createShader = function(shaderCode, shaderType) {
     this.glContext.compileShader(shader);
 
     if (!this.glContext.getShaderParameter(shader, this.glContext.COMPILE_STATUS) && !this.glContext.isContextLost()) {
-        console.warn("Errors occurred while compiling the shader:\n" + this.glContext.getShaderInfoLog(shader));
+        if(!this.productionMode) console.warn("Errors occurred while compiling the shader:\n" + this.glContext.getShaderInfoLog(shader));
+
         this.container.classList.add('no-webgl-curtains');
         return null;
     }
@@ -508,7 +516,7 @@ Curtains.prototype._readyToDraw = function() {
     // enable depth by default
     this._handleDepth(true);
 
-    console.log("curtains.js - v1.5");
+    console.log("curtains.js - v1.6");
 
     var self = this;
     function animatePlanes() {
@@ -659,7 +667,8 @@ function Plane(curtainWrapper, plane, params) {
 
     if(!params.vertexShader) {
         if(!vsId || !document.getElementById(vsId)) {
-            console.warn("No vertex shader provided, will use a default one");
+            if(!this.wrapper.productionMode) console.warn("No vertex shader provided, will use a default one");
+
             vsIdHTML = "#ifdef GL_ES\nprecision mediump float;\n#endif\nattribute vec3 aVertexPosition;\nattribute vec2 aTextureCoord;\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nvarying vec3 vVertexPosition;\nvarying vec2 vTextureCoord;\nvoid main() {vTextureCoord = aTextureCoord;vVertexPosition = aVertexPosition;gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);}";
         }
         else {
@@ -669,7 +678,8 @@ function Plane(curtainWrapper, plane, params) {
 
     if(!params.fragmentShader) {
         if(!fsId || !document.getElementById(fsId)) {
-            console.warn("No fragment shader provided, will use a default one");
+            if(!this.wrapper.productionMode) console.warn("No fragment shader provided, will use a default one");
+
             fsIdHTML = "#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec3 vVertexPosition;\nvarying vec2 vTextureCoord;\nvoid main( void ) {gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);}";
         }
         else {
@@ -688,8 +698,9 @@ function Plane(curtainWrapper, plane, params) {
 
     // handle uniforms
     if(!params.uniforms) {
+        if(!this.wrapper.productionMode) console.warn("You are setting a plane without uniforms, you won't be able to interact with it. Please check your addPlane method for : ", this.htmlElement);
+
         params.uniforms = {};
-        console.warn("You are setting a plane without uniforms, you won't be able to interact with it. Please check your addPlane method for : ", this.htmlElement);
     }
 
     this.uniforms = {};
@@ -771,8 +782,9 @@ Plane.prototype._setupPlane = function() {
     this.shaders.vertexShader = this.wrapper._createShader(this.shaders.vertexShaderCode, glContext.VERTEX_SHADER);
     this.shaders.fragmentShader = this.wrapper._createShader(this.shaders.fragmentShaderCode, glContext.FRAGMENT_SHADER);
 
-    if(!this.shaders.vertexShader || !this.shaders.fragmentShader) {
-        console.warn("Unable to find the vertex or fragment shader");
+    if((!this.shaders.vertexShader || !this.shaders.fragmentShader) && !this.wrapper.productionMode) {
+        if(!this.wrapper.productionMode) console.warn("Unable to find the vertex or fragment shader");
+
         this.wrapper.container.classList.add('no-webgl-curtains');
         return false;
     }
@@ -784,7 +796,8 @@ Plane.prototype._setupPlane = function() {
 
     // Check the shader program creation status,
     if (!glContext.getProgramParameter(this.program, glContext.LINK_STATUS) && !glContext.isContextLost()) {
-       console.warn("Unable to initialize the shader program.");
+       if(!this.wrapper.productionMode) console.warn("Unable to initialize the shader program.");
+
        this.wrapper.container.classList.add('no-webgl-curtains');
        return false;
     }
@@ -824,7 +837,8 @@ Used internally to check if the plane shader program has been created
 ***/
 Plane.prototype._isProgramInitialized = function() {
     if(!this.program) {
-        console.warn("No WebGL program for this plane");
+        if(!this.wrapper.productionMode) console.warn("No WebGL program for this plane");
+
         return false;
     }
 };
@@ -1241,7 +1255,7 @@ Plane.prototype._handleUniformSetting = function(uniformType, uniformLocation, u
         glContext.uniformMatrix4fv(uniformLocation, false, uniformValue)
     }
 
-    else {
+    else if(!this.wrapper.productionMode) {
         console.warn("This uniform type is not handled : ", uniformType);
     }
 }
@@ -1276,34 +1290,41 @@ Plane.prototype._setUniforms = function(uniforms) {
                     if(Array.isArray(uniform.value)) {
                         if(uniform.value.length == 4) {
                             uniform.type = "4f";
-                            console.warn("No uniform type declared for " + uniform.name + ", applied a 4f (array of 4 floats) uniform type");
+
+                            if(!this.wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a 4f (array of 4 floats) uniform type");
                         }
                         else if(uniform.value.length == 3) {
                             uniform.type = "3f";
-                            console.warn("No uniform type declared for " + uniform.name + ", applied a 3f (array of 3 floats) uniform type");
+
+                            if(!this.wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a 3f (array of 3 floats) uniform type");
                         }
                         else if(uniform.value.length == 2) {
                             uniform.type = "2f";
-                            console.warn("No uniform type declared for " + uniform.name + ", applied a 2f (array of 2 floats) uniform type");
+
+                            if(!this.wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a 2f (array of 2 floats) uniform type");
                         }
                     }
                     else if(uniform.value.constructor === Float32Array) {
                         if(uniform.value.length == 16) {
                             uniform.type = "mat4";
-                            console.warn("No uniform type declared for " + uniform.name + ", applied a mat4 (4x4 matrix array) uniform type");
+
+                            if(!this.wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a mat4 (4x4 matrix array) uniform type");
                         }
                         else if(uniform.value.length == 9) {
                             uniform.type = "mat3";
-                            console.warn("No uniform type declared for " + uniform.name + ", applied a mat3 (3x3 matrix array) uniform type");
+
+                            if(!this.wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a mat3 (3x3 matrix array) uniform type");
                         }
                         else  if(uniform.value.length == 4) {
                             uniform.type = "mat2";
-                            console.warn("No uniform type declared for " + uniform.name + ", applied a mat2 (2x2 matrix array) uniform type");
+
+                            if(!this.wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a mat2 (2x2 matrix array) uniform type");
                         }
                     }
                     else {
                         uniform.type = "1f";
-                        console.warn("No uniform type declared for " + uniform.name + ", applied a 1f (float) uniform type");
+
+                        if(!this.wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a 1f (float) uniform type");
                     }
                 }
 
@@ -1624,6 +1645,17 @@ Plane.prototype._applyCSSPositions = function() {
     this.setTranslation(relativePosition.x, relativePosition.y, this.translation.z);
 }
 
+
+/***
+This function update the plane position based on its CSS positions and transformations values.
+Useful if the HTML element has been moved while the container size has not changed.
+Only triggered if the plane has the mimicCSS property set to true.
+***/
+Plane.prototype.updatePosition = function() {
+    if(this.mimicCSS) {
+        this._applyCSSPositions();
+    }
+}
 
 
 /***
@@ -1958,6 +1990,8 @@ Plane.prototype.loadVideos = function(videosArray) {
 
         // our video has not yet started for the first time
         video.firstStarted = false;
+        var startedPlaying = false;
+        var timeUpdating = false;
 
         // at first we don't want to update frames since there's nothing to show
         video.frameUpdate = false;
@@ -1965,21 +1999,41 @@ Plane.prototype.loadVideos = function(videosArray) {
         // a boolean if we want to stop updating our texture (if the plane is hidden for example)
         video.shouldUpdate = true;
 
-        video.addEventListener("play", function() {
-            var currentVideo = this;
+        var isReadyInterval;
 
-            // our video has finally started
-            currentVideo.firstStarted = true;
+        function startVideoUploading(video) {
+            video.firstStarted = true;
 
             // if our update interval has not been started yet, we're launching it
             // our 33ms interval should cover videos up to 30FPS
-            if(!currentVideo.updateInterval) {
-                currentVideo.updateInterval = setInterval(function() {
+            if(!video.updateInterval) {
+                video.updateInterval = setInterval(function() {
                     // we should draw a new frame
-                    currentVideo.frameUpdate = true;
+                    video.frameUpdate = true;
                 }, 33);
             }
+        }
 
+        function isVideoReady(video) {
+            if(startedPlaying && timeUpdating && !video.firstStarted) {
+                // be sure we have enough data to upload our video texture
+                isReadyInterval = setInterval(function() {
+                    if(video.readyState >= video.HAVE_CURRENT_DATA) {
+                        clearInterval(isReadyInterval);
+                        startVideoUploading(video);
+                    }
+                }, 10);
+            }
+        }
+
+        video.addEventListener("timeupdate", function() {
+            timeUpdating = true;
+            isVideoReady(this);
+        });
+
+        video.addEventListener("play", function() {
+            startedPlaying = true;
+            isVideoReady(this);
         });
 
         // handle only one src
@@ -2035,9 +2089,10 @@ Plane.prototype.playVideos = function() {
             // In browsers that don’t yet support this functionality,
             // playPromise won’t be defined.
             var texture = this.textures[i];
+            var self = this;
             if (playPromise !== undefined) {
                 playPromise.catch(function(error) {
-                    console.warn("Could not play the video : ", error);
+                    if(!self.wrapper.productionMode) console.warn("Could not play the video : ", error);
                 });
             }
         }
@@ -2118,9 +2173,6 @@ Plane.prototype._createTextures = function(textureType) {
 
         // Bind the texture the target (TEXTURE_2D) of the active texture unit.
         glContext.bindTexture(glContext.TEXTURE_2D, texture.glTexture);
-
-        // flip Y axis to match the WebGL texture coordinate space.
-        glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, true);
 
         // Set the parameters so we can render any size image.
         glContext.texParameteri(glContext.TEXTURE_2D, glContext.TEXTURE_WRAP_S, glContext.CLAMP_TO_EDGE);
@@ -2238,20 +2290,27 @@ Plane.prototype._drawPlane = function(shouldBindBuffers) {
         function drawTexture(glContext, plane, index) {
             var texture = plane.textures[index];
 
+            // flip Y all textures
+            glContext.pixelStorei(plane.wrapper.glContext.UNPACK_FLIP_Y_WEBGL, true);
+
             glContext.activeTexture(glContext.TEXTURE0 + texture.index);
             // bind the texture to the plane's index unit
             glContext.bindTexture(glContext.TEXTURE_2D, texture.glTexture);
 
             // if our texture is a video we need to redraw it each time the frame has changed
             if(texture.type == "video") {
-                if(plane.videos[texture.typeIndex].frameUpdate && plane.videos[texture.typeIndex].shouldUpdate) {
-                    // if our flag is set to true we draw the next frame
-                    glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, plane.videos[texture.typeIndex]);
+                if(plane.videos[texture.typeIndex].firstStarted) {
+                    if(plane.videos[texture.typeIndex].frameUpdate && plane.videos[texture.typeIndex].shouldUpdate) {
+                        // if our flag is set to true we draw the next frame
+                        glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, plane.videos[texture.typeIndex]);
 
-                    // reset our flag until next setInterval loop
-                    plane.videos[texture.typeIndex].frameUpdate = false;
+                        // reset our flag until next setInterval loop
+                        plane.videos[texture.typeIndex].frameUpdate = false;
+                    }
                 }
-                else if(!plane.videos[texture.typeIndex].firstStarted) {
+                else {
+                    // cancel flip Y because the texture is non DOM element
+                    glContext.pixelStorei(plane.wrapper.glContext.UNPACK_FLIP_Y_WEBGL, false);
                     // if the video has not yet started for the first time (ie there's nothing to show) we just draw a black plane
                     glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, 1, 1, 0, glContext.RGBA, glContext.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
                 }

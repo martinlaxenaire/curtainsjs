@@ -448,6 +448,14 @@ var curtains = new Curtains("canvas"); // "canvas" is the ID of our HTML element
 </code>
 </pre>
 </p>
+<p>
+    You can pass a boolean as a second parameter to indicate whether you want to use the library in production mode. If set to true it will remove all console warnings. Default to false.
+</p>
+<pre>
+<code>
+var curtains = new Curtains("canvas", true); // use the library in "production" mode
+</code>
+</pre>
 <h4>Methods</h4>
 <ul>
     <li>
@@ -609,6 +617,15 @@ var params = {
     </li>
     <li>
         <p>
+            <strong>updatePosition</strong>() :
+        </p>
+        <p>
+            The planes positions are updated only when the canvas container is resized. But if you are updating your plane HTML element position without resizing the container (typically animating its CSS position or transform values), call this method in your animation loop at the same time.<br />
+            Only effective if the mimicCSS property is set to true.
+        </p>
+    </li>
+    <li>
+        <p>
             <strong>setPerspective</strong>(fieldOfView, nearPlane, farPlane) :<br />
             <em>fieldOfView</em> (integer) : the perspective field of view. Should be greater than 0 and lower than 180. Default to 75.<br />
             <em>nearPlane</em> (float, optionnal) : closest point where a mesh vertex is displayed. Default to 0.1.<br />
@@ -704,6 +721,18 @@ var params = {
     </li>
 </ul>
 <h2>Changelog</h2>
+<h3>Version 1.6</h3>
+<ul>
+    <li>
+        Added an updatePosition() method to the Plane object.
+    </li>
+    <li>
+        Added a "production" parameter to the Curtains instanciation process to remove console warnings in production.
+    </li>
+    <li>
+        Improved video handling and removed warnings.
+    </li>
+</ul>
 <h3>Version 1.5</h3>
 <ul>
     <li>
