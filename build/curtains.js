@@ -2171,6 +2171,10 @@ Plane.prototype._createTextures = function(textureType) {
 
         texture.glTexture = glContext.createTexture();
 
+        if(texture.type != "video") {
+            glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, true);
+        }
+
         // Bind the texture the target (TEXTURE_2D) of the active texture unit.
         glContext.bindTexture(glContext.TEXTURE_2D, texture.glTexture);
 
@@ -2291,7 +2295,7 @@ Plane.prototype._drawPlane = function(shouldBindBuffers) {
             var texture = plane.textures[index];
 
             // flip Y all textures
-            glContext.pixelStorei(plane.wrapper.glContext.UNPACK_FLIP_Y_WEBGL, true);
+            glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, true);
 
             glContext.activeTexture(glContext.TEXTURE0 + texture.index);
             // bind the texture to the plane's index unit
@@ -2310,7 +2314,7 @@ Plane.prototype._drawPlane = function(shouldBindBuffers) {
                 }
                 else {
                     // cancel flip Y because the texture is non DOM element
-                    glContext.pixelStorei(plane.wrapper.glContext.UNPACK_FLIP_Y_WEBGL, false);
+                    glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, false);
                     // if the video has not yet started for the first time (ie there's nothing to show) we just draw a black plane
                     glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, 1, 1, 0, glContext.RGBA, glContext.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
                 }
