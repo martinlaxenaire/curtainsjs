@@ -63,6 +63,9 @@ function portfolioNavigation() {
     function handlePlanes(index) {
         var plane = planes[index];
         plane.onReady(function() {
+            // to update the plane position during css translate animation
+            plane.shouldUpdatePos = false;
+
             // once everything is ready, display everything
             if(index == planes.length - 1) {
                 handleNavigation();
@@ -83,6 +86,11 @@ function portfolioNavigation() {
             plane.uniforms.time.value++;
             // decrease our mouse timer uniform
             plane.uniforms.mouseMoveStrength.value = Math.max(plane.uniforms.mouseMoveStrength.value - 0.01, 0);
+
+            // update position if we should
+            if(plane.shouldUpdatePos) {
+                plane.updatePosition();
+            }
         });
     }
 
@@ -150,6 +158,18 @@ function portfolioNavigation() {
             // change our page-wrap class and so trigger css animations
             document.getElementById("page-wrap").className = "";
             document.getElementById("page-wrap").classList.add("slide-" + index);
+
+            // tell our plane to update their positions during css animation
+            for(var i = 0; i < planes.length; i++) {
+                planes[i].shouldUpdatePos = true;
+            }
+
+            // animation is done
+            setTimeout(function() {
+                for(var i = 0; i < planes.length; i++) {
+                    planes[i].shouldUpdatePos = false;
+                }
+            }, 900);
         }
 
         // listen to the navigation buttons click event

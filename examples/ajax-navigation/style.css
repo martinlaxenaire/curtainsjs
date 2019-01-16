@@ -70,7 +70,7 @@
         top: 0;
         left: 0;
 
-        width: 300%;
+        width: 100%;
         height: 100vh;
 
         z-index: 10;
@@ -84,29 +84,17 @@
         opacity: 1;
     }
 
-    .slide-0 #canvas {
-        transform: translate3D(0, 0, 0);
-    }
-
-    .slide-1 #canvas {
-        transform: translate3D(calc(-100% / 3), 0, 0);
-    }
-
-    .slide-2 #canvas {
-        transform: translate3D(calc(-100% * 2 / 3), 0, 0);
-    }
-
 
     .go-to-project .slide-0 #canvas {
-        transform: translate3D(calc(100% / 6), -12.5vh, 0) scale(1.5);
+        transform: translate3D(0, -12.5vh, 0) scale(1.5);
     }
 
     .go-to-project .slide-1 #canvas {
-        transform: translate3D(calc(-100% / 3), -12.5vh, 0) scale(1.5);
+        transform: translate3D(0, -12.5vh, 0) scale(1.5);
     }
 
     .go-to-project .slide-2 #canvas {
-        transform: translate3D(calc(-100% * 5 / 6), -12.5vh, 0) scale(1.5);
+        transform: translate3D(0, -12.5vh, 0) scale(1.5);
     }
 
     /*** content ***/
@@ -199,9 +187,6 @@
     }
 
     .plane-title {
-        /*background: #ee6557;
-        color: white;*/
-
         color: #ee6557;
 
         font-size: 4em;

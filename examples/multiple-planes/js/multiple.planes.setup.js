@@ -43,6 +43,11 @@ window.onload = function(){
     window.addEventListener("scroll", function(e) {
         lastScrollValue = scrollValue;
         scrollValue = window.pageYOffset;
+
+        // update the plane positions during scroll
+        for(var i = 0; i < planes.length; i++) {
+            planes[i].updatePosition();
+        }
     });
 
 

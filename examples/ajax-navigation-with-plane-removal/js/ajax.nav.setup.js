@@ -7,7 +7,6 @@ function archiveNavigation() {
 
     // we will keep track of all our planes in an array
     var planes = [];
-    var planesInitialOffset = [];
     var planeElements = [];
 
     // all planes will have the same parameters
@@ -35,20 +34,9 @@ function archiveNavigation() {
                 console.log("all planes are ready");
             }
 
-            // on resize, update the resolution uniform
-            window.onresize = function() {
-                // restore planes top positions
-                for(var i = 0; i < planeElements.length; i++) {
-                    planesInitialOffset[i] = planeElements[i].getBoundingClientRect().top + window.pageYOffset;
-                }
-            }
-
         }).onRender(function() {
             // increment our time uniform
             plane.uniforms.time.value++;
-
-            // this could be done in a window scroll event as well
-             plane.setRelativePosition(plane.relativeTranslation.x, planesInitialOffset[index] - window.pageYOffset, plane.relativeTranslation.z);
         });
     }
 
@@ -63,9 +51,6 @@ function archiveNavigation() {
                 // add the plane to our array
                 planes.push(webGLCurtain.addPlane(planeElements[i], params));
 
-                // store planes top positions
-                planesInitialOffset.push(planeElements[i].getBoundingClientRect().top + window.pageYOffset);
-
                 handlePlanes(i);
             }
         }
@@ -79,7 +64,6 @@ function archiveNavigation() {
 
         // reset our arrays
         planes = [];
-        planesInitialOffset = [];
     }
 
     addPlanes();
@@ -180,6 +164,13 @@ function archiveNavigation() {
             }, 750);
         }
     }
+
+    // update planes positions during scroll
+    window.addEventListener("scroll", function(e) {
+        for(var i = 0; i < planes.length; i++) {
+            planes[i].updatePosition();
+        }
+    });
 
     handleNavigation();
 }

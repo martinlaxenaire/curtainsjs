@@ -2,17 +2,11 @@ window.onload = function(){
     // our canvas container
     var canvasContainer = document.getElementById("canvas");
 
-    // we will keep track of the scroll
-    var scrollValue = 0;
-    var lastScrollValue = 0;
-
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
 
     // we will keep track of all our planes in an array
     var planes = [];
-    // we will also keep track of all planes HTML element top position
-    var planesInitialOffset = [];
     // whether the canvas will cover the whole document or just the window size
     var perfOptimised = false;
 
@@ -37,16 +31,18 @@ window.onload = function(){
     // add our planes and handle them
     for(var i = 0; i < planeElements.length; i++) {
         planes.push(webGLCurtain.addPlane(planeElements[i], params));
-        // store planes top positions
-        planesInitialOffset.push(planeElements[i].getBoundingClientRect().top + window.pageYOffset);
 
         handlePlanes(i);
     }
 
     // listen to scroll
     window.addEventListener("scroll", function(e) {
-        lastScrollValue = scrollValue;
-        scrollValue = window.pageYOffset;
+        // if the canvas does not cover the whole document, we have to update the plane positions during scroll
+        if(perfOptimised) {
+            for(var i = 0; i < planes.length; i++) {
+                planes[i].updatePosition();
+            }
+        }
     });
 
 
@@ -62,11 +58,6 @@ window.onload = function(){
                 document.getElementById("canvas-height").innerHTML = "canvas height: " + document.getElementById("canvas").clientHeight + "px";
 
                 window.onresize = function() {
-                    // store planes top positions
-                    for(var i = 0; i < planeElements.length; i++) {
-                        planesInitialOffset[i] = planeElements[i].getBoundingClientRect().top + window.pageYOffset;
-                    }
-
                     // show canvas height
                     document.getElementById("canvas-height").innerHTML = "canvas height: " + document.getElementById("canvas").clientHeight + "px";
                 }
@@ -91,12 +82,6 @@ window.onload = function(){
         }).onRender(function() {
             // update the uniform
             plane.uniforms.time.value++;
-
-            // if the canvas does not cover the whole document, we have to manually change the position of each plane
-            if(perfOptimised) {
-                plane.setRelativePosition(plane.relativeTranslation.x, planesInitialOffset[index] - window.pageYOffset, plane.relativeTranslation.z);
-            }
-
         });
     }
 }
