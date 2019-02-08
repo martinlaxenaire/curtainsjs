@@ -167,6 +167,8 @@ Curtains.prototype.dispose = function() {
                 self.glContext.getExtension('WEBGL_lose_context').loseContext();
             }
 
+            // remove canvas from DOM
+            self.container.removeChild(self.glCanvas);
         }
     }, 100);
 
@@ -2294,9 +2296,6 @@ Plane.prototype._drawPlane = function(shouldBindBuffers) {
         function drawTexture(glContext, plane, index) {
             var texture = plane.textures[index];
 
-            // flip Y all textures
-            glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, true);
-
             glContext.activeTexture(glContext.TEXTURE0 + texture.index);
             // bind the texture to the plane's index unit
             glContext.bindTexture(glContext.TEXTURE_2D, texture.glTexture);
@@ -2305,6 +2304,9 @@ Plane.prototype._drawPlane = function(shouldBindBuffers) {
             if(texture.type == "video") {
                 if(plane.videos[texture.typeIndex].firstStarted) {
                     if(plane.videos[texture.typeIndex].frameUpdate && plane.videos[texture.typeIndex].shouldUpdate) {
+                        // flip Y all textures
+                        glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, true);
+
                         // if our flag is set to true we draw the next frame
                         glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, plane.videos[texture.typeIndex]);
 
