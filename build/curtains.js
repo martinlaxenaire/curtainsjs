@@ -333,29 +333,33 @@ Curtains.prototype.removePlane = function(plane) {
             clearInterval(plane.videos[plane.textures[i].typeIndex].updateInterval);
         }
 
-        this.glContext.activeTexture(this.glContext.TEXTURE0 + plane.textures[i].index);
-        this.glContext.bindTexture(this.glContext.TEXTURE_2D, null);
-        this.glContext.deleteTexture(plane.textures[i].glTexture);
+        if(this.glContext) {
+            this.glContext.activeTexture(this.glContext.TEXTURE0 + plane.textures[i].index);
+            this.glContext.bindTexture(this.glContext.TEXTURE_2D, null);
+            this.glContext.deleteTexture(plane.textures[i].glTexture);
+        }
 
         // decrease textures loaded as it is our texture index and it is limited in WebGL
         this.loadingManager.texturesLoaded--;
     }
 
-    // delete buffers
-    this.glContext.bindBuffer(this.glContext.ARRAY_BUFFER, plane.geometry.bufferInfos.id);
-    this.glContext.bufferData(this.glContext.ARRAY_BUFFER, 1, this.glContext.STATIC_DRAW);
-    this.glContext.deleteBuffer(plane.geometry.bufferInfos.id);
+    if(this.glContext) {
+        // delete buffers
+        this.glContext.bindBuffer(this.glContext.ARRAY_BUFFER, plane.geometry.bufferInfos.id);
+        this.glContext.bufferData(this.glContext.ARRAY_BUFFER, 1, this.glContext.STATIC_DRAW);
+        this.glContext.deleteBuffer(plane.geometry.bufferInfos.id);
 
-    this.glContext.bindBuffer(this.glContext.ARRAY_BUFFER, plane.material.bufferInfos.id);
-    this.glContext.bufferData(this.glContext.ARRAY_BUFFER, 1, this.glContext.STATIC_DRAW);
-    this.glContext.deleteBuffer(plane.material.bufferInfos.id);
+        this.glContext.bindBuffer(this.glContext.ARRAY_BUFFER, plane.material.bufferInfos.id);
+        this.glContext.bufferData(this.glContext.ARRAY_BUFFER, 1, this.glContext.STATIC_DRAW);
+        this.glContext.deleteBuffer(plane.material.bufferInfos.id);
 
-    // delete the shaders
-    this.glContext.deleteShader(plane.shaders.fragmentShader);
-    this.glContext.deleteShader(plane.shaders.vertexShader);
+        // delete the shaders
+        this.glContext.deleteShader(plane.shaders.fragmentShader);
+        this.glContext.deleteShader(plane.shaders.vertexShader);
 
-    // and delete the program at last
-    this.glContext.deleteProgram(plane.program);
+        // and delete the program at last
+        this.glContext.deleteProgram(plane.program);
+    }
 
     // remove from our Curtains planes array
     var planeIndex;
@@ -371,7 +375,7 @@ Curtains.prototype.removePlane = function(plane) {
     this.planes.splice(planeIndex, 1);
 
     // clear the buffer to clean scene
-    this.glContext.clear(this.glContext.DEPTH_BUFFER_BIT | this.glContext.COLOR_BUFFER_BIT);
+    if(this.glContext) this.glContext.clear(this.glContext.DEPTH_BUFFER_BIT | this.glContext.COLOR_BUFFER_BIT);
 
     // we are no longer manipulating the drawstack, we can draw it again
     drawStack[stackIndex].isReordering = false;
@@ -518,7 +522,7 @@ Curtains.prototype._readyToDraw = function() {
     // enable depth by default
     this._handleDepth(true);
 
-    console.log("curtains.js - v1.6");
+    console.log("curtains.js - v1.7");
 
     var self = this;
     function animatePlanes() {
@@ -635,8 +639,8 @@ function Plane(curtainWrapper, plane, params) {
 
     // set our basic initial infos
     this.size = {
-        width: (this.htmlElement.clientWidth * this.wrapper.pixelRatio || this.wrapper.glCanvas.width),
-        height: (this.htmlElement.clientHeight * this.wrapper.pixelRatio || this.wrapper.glCanvas.height),
+        width: (this.htmlElement.getBoundingClientRect().width * this.wrapper.pixelRatio || this.wrapper.glCanvas.width),
+        height: (this.htmlElement.getBoundingClientRect().height * this.wrapper.pixelRatio || this.wrapper.glCanvas.height),
     }
 
     this.scale = {
@@ -734,7 +738,7 @@ function Plane(curtainWrapper, plane, params) {
     // but we have to keep in mind that 10*15 and 15*10 are not the same vertices definion, so we add widthSegments to differenciate them
     this.wrapper._stackPlane(widthSegments * heightSegments + widthSegments);
 
-     return this;
+    return this;
 }
 
 
@@ -822,7 +826,6 @@ Plane.prototype._setupPlane = function() {
      // matrix uniforms
      this.matrix.pMatrixUniform = glContext.getUniformLocation(this.program, "uPMatrix");
      this.matrix.mvMatrixUniform = glContext.getUniformLocation(this.program, "uMVMatrix");
-
 
      // set default attributes
      var defaultAttributes = {
@@ -1038,8 +1041,8 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
     widthSegments = Math.floor(widthSegments) || 1; // 1 is default definition
     heightSegments = Math.floor(heightSegments) || 1;
 
-    var planeWidth = (this.htmlElement.clientWidth * this.wrapper.pixelRatio || this.wrapper.glCanvas.width);
-    var planeHeight = (this.htmlElement.clientHeight * this.wrapper.pixelRatio || this.wrapper.glCanvas.height);
+    var planeWidth = (this.htmlElement.getBoundingClientRect().width * this.wrapper.pixelRatio || this.wrapper.glCanvas.width);
+    var planeHeight = (this.htmlElement.getBoundingClientRect().height * this.wrapper.pixelRatio || this.wrapper.glCanvas.height);
 
     // if this our first time we need to create our geometry and material objects
     if(!this.geometry && !this.material) {
@@ -1082,7 +1085,7 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
     // scale the texture now that we know all our sizes
     for(var i = 0; i < this.textures.length; i++) {
         // adjust size
-        this._adjustTextureSize(i);
+        this._adjustTextureSize(i, true);
     }
 
     var glContext = this.wrapper.glContext;
@@ -1504,6 +1507,12 @@ Plane.prototype.setScale = function(scaleX, scaleY) {
 
     // set mvMatrix
     this.matrix.mvMatrix = this._setMVMatrix();
+
+    // scale the texture to adapt to new scale
+    for(var i = 0; i < this.textures.length; i++) {
+        // adjust size
+        this._adjustTextureSize(i, false);
+    }
 }
 
 
@@ -1813,8 +1822,8 @@ Plane.prototype.planeResize = function() {
     this.matrix.pMatrix = this._setPerspectiveMatrix(this.fov, 0.1, this.fov * 2);
 
     // our plane width and height
-    var planeWidth = this.htmlElement.clientWidth * this.wrapper.pixelRatio;
-    var planeHeight = this.htmlElement.clientHeight * this.wrapper.pixelRatio;
+    var planeWidth = this.htmlElement.getBoundingClientRect().width * this.wrapper.pixelRatio;
+    var planeHeight = this.htmlElement.getBoundingClientRect().height * this.wrapper.pixelRatio;
 
     // if div is not in the DOM anymore, probably because there's been a ajax call in between
     // we loop through the DOM looking if they are back
@@ -1871,7 +1880,7 @@ Plane.prototype.planeResize = function() {
         // resize all textures only if plane size has changed
         if(shouldResizeTextures) {
             for(var i = 0; i < this.textures.length; i++) {
-                this._adjustTextureSize(i);
+                this._adjustTextureSize(i, false);
             }
         }
     }
@@ -1913,6 +1922,8 @@ Plane.prototype.loadImages = function(imagesArray) {
         image.crossOrigin = self.crossOrigin;
         image.sampler = imagesArray[i].getAttribute("data-sampler") || null;
         image.src = imagesArray[i].src;
+
+        image.shouldUpdate = true;
     }
 
     // we need to be sure that we have loaded all the images
@@ -1975,6 +1986,8 @@ Plane.prototype.loadVideos = function(videosArray) {
     // reset our loading flag
     this.videosLoaded = false;
 
+    var glContext = this.wrapper.glContext;
+
     function initVideo(plane, index) {
         video = document.createElement('video');
 
@@ -2012,6 +2025,9 @@ Plane.prototype.loadVideos = function(videosArray) {
                 video.updateInterval = setInterval(function() {
                     // we should draw a new frame
                     video.frameUpdate = true;
+
+                    // now that we can play the video, flip Y the texture
+                    glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, true);
                 }, 33);
             }
         }
@@ -2213,8 +2229,9 @@ Called internally inside a loop to resize all textures at once
 
 params :
     @index (integer) : index of the texture to adjust
+    @shouldBindTexture (integer) : if we should bind the texture (always true on initialization and if imageCover is set to true)
 ***/
-Plane.prototype._adjustTextureSize = function(index) {
+Plane.prototype._adjustTextureSize = function(index, shouldBindTexture) {
     this.wrapper._isInitialized();
 
     // we will only resize image textures here because videos textures are created directly in the draw loop
@@ -2225,7 +2242,8 @@ Plane.prototype._adjustTextureSize = function(index) {
 
         var glContext = this.wrapper.glContext;
 
-        if(!this.imageCover) {
+        if(shouldBindTexture && (!this.imageCover || !image.shouldUpdate)) {
+
             glContext.useProgram(this.program);
             // tell WebGL we want to affect the texture at the plane's index unit
             glContext.activeTexture(glContext.TEXTURE0 + this.textures[index].index);
@@ -2233,13 +2251,15 @@ Plane.prototype._adjustTextureSize = function(index) {
             glContext.bindTexture(glContext.TEXTURE_2D, this.textures[index].glTexture);
 
             glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, image);
+
         }
-        else {
+        else if(this.imageCover && image.shouldUpdate) {
+            // we are going to draw the image inside a canvas, centered and cropped to act like a background cover
             var drawCanvas = document.createElement("canvas");
             var drawCtx = drawCanvas.getContext("2d");
 
-            drawCanvas.width  = this.size.width;
-            drawCanvas.height = this.size.height;
+            drawCanvas.width  = this.size.width * this.scale.x;
+            drawCanvas.height = this.size.height * this.scale.y;
 
             var imgWidth = image.width;
             var imgHeight = image.height;
@@ -2258,8 +2278,8 @@ Plane.prototype._adjustTextureSize = function(index) {
                 imgXPos = Math.min(0, (drawCanvas.width - (drawCanvas.height * imgRatio)) / 2);
             }
 
-            drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-            drawCtx.drawImage( image, imgXPos, imgYPos, drawCanvas.width - (imgXPos * 2), drawCanvas.height - (imgYPos * 2));
+            // we will use Math.round() to boost performance
+            drawCtx.drawImage(image, 0, 0, imgWidth, imgHeight, imgXPos, Math.round(imgYPos), Math.round(drawCanvas.width - (imgXPos * 2)), Math.round(drawCanvas.height - (imgYPos * 2)));
 
             glContext.useProgram(this.program);
             // tell WebGL we want to affect the texture at the plane's index unit
@@ -2304,9 +2324,6 @@ Plane.prototype._drawPlane = function(shouldBindBuffers) {
             if(texture.type == "video") {
                 if(plane.videos[texture.typeIndex].firstStarted) {
                     if(plane.videos[texture.typeIndex].frameUpdate && plane.videos[texture.typeIndex].shouldUpdate) {
-                        // flip Y all textures
-                        glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, true);
-
                         // if our flag is set to true we draw the next frame
                         glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, plane.videos[texture.typeIndex]);
 

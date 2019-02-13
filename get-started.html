@@ -529,10 +529,13 @@ window.onload = function() {
 							<h2>Other performance tips</h2>
 							<ul>
 								<li>
+									Plane's videos and canvases textures are updated at each frame, which has a significant impact on performance. When those textures are not visible (if they are hidden by another texture, or if the plane is not visible in the viewport...), you should set those videos or canvases shouldUpdate property to false, and switch it back to true before displaying them.
+								</li>
+								<li>
 									Be careful with each plane definition. A lot of vertices implies a big impact on performance. If you plan to use more than one plane, try to reduce the number of vertices.
 								</li>
 								<li>
-									Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size. It goes the same for videos of course : try to keep them as light as possible.
+									Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size. It goes the same for videos of course: try to keep them as light as possible.
 								</li>
 								<li>
 							        Try to use as less javascript as possible in the onRender() planes methods as this get executed at each draw call. Try not to use too many uniforms as they are updated at every draw call as well.

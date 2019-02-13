@@ -84,7 +84,7 @@
 						<div class="text-section">
 							<h2>Download</h2>
 							<p>
-								<a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v1.6">curtains.js v1.6 (78Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v1.6">curtains.min.js v1.6 (30Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+								<a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v1.7">curtains.js v1.7 (79Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v1.7">curtains.min.js v1.7 (31Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
 							</p>
 						</div>
 
@@ -152,6 +152,21 @@ import {Curtains} from 'curtainsjs';
 
 						<div class="text-section">
 							<h2>Changelog</h2>
+							<h3>Version 1.7</h3>
+							<ul>
+								<li>
+									setScale() method now adjusts the textures sizes as well.
+								</li>
+								<li>
+									Fixed a bug where CSS scale and plane's sizes were not synced.
+								</li>
+								<li>
+									All plane's images, canvases and videos now have a shouldUpdate property set to true by default. When those associated textures are not visible, you could set this property to false to get a performance boost.
+								</li>
+								<li>
+									Fixed a bug with video textures (props to <a href="https://github.com/deJong" title="@deJong" target="_blank">@deJong</a>)
+								</li>
+							</ul>
 							<h3>Version 1.6</h3>
 							<ul>
 								<li>

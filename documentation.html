@@ -255,7 +255,7 @@ var params = {
 										<strong>planeResize</strong>() :
 									</p>
 									<p>
-										This method is called internally each time the WebGL canvas is resized, but if you remove the plane HTML element and append it again later (typically with an AJAX navigation, see the <a href="examples/ajax-navigation/index.html" title="AJAX navigation" target="_blank">AJAX navigation</a> example), you would have to manually reset the plane size by calling it.
+										This method is called internally each time the WebGL canvas is resized, but you should call it manually each time you're updating a plane size, either via CSS animations or directly in javascript. Updates position as well if the mimicCSS property is set to true.
 									</p>
 								</li>
 

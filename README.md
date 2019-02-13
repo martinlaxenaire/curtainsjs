@@ -612,7 +612,7 @@ var params = {
             <strong>planeResize</strong>() :
         </p>
         <p>
-            This method is called internally each time the WebGL canvas is resized, but if you remove the plane HTML element and append it again later (typically with an AJAX navigation, see the <a href="examples/ajax-navigation/index.html" title="AJAX navigation" target="_blank">AJAX navigation</a> example), you would have to manually reset the plane size by calling it.
+            This method is called internally each time the WebGL canvas is resized, but you should call it manually each time you're updating a plane size, either via CSS animations or directly in javascript. Updates position as well if the mimicCSS property is set to true.
         </p>
     </li>
     <li>
@@ -708,10 +708,13 @@ var params = {
 <h2>Other performance tips</h2>
 <ul>
     <li>
+        Plane's videos and canvases textures are updated at each frame, which has a significant impact on performance. When those textures are not visible (if they are hidden by another texture, or if the plane is not visible in the viewport...), you should set those videos or canvases shouldUpdate property to false, and switch it back to true before displaying them.
+    </li>
+    <li>
         Be careful with each plane definition. A lot of vertices implies a big impact on performance. If you plan to use more than one plane, try to reduce the number of vertices.
     </li>
     <li>
-        Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size. It goes the same for videos of course : try to keep them as light as possible.
+        Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size. It goes the same for videos of course: try to keep them as light as possible.
     </li>
     <li>
         Try to use as less javascript as possible in the onRender() planes methods as this get executed at each draw call. Try not to use too many uniforms as they are updated at every draw call as well.
@@ -721,6 +724,21 @@ var params = {
     </li>
 </ul>
 <h2>Changelog</h2>
+<h3>Version 1.7</h3>
+<ul>
+    <li>
+        setScale() method now adjusts the textures sizes as well.
+    </li>
+    <li>
+        Fixed a bug where CSS scale and plane's sizes were not synced.
+    </li>
+    <li>
+        All plane's images, canvases and videos now have a shouldUpdate property set to true by default. When those associated textures are not visible, you could set this property to false to get a performance boost.
+    </li>
+    <li>
+        Fixed a bug with video textures (props to <a href="https://github.com/deJong" title="@deJong" target="_blank">@deJong</a>)
+    </li>
+</ul>
 <h3>Version 1.6</h3>
 <ul>
     <li>
