@@ -1988,7 +1988,7 @@ Plane.prototype.loadVideos = function(videosArray) {
 
         video.sampler = videosArray[index].getAttribute("data-sampler") || null;
 
-        video.crossOrigin = this.crossOrigin;
+        video.crossOrigin = self.crossOrigin;
 
         // our video has not yet started for the first time
         video.firstStarted = false;
