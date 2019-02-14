@@ -445,7 +445,7 @@ Curtains.prototype._createShader = function(shaderCode, shaderType) {
     if (!this.glContext.getShaderParameter(shader, this.glContext.COMPILE_STATUS) && !this.glContext.isContextLost()) {
         if(!this.productionMode) console.warn("Errors occurred while compiling the shader:\n" + this.glContext.getShaderInfoLog(shader));
 
-        this.container.classList.add('no-webgl-curtains');
+        document.body.classList.add('no-curtains');
         return null;
     }
     return shader;
@@ -791,7 +791,7 @@ Plane.prototype._setupPlane = function() {
     if((!this.shaders.vertexShader || !this.shaders.fragmentShader) && !this.wrapper.productionMode) {
         if(!this.wrapper.productionMode) console.warn("Unable to find the vertex or fragment shader");
 
-        this.wrapper.container.classList.add('no-webgl-curtains');
+        document.body.classList.add('no-curtains');
         return false;
     }
 
@@ -804,7 +804,7 @@ Plane.prototype._setupPlane = function() {
     if (!glContext.getProgramParameter(this.program, glContext.LINK_STATUS) && !glContext.isContextLost()) {
        if(!this.wrapper.productionMode) console.warn("Unable to initialize the shader program.");
 
-       this.wrapper.container.classList.add('no-webgl-curtains');
+       document.body.classList.add('no-curtains');
        return false;
     }
 
