@@ -48,6 +48,9 @@ window.onload = function() {
             // load the images
             asyncTexturesPlane.loadImages(asyncImgElements)
             .onReady(function() {
+                // if window has been resized between plane creation and image loading, we need to trigger a resize
+                asyncTexturesPlane.planeResize();
+
                 // images are loaded, we are ready to attach event listener and do stuff
                 planeElements[0].addEventListener("click", function() {
                     // switch the active texture

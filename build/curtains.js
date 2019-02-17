@@ -1102,6 +1102,12 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
     widthSegments = Math.floor(widthSegments) || 1; // 1 is default definition
     heightSegments = Math.floor(heightSegments) || 1;
 
+    // we could not use plane.size property here because it might have changed since its creation
+    // if the plane does not have any texture yet, a window resize does not trigger the resize function
+    var planeElementBoundingRect = this.htmlElement.getBoundingClientRect();
+    var planeWidth = planeElementBoundingRect.width * this.wrapper.pixelRatio || this.wrapper.glCanvas.width;
+    var planeHeight = planeElementBoundingRect.height * this.wrapper.pixelRatio || this.wrapper.glCanvas.height;
+
     // if this our first time we need to create our geometry and material objects
     if(!this.geometry && !this.material) {
         var returnedVertices = this._setPlaneVertices(widthSegments, heightSegments);
@@ -1118,8 +1124,8 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
 
     // set plane scale relative to its canvas parent
     this.geometry.innerScale = {
-        x: this.size.width / this.wrapper.glCanvas.width,
-        y: this.size.height / this.wrapper.glCanvas.height
+        x: planeWidth / this.wrapper.glCanvas.width,
+        y: planeHeight / this.wrapper.glCanvas.height
     };
 
 
