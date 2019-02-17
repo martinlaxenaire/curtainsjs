@@ -1,7 +1,7 @@
 /***
     Little WebGL helper to apply images, videos or canvases as textures of planes
     Author: Martin Laxenaire https://www.martin-laxenaire.fr/
-    Version: 1.6
+    Version: 1.7
 
     Compatibility
     PC: Chrome (65.0), Firefox (59.0.2), Microsoft Edge (41)
@@ -76,11 +76,14 @@ Curtains.prototype._init = function() {
     // set our canvas sizes
     this.pixelRatio = window.devicePixelRatio || 1;
 
-    this.glCanvas.style.width  = Math.floor(this.container.clientWidth) + "px";
-    this.glCanvas.style.height = Math.floor(this.container.clientHeight) + "px";
+    var containerWidth = this.container.clientWidth;
+    var containerHeight = this.container.clientHeight;
 
-    this.glCanvas.width  = Math.floor(this.container.clientWidth) * this.pixelRatio;
-    this.glCanvas.height = Math.floor(this.container.clientHeight) * this.pixelRatio;
+    this.glCanvas.style.width  = Math.floor(containerWidth) + "px";
+    this.glCanvas.style.height = Math.floor(containerHeight) + "px";
+
+    this.glCanvas.width  = Math.floor(containerWidth) * this.pixelRatio;
+    this.glCanvas.height = Math.floor(containerHeight) * this.pixelRatio;
 
     // set our context viewport
     this.glContext.viewport(0, 0, this.glContext.drawingBufferWidth, this.glContext.drawingBufferHeight);
@@ -500,15 +503,17 @@ used internally in each requestAnimationFrame call
 ***/
 Curtains.prototype._reSize = function() {
     // if container size has changed
-    if(parseInt(this.glCanvas.style.width) !== Math.floor(this.container.clientWidth) || parseInt(this.glCanvas.style.height) !== Math.floor(this.container.clientHeight)) {
+    var containerWidth = this.container.clientWidth;
+    var containerHeight = this.container.clientHeight;
+    if(parseInt(this.glCanvas.style.width) !== Math.floor(containerWidth) || parseInt(this.glCanvas.style.height) !== Math.floor(containerHeight)) {
 
         this.pixelRatio = window.devicePixelRatio || 1;
 
-        this.glCanvas.style.width  = Math.floor(this.container.clientWidth) + "px";
-        this.glCanvas.style.height = Math.floor(this.container.clientHeight) + "px";
+        this.glCanvas.style.width  = Math.floor(containerWidth) + "px";
+        this.glCanvas.style.height = Math.floor(containerHeight) + "px";
 
-        this.glCanvas.width  = Math.floor(this.container.clientWidth) * this.pixelRatio;
-        this.glCanvas.height = Math.floor(this.container.clientHeight) * this.pixelRatio;
+        this.glCanvas.width  = Math.floor(containerWidth) * this.pixelRatio;
+        this.glCanvas.height = Math.floor(containerHeight) * this.pixelRatio;
 
         this.glContext.viewport(0, 0, this.glContext.drawingBufferWidth, this.glContext.drawingBufferHeight);
 
@@ -680,9 +685,10 @@ function Plane(curtainWrapper, plane, params) {
     this.shouldUseDepthTest = true;
 
     // set our basic initial infos
+    var planeElementBoundingRect = this.htmlElement.getBoundingClientRect();
     this.size = {
-        width: (this.htmlElement.getBoundingClientRect().width * this.wrapper.pixelRatio || this.wrapper.glCanvas.width),
-        height: (this.htmlElement.getBoundingClientRect().height * this.wrapper.pixelRatio || this.wrapper.glCanvas.height),
+        width: (planeElementBoundingRect.width * this.wrapper.pixelRatio || this.wrapper.glCanvas.width),
+        height: (planeElementBoundingRect.height * this.wrapper.pixelRatio || this.wrapper.glCanvas.height),
     }
 
     this.scale = {
@@ -1096,9 +1102,6 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
     widthSegments = Math.floor(widthSegments) || 1; // 1 is default definition
     heightSegments = Math.floor(heightSegments) || 1;
 
-    var planeWidth = (this.htmlElement.getBoundingClientRect().width * this.wrapper.pixelRatio || this.wrapper.glCanvas.width);
-    var planeHeight = (this.htmlElement.getBoundingClientRect().height * this.wrapper.pixelRatio || this.wrapper.glCanvas.height);
-
     // if this our first time we need to create our geometry and material objects
     if(!this.geometry && !this.material) {
         var returnedVertices = this._setPlaneVertices(widthSegments, heightSegments);
@@ -1115,8 +1118,8 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
 
     // set plane scale relative to its canvas parent
     this.geometry.innerScale = {
-        x: planeWidth / this.wrapper.glCanvas.width,
-        y: planeHeight / this.wrapper.glCanvas.height
+        x: this.size.width / this.wrapper.glCanvas.width,
+        y: this.size.height / this.wrapper.glCanvas.height
     };
 
 
@@ -1695,10 +1698,13 @@ This function takes the plane CSS positions and convert them to clip space coord
 Plane.prototype._applyCSSPositions = function() {
     var planeAspect = this.size.width / this.size.height;
 
+    var planeOffset = this.htmlElement.getBoundingClientRect();
+    var wrapperOffset = this.wrapper.container.getBoundingClientRect();
+
     // plane position
     var cssPositions = {
-        top: this.htmlElement.getBoundingClientRect().top - this.wrapper.container.getBoundingClientRect().top,
-        left: this.htmlElement.getBoundingClientRect().left - this.wrapper.container.getBoundingClientRect().left,
+        top: planeOffset.top - wrapperOffset.top,
+        left: planeOffset.left - wrapperOffset.left,
     }
 
     // our position relative to the clip space
@@ -1879,8 +1885,9 @@ Plane.prototype.planeResize = function() {
     this.matrix.pMatrix = this._setPerspectiveMatrix(this.fov, 0.1, this.fov * 2);
 
     // our plane width and height
-    var planeWidth = this.htmlElement.getBoundingClientRect().width * this.wrapper.pixelRatio;
-    var planeHeight = this.htmlElement.getBoundingClientRect().height * this.wrapper.pixelRatio;
+    var planeElementBoundingRect = this.htmlElement.getBoundingClientRect();
+    var planeWidth = planeElementBoundingRect.width * this.wrapper.pixelRatio;
+    var planeHeight = planeElementBoundingRect.height * this.wrapper.pixelRatio;
 
     // if div is not in the DOM anymore, probably because there's been a ajax call in between
     // we loop through the DOM looking if they are back
