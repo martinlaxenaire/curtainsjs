@@ -121,6 +121,14 @@
         display: none;
     }
 
+    /*** handling errors ***/
+
+    .no-curtains .plane img {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
 }
 
 

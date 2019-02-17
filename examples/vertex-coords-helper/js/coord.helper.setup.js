@@ -26,13 +26,20 @@ window.onload = function(){
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
 
+    // handling errors
+    webGLCurtain.onError(function() {
+        // we will add a class to the document body to display original images
+        document.body.classList.add("no-curtains");
+    });
+
     // get our plane element
     var planeElements = document.getElementsByClassName("plane");
     // add the plane
     var helperPlane = webGLCurtain.addPlane(planeElements[0], params);
 
     // when the plane is set up, listen to the mouse move event
-    helperPlane.onReady(function() {
+    // we also check if helperPlane is defined (it won't be if there's any error during init)
+    helperPlane && helperPlane.onReady(function() {
 
         var wrapper = document.getElementById("page-wrap");
 

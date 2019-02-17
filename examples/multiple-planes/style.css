@@ -147,6 +147,19 @@
         background: black;
     }
 
+
+    /*** handling errors ***/
+
+    .no-curtains .plane-title {
+        z-index: 1;
+    }
+
+    .no-curtains .plane img {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
 }
 
 

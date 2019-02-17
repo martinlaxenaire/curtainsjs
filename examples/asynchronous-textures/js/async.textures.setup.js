@@ -10,6 +10,13 @@ window.onload = function() {
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
 
+    webGLCurtain.onError(function() {
+        // we will add a class to the document body to display original images
+        document.body.classList.add("no-curtains");
+        // display an error message
+        document.getElementById("load-images").innerHTML = "There has been an error while initiating the WebGL context.";
+    });
+
     // get our plane element
     var planeElements = document.getElementsByClassName("async-textures");
 
@@ -36,34 +43,37 @@ window.onload = function() {
 
         // get our images in the HTML, but it could be inside an AJAX response
         var asyncImgElements = document.getElementById("async-textures-wrapper").getElementsByTagName("img");
-        // load the images
-        asyncTexturesPlane.loadImages(asyncImgElements)
-        .onReady(function() {
-            // images are loaded, we are ready to attach event listener and do stuff
-            planeElements[0].addEventListener("click", function() {
-                // switch the active texture
-                if(activeTexture == 1) {
-                    activeTexture = 2;
+        // if there has not been any error during init
+        if(asyncTexturesPlane) {
+            // load the images
+            asyncTexturesPlane.loadImages(asyncImgElements)
+            .onReady(function() {
+                // images are loaded, we are ready to attach event listener and do stuff
+                planeElements[0].addEventListener("click", function() {
+                    // switch the active texture
+                    if(activeTexture == 1) {
+                        activeTexture = 2;
 
-                    document.getElementById("async-textures-wrapper").classList.add("second-image-shown");
+                        document.getElementById("async-textures-wrapper").classList.add("second-image-shown");
+                    }
+                    else {
+                        activeTexture = 1;
+
+                        document.getElementById("async-textures-wrapper").classList.remove("second-image-shown");
+                    }
+                });
+
+            }).onRender(function() {
+                // increase/decrease our timer based on active texture
+                if(activeTexture == 2) {
+                    transitionTimer = Math.min(60, transitionTimer + 1);
                 }
                 else {
-                    activeTexture = 1;
-
-                    document.getElementById("async-textures-wrapper").classList.remove("second-image-shown");
+                    transitionTimer = Math.max(0, transitionTimer - 1);
                 }
+                // update the uniform
+                asyncTexturesPlane.uniforms.transitionTimer.value = transitionTimer;
             });
-
-        }).onRender(function() {
-            // increase/decrease our timer based on active texture
-            if(activeTexture == 2) {
-                transitionTimer = Math.min(60, transitionTimer + 1);
-            }
-            else {
-                transitionTimer = Math.max(0, transitionTimer - 1);
-            }
-            // update the uniform
-            asyncTexturesPlane.uniforms.transitionTimer.value = transitionTimer;
-        });
+        }
     });
 }

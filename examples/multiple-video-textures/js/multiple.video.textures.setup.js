@@ -9,6 +9,15 @@ window.onload = function() {
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
 
+    // handling errors
+    webGLCurtain.onError(function() {
+        // we will add a class to the document body
+        document.body.classList.add("no-curtains", "curtains-ready");
+
+        // display an error message
+        document.getElementById("enter-site").innerHTML = "There has been an error while initiating the WebGL context.";
+    });
+
     // get our plane element
     var planeElements = document.getElementsByClassName("multi-textures");
 
@@ -35,7 +44,7 @@ window.onload = function() {
     var multiTexturesPlane = webGLCurtain.addPlane(planeElements[0], params);
 
     // create our plane
-    multiTexturesPlane.onReady(function() {
+    multiTexturesPlane && multiTexturesPlane.onReady(function() {
         // display the button
         document.body.classList.add("curtains-ready");
 
@@ -65,7 +74,7 @@ window.onload = function() {
     }).onRender(function() {
         // increase or decrease our timer based on the active texture value
         if(activeTexture == 2) {
-            transitionTimer = Math.min(90, transitionTimer + 1);
+            transitionTimer = Math.min(60, transitionTimer + 1);
         }
         else {
             transitionTimer = Math.max(0, transitionTimer - 1);

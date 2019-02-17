@@ -59,4 +59,10 @@
         display: none;
     }
 
+    /*** handling errors ***/
+
+    .no-curtains .curtain canvas {
+        display: block;
+    }
+
 }

@@ -11,6 +11,14 @@ function portfolioNavigation() {
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
 
+    webGLCurtain.onError(function() {
+        // we will add a class to the document body to display original images
+        document.body.classList.add("no-curtains", "planes-loaded");
+
+        // handle ajax navigation anyway
+        handleNavigation();
+    });
+
     // we will keep track of all our planes in an array
     var planes = [];
 
@@ -49,7 +57,7 @@ function portfolioNavigation() {
         planes.push(webGLCurtain.addPlane(planeElements[i], params));
 
         // update loader
-        planes[i].onLoading(function() {
+        planes[i] && planes[i].onLoading(function() {
             imagesLoaded++;
             document.getElementById("loading").textContent = parseInt((imagesLoaded / planeElements.length) * 100) + "%";
         });
@@ -62,7 +70,7 @@ function portfolioNavigation() {
     // handle all the planes
     function handlePlanes(index) {
         var plane = planes[index];
-        plane.onReady(function() {
+        plane && plane.onReady(function() {
             // to update the plane position during css translate animation
             plane.shouldUpdatePos = false;
 
@@ -161,13 +169,13 @@ function portfolioNavigation() {
 
             // tell our plane to update their positions during css animation
             for(var i = 0; i < planes.length; i++) {
-                planes[i].shouldUpdatePos = true;
+                if(planes[i]) planes[i].shouldUpdatePos = true;
             }
 
             // animation is done
             setTimeout(function() {
                 for(var i = 0; i < planes.length; i++) {
-                    planes[i].shouldUpdatePos = false;
+                    if(planes[i]) planes[i].shouldUpdatePos = false;
                 }
             }, 900);
         }
@@ -257,7 +265,7 @@ function portfolioNavigation() {
 
                 // since the planes HTML elements were removed from our content by the previous AJAX call we need to reset their sizes
                 for(var i = 0; i < planes.length; i++) {
-                    planes[i].planeResize();
+                    if(planes[i]) planes[i].planeResize();
                 }
 
                 // handle the home slideshow click again

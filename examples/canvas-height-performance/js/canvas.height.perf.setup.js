@@ -5,6 +5,11 @@ window.onload = function(){
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
 
+    webGLCurtain.onError(function() {
+        // we will add a class to the document body to display original images
+        document.body.classList.add("no-curtains", "planes-loaded");
+    });
+
     // we will keep track of all our planes in an array
     var planes = [];
     // whether the canvas will cover the whole document or just the window size
@@ -30,7 +35,9 @@ window.onload = function(){
 
     // add our planes and handle them
     for(var i = 0; i < planeElements.length; i++) {
-        planes.push(webGLCurtain.addPlane(planeElements[i], params));
+        var plane = webGLCurtain.addPlane(planeElements[i], params);
+        // push the plane only if it is defined
+        if(plane) planes.push(plane);
 
         handlePlanes(i);
     }
@@ -40,7 +47,7 @@ window.onload = function(){
         // if the canvas does not cover the whole document, we have to update the plane positions during scroll
         if(perfOptimised) {
             for(var i = 0; i < planes.length; i++) {
-                planes[i].updatePosition();
+                if(planes[i]) planes[i].updatePosition();
             }
         }
     });
@@ -49,7 +56,7 @@ window.onload = function(){
     // handle all the planes
     function handlePlanes(index) {
         var plane = planes[index];
-        plane.onReady(function() {
+        plane && plane.onReady(function() {
             // once everything is ready, display everything
             if(index == planes.length - 1) {
                 document.body.classList.add("planes-loaded");

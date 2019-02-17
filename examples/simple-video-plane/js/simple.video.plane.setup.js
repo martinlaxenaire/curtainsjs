@@ -21,6 +21,20 @@ function initCurtains() {
     // get our plane element
     var planeElements = document.getElementsByClassName("curtain");
 
+    // handling errors
+    webGLCurtain.onError(function() {
+        // we will add a class to the document body to display original video
+        document.body.classList.add("no-curtains", "curtains-ready");
+
+        // handle video
+        document.getElementById("enter-site").addEventListener("click", function() {
+            // display canvas and hide the button
+            document.body.classList.add("video-started");
+
+            planeElements[0].getElementsByTagName("video")[0].play();
+        }, false);
+    });
+
 
     // could be useful to get pixel ratio
     var pixelRatio = window.devicePixelRatio ? window.devicePixelRatio : 1.0;
@@ -57,7 +71,7 @@ function initCurtains() {
     // create our plane
     var simplePlane = webGLCurtain.addPlane(planeElements[0], params);
 
-    simplePlane.onReady(function() {
+    simplePlane && simplePlane.onReady(function() {
         // display the button
         document.body.classList.add("curtains-ready");
 

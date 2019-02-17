@@ -479,6 +479,14 @@ var curtains = new Curtains("canvas", true); // use the library in "production" 
     </li>
     <li>
         <p>
+            <strong>onError</strong>() :
+        </p>
+        <p>
+            This function will be called if there's an error during the initialisation, or if the WebGL context could not be created.
+        </p>
+    </li>
+    <li>
+        <p>
             <strong>dispose</strong>() :
         </p>
         <p>
@@ -734,6 +742,9 @@ var params = {
     </li>
     <li>
         All plane's images, canvases and videos now have a shouldUpdate property set to true by default. When those associated textures are not visible, you could set this property to false to get a performance boost.
+    </li>
+    <li>
+        Added an onError() callback to the Curtains object to handle errors during initialisation and updated all examples.
     </li>
     <li>
         Fixed a bug with video textures (props to <a href="https://github.com/deJong" title="@deJong" target="_blank">@deJong</a>)

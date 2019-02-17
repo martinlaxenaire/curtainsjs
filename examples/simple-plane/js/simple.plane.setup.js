@@ -18,6 +18,12 @@ window.onload = function(){
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
 
+    // handling errors
+    webGLCurtain.onError(function() {
+        // we will add a class to the document body to display original images
+        document.body.classList.add("no-curtains");
+    });
+
     // get our plane element
     var planeElements = document.getElementsByClassName("curtain");
 
@@ -57,7 +63,8 @@ window.onload = function(){
     // create our plane
     var simplePlane = webGLCurtain.addPlane(planeElements[0], params);
 
-    simplePlane.onReady(function() {
+    // if there has been an error during init, simplePlane will be null
+    simplePlane && simplePlane.onReady(function() {
         // set a fov of 35 to exagerate perspective
         simplePlane.setPerspective(35);
 

@@ -108,7 +108,7 @@
 				// i'll be using the fragment shader seen here : https://tympanus.net/codrops/2018/04/10/webgl-distortion-hover-effects/
 				vec4 displacementTexture = texture2D(displacement, textureCoords);
 
-				float displacementFactor = (cos(uTransitionTimer / (90.0 / 3.141592)) + 1.0) / 2.0;
+				float displacementFactor = (cos(uTransitionTimer / (60.0 / 3.141592)) + 1.0) / 2.0;
 				float effectFactor = 1.0;
 
 				vec2 firstDisplacementCoords = vec2(textureCoords.x + displacementFactor * (displacementTexture.r * effectFactor), textureCoords.y);

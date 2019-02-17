@@ -380,6 +380,27 @@
         opacity: 0;
     }
 
+    /*** handling errors ***/
+
+    .no-curtains .plane {
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        transform: translate3D(0, 0, 0) scale(1);
+        transition: transform 1s ease-in;
+    }
+
+    .no-curtains.go-to-project .plane {
+        transform: translate3D(0, -12.5vh, 0) scale(1.5);
+    }
+
+    .no-curtains .plane img {
+        display: block;
+        object-fit: cover;
+    }
+
 }
 
 

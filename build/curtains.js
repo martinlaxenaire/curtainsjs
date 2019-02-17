@@ -33,6 +33,11 @@ function Curtains(containerID, production) {
     if(!this.container) {
         if(!this.productionMode) console.warn("You must specify a valid container ID");
 
+        // call the error callback if provided
+        if(this._onErrorCallback) {
+            this._onErrorCallback()
+        }
+
         return false;
     }
 
@@ -61,6 +66,10 @@ Curtains.prototype._init = function() {
     if(!this.glContext) {
         if(!this.productionMode) console.warn("WebGL context could not be created");
 
+        if(this._onErrorCallback) {
+            this._onErrorCallback()
+        }
+
         return;
     }
 
@@ -85,6 +94,23 @@ Curtains.prototype._init = function() {
 };
 
 
+/*** HANDLING ERRORS ***/
+
+/***
+This is called when an error has been detected during init
+
+params :
+    @callback (function) : a function to execute
+***/
+Curtains.prototype.onError = function(callback) {
+    if(callback) {
+        this._onErrorCallback = callback;
+    }
+
+    return this;
+}
+
+
 /*** INIT CHECK ***/
 
 /***
@@ -93,6 +119,10 @@ Used internally to check if our canvas and context have been created
 Curtains.prototype._isInitialized = function() {
     if(!this.glCanvas || !this.glContext) {
         if(!this.productionMode) console.warn("No WebGL canvas or context");
+
+        if(this._onErrorCallback) {
+            this._onErrorCallback()
+        }
 
         return false;
     }
@@ -215,12 +245,20 @@ Curtains.prototype.addPlane = function(planeHtmlElement, params) {
     if(!this.glContext) {
         if(!this.productionMode) console.warn("Unable to create a plane. The WebGl context couldn't be created");
 
+        if(this._onErrorCallback) {
+            this._onErrorCallback()
+        }
+
         return null;
     }
     else {
 
         if(!planeHtmlElement || planeHtmlElement.length === 0) {
             if(!this.productionMode) console.warn("The html element you specified does not currently exists in the DOM");
+
+            if(this._onErrorCallback) {
+                this._onErrorCallback()
+            }
 
             return false;
         }
@@ -445,7 +483,11 @@ Curtains.prototype._createShader = function(shaderCode, shaderType) {
     if (!this.glContext.getShaderParameter(shader, this.glContext.COMPILE_STATUS) && !this.glContext.isContextLost()) {
         if(!this.productionMode) console.warn("Errors occurred while compiling the shader:\n" + this.glContext.getShaderInfoLog(shader));
 
-        document.body.classList.add('no-curtains');
+        // call the error callback if provided
+        if(this._onErrorCallback) {
+            this._onErrorCallback()
+        }
+
         return null;
     }
     return shader;
@@ -791,7 +833,11 @@ Plane.prototype._setupPlane = function() {
     if((!this.shaders.vertexShader || !this.shaders.fragmentShader) && !this.wrapper.productionMode) {
         if(!this.wrapper.productionMode) console.warn("Unable to find the vertex or fragment shader");
 
-        document.body.classList.add('no-curtains');
+        // call the error callback if provided
+        if(this._onErrorCallback) {
+            this._onErrorCallback()
+        }
+
         return false;
     }
 
@@ -804,7 +850,11 @@ Plane.prototype._setupPlane = function() {
     if (!glContext.getProgramParameter(this.program, glContext.LINK_STATUS) && !glContext.isContextLost()) {
        if(!this.wrapper.productionMode) console.warn("Unable to initialize the shader program.");
 
-       document.body.classList.add('no-curtains');
+       // call the error callback if provided
+       if(this._onErrorCallback) {
+           this._onErrorCallback()
+       }
+
        return false;
     }
 
@@ -843,6 +893,11 @@ Used internally to check if the plane shader program has been created
 Plane.prototype._isProgramInitialized = function() {
     if(!this.program) {
         if(!this.wrapper.productionMode) console.warn("No WebGL program for this plane");
+
+        // call the error callback if provided
+        if(this._onErrorCallback) {
+            this._onErrorCallback()
+        }
 
         return false;
     }
@@ -1085,6 +1140,7 @@ Plane.prototype._initializeBuffers = function(widthSegments, heightSegments) {
     // scale the texture now that we know all our sizes
     for(var i = 0; i < this.textures.length; i++) {
         // adjust size
+        // second parameter is set to true to bind the texture as its the first time we're drawing it
         this._adjustTextureSize(i, true);
     }
 
@@ -1511,6 +1567,7 @@ Plane.prototype.setScale = function(scaleX, scaleY) {
     // scale the texture to adapt to new scale
     for(var i = 0; i < this.textures.length; i++) {
         // adjust size
+        // second parameter is set to false : we don't need to bind the texture that doesn't have imageCover again
         this._adjustTextureSize(i, false);
     }
 }
@@ -1880,6 +1937,7 @@ Plane.prototype.planeResize = function() {
         // resize all textures only if plane size has changed
         if(shouldResizeTextures) {
             for(var i = 0; i < this.textures.length; i++) {
+                // second parameter is set to false : we don't need to bind the texture that doesn't have imageCover again
                 this._adjustTextureSize(i, false);
             }
         }
@@ -2224,6 +2282,21 @@ Plane.prototype._createTextures = function(textureType) {
 
 
 /***
+This is used to set the WebGL context active texture and bind it
+
+params :
+    @texture (texture object) : Our texture object containing our WebGL texture and its index
+***/
+Plane.prototype._bindPlaneTexture = function(texture) {
+    var glContext = this.wrapper.glContext;
+    // tell WebGL we want to affect the texture at the plane's index unit
+    glContext.activeTexture(glContext.TEXTURE0 + texture.index);
+    // bind the texture to the plane's index unit
+    glContext.bindTexture(glContext.TEXTURE_2D, texture.glTexture);
+}
+
+
+/***
 This is used to resize one of the texture inside a plane images array
 Called internally inside a loop to resize all textures at once
 
@@ -2242,18 +2315,7 @@ Plane.prototype._adjustTextureSize = function(index, shouldBindTexture) {
 
         var glContext = this.wrapper.glContext;
 
-        if(shouldBindTexture && (!this.imageCover || !image.shouldUpdate)) {
-
-            glContext.useProgram(this.program);
-            // tell WebGL we want to affect the texture at the plane's index unit
-            glContext.activeTexture(glContext.TEXTURE0 + this.textures[index].index);
-            // bind the texture to the plane's index unit
-            glContext.bindTexture(glContext.TEXTURE_2D, this.textures[index].glTexture);
-
-            glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, image);
-
-        }
-        else if(this.imageCover && image.shouldUpdate) {
+        if(this.imageCover && image.shouldUpdate) {
             // we are going to draw the image inside a canvas, centered and cropped to act like a background cover
             var drawCanvas = document.createElement("canvas");
             var drawCtx = drawCanvas.getContext("2d");
@@ -2282,12 +2344,22 @@ Plane.prototype._adjustTextureSize = function(index, shouldBindTexture) {
             drawCtx.drawImage(image, 0, 0, imgWidth, imgHeight, imgXPos, Math.round(imgYPos), Math.round(drawCanvas.width - (imgXPos * 2)), Math.round(drawCanvas.height - (imgYPos * 2)));
 
             glContext.useProgram(this.program);
-            // tell WebGL we want to affect the texture at the plane's index unit
-            glContext.activeTexture(glContext.TEXTURE0 + this.textures[index].index);
-            // bind the texture to the plane's index unit
-            glContext.bindTexture(glContext.TEXTURE_2D, this.textures[index].glTexture);
+
+            // bind the texture
+            this._bindPlaneTexture(this.textures[index]);
 
             glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, drawCanvas);
+
+        }
+        else if(shouldBindTexture) {
+
+            glContext.useProgram(this.program);
+
+            // bind the texture
+            this._bindPlaneTexture(this.textures[index]);
+
+            glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, image);
+
         }
     }
 
@@ -2316,9 +2388,8 @@ Plane.prototype._drawPlane = function(shouldBindBuffers) {
         function drawTexture(glContext, plane, index) {
             var texture = plane.textures[index];
 
-            glContext.activeTexture(glContext.TEXTURE0 + texture.index);
-            // bind the texture to the plane's index unit
-            glContext.bindTexture(glContext.TEXTURE_2D, texture.glTexture);
+            // bind the texture
+            plane._bindPlaneTexture(texture);
 
             // if our texture is a video we need to redraw it each time the frame has changed
             if(texture.type == "video") {

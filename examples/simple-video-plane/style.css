@@ -106,6 +106,20 @@
         cursor: pointer;
     }
 
+    /*** handling errors ***/
+
+    .no-curtains .curtain {
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .no-curtains.video-started .curtain img, .no-curtains.video-started .curtain video {
+        display: block;
+        object-fit: cover;
+    }
+
 }
 
 @media screen and (max-aspect-ratio: 1920/1080) {

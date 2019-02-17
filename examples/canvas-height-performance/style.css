@@ -101,4 +101,18 @@
         display: none;
     }
 
+    /*** handling errors ***/
+
+    .no-curtains .plane {
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .no-curtains .plane img {
+        display: block;
+        object-fit: cover;
+    }
+
 }

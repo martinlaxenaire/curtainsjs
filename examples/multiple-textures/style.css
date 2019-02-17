@@ -70,6 +70,32 @@
         display: none;
     }
 
+    /*** handling errors ***/
+
+    .no-curtains .multi-textures {
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .no-curtains .multi-textures span {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate3D(-50%, -50%, 0);
+    }
+
+    .no-curtains.image-1 .multi-textures img:nth-child(3) {
+        display: block;
+        object-fit: cover;
+    }
+
+    .no-curtains.image-2 .multi-textures img:nth-child(4) {
+        display: block;
+        object-fit: cover;
+    }
+
 }
 
 

@@ -47,4 +47,10 @@
     }
 
 
+    /*** handling errors ***/
+
+    .no-curtains .plane {
+        background: #d17379;
+    }
+
 }

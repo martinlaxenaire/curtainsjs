@@ -146,4 +146,11 @@
         opacity: 1;
     }
 
+    /*** handling error ***/
+
+    .no-curtains #load-images {
+        background: #333;
+        pointer-events: none
+    }
+
 }

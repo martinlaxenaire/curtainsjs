@@ -9,6 +9,11 @@ window.onload = function(){
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
 
+    webGLCurtain.onError(function() {
+        // we will add a class to the document body to display original images
+        document.body.classList.add("no-curtains", "planes-loaded");
+    });
+
     // we will keep track of all our planes in an array
     var planes = [];
     var planesDeformations = [];
@@ -54,7 +59,9 @@ window.onload = function(){
     // handle all the planes
     function handlePlanes(index) {
         var plane = planes[index];
-        plane.onReady(function() {
+
+        // check if our plane is defined and use it
+        plane && plane.onReady(function() {
             // once everything is ready, display everything
             if(index == planes.length - 1) {
                 document.body.classList.add("planes-loaded");

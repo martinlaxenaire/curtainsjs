@@ -3,7 +3,12 @@ function archiveNavigation() {
     var canvasContainer = document.getElementById("canvas");
 
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains("canvas");
+    var webGLCurtain = new Curtains("f");
+
+    webGLCurtain.onError(function() {
+        // we will add a class to the document body to display original images
+        document.body.classList.add("no-curtains", "planes-loaded");
+    });
 
     // we will keep track of all our planes in an array
     var planes = [];
@@ -28,7 +33,7 @@ function archiveNavigation() {
     // handle all the planes
     function handlePlanes(index) {
         var plane = planes[index];
-        plane.onReady(function() {
+        plane && plane.onReady(function() {
 
             if(index == planeElements.length - 1) {
                 console.log("all planes are ready");
@@ -49,7 +54,9 @@ function archiveNavigation() {
 
             for(var i = 0; i < planeElements.length; i++) {
                 // add the plane to our array
-                planes.push(webGLCurtain.addPlane(planeElements[i], params));
+                var plane = webGLCurtain.addPlane(planeElements[i], params)
+                // only push the plane if it exists
+                if(plane) planes.push(plane);
 
                 handlePlanes(i);
             }
@@ -168,7 +175,7 @@ function archiveNavigation() {
     // update planes positions during scroll
     window.addEventListener("scroll", function(e) {
         for(var i = 0; i < planes.length; i++) {
-            planes[i].updatePosition();
+            if(planes[i]) planes[i].updatePosition();
         }
     });
 

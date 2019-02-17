@@ -126,6 +126,13 @@
         cursor: pointer;
     }
 
+    /*** handling errors ***/
+
+    .no-curtains #enter-site {
+        background: #333;
+        pointer-events: none;
+    }
+
 }
 
 

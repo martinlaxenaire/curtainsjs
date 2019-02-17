@@ -99,15 +99,15 @@
 				vec4 displacementTexture = texture2D(displacement, textureCoords);
 
 				// slides transitions based on displacement and transition timer
-				vec2 firstDisplacementCoords = textureCoords + displacementTexture.r * ((cos(uTransitionTimer / (120.0 / 3.141592)) + 1.0) / 2.0);
+				vec2 firstDisplacementCoords = textureCoords + displacementTexture.r * ((cos((uTransitionTimer + 120.0) / (120.0 / 3.141592)) + 1.0) / 2.0);
 				vec4 firstDistortedColor = texture2D(firstTexture, firstDisplacementCoords);
 
 				// same as above but we substract the effect
-				vec2 secondDisplacementCoords = textureCoords - displacementTexture.r * ((cos((uTransitionTimer + 120.0) / (120.0 / 3.141592)) + 1.0) / 2.0);
+				vec2 secondDisplacementCoords = textureCoords - displacementTexture.r * ((cos(uTransitionTimer / (120.0 / 3.141592)) + 1.0) / 2.0);
 				vec4 secondDistortedColor = texture2D(secondTexture, secondDisplacementCoords);
 
 				// mix both texture
-				vec4 finalColor = mix(firstDistortedColor, secondDistortedColor, ((cos(uTransitionTimer / (120.0 / 3.141592)) + 1.0) / 2.0));
+				vec4 finalColor = mix(firstDistortedColor, secondDistortedColor, 1.0 - ((cos(uTransitionTimer / (120.0 / 3.141592)) + 1.0) / 2.0));
 
 				// handling premultiplied alpha
 				finalColor = vec4(finalColor.rgb * finalColor.a, finalColor.a);

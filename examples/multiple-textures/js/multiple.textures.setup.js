@@ -9,6 +9,26 @@ window.onload = function() {
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
 
+    // handling errors
+    webGLCurtain.onError(function() {
+        // we will add a class to the document body to display original images
+        document.body.classList.add("no-curtains", "image-1");
+
+        // handle simple slides here
+        planeElements[0].addEventListener("click", function() {
+            if(activeTexture == 1) {
+                activeTexture = 2;
+                document.body.classList.remove("image-1");
+                document.body.classList.add("image-2");
+            }
+            else {
+                activeTexture = 1;
+                document.body.classList.remove("image-2");
+                document.body.classList.add("image-1");
+            }
+        });
+    });
+
     // get our plane element
     var planeElements = document.getElementsByClassName("multi-textures");
 
@@ -34,8 +54,8 @@ window.onload = function() {
 
     var multiTexturesPlane = webGLCurtain.addPlane(planeElements[0], params);
 
-    // create our plane
-    multiTexturesPlane.onReady(function() {
+    // check if the plane exists and use it
+    multiTexturesPlane && multiTexturesPlane.onReady(function() {
         // when our plane is ready we add a click event listener that will switch the active texture value
         planeElements[0].addEventListener("click", function() {
             if(activeTexture == 1) {

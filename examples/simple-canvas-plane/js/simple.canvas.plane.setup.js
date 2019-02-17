@@ -30,6 +30,22 @@ function initCurtains() {
     simpleCanvas.width = planeElements[0].clientWidth;
     simpleCanvas.height = planeElements[0].clientHeight;
 
+    // handling errors
+    webGLCurtain.onError(function() {
+        // we will add a class to the document body to display original canvas
+        document.body.classList.add("no-curtains");
+
+        // handle canvas here
+        function animate() {
+            // animate our texture canvas
+            animateTextureCanvas();
+
+            window.requestAnimationFrame(animate);
+        }
+
+        animate();
+    });
+
     function animateTextureCanvas() {
         // here we will handle our canvas texture animation
 
@@ -82,7 +98,7 @@ function initCurtains() {
     // create our plane
     var simplePlane = webGLCurtain.addPlane(planeElements[0], params);
 
-    simplePlane.onReady(function() {
+    simplePlane && simplePlane.onReady(function() {
         // display the button
         document.body.classList.add("curtains-ready");
 

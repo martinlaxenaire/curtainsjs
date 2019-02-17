@@ -51,6 +51,12 @@ window.onload = function(){
 
     var webGLCurtain = new Curtains("canvas");
 
+    // handling errors
+    webGLCurtain.onError(function() {
+        // we will add a class to the document body to display original images
+        document.body.classList.add("no-curtains");
+    });
+
     var planeElements = document.getElementsByClassName("curtain");
     var examplePlanes = [];
     var planesInitialOffset = [];
@@ -116,36 +122,39 @@ window.onload = function(){
 
         var curtainPlane = webGLCurtain.addPlane(planeElements[0], curtainPlaneParams);
 
-        curtainPlane.onReady(function() {
-            planeElements[0].classList.add("curtain-ready");
-            curtainPlane.setPerspective(10);
+        // if there has been an error during init, curtainPlane will be null
+        if(curtainPlane) {
+            curtainPlane.onReady(function() {
+                planeElements[0].classList.add("curtain-ready");
+                curtainPlane.setPerspective(10);
 
-            var wrapper = document.getElementById("page-wrap");
+                var wrapper = document.getElementById("page-wrap");
 
-            wrapper.addEventListener("mousemove", function(e) {
-                handleMovement(e, curtainPlane);
-            });
+                wrapper.addEventListener("mousemove", function(e) {
+                    handleMovement(e, curtainPlane);
+                });
 
-            wrapper.addEventListener("touchmove", function(e) {
-                handleMovement(e, curtainPlane);
-            });
+                wrapper.addEventListener("touchmove", function(e) {
+                    handleMovement(e, curtainPlane);
+                });
 
-            window.onresize = function() {
-                curtainPlane.uniforms.resolution.value = [curtainPlane.htmlElement.offsetWidth, curtainPlane.htmlElement.offsetHeight];
+                window.onresize = function() {
+                    curtainPlane.uniforms.resolution.value = [curtainPlane.htmlElement.offsetWidth, curtainPlane.htmlElement.offsetHeight];
 
-                for(var i = 0; i < planeElements.length; i++) {
-                    planesInitialOffset[i] = planeElements[i].getBoundingClientRect().top + window.pageYOffset;
+                    for(var i = 0; i < planeElements.length; i++) {
+                        planesInitialOffset[i] = planeElements[i].getBoundingClientRect().top + window.pageYOffset;
+                    }
                 }
-            }
 
-        }).onRender(function() {
-            curtainPlane.uniforms.mouseTime.value++;
+            }).onRender(function() {
+                curtainPlane.uniforms.mouseTime.value++;
 
-            curtainPlane.uniforms.mouseMoveStrength.value = mouseDelta;
-            mouseDelta = Math.max(0, mouseDelta * 0.995);
+                curtainPlane.uniforms.mouseMoveStrength.value = mouseDelta;
+                mouseDelta = Math.max(0, mouseDelta * 0.995);
 
-            curtainPlane.setRelativePosition(curtainPlane.relativeTranslation.x, planesInitialOffset[0] - window.pageYOffset, curtainPlane.relativeTranslation.z);
-        });
+                curtainPlane.setRelativePosition(curtainPlane.relativeTranslation.x, planesInitialOffset[0] - window.pageYOffset, curtainPlane.relativeTranslation.z);
+            });
+        }
 
     }
 
@@ -154,30 +163,33 @@ window.onload = function(){
     function handleExamples(index) {
         var plane = examplePlanes[index - 1];
 
-        plane.onReady(function() {
+        // if there has been an error during init, plane will be null
+        if(plane) {
+            plane.onReady(function() {
 
-            plane.mouseOver = false;
-
-            planeElements[index].addEventListener("mouseenter", function(e) {
-                plane.mouseOver = true;
-            });
-
-            planeElements[index].addEventListener("mouseleave", function(e) {
                 plane.mouseOver = false;
+
+                planeElements[index].addEventListener("mouseenter", function(e) {
+                    plane.mouseOver = true;
+                });
+
+                planeElements[index].addEventListener("mouseleave", function(e) {
+                    plane.mouseOver = false;
+                });
+
+            }).onRender(function() {
+                //plane.uniforms.time.value++;
+                //if(index == 2) console.log(plane.uniforms.time.value);
+                if(plane.mouseOver) {
+                    plane.uniforms.time.value = Math.min(45, plane.uniforms.time.value + 1);
+                }
+                else {
+                    plane.uniforms.time.value = Math.max(0, plane.uniforms.time.value - 1);
+                }
+
+                plane.setRelativePosition(plane.relativeTranslation.x, planesInitialOffset[index] - window.pageYOffset, plane.relativeTranslation.z);
             });
-
-        }).onRender(function() {
-            //plane.uniforms.time.value++;
-            //if(index == 2) console.log(plane.uniforms.time.value);
-            if(plane.mouseOver) {
-                plane.uniforms.time.value = Math.min(45, plane.uniforms.time.value + 1);
-            }
-            else {
-                plane.uniforms.time.value = Math.max(0, plane.uniforms.time.value - 1);
-            }
-
-            plane.setRelativePosition(plane.relativeTranslation.x, planesInitialOffset[index] - window.pageYOffset, plane.relativeTranslation.z);
-        });
+        }
 
     }
 

@@ -40,5 +40,18 @@
         display: none;
     }
 
+    /*** handling errors ***/
+
+    .no-curtains .curtain {
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .no-curtains .curtain img {
+        display: block;
+        object-fit: cover;
+    }
 
 }
