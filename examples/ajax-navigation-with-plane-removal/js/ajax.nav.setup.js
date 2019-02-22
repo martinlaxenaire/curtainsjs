@@ -3,7 +3,7 @@ function archiveNavigation() {
     var canvasContainer = document.getElementById("canvas");
 
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains("f");
+    var webGLCurtain = new Curtains("canvas");
 
     webGLCurtain.onError(function() {
         // we will add a class to the document body to display original images
