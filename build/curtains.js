@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 1.7.5
+ Version: 1.7.6
 
  Compatibility
  PC: Chrome (65.0), Firefox (59.0.2), Microsoft Edge (41)
@@ -369,8 +369,17 @@ Curtains.prototype.removePlane = function(plane) {
     // unbind and delete the textures
     for(var i = 0; i < plane.textures.length; i++) {
         // if its a video texture, clear the update interval as well
-        if(plane.textures[i].type == "video" && plane.videos[plane.textures[i].typeIndex].updateInterval) {
-            clearInterval(plane.videos[plane.textures[i].typeIndex].updateInterval);
+        if(plane.textures[i].type == "video") {
+
+            // empty source to properly delete video element and free the memory
+            plane.videos[plane.textures[i].typeIndex].pause()
+            plane.videos[plane.textures[i].typeIndex].removeAttribute('src');
+            plane.videos[plane.textures[i].typeIndex].load();
+
+            // clear the update interval
+            if(plane.videos[plane.textures[i].typeIndex].updateInterval) {
+                clearInterval(plane.videos[plane.textures[i].typeIndex].updateInterval);
+            }
         }
 
         if(this.glContext) {
