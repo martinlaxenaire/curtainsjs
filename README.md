@@ -487,6 +487,30 @@ var curtains = new Curtains("canvas", true); // use the library in "production" 
     </li>
     <li>
         <p>
+            <strong>disableDrawing</strong>() :
+        </p>
+        <p>
+            This function will prevent the scene from being drawn again (putting it in a paused state). You won't be able to update uniforms while the drawing is disabled. Useful to improve performance if you got a static scene.
+        </p>
+    </li>
+    <li>
+        <p>
+            <strong>enableDrawing</strong>() :
+        </p>
+        <p>
+            This function will reenable the scene drawing in case you paused it via disableDrawing(). Could be useful if you want to start drawing the scene again when a user gesture happens for example.
+        </p>
+    </li>
+    <li>
+        <p>
+            <strong>needRender</strong>() :
+        </p>
+        <p>
+            This function will reenable the scene drawing for just one frame. Useful if you want to update uniforms if the drawing is disabled.
+        </p>
+    </li>
+    <li>
+        <p>
             <strong>dispose</strong>() :
         </p>
         <p>
@@ -732,6 +756,15 @@ var params = {
     </li>
 </ul>
 <h2>Changelog</h2>
+<h3>Version 1.8</h3>
+<ul>
+    <li>
+        Added enableDrawing(), disableDrawing() and needRender() methods to the Curtains object (props to <a href="https://github.com/risq" title="@risq" target="_blank">@risq</a>).
+    </li>
+    <li>
+        Improved videos removal.
+    </li>
+</ul>
 <h3>Version 1.7</h3>
 <ul>
     <li>

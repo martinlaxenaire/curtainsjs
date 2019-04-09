@@ -248,11 +248,15 @@
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
+
+        margin: 0 -10px;
     }
 
     .website-example-item {
         flex-basis: 50%;
         overflow: hidden;
+        box-sizing: border-box;
+        padding: 10px;
     }
 
     .website-example-cover {

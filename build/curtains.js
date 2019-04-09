@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 1.7.6
+ Version: 1.8.0
 
  Compatibility
  PC: Chrome (65.0), Firefox (59.0.2), Microsoft Edge (41)
@@ -24,7 +24,7 @@ function Curtains(containerID, production) {
     this.planes = [];
     this.drawStack = [];
 
-    this._enabled = true;
+    this._drawingEnabled = true;
     this._needRender = false;
 
     // set container
@@ -101,15 +101,15 @@ Curtains.prototype._init = function() {
 /***
  Enables the render loop.
  ***/
-Curtains.prototype.enable = function() {
-	this._enabled = true;
+Curtains.prototype.enableDrawing = function() {
+	this._drawingEnabled = true;
 }
 
 /***
  Disables the render loop.
  ***/
-Curtains.prototype.disable = function() {
-	this._enabled = false;
+Curtains.prototype.disableDrawing = function() {
+	this._drawingEnabled = false;
 }
 
 /***
@@ -612,7 +612,7 @@ Curtains.prototype._readyToDraw = function() {
     // enable depth by default
     this._handleDepth(true);
 
-    console.log("curtains.js - v1.7");
+    console.log("curtains.js - v1.8");
 
     var self = this;
     function animatePlanes() {
@@ -632,11 +632,11 @@ Curtains.prototype._readyToDraw = function() {
  sets our matrix and draw everything
  ***/
 Curtains.prototype._drawScene = function() {
-    // If `needRender` is true, force rendering this frame even if not enabled.
+    // If needRender is true, force rendering this frame even if drawing is not enabled.
     // If not, only render if enabled.
-    if (!this._enabled && !this._needRender) return;
+    if(!this._drawingEnabled && !this._needRender) return;
 
-    if (this._needRender) {
+    if(this._needRender) {
 		this._needRender = false;
     }
     
