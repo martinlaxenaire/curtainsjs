@@ -24,6 +24,9 @@ function Curtains(containerID, production) {
     this.planes = [];
     this.drawStack = [];
 
+    this._enabled = true;
+    this._needRender = false;
+
     // set container
     var container = containerID || "canvas";
     this.container = document.getElementById(container);
@@ -94,6 +97,27 @@ Curtains.prototype._init = function() {
     // we can start rendering now
     this._readyToDraw();
 };
+
+/***
+ Enables the render loop.
+ ***/
+Curtains.prototype.enable = function() {
+	this._enabled = true;
+}
+
+/***
+ Disables the render loop.
+ ***/
+Curtains.prototype.disable = function() {
+	this._enabled = false;
+}
+
+/***
+ Forces the rendering of the next frame, even if disabled.
+ ***/
+Curtains.prototype.needRender = function() {
+	this._needRender = true;
+}
 
 
 /*** HANDLING ERRORS ***/
@@ -608,6 +632,14 @@ Curtains.prototype._readyToDraw = function() {
  sets our matrix and draw everything
  ***/
 Curtains.prototype._drawScene = function() {
+    // If `needRender` is true, force rendering this frame even if not enabled.
+    // If not, only render if enabled.
+    if (!this._enabled && !this._needRender) return;
+
+    if (this._needRender) {
+		this._needRender = false;
+    }
+    
     this._isInitialized();
 
     // Clear the color buffer,
