@@ -2515,3 +2515,5 @@ Plane.prototype._drawPlane = function(shouldBindBuffers) {
     }
 
 }
+
+export { Curtains };
