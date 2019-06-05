@@ -48,6 +48,23 @@
         z-index: 10;
     }
 
+    #back-to-lib-link {
+        display: inline-block;
+        position: fixed;
+        top: 0;
+        right: 0;
+        padding: 0.25em 0.5em;
+        background: #ee6557;
+        color: white;
+        text-decoration: none;
+        z-index: 20;
+        font-size: 0.85em;
+    }
+
+    #back-to-lib-link:hover {
+        background: black;
+    }
+
     .multi-textures {
         position: absolute;
         top: 5%;
@@ -68,6 +85,9 @@
 
     .multi-textures img {
         display: none;
+        min-width: 100%;
+        min-height: 100%;
+        object-fit: cover;
     }
 
     /*** handling errors ***/
@@ -88,12 +108,18 @@
 
     .no-curtains.image-1 .multi-textures img:nth-child(3) {
         display: block;
-        object-fit: cover;
     }
 
     .no-curtains.image-2 .multi-textures img:nth-child(4) {
         display: block;
-        object-fit: cover;
+    }
+
+    .no-curtains.image-3 .multi-textures img:nth-child(5) {
+        display: block;
+    }
+
+    .no-curtains.image-4 .multi-textures img:nth-child(6) {
+        display: block;
     }
 
 }

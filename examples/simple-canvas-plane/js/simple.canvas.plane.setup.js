@@ -1,8 +1,4 @@
 function initCurtains() {
-
-    // our canvas container
-    var canvasContainer = document.getElementById("canvas");
-
     // track the mouse positions to send it to the shaders
     var mousePosition = {
         x: 0,
@@ -117,13 +113,13 @@ function initCurtains() {
         });
 
         // on resize, update the resolution uniform
-        window.onresize = function() {
+        window.addEventListener("resize", function() {
             simplePlane.uniforms.resolution.value = [pixelRatio * planeElements[0].clientWidth, pixelRatio * planeElements[0].clientHeight];
 
             // resize our canvas
             simpleCanvas.width = planeElements[0].clientWidth;
             simpleCanvas.height = planeElements[0].clientHeight;
-        }
+        });
 
     }).onRender(function() {
         // increment our time uniform

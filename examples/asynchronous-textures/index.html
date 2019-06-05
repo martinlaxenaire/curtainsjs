@@ -1,37 +1,49 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset=utf-8>
+		<meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 		<!-- Metas -->
 		<title>curtains.js | Asynchronous textures example</title>
-	    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-	    <link rel="canonical" href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/asynchronous-textures/index.html" />
+	    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+	    <link rel="canonical" href="https://www.curtainsjs.com/examples/asynchronous-textures/index.html">
 
 	    <!-- Facebook OG -->
-	    <meta property="og:title" content="curtains.js | Asynchronous textures example" />
-	    <meta property="og:type" content="website" />
-	    <meta property="og:description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-	    <meta property="og:url" content="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/asynchronous-textures/index.html" />
-	    <meta property="og:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg"/>
+	    <meta property="og:title" content="curtains.js | Asynchronous textures example">
+	    <meta property="og:type" content="website">
+	    <meta property="og:description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+	    <meta property="og:url" content="https://www.curtainsjs.com/examples/asynchronous-textures/index.html">
+	    <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
 
 	    <!-- Twitter card -->
 	    <meta name="twitter:card" content="summary_large_image">
 	    <meta name="twitter:site" content="@webdesign_ml">
 		<meta name="twitter:creator" content="@webdesign_ml">
-		<meta name="twitter:title" content="curtains.js | Asynchronous textures example" />
-		<meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-		<meta name="twitter:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg" />
+		<meta name="twitter:title" content="curtains.js | Asynchronous textures example">
+		<meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+		<meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
 
+		<!-- Favicon -->
+		<link rel="apple-touch-icon" sizes="180x180" href="../../images/favicons/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="../../images/favicons/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="../../images/favicons/favicon-16x16.png">
+		<link rel="manifest" href="../../images/favicons/site.webmanifest">
+		<link rel="mask-icon" href="../../images/favicons/safari-pinned-tab.svg" color="#202340">
+		<link rel="shortcut icon" href="../../images/favicons/favicon.ico">
+		<meta name="msapplication-TileColor" content="#202340">
+		<meta name="msapplication-config" content="../../images/favicons/browserconfig.xml">
+		<meta name="theme-color" content="#202340">
 
 		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400" rel="stylesheet">
-		<link rel="stylesheet" href="style.css" type="text/css" />
+		<link rel="stylesheet" href="style.css" type="text/css">
 	</head>
 	<body>
         <div id="page-wrap">
 
 			<div id="canvas"></div>
+
+			<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
 
 			<div id="content">
 				<!-- notice this plane does not contain any image -->
@@ -43,8 +55,8 @@
 
 			<div id="async-textures-wrapper">
 				<!-- we will use those images as textures -->
-				<img src="images/plane-texture-1.jpg" data-sampler="firstTexture" />
-				<img src="images/plane-texture-2.jpg" data-sampler="secondTexture" />
+				<img src="../medias/plane-texture-1.jpg" data-sampler="firstTexture" />
+				<img src="../medias/plane-texture-2.jpg" data-sampler="secondTexture" />
 			</div>
 
 
@@ -67,9 +79,16 @@
 			uniform mat4 uMVMatrix;
     		uniform mat4 uPMatrix;
 
-			// custom variables
+			// varyings
+			// note how our texture matrices variable name matches the samplers variable names
 			varying vec3 vVertexPosition;
 			varying vec2 vTextureCoord;
+			varying vec2 vFirstTextureCoord;
+			varying vec2 vSecondTextureCoord;
+
+			// textures matrices
+			uniform mat4 firstTextureMatrix;
+			uniform mat4 secondTextureMatrix;
 
 			uniform float uTransitionTimer;
 
@@ -91,6 +110,8 @@
 
 			   	// varyings
 			   	vTextureCoord = aTextureCoord;
+			   	vFirstTextureCoord = (firstTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+			   	vSecondTextureCoord = (secondTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
 			   	vVertexPosition = vertexPosition;
 			}
         </script>
@@ -102,6 +123,8 @@
 
 			varying vec3 vVertexPosition;
 			varying vec2 vTextureCoord;
+			varying vec2 vFirstTextureCoord;
+			varying vec2 vSecondTextureCoord;
 
 			uniform float uTransitionTimer;
 
@@ -109,13 +132,9 @@
 			uniform sampler2D secondTexture;
 
 			void main( void ) {
-
-				// texture coords
-				vec2 textureCoords = vec2(vTextureCoord.x, vTextureCoord.y);
-
 				// set our textures
-				vec4 firstTextureColor = texture2D(firstTexture, textureCoords);
-				vec4 secondTextureColor = texture2D(secondTexture, textureCoords);
+				vec4 firstTextureColor = texture2D(firstTexture, vFirstTextureCoord);
+				vec4 secondTextureColor = texture2D(secondTexture, vSecondTextureCoord);
 
 				// mix our textures based on our transition timer
 				vec4 finalColor = mix(firstTextureColor, secondTextureColor, clamp((2.0 - vTextureCoord.x) * (uTransitionTimer / 60.0), 0.0, 1.0));
@@ -132,13 +151,13 @@
         <script src="js/async.textures.setup.js" type="text/javascript"></script>
 
 		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-29368338-1"></script>
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
 		<script>
 		  	window.dataLayer = window.dataLayer || [];
 		  	function gtag(){dataLayer.push(arguments);}
 		  	gtag('js', new Date());
 
-		  	gtag('config', 'UA-29368338-1');
+		  	gtag('config', 'UA-141413267-1');
 		</script>
 
 	</body>

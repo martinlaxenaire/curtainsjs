@@ -1,7 +1,4 @@
 window.onload = function(){
-    // our canvas container
-    var canvasContainer = document.getElementById("canvas");
-
     // we will keep track of the scroll
     var scrollValue = 0;
     var lastScrollValue = 0;
@@ -9,14 +6,23 @@ window.onload = function(){
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
 
-    webGLCurtain.onError(function() {
+    webGLCurtain.onRender(function() {
+        // update our planes deformation
+        // increase/decrease the effect
+        if(planesDeformations >= 0) {
+            planesDeformations = Math.max(0, planesDeformations - 1);
+        }
+        else {
+            planesDeformations = Math.min(0, planesDeformations + 1);
+        }
+    }).onError(function() {
         // we will add a class to the document body to display original images
         document.body.classList.add("no-curtains", "planes-loaded");
     });
 
     // we will keep track of all our planes in an array
     var planes = [];
-    var planesDeformations = [];
+    var planesDeformations = 0;
 
     // get our planes elements
     var planeElements = document.getElementsByClassName("plane");
@@ -26,6 +32,7 @@ window.onload = function(){
     var params = {
         widthSegments: 10,
         heightSegments: 10,
+        //autoloadSources: false,
         imageCover: false, // we are using the padding-bottom hack to set our plane HTML element size so it will fit our images aspect ratio
         uniforms: {
             planeDeformation: {
@@ -39,7 +46,6 @@ window.onload = function(){
     // add our planes and handle them
     for(var i = 0; i < planeElements.length; i++) {
         planes.push(webGLCurtain.addPlane(planeElements[i], params));
-        planesDeformations.push(0);
 
         handlePlanes(i);
     }
@@ -48,6 +54,19 @@ window.onload = function(){
     window.addEventListener("scroll", function(e) {
         lastScrollValue = scrollValue;
         scrollValue = window.pageYOffset;
+
+        var delta = scrollValue - lastScrollValue;
+        // threshold
+        if(delta > 60) {
+            delta = 60;
+        }
+        else if(delta < -60) {
+            delta = -60;
+        }
+
+        if(Math.abs(delta) > Math.abs(planesDeformations)) {
+            planesDeformations = delta;
+        }
 
         // update the plane positions during scroll
         for(var i = 0; i < planes.length; i++) {
@@ -61,47 +80,24 @@ window.onload = function(){
         var plane = planes[index];
 
         // check if our plane is defined and use it
-        plane && plane.onReady(function() {
+        plane && plane.onLoading(function() {
+            //console.log(plane.loadingManager.sourcesLoaded);
+        })
+        .onReady(function() {
             // once everything is ready, display everything
             if(index == planes.length - 1) {
                 document.body.classList.add("planes-loaded");
             }
-
-            // listen to scroll to update our planeDeformations values
-            // we don't really need an array of planeDeformations because they will always be the same here
-            // but you may want to have different values for each plane
-            window.addEventListener("scroll", function(e) {
-                var delta = scrollValue - lastScrollValue;
-                // threshold
-                if(delta > 60) {
-                    delta = 60;
-                }
-                else if(delta < -60) {
-                    delta = -60;
-                }
-                // if delta is bigger, update
-                if(Math.abs(delta) > Math.abs(planesDeformations[index])) {
-                    planesDeformations[index] = delta;
-                }
-            });
         }).onRender(function() {
-            // increase/decrease our scroll effect
-            if(planesDeformations[index] >= 0) {
-                planesDeformations[index] = Math.max(0, planesDeformations[index] - 1);
-            }
-            else {
-                planesDeformations[index] = Math.min(0, planesDeformations[index] + 1);
-            }
             // update the uniform
-            plane.uniforms.planeDeformation.value = planesDeformations[index];
+            plane.uniforms.planeDeformation.value = planesDeformations;
         });
     }
-
 
     // this will simulate an ajax lazy load call
     // additionnalPlanes string could be the response of our AJAX call
     document.getElementById("add-more-planes").addEventListener("click", function() {
-        var additionnalPlanes = '<div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 1) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs"><img src="images/plane-texture-1.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 2) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs"><img src="images/plane-texture-2.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 3) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs"><img src="images/plane-texture-3.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 4) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs"><img src="images/plane-texture-4.jpg" data-sampler="planeTexture" /></div></div></div></div></div>';
+        var additionnalPlanes = '<div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 1) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs"><img src="../medias/plane-small-texture-1.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 2) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs"><img src="../medias/plane-small-texture-2.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 3) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs"><img src="../medias/plane-small-texture-3.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 4) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs"><img src="../medias/plane-small-texture-4.jpg" data-sampler="planeTexture" /></div></div></div></div></div>';
 
         // append the response
         document.getElementById("planes").insertAdjacentHTML("beforeend", additionnalPlanes);
@@ -116,7 +112,6 @@ window.onload = function(){
             for(var i = planes.length; i < planeElements.length; i++) {
 
                 planes.push(webGLCurtain.addPlane(planeElements[i], params));
-                planesDeformations.push(0);
 
                 handlePlanes(i);
 

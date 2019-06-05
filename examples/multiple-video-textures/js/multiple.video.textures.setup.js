@@ -1,7 +1,4 @@
 window.onload = function() {
-    // our canvas container
-    var canvasContainer = document.getElementById("canvas");
-
     // here we will handle which texture is visible and the timer to transition between images
     var activeTexture = 1;
     var transitionTimer = 0;
@@ -59,9 +56,9 @@ window.onload = function() {
         });
 
         // on resize, update the resolution uniform
-        window.onresize = function() {
+        window.addEventListener("resize", function() {
             multiTexturesPlane.uniforms.resolution.value = [pixelRatio * planeElements[0].clientWidth, pixelRatio * planeElements[0].clientHeight];
-        }
+        });
 
         // click to play the videos
         document.getElementById("enter-site").addEventListener("click", function() {

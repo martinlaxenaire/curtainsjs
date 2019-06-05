@@ -1,44 +1,57 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset=utf-8>
+		<meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 		<!-- Metas -->
 		<title>curtains.js | Multiple video textures example</title>
-	    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-	    <link rel="canonical" href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-video-textures/index.html" />
+	    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+	    <link rel="canonical" href="https://www.curtainsjs.com/examples/multiple-video-textures/index.html">
 
 	    <!-- Facebook OG -->
-	    <meta property="og:title" content="curtains.js | Multiple video textures example" />
-	    <meta property="og:type" content="website" />
-	    <meta property="og:description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-	    <meta property="og:url" content="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/multiple-video-textures/index.html" />
-	    <meta property="og:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg"/>
+	    <meta property="og:title" content="curtains.js | Multiple video textures example">
+	    <meta property="og:type" content="website">
+	    <meta property="og:description" content="Curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+	    <meta property="og:url" content="https://www.curtainsjs.com/examples/multiple-video-textures/index.html">
+	    <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
 
 	    <!-- Twitter card -->
 	    <meta name="twitter:card" content="summary_large_image">
 	    <meta name="twitter:site" content="@webdesign_ml">
 		<meta name="twitter:creator" content="@webdesign_ml">
-		<meta name="twitter:title" content="curtains.js | Multiple video textures example" />
-		<meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-		<meta name="twitter:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg" />
+		<meta name="twitter:title" content="curtains.js | Multiple video textures example">
+		<meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+		<meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+		<!-- Favicon -->
+		<link rel="apple-touch-icon" sizes="180x180" href="../../images/favicons/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="../../images/favicons/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="../../images/favicons/favicon-16x16.png">
+		<link rel="manifest" href="../../images/favicons/site.webmanifest">
+		<link rel="mask-icon" href="../../images/favicons/safari-pinned-tab.svg" color="#202340">
+		<link rel="shortcut icon" href="../../images/favicons/favicon.ico">
+		<meta name="msapplication-TileColor" content="#202340">
+		<meta name="msapplication-config" content="../../images/favicons/browserconfig.xml">
+		<meta name="theme-color" content="#202340">
 
 		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400" rel="stylesheet">
-		<link rel="stylesheet" href="style.css" type="text/css" />
+		<link rel="stylesheet" href="style.css" type="text/css">
 	</head>
 	<body>
         <div id="page-wrap">
 
 			<div id="canvas"></div>
 
+			<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
+
 			<div class="multi-textures-wrapper">
 				<div class="flex-wrapper multi-textures" data-vs-id="multiple-textures-vs" data-fs-id="multiple-textures-fs">
 					<span>Click me !</span>
 					<!-- notice here we are using the data-sampler attribute to name our sampler uniforms -->
-					<img src="images/displacement.jpg" data-sampler="displacement" />
-					<video src="videos/plane-video-texture.mp4" data-sampler="firstTexture"></video>
-					<video src="videos/plane-video-texture-2.mp4" data-sampler="secondTexture"></video>
+					<img src="../medias/video-displacement.jpg" data-sampler="displacement" />
+					<video src="../medias/plane-video-texture-1.mp4" data-sampler="firstTexture"></video>
+					<video src="../medias/plane-video-texture-2.mp4" data-sampler="secondTexture"></video>
 				</div>
 			</div>
 
@@ -62,9 +75,16 @@
 			uniform mat4 uMVMatrix;
     		uniform mat4 uPMatrix;
 
+    		// our texture matrices
+    		// displacement texture does not need to use them
+    		uniform mat4 firstTextureMatrix;
+    		uniform mat4 secondTextureMatrix;
+
 			// custom variables
 			varying vec3 vVertexPosition;
 			varying vec2 vTextureCoord;
+			varying vec2 vFirstTextureCoord;
+			varying vec2 vSecondTextureCoord;
 
 			// custom uniforms
 			uniform float uTransitionTimer;
@@ -78,7 +98,11 @@
 			   	gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
 
 			   	// varyings
+			   	// use original texture coords for our displacement
 			   	vTextureCoord = aTextureCoord;
+			   	// use texture matrices for our videos
+			   	vFirstTextureCoord = (firstTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+			   	vSecondTextureCoord = (secondTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
 			   	vVertexPosition = vertexPosition;
 			}
         </script>
@@ -89,6 +113,8 @@
 
 			varying vec3 vVertexPosition;
 			varying vec2 vTextureCoord;
+			varying vec2 vFirstTextureCoord;
+			varying vec2 vSecondTextureCoord;
 
 			// custom uniforms
 			uniform float uTransitionTimer;
@@ -101,18 +127,15 @@
 			uniform sampler2D displacement;
 
 			void main( void ) {
-				// our texture coords
-				vec2 textureCoords = vec2(vTextureCoord.x, vTextureCoord.y);
-
 				// our displacement texture
 				// i'll be using the fragment shader seen here : https://tympanus.net/codrops/2018/04/10/webgl-distortion-hover-effects/
-				vec4 displacementTexture = texture2D(displacement, textureCoords);
+				vec4 displacementTexture = texture2D(displacement, vTextureCoord);
 
 				float displacementFactor = (cos(uTransitionTimer / (60.0 / 3.141592)) + 1.0) / 2.0;
 				float effectFactor = 1.0;
 
-				vec2 firstDisplacementCoords = vec2(textureCoords.x + displacementFactor * (displacementTexture.r * effectFactor), textureCoords.y);
-	            vec2 secondDisplacementCoords = vec2(textureCoords.x - (1.0 - displacementFactor) * (displacementTexture.r * effectFactor), textureCoords.y);
+				vec2 firstDisplacementCoords = vec2(vFirstTextureCoord.x + displacementFactor * (displacementTexture.r * effectFactor), vFirstTextureCoord.y);
+	            vec2 secondDisplacementCoords = vec2(vSecondTextureCoord.x - (1.0 - displacementFactor) * (displacementTexture.r * effectFactor), vSecondTextureCoord.y);
 
 	            vec4 firstDistortedColor = texture2D(firstTexture, firstDisplacementCoords);
 	            vec4 secondDistortedColor = texture2D(secondTexture, secondDisplacementCoords);
@@ -131,13 +154,13 @@
         <script src="js/multiple.video.textures.setup.js" type="text/javascript"></script>
 
 		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-29368338-1"></script>
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
 		<script>
 		  	window.dataLayer = window.dataLayer || [];
 		  	function gtag(){dataLayer.push(arguments);}
 		  	gtag('js', new Date());
 
-		  	gtag('config', 'UA-29368338-1');
+		  	gtag('config', 'UA-141413267-1');
 		</script>
 
 	</body>

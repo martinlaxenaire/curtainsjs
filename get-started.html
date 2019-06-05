@@ -1,33 +1,43 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset=utf-8>
+		<meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 		<!-- Metas -->
 		<title>curtains.js | Get Started</title>
-	    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-	    <link rel="canonical" href="https://www.martin-laxenaire.fr/libs/curtainsjs/get-started.html" />
+	    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+	    <link rel="canonical" href="https://www.curtainsjs.com/get-started.html">
 
 	    <!-- Facebook OG -->
-	    <meta property="og:title" content="curtains.js | Get Started" />
-	    <meta property="og:type" content="website" />
-	    <meta property="og:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-	    <meta property="og:url" content="https://www.martin-laxenaire.fr/libs/curtainsjs/get-started.html" />
-	    <meta property="og:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg"/>
+	    <meta property="og:title" content="curtains.js | Get Started">
+	    <meta property="og:type" content="website">
+	    <meta property="og:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+	    <meta property="og:url" content="https://www.curtainsjs.com/get-started.html">
+	    <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
 
 	    <!-- Twitter card -->
 	    <meta name="twitter:card" content="summary_large_image">
 	    <meta name="twitter:site" content="@webdesign_ml">
 		<meta name="twitter:creator" content="@webdesign_ml">
-		<meta name="twitter:title" content="curtains.js | Get Started" />
-		<meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-		<meta name="twitter:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg" />
+		<meta name="twitter:title" content="curtains.js | Get Started">
+		<meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+		<meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
 
+		<!-- Favicon -->
+		<link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="images/favicons/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="images/favicons/favicon-16x16.png">
+		<link rel="manifest" href="images/favicons/site.webmanifest">
+		<link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#202340">
+		<link rel="shortcut icon" href="images/favicons/favicon.ico">
+		<meta name="msapplication-TileColor" content="#202340">
+		<meta name="msapplication-config" content="images/favicons/browserconfig.xml">
+		<meta name="theme-color" content="#202340">
 
 		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
-		<link rel="stylesheet" href="style.css" type="text/css" />
+		<link rel="stylesheet" href="style.css" type="text/css">
 	</head>
 	<body>
         <div id="page-wrap">
@@ -72,7 +82,7 @@
 									<a href="#basic-setup" title="Basic setup example">Basic setup example</a>
 								</li>
 								<li>
-									<a href="#image-uniform-sampler" title="Images uniform sampler names">Images uniform sampler names</a>
+									<a href="#image-uniform-sampler" title="Textures uniform sampler names">Textures uniform sampler names</a>
 								</li>
 								<li>
 									<a href="#videos-textures" title="Videos as textures">Videos as textures</a>
@@ -91,8 +101,11 @@
 
 						<div id="basic-setup" class="text-section inner-section">
 							<h2>Basic setup example</h2>
+							<div id="basic-example">
+								<img src="examples/medias/plane-texture-3.jpg" alt="Basic example image" />
+							</div>
 							<p>
-								<a href="examples/basic-plane/index.html" title="See it live" target="_blank">See it live</a>
+								<a href="examples/basic-plane/index.html" title="Open it in a new tab" target="_blank">Open it in a new tab</a>
 							</p>
 							<h3>HTML</h3>
 							<p>
@@ -219,16 +232,21 @@ window.onload = function() {
     uniform mat4 uMVMatrix;
     uniform mat4 uPMatrix;
 
+    // our texture matrix that will handle image cover
+    uniform mat4 uTextureMatrix0;
+
     // if you want to pass your vertex and texture coords to the fragment shader
     varying vec3 vVertexPosition;
     varying vec2 vTextureCoord;
 
     void main() {
         vec3 vertexPosition = aVertexPosition;
+
         gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
 
         // set the varyings
-        vTextureCoord = aTextureCoord;
+        // here we use our texture matrix to calculate the accurate texture coords
+        vTextureCoord = (uTextureMatrix0 * vec4(aTextureCoord, 0.0, 1.0)).xy;
         vVertexPosition = vertexPosition;
     }
 &lt;/script&gt;
@@ -267,10 +285,10 @@ window.onload = function() {
 							</p>
 						</div>
 						<div id="images-uniforms-samplers" class="text-section inner-section">
-							<h2>Images uniform sampler names</h2>
+							<h2>Textures uniforms matrices and sampler names</h2>
 							<p>
 								Let's say you want to build a slideshow with 3 images and a displacement image to create a nice transition effect.<br />
-								By default, the textures uniforms sampler will be named upon their indexes inside your plane element. If you got something like that :
+								By default, the textures uniforms matrices and sampler will be named upon their indexes inside your plane element. If you got something like that :
 							</p>
 							<p>
 								<pre>
@@ -289,11 +307,20 @@ window.onload = function() {
 								</pre>
 							</p>
 							<p>
-								Then, in your shaders, your textures samplers would have to be declared that way :
+								Then, in your shaders, your textures matrices and samplers would have to be declared that way :
 							</p>
 							<p>
 								<pre>
 <code>
+// use this in your vertex shader
+uniform mat4 uTextureMatrix0 // texture matrix of displacement.jpg
+uniform mat4 uTextureMatrix1 // texture matrix of my-image-1.jpg
+uniform mat4 uTextureMatrix2 // texture matrix of my-image-2.jpg
+uniform mat4 uTextureMatrix3 // texture matrix of my-image-3.jpg
+
+...
+
+// use this in your fragment shader
 uniform sampler2D uSampler0 // bound to displacement.jpg
 uniform sampler2D uSampler1 // bound to my-image-1.jpg
 uniform sampler2D uSampler2 // bound to my-image-2.jpg
@@ -303,7 +330,7 @@ uniform sampler2D uSampler3 // bound to my-image-3.jpg
 							</p>
 							<p>
 								It is handy but you could also get easily confused.<br />
-								By using a data-sampler attribute on the &lt;img /&gt; tag, you could specify a custom uniform sampler name to use in your shader. With the example above, this would become :
+								By using a data-sampler attribute on the &lt;img /&gt; tag, you could specify custom uniforms matrices and samplers names to use in your shaders. With the example above, this would become :
 							</p>
 							<p>
 								<pre>
@@ -324,9 +351,18 @@ uniform sampler2D uSampler3 // bound to my-image-3.jpg
 							<p>
 								<pre>
 <code>
+// use this in your vertex shader
+uniform mat4 uDisplacementTextureMatrix // texture matrix of displacement.jpg
+uniform mat4 uSlide1TextureMatrix       // texture matrix of my-image-1.jpg
+uniform mat4 uSlide1TextureMatrix       // texture matrix of my-image-2.jpg
+uniform mat4 uLastSlideTextureMatrix    // texture matrix of my-image-3.jpg
+
+...
+
+// use this in your fragment shader
 uniform sampler2D uDisplacement // bound to displacement.jpg
 uniform sampler2D uSlide1       // bound to my-image-1.jpg
-uniform sampler2D uSlide2       // bound to my-image-2.jpg
+uniform sampler2D uSlide1       // bound to my-image-2.jpg
 uniform sampler2D uLastSlide    // bound to my-image-3.jpg
 </code>
 							</pre>
@@ -336,8 +372,8 @@ uniform sampler2D uLastSlide    // bound to my-image-3.jpg
 							<h2>Using videos as textures</h2>
 							<p>
 								Yes, videos as textures are supported ! However there are a few downsides you need to know.<br />
-								First, the videos will <strong>always fit the plane</strong> : your plane's size ratio would have to be the same as your videos so they won't appear distorted (you can handle that with CSS).<br />
-								<strong>We can't autoplay videos without a user gesture on most mobile devices</strong>. Unless you don't care about mobile users, you will have to start the videos playback after a user interaction like a click event.<br />
+								<strong>First, we can't autoplay videos without a user gesture on most mobile devices</strong>. Unless you don't care about mobile users, you will have to start the videos playback after a user interaction like a click event.<br />
+								Also, please note that videos tend to use a lot of memory and <strong>could have a significant impact on performance</strong>, so try to keep them small.<br />
 								Besides that, videos are really easy to use (and can be mixed with images as well). Let's see how we can handle them :
 							</p>
 							<h3>HTML</h3>
@@ -374,7 +410,7 @@ uniform sampler2D uLastSlide    // bound to my-image-3.jpg
 							</p>
 							<h3>Javascript</h3>
 							<p>
-								There's only one change inside our javascript : we need to tell our plane when to start playing the videos. We've got a playVideos() method that we will put inside an event listener in our onReady() method :
+								There's only one change inside our javascript : we need to tell our plane when to start playing the videos. We've got a <a href="plane-class.html#play-videos">playVideos</a> method that we will put inside an event listener in our <a href="plane-class.html#on-ready">onReady</a> method :
 							</p>
 							<p>
 								<pre>
@@ -430,7 +466,7 @@ window.onload = function() {
 						<div id="canvases-textures" class="text-section inner-section">
 							<h2>Using canvas as texture</h2>
 							<p>
-								Last but not least, you can use a canvas as a texture. It is once again really easy to use. You just have to insert a canvas tag inside your HTML, or eventually create it in your javascript and load it using the loadCanvases() method.
+								Last but not least, you can use a canvas as a texture. It is once again really easy to use. You just have to insert a canvas tag inside your HTML, or eventually create it in your javascript and load it using the <a href="plane-class.html#load-canvas">loadCanvas</a> method.
 							</p>
 							<h3>HTML</h3>
 							<p>
@@ -482,11 +518,11 @@ window.onload = function() {
     // create our plane mesh
     var plane = webGLCurtain.addPlane(planeElement, params);
 
-	// our texture canvas
+    // our texture canvas
     var textureCanvas = document.getElementById("canvas-texture");
     var textureCanvasContext = textureCanvas.getContext("2d");
 
-	// set the size of our canvas
+    // set the size of our canvas
     textureCanvas.width = planeElements[0].clientWidth;
     textureCanvas.height = planeElements[0].clientHeight;
 
@@ -494,7 +530,7 @@ window.onload = function() {
     plane.onRender(function() {
         plane.uniforms.time.value++; // update our time uniform value
 
-		// here we will handle our canvas texture animation
+        // here we will handle our canvas texture animation
         // clear scene
         textureCanvasContext.clearRect(0, 0, textureCanvas.width, textureCanvas.height);
 
@@ -515,34 +551,17 @@ window.onload = function() {
 						</div>
 
 						<div id="performance-tips" class="text-section inner-section">
-							<h2>Canvas height, perspective and performance</h2>
-							<p>
-								The canvas size will directly impact the global perspective and performance.
-							</p>
-							<p>
-								The perspective is calculated based on each plane position inside the canvas as well as the canvas width and height. The center of the field of view will be located at the center of your canvas, which means that with tall or wide canvas you might end with exagerated perspectives.<br />
-								Also keep in mind that a wide or tall canvas will pretty much impact performance (thanks to <a href="https://github.com/ColinPeyrat" title="Colin Peyrat on GitHub" target="_blank">Colin Peyrat</a> for pointing that out).
-							</p>
-							<p>
-								There's a way to avoid these annoyances: set your canvas to fit the window size instead of the document size, and set the position of each plane based on the scroll inside your render loop. Check the <a href="examples/canvas-height-performance/index.html" title="Canvas size, performance and perspective" target="_blank">canvas size, performance and perspective</a> example if you want to see the differences.
-							</p>
-							<h2>Other performance tips</h2>
+							<h2>Performance tips</h2>
 							<ul>
 								<li>
-									Plane's videos and canvases textures are updated at each frame, which has a significant impact on performance. When those textures are not visible (if they are hidden by another texture, or if the plane is not visible in the viewport...), you should set those videos or canvases shouldUpdate property to false, and switch it back to true before displaying them.
-								</li>
-								<li>
-									Be careful with each plane definition. A lot of vertices implies a big impact on performance. If you plan to use more than one plane, try to reduce the number of vertices.
+									Plane's canvases textures are updated at each frame (videos are updated at 30FPS), which has a significant impact on performance. When those textures are not visible (if they are hidden by another texture, or if you have finished drawing on your canvas...), you should set those <a href="texture-class.html#should-update">textures shouldUpdate property</a> to false, and switch it back to true before displaying them again.
 								</li>
 								<li>
 									Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size. It goes the same for videos of course: try to keep them as light as possible.
 								</li>
 								<li>
-							        Try to use as less javascript as possible in the onRender() planes methods as this get executed at each draw call. Try not to use too many uniforms as they are updated at every draw call as well.
+							        Try to use as less javascript as possible in the onRender() methods as this get executed at each draw call.
 							    </li>
-								<li>
-									If you use multiple planes with multiple textures, you should set the dimensions of your plane to fit the aspect ratio of your images in CSS (you could use the padding-bottom hack, see the <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">multiple planes</a> example HTML & CSS) and set the imageCover plane property to false when adding it.
-								</li>
 							</ul>
 						</div>
 						<div id="useful-examples" class="text-section inner-section">
@@ -554,12 +573,11 @@ window.onload = function() {
 							<p>
 								<a href="examples/vertex-coords-helper/index.html" title="Vertex coordinates helper" target="_blank">Vertex coordinates helper</a><br />
 								<a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
-								<a href="examples/multiple-textures/index.html" title="Multiple textures" target="_blank">Multiple textures with a displacement shader</a><br />
+								<a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a><br />
 								<a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
+								<a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a><br />
 								<a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
-								<a href="examples/ajax-navigation/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation</a><br />
-								<a href="examples/ajax-navigation-with-plane-removal/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation with plane removal</a><br />
-								<a href="examples/canvas-height-performance/index.html" title="Canvas size, performance and perspective" target="_blank">Canvas size, performance and perspective</a>
+								<a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a><br />
 							</p>
 							<h3>Videos</h3>
 							<p>
@@ -569,6 +587,7 @@ window.onload = function() {
 							<h3>Canvas</h3>
 							<p>
 								<a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a><br />
+								<a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a>
 							</p>
 						</div>
 
@@ -577,14 +596,75 @@ window.onload = function() {
 			</div>
 		</div>
 
+
+		<script id="basic-plane-vs" type="x-shader/x-vertex">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+
+			// those are the mandatory attributes that the lib sets
+			attribute vec3 aVertexPosition;
+			attribute vec2 aTextureCoord;
+
+			// those are mandatory uniforms that the lib sets and that contain our model view and projection matrix
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+
+			// our texture matrix that will handle image cover
+			uniform mat4 uTextureMatrix0;
+
+			// if you want to pass your vertex and texture coords to the fragment shader
+			varying vec3 vVertexPosition;
+			varying vec2 vTextureCoord;
+
+			void main() {
+				vec3 vertexPosition = aVertexPosition;
+
+				gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+
+				// set the varyings
+				// here we use our texture matrix to calculate te accurate texture coords
+				vTextureCoord = (uTextureMatrix0 * vec4(aTextureCoord, 0.0, 1.0)).xy;
+				vVertexPosition = vertexPosition;
+			}
+        </script>
+		<script id="basic-plane-fs" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+
+			// get our varyings
+			varying vec3 vVertexPosition;
+			varying vec2 vTextureCoord;
+
+			// the uniform we declared inside our javascript
+			uniform float uTime;
+
+			// our texture sampler (default name, to use a different name please refer to the documentation)
+			uniform sampler2D uSampler0;
+
+			void main() {
+				vec2 textureCoord = vec2(vTextureCoord.x, vTextureCoord.y);
+
+				// displace our pixels along the X axis based on our time uniform
+				// textures coords are ranging from 0.0 to 1.0 on both axis
+				textureCoord.x += sin(textureCoord.y * 25.0) * cos(textureCoord.x * 25.0) * (cos(uTime / 50.0)) / 25.0;
+
+				gl_FragColor = texture2D(uSampler0, textureCoord);
+			}
+        </script>
+
+		<script src="build/curtains.js" type="text/javascript"></script>
+		<script src="js/main.navigation.js" type="text/javascript"></script>
+
 		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-29368338-1"></script>
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
 		<script>
 		  	window.dataLayer = window.dataLayer || [];
 		  	function gtag(){dataLayer.push(arguments);}
 		  	gtag('js', new Date());
 
-		  	gtag('config', 'UA-29368338-1');
+		  	gtag('config', 'UA-141413267-1');
 		</script>
 
 	</body>

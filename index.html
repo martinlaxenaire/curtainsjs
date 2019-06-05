@@ -1,33 +1,43 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset=utf-8>
+		<meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 		<!-- Metas -->
 		<title>curtains.js | Home</title>
-	    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-	    <link rel="canonical" href="https://www.martin-laxenaire.fr/libs/curtainsjs/" />
+	    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+	    <link rel="canonical" href="https://www.curtainsjs.com/">
 
 	    <!-- Facebook OG -->
-	    <meta property="og:title" content="curtains.js | Home" />
-	    <meta property="og:type" content="website" />
-	    <meta property="og:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-	    <meta property="og:url" content="https://www.martin-laxenaire.fr/libs/curtainsjs/" />
-	    <meta property="og:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg"/>
+	    <meta property="og:title" content="curtains.js | Home">
+	    <meta property="og:type" content="website">
+	    <meta property="og:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+	    <meta property="og:url" content="https://www.curtainsjs.com/">
+	    <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
 
 	    <!-- Twitter card -->
 	    <meta name="twitter:card" content="summary_large_image">
 	    <meta name="twitter:site" content="@webdesign_ml">
 		<meta name="twitter:creator" content="@webdesign_ml">
-		<meta name="twitter:title" content="curtains.js | Home" />
-		<meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-		<meta name="twitter:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg" />
+		<meta name="twitter:title" content="curtains.js | Home">
+		<meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+		<meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
 
+        <!-- Favicon -->
+        <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="images/favicons/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="images/favicons/favicon-16x16.png">
+        <link rel="manifest" href="images/favicons/site.webmanifest">
+        <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#202340">
+        <link rel="shortcut icon" href="images/favicons/favicon.ico">
+        <meta name="msapplication-TileColor" content="#202340">
+        <meta name="msapplication-config" content="images/favicons/browserconfig.xml">
+        <meta name="theme-color" content="#202340">
 
 		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
-		<link rel="stylesheet" href="style.css" type="text/css" />
+		<link rel="stylesheet" href="style.css" type="text/css">
 	</head>
 	<body>
         <div id="page-wrap">
@@ -60,8 +70,8 @@
 				</header>
 
 				<section id="intro" class="flex-wrapper">
-					<h1>curtains.js</h1>
-					<h2>easy WebGL tool to animate images and videos</h2>
+					<h1 id="site-title">curtains.js</h1>
+					<h2 id="site-subtitle">easy WebGL tool to animate images and videos</h2>
 
 					<div class="curtain" data-vs-id="intro-vs" data-fs-id="intro-fs">
 						<img data-sampler="curtainSampler" src="images/intro-background.jpg" />
@@ -76,30 +86,35 @@
 								Shaders are the next front-end web developpment big thing, with the ability to create very powerful 3D interactions and animations. A lot of very good javascript libraries already handle WebGL but with most of them it's kind of a headache to position your meshes relative to the DOM elements of your web page.
 							</p>
 							<p>
-								curtains.js was created with just that issue in mind. It is a small vanilla WebGL javascript library that converts HTML elements containing images and videos into 3D WebGL textured planes, allowing you to animate them via shaders.<br />
+								curtains.js was created with just that issue in mind. It is a small vanilla WebGL javascript library that converts HTML elements containing images, videos and canvases into 3D WebGL textured planes, allowing you to animate them via shaders.<br />
 								You can define each plane size and position via CSS, which makes it super easy to add WebGL responsive planes all over your pages.
+							</p>
+							<p>
+								V2.0 introduces major improvements on performance and capabilities. Be sure to check the <a href="documentation.html" title="curtains.js documentation">documentation</a> and examples to see what's possible.
 							</p>
 						</div>
 
 						<div class="text-section">
 							<h2>Download</h2>
 							<p>
-								<a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v1.8">curtains.js v1.8 (83Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v1.8">curtains.min.js v1.8 (32Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+								<a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v2.0">curtains.js v2.0 (88Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v2.0">curtains.min.js v2.0 (35Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
 							</p>
 						</div>
 
 						<div class="text-section">
-							<h2>Examples</h2>
+							<h2 id="examples">Examples</h2>
+							<p>
+								All the examples are fully commented so do not hesitate to have a look at the source code.
+							</p>
 							<h3>Images</h3>
 							<p>
 								<a href="examples/vertex-coords-helper/index.html" title="Vertex coordinates helper" target="_blank">Vertex coordinates helper</a><br />
 								<a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
-								<a href="examples/multiple-textures/index.html" title="Multiple textures" target="_blank">Multiple textures with a displacement shader</a><br />
+								<a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a><br />
 								<a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
+								<a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a><br />
 								<a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
-								<a href="examples/ajax-navigation/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation</a><br />
-								<a href="examples/ajax-navigation-with-plane-removal/index.html" title="Asynchronous textures loading" target="_blank">AJAX navigation with plane removal</a><br />
-								<a href="examples/canvas-height-performance/index.html" title="Canvas size, performance and perspective" target="_blank">Canvas size, performance and perspective</a>
+								<a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a><br />
 							</p>
 							<h3>Videos</h3>
 							<p>
@@ -109,6 +124,7 @@
 							<h3>Canvas</h3>
 							<p>
 								<a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a><br />
+                                <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a>
 							</p>
 						</div>
 
@@ -151,114 +167,6 @@ import {Curtains} from 'curtainsjs';
 						</div>
 
 						<div class="text-section">
-							<h2>Changelog</h2>
-							<h3>Version 1.8</h3>
-							<ul>
-								<li>
-									Added enableDrawing(), disableDrawing() and needRender() methods to the Curtains object (props to <a href="https://github.com/risq" title="@risq" target="_blank">@risq</a>).
-								</li>
-								<li>
-									Improved videos removal.
-								</li>
-							</ul>
-
-							<h3>Version 1.7</h3>
-							<ul>
-								<li>
-									setScale() method now adjusts the textures sizes as well.
-								</li>
-								<li>
-									Fixed a bug where CSS scale and plane's sizes were not synced.
-								</li>
-								<li>
-									All plane's images, canvases and videos now have a shouldUpdate property set to true by default. When those associated textures are not visible, you could set this property to false to get a performance boost.
-								</li>
-								<li>
-									Added an onError() callback to the Curtains object to handle errors during initialisation and updated all examples.
-								</li>
-								<li>
-									Fixed a bug with video textures (props to <a href="https://github.com/deJong" title="@deJong" target="_blank">@deJong</a>)
-								</li>
-							</ul>
-							<h3>Version 1.6</h3>
-							<ul>
-								<li>
-									Added an updatePosition() method to the Plane object.
-								</li>
-								<li>
-									Added a "production" parameter to the Curtains instanciation process to remove console warnings in production.
-								</li>
-								<li>
-									Improved video handling and removed warnings.
-								</li>
-							</ul>
-							<h3>Version 1.5</h3>
-							<ul>
-								<li>
-									Added a removePlane() method to the Curtains object.
-								</li>
-								<li>
-									Slightly improved video textures performance.
-								</li>
-							</ul>
-							<h3>Version 1.4</h3>
-							<ul>
-								<li>
-									Added support for canvases as textures.
-								</li>
-								<li>
-									Improved pixel ratio handling.
-								</li>
-							</ul>
-							<h3>Version 1.3</h3>
-							<ul>
-								<li>
-									Added the possibility to set/unset depth test for each plane via a enableDepthTest() method. This might be useful to handle transparency problems.
-								</li>
-								<li>
-									Added a plane moveToFront() method so that a plane could overlay all other planes.
-								</li>
-							</ul>
-							<h3>Version 1.2</h3>
-							<ul>
-								<li>
-									Added support for videos as textures.
-								</li>
-								<li>
-									Sort planes by their vertices length in order to avoid redundant buffer binding calls during draw loop.
-								</li>
-								<li>
-							        Refactored and cleaned code.
-							    </li>
-							</ul>
-							<h3>Version 1.1</h3>
-							<ul>
-								<li>
-									WebGL context viewport size now based on drawingBufferWidth and drawingBufferHeight.
-								</li>
-								<li>
-							        Cleaned and refactored code in order to add support for lost and restored context events.
-							    </li>
-							</ul>
-						</div>
-
-						<div class="text-section">
-							<h2>Todo and improvements</h2>
-							<ul>
-								<li>
-									Tests, tests and more tests.
-								</li>
-								<li>
-									Improve performance if possible.
-								</li>
-								<li>
-									...
-								</li>
-							</ul>
-						</div>
-
-
-						<div class="text-section">
 							<h2>About</h2>
 							<p>
 								This library is released under the MIT license which means it is free to use for personnal and commercial projects.
@@ -267,7 +175,7 @@ import {Curtains} from 'curtainsjs';
 								All images used in the examples were taken by <a href="https://marionbornaz.com/" title="Marion Bornaz" target="_blank">Marion Bornaz</a> during the <a href="https://www.miragefestival.com/" title="Mirage Festival" target="_blank">Mirage Festival</a>.
 							</p>
 							<p>
-								All examples video footages were shot by <a href="http://analogueprod.com/" title="Analogue Production" target="_blank">Analogue Production</a>.
+								All examples video footages were shot by <a href="https://analogueprod.com/" title="Analogue Production" target="_blank">Analogue Production</a>.
 							</p>
 							<p>
 								Many thanks to <a href="https://webglfundamentals.org/" title="webglfundamentals.org" target="_blank">webglfundamentals.org</a> tutorials which helped me a lot.
@@ -289,9 +197,17 @@ import {Curtains} from 'curtainsjs';
 
 							<div class="websites-examples-gallery">
 
+								<a class="website-example-item" href="https://www.martin-laxenaire.fr/" title="Martin Laxenaire" target="_blank">
+									<div class="website-example-cover">
+										<div class="showcase-curtain">
+											<img src="images/curtains-js-martin-laxenaire.jpg" alt="Martin Laxenaire" data-sampler="uExample" />
+										</div>
+									</div>
+								</a>
+
 								<a class="website-example-item" href="https://nordik.org/" title="Nördik Impakt 2018" target="_blank">
 									<div class="website-example-cover">
-										<div class="curtain">
+										<div class="showcase-curtain">
 											<img src="images/curtains-js-nordik-impakt.jpg" alt="Nördik Impakt 2018" data-sampler="uExample" />
 										</div>
 									</div>
@@ -300,7 +216,7 @@ import {Curtains} from 'curtainsjs';
 
 								<a class="website-example-item" href="http://lookbook-olaian.fr/" title="Olaian Lookbook" target="_blank">
 									<div class="website-example-cover">
-										<div class="curtain">
+										<div class="showcase-curtain">
 											<img src="images/curtains-js-olaian-lookbook.jpg" alt="Olaian Lookbook" data-sampler="uExample" />
 										</div>
 									</div>
@@ -308,8 +224,24 @@ import {Curtains} from 'curtainsjs';
 
 								<a class="website-example-item" href="https://analogueprod.com/" title="Analogue Production" target="_blank">
 									<div class="website-example-cover">
-										<div class="curtain">
+										<div class="showcase-curtain">
 											<img src="images/curtains-js-analogue-production.jpg" alt="Analogue Production" data-sampler="uExample" />
+										</div>
+									</div>
+								</a>
+
+								<a class="website-example-item" href="https://www.corsaires.studio/" title="Corsaires Studio" target="_blank">
+									<div class="website-example-cover">
+										<div class="showcase-curtain">
+											<img src="images/curtains-js-corsaires-studio.jpg" alt="Corsaires Studio" data-sampler="uExample" />
+										</div>
+									</div>
+								</a>
+
+								<a class="website-example-item" href="https://www.miragefestival.com/2019/" title="Mirage Festival 2019" target="_blank">
+									<div class="website-example-cover">
+										<div class="showcase-curtain">
+											<img src="images/curtains-js-mirage-festival-2019.jpg" alt="Mirage Festival 2019" data-sampler="uExample" />
 										</div>
 									</div>
 								</a>
@@ -339,7 +271,6 @@ import {Curtains} from 'curtainsjs';
 			varying vec2 vTextureCoord;
 
 			uniform float uMouseTime;
-			uniform vec2 uResolution;
 			uniform vec2 uMousePosition;
 			uniform float uMouseMoveStrength;
 
@@ -354,7 +285,7 @@ import {Curtains} from 'curtainsjs';
 
 				float distanceFromMouse = distance(vec2(uMousePosition.x, 0.0), vec2(vertexPosition.x, 0.0));
 
-				float waveSinusoid = cos(10.0 * (uResolution.x / uResolution.y) * ((1.0 / (distanceFromMouse - 2.0)) - (uMouseTime / 500.0)));
+				float waveSinusoid = cos(10.0 * 1.5 * ((1.0 / (distanceFromMouse - 2.0)) - (uMouseTime / 500.0)));
 
 				float xAttenuation = ((2.0 - abs(uMousePosition.x - vertexPosition.x)) / 2.0);
 				float yAttenuation = ((-1.0 * uMousePosition.y) + 1.0) / 2.0;
@@ -368,7 +299,7 @@ import {Curtains} from 'curtainsjs';
 				float xDisplacement = abs(yCoordRatio) * sign(vertexPosition.x);
 
 				vertexPosition.z +=  curtainEffect / 15.0;
-				vertexPosition.x +=  curtainEffect * (uResolution.x / uResolution.y) * xDisplacement / 120.0;
+				vertexPosition.x +=  curtainEffect * 1.5 * xDisplacement / 120.0;
 
 			   	gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
 
@@ -386,6 +317,7 @@ import {Curtains} from 'curtainsjs';
 			varying vec2 vTextureCoord;
 
 			uniform sampler2D curtainSampler;
+			uniform sampler2D titleSampler;
 
 
 			void main( void ) {
@@ -394,6 +326,9 @@ import {Curtains} from 'curtainsjs';
 
 				// slides transitions
 				vec4 finalColor = texture2D(curtainSampler, textureCoords);
+				vec4 title = texture2D(titleSampler, textureCoords);
+
+				finalColor = mix(finalColor, title, title.a);
 
 				finalColor.rgb -= clamp(-vVertexPosition.z / 5.0, 0.0, 1.0);
 				finalColor.rgb += clamp(vVertexPosition.z / 5.0, 0.0, 1.0);
@@ -473,13 +408,13 @@ import {Curtains} from 'curtainsjs';
         <script src="js/main.navigation.js" type="text/javascript"></script>
 
 		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-29368338-1"></script>
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
 		<script>
 		  	window.dataLayer = window.dataLayer || [];
 		  	function gtag(){dataLayer.push(arguments);}
 		  	gtag('js', new Date());
 
-		  	gtag('config', 'UA-29368338-1');
+		  	gtag('config', 'UA-141413267-1');
 		</script>
 
 		<script type="text/javascript">

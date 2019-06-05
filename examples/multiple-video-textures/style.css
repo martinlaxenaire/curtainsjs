@@ -51,15 +51,33 @@
         transition: opacity 0.5s ease-in;
     }
 
+    #back-to-lib-link {
+        display: inline-block;
+        position: fixed;
+        top: 0;
+        right: 0;
+        padding: 0.25em 0.5em;
+        background: #ee6557;
+        color: white;
+        text-decoration: none;
+        z-index: 20;
+        font-size: 0.85em;
+    }
+
+    #back-to-lib-link:hover {
+        background: black;
+    }
+
     .video-started #canvas {
         opacity: 1;
     }
 
     .multi-textures-wrapper {
         position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
         z-index: 15;
     }
 
@@ -128,6 +146,14 @@
 
     /*** handling errors ***/
 
+    .no-curtains .multi-textures-wrapper {
+        top: 50%;
+        right: auto;
+        bottom: auto;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
     .no-curtains #enter-site {
         background: #333;
         pointer-events: none;
@@ -135,16 +161,17 @@
 
 }
 
+/*** handling video ratio on error ***/
 
 @media screen and (max-aspect-ratio: 1920/1080) {
-    .multi-textures-wrapper {
+    .no-curtains .multi-textures-wrapper {
         height: 100vh;
         width: 177vh;
     }
 }
 
 @media screen and (min-aspect-ratio: 1920/1080) {
-    .multi-textures-wrapper {
+    .no-curtains .multi-textures-wrapper {
         width: 100vw;
         height: 56.25vw;
     }

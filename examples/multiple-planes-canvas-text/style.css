@@ -1,0 +1,155 @@
+@media screen {
+
+    html, body {
+        min-height: 100%;
+    }
+
+    body {
+        margin: 0;
+        font-size: 18px;
+        font-family: 'PT Sans', Verdana, sans-serif;
+        background: #ffffff;
+        line-height: 1.4;
+    }
+
+    /*** layout ***/
+
+    .flex-wrapper {
+        display: -webkit-box;
+        display: -moz-box;
+        display: -ms-flexbox;
+        display: flexbox;
+        display: -moz-flex;
+        display: -o-flex;
+        display: -webkit-flex;
+        display: -ms-flex;
+        display: flex;
+        -moz-flex-wrap: wrap;
+        -ms-flex-wrap: wrap;
+        -o-flex-wrap: wrap;
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+    }
+
+    #page-wrap {
+        position: relative;
+    }
+
+    /*** canvas ***/
+
+    #canvas {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 0;
+        height: 100vh;
+
+        z-index: 10;
+    }
+
+    #back-to-lib-link {
+        display: inline-block;
+        position: fixed;
+        top: 0;
+        right: 0;
+        padding: 0.25em 0.5em;
+        background: #ee6557;
+        color: white;
+        text-decoration: none;
+        z-index: 20;
+        font-size: 0.85em;
+    }
+
+    #back-to-lib-link:hover {
+        background: black;
+    }
+
+    /*** content ***/
+
+    #content {
+        position: relative;
+        z-index: 15;
+
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 40px 0;
+    }
+
+    #planes {
+        overflow: hidden;
+    }
+
+    .plane-wrapper {
+        position: relative;
+        width: 75%;
+        margin: 3em 25% 3em 0;
+    }
+
+    .plane-wrapper:nth-child(even) {
+        margin: 3em 0 3em 25%;
+    }
+
+    .plane-title {
+        color: #ee6557;
+        font-size: 3em;
+        font-family: 'Abril Fatface', 'Times New Roman', serif;
+        display: inline-block;
+        margin: 0;
+        font-weight: normal;
+        opacity: 0;
+    }
+
+
+    /*** handling errors ***/
+
+    .no-curtains .plane-title {
+        opacity: 1;
+    }
+
+}
+
+
+
+
+@media screen and (max-width: 1320px) {
+
+    #content {
+        margin: 0 20px;
+    }
+
+    .plane-wrapper {
+        width: 87.5%;
+        margin: 3em 12.5% 3em 0;
+    }
+
+    .plane-wrapper:nth-child(even) {
+        margin: 3em 0 3em 12.5%;
+    }
+
+    .plane-title {
+        font-size: 2.5em;
+    }
+
+}
+
+
+@media screen and (max-width: 720px) {
+
+    #content {
+        margin: 0 10px;
+    }
+
+    .plane-wrapper {
+        width: 100%;
+        margin: 3em 0;
+    }
+
+    .plane-wrapper:nth-child(even) {
+        margin: 3em 0;
+    }
+
+    .plane-title {
+        font-size: 1.75em;
+    }
+
+}

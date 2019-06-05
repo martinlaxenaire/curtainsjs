@@ -47,16 +47,34 @@
         transition: opacity 0.5s ease-in;
     }
 
+    #back-to-lib-link {
+        display: inline-block;
+        position: fixed;
+        top: 0;
+        right: 0;
+        padding: 0.25em 0.5em;
+        background: #ee6557;
+        color: white;
+        text-decoration: none;
+        z-index: 20;
+        font-size: 0.85em;
+    }
+
+    #back-to-lib-link:hover {
+        background: black;
+    }
+
     .video-started #canvas {
         opacity: 1;
     }
 
     .curtain-wrapper {
         position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
         z-index: 15;
+        top: 10%;
+        right: 10%;
+        bottom: 10%;
+        left: 10%;
     }
 
     .curtain {
@@ -108,6 +126,14 @@
 
     /*** handling errors ***/
 
+    .no-curtains .curtain-wrapper {
+        left: 50%;
+        right: auto;
+        bottom: auto;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+
     .no-curtains .curtain {
         overflow: hidden;
         display: flex;
@@ -122,14 +148,16 @@
 
 }
 
+/*** handling video ratio on error ***/
+
 @media screen and (max-aspect-ratio: 1920/1080) {
-    .curtain-wrapper {
+    .no-curtains .curtain-wrapper {
         height: calc(100vh * 0.8);
         width: calc(177vh * 0.8);
     }
 }
 @media screen and (min-aspect-ratio: 1920/1080) {
-    .curtain-wrapper {
+    .no-curtains .curtain-wrapper {
         width: calc(100vw * 0.8);
         height: calc(56.25vw * 0.8);
     }

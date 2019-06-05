@@ -1,7 +1,4 @@
 function archiveNavigation() {
-    // our canvas container
-    var canvasContainer = document.getElementById("canvas");
-
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
 
@@ -127,6 +124,7 @@ function archiveNavigation() {
             };
 
             xhr.open("GET", href, true);
+            xhr.setRequestHeader("Accept", "text/html");
             xhr.send(null);
 
             // start page transition

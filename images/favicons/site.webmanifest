@@ -1,0 +1,19 @@
+{
+    "name": "curtains.js",
+    "short_name": "curtains.js",
+    "icons": [
+        {
+            "src": "/medias/favicons/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/medias/favicons/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "theme_color": "#202340",
+    "background_color": "#202340",
+    "display": "standalone"
+}

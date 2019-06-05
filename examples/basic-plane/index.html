@@ -1,29 +1,41 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset=utf-8>
+		<meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 		<!-- Metas -->
 		<title>curtains.js | Basic plane example</title>
-	    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-	    <link rel="canonical" href="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/basic-plane/index.html" />
+	    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+	    <link rel="canonical" href="https://www.curtainsjs.com/examples/basic-plane/index.html">
 
 	    <!-- Facebook OG -->
-	    <meta property="og:title" content="curtains.js | Basic plane example" />
-	    <meta property="og:type" content="website" />
-	    <meta property="og:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-	    <meta property="og:url" content="https://www.martin-laxenaire.fr/libs/curtainsjs/examples/basic-plane/index.html" />
-	    <meta property="og:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg"/>
+	    <meta property="og:title" content="curtains.js | Basic plane example">
+	    <meta property="og:type" content="website">
+	    <meta property="og:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+	    <meta property="og:url" content="https://www.curtainsjs.com/examples/basic-plane/index.html">
+	    <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
 
 	    <!-- Twitter card -->
 	    <meta name="twitter:card" content="summary_large_image">
 	    <meta name="twitter:site" content="@webdesign_ml">
 		<meta name="twitter:creator" content="@webdesign_ml">
-		<meta name="twitter:title" content="curtains.js | Basic plane example" />
-		<meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes." />
-		<meta name="twitter:image" content="https://www.martin-laxenaire.fr/libs/curtainsjs/images/intro-background.jpg" />
+		<meta name="twitter:title" content="curtains.js | Basic plane example">
+		<meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
+		<meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
 
+		<!-- Favicon -->
+		<link rel="apple-touch-icon" sizes="180x180" href="../../images/favicons/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="../../images/favicons/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="../../images/favicons/favicon-16x16.png">
+		<link rel="manifest" href="../../images/favicons/site.webmanifest">
+		<link rel="mask-icon" href="../../images/favicons/safari-pinned-tab.svg" color="#202340">
+		<link rel="shortcut icon" href="../../images/favicons/favicon.ico">
+		<meta name="msapplication-TileColor" content="#202340">
+		<meta name="msapplication-config" content="../../images/favicons/browserconfig.xml">
+		<meta name="theme-color" content="#202340">
+
+		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400" rel="stylesheet">
 
 		<style>
 			body {
@@ -33,6 +45,8 @@
 				height: 100vh;
 				margin: 0;
 				overflow: hidden;
+				font-family: 'PT Sans', Verdana, sans-serif;
+				font-size: 18px;
 			}
 
 			#canvas {
@@ -42,6 +56,23 @@
 				right: 0;
 				bottom: 0;
 				left: 0;
+			}
+
+			#back-to-lib-link {
+				display: inline-block;
+				position: fixed;
+				top: 0;
+				right: 0;
+				padding: 0.25em 0.5em;
+				background: #ee6557;
+				color: white;
+				text-decoration: none;
+				z-index: 20;
+				font-size: 0.85em;
+			}
+
+			#back-to-lib-link:hover {
+				background: black;
 			}
 
 			.plane {
@@ -61,8 +92,10 @@
 
 		<div id="canvas"></div>
 
+		<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
+
 		<div class="plane">
-			<img src="images/plane-texture.jpg" />
+			<img src="../medias/plane-texture-3.jpg" />
 		</div>
 
         <script id="plane-vs" type="x-shader/x-vertex">
@@ -78,6 +111,9 @@
 			uniform mat4 uMVMatrix;
 			uniform mat4 uPMatrix;
 
+			// our texture matrix that will handle image cover
+			uniform mat4 uTextureMatrix0;
+
 			// if you want to pass your vertex and texture coords to the fragment shader
 			varying vec3 vVertexPosition;
 			varying vec2 vTextureCoord;
@@ -88,7 +124,8 @@
 				gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
 
 				// set the varyings
-				vTextureCoord = aTextureCoord;
+				// here we use our texture matrix to calculate te accurate texture coords
+				vTextureCoord = (uTextureMatrix0 * vec4(aTextureCoord, 0.0, 1.0)).xy;
 				vVertexPosition = vertexPosition;
 			}
         </script>
@@ -123,9 +160,6 @@
 
 		<script type="text/javascript">
 			window.onload = function() {
-				// get our canvas wrapper
-				var canvasContainer = document.getElementById("canvas");
-
 				// set up our WebGL context and append the canvas to our wrapper
 				var webGLCurtain = new Curtains("canvas");
 
@@ -158,13 +192,13 @@
 
 
 		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-29368338-1"></script>
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
 		<script>
 		  	window.dataLayer = window.dataLayer || [];
 		  	function gtag(){dataLayer.push(arguments);}
 		  	gtag('js', new Date());
 
-		  	gtag('config', 'UA-29368338-1');
+		  	gtag('config', 'UA-141413267-1');
 		</script>
 
 	</body>

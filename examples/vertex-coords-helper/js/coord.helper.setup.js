@@ -1,8 +1,4 @@
 window.onload = function(){
-
-    // our canvas container
-    var canvasContainer = document.getElementById("canvas");
-
     // track the mouse positions to display them on screen
     var mousePosition = {
         x: 0,

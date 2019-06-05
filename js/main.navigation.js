@@ -1,9 +1,4 @@
 window.onload = function(){
-
-    var canvasContainer = document.getElementById("canvas");
-
-    var planes = [];
-
     var mousePosition = {
         x: 0,
         y: 0,
@@ -25,24 +20,28 @@ window.onload = function(){
 
         if(e.targetTouches) {
 
-            mousePosition.x = e.targetTouches[0].pageX;
-            mousePosition.y = e.targetTouches[0].pageY;
+            mousePosition.x = e.targetTouches[0].clientX;
+            mousePosition.y = e.targetTouches[0].clientY;
         }
         else {
-            mousePosition.x = e.pageX;
-            mousePosition.y = e.pageY;
+            mousePosition.x = e.clientX;
+            mousePosition.y = e.clientY;
         }
 
         if(plane) {
             var mouseCoords = plane.mouseToPlaneCoords(mousePosition.x, mousePosition.y);
-            plane.uniforms.mousePosition.value = [mouseCoords.x, mouseCoords.y];
 
-            if(mouseLastPosition.x && mouseLastPosition.y) {
-                var delta = Math.sqrt(Math.pow(mousePosition.x - mouseLastPosition.x, 2) + Math.pow(mousePosition.y - mouseLastPosition.y, 2)) / 30;
-                delta = Math.min(4, delta);
-                if(delta >= mouseDelta) {
-                    mouseDelta = delta;
-                    plane.uniforms.mouseTime.value = 0;
+            // mouse must be not too much below the curtains to update the uniforms
+            if(mouseCoords.y > -1.25) {
+                plane.uniforms.mousePosition.value = [mouseCoords.x, mouseCoords.y];
+
+                if(mouseLastPosition.x && mouseLastPosition.y) {
+                    var delta = Math.sqrt(Math.pow(mousePosition.x - mouseLastPosition.x, 2) + Math.pow(mousePosition.y - mouseLastPosition.y, 2)) / 30;
+                    delta = Math.min(4, delta);
+                    if(delta >= mouseDelta) {
+                        mouseDelta = delta;
+                        plane.uniforms.mouseTime.value = 0;
+                    }
                 }
             }
         }
@@ -57,33 +56,43 @@ window.onload = function(){
         document.body.classList.add("no-curtains");
     });
 
-    var planeElements = document.getElementsByClassName("curtain");
-    var examplePlanes = [];
+    // home curtain
+    // here we will write our title inside our canvas
+    function writeTitle(plane, canvas) {
+        var title = document.getElementById("site-title");
+        var titleStyle = window.getComputedStyle(title);
+        var htmlPlaneWidth = plane._boundingRect.document.width;
+        var htmlPlaneHeight = plane._boundingRect.document.height;
 
+        // set sizes
+        canvas.width = htmlPlaneWidth;
+        canvas.height = htmlPlaneHeight;
+        var context = canvas.getContext("2d");
 
-    var exampleParams = {
-        vertexShaderID: "simple-shader-vs",
-        fragmentShaderID: "simple-shader-fs",
-        widthSegments: 10,
-        heightSegments: 1,
-        imageCover: false,
-        uniforms: {
-            time: {
-                name: "uTime",
-                type: "1f",
-                value: 0,
-            },
-        },
-    };
+        context.width = htmlPlaneWidth * webGLCurtain.pixelRatio;
+        context.height = htmlPlaneHeight * webGLCurtain.pixelRatio;
 
+        // draw our title with the original style
+        context.fillStyle = titleStyle.color;
+        context.font = titleStyle.fontSize + " " + titleStyle.fontFamily;
+        context.fontStyle = titleStyle.fontStyle;
+        context.textAlign = "center";
 
-    for(var i = 0; i < planeElements.length; i++) {
-        if(i > 0) {
-            examplePlanes.push(webGLCurtain.addPlane(planeElements[i], exampleParams));
+        // vertical alignment is a bit hacky
+        context.textBaseline = "middle";
+        context.fillText("curtains.js", htmlPlaneWidth / 2, title.offsetTop);
 
-            handleExamples(i);
+        context.imageSmoothingEnabled = true;
+
+        if(curtainPlane.textures && curtainPlane.textures.length > 1) {
+            setTimeout(function() {
+                curtainPlane.textures[1].shouldUpdate = false;
+            }, 50);
         }
     }
+
+
+    var planeElements = document.getElementsByClassName("curtain");
 
     if(planeElements.length > 0) {
 
@@ -91,13 +100,8 @@ window.onload = function(){
             widthSegments: 50,
             heightSegments: 37,
             //fov: 15,
-            imageCover: false,
+            alwaysDraw: true, // set to true because the webgl part is overflowing the original plane
             uniforms: {
-                resolution: {
-                    name: "uResolution",
-                    type: "2f",
-                    value: [planeElements[0].offsetWidth, planeElements[0].offsetHeight],
-                },
                 mouseTime: {
                     name: "uMouseTime",
                     type: "1f",
@@ -120,8 +124,26 @@ window.onload = function(){
 
         // if there has been an error during init, curtainPlane will be null
         if(curtainPlane) {
-            curtainPlane.onReady(function() {
-                planeElements[0].classList.add("curtain-ready");
+            var gl = webGLCurtain.glContext;
+            gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+            var canvas = document.createElement("canvas");
+            writeTitle(curtainPlane, canvas);
+
+            canvas.setAttribute("data-sampler", "titleSampler");
+            canvas.style.display = "none";
+
+            curtainPlane.loadCanvas(canvas);
+
+            curtainPlane.onLoading(function() {
+                if(curtainPlane._loadingManager.sourcesLoaded == 2) {
+                    setTimeout(function() {
+                        curtainPlane.textures[1].shouldUpdate = false;
+                        mouseDelta = 1;
+                        document.body.classList.add("curtain-ready");
+                    }, 50);
+                }
+            }).onReady(function() {
                 curtainPlane.setPerspective(10);
 
                 var wrapper = document.getElementById("page-wrap");
@@ -134,10 +156,11 @@ window.onload = function(){
                     handleMovement(e, curtainPlane);
                 });
 
-                window.onresize = function() {
-                    curtainPlane.uniforms.resolution.value = [curtainPlane.htmlElement.offsetWidth, curtainPlane.htmlElement.offsetHeight];
-                }
-
+                window.addEventListener("resize", function() {
+                    // update title texture
+                    curtainPlane.textures[1].shouldUpdate = true;
+                    writeTitle(curtainPlane, curtainPlane.textures[1].source);
+                });
             }).onRender(function() {
                 curtainPlane.uniforms.mouseTime.value++;
 
@@ -151,9 +174,37 @@ window.onload = function(){
     }
 
 
+    // examples
+    var showcaseElements = document.getElementsByClassName("showcase-curtain");
+    var showcasePlanes = [];
+
+    var showcaseParams = {
+        vertexShaderID: "simple-shader-vs",
+        fragmentShaderID: "simple-shader-fs",
+        widthSegments: 10,
+        heightSegments: 1,
+        //alwaysDraw: true, // firefox bug ?!
+        uniforms: {
+            time: {
+                name: "uTime",
+                type: "1f",
+                value: 0,
+            },
+        },
+    };
+
+    for(var i = 0; i < showcaseElements.length; i++) {
+        var plane = webGLCurtain.addPlane(showcaseElements[i], showcaseParams);
+
+        if(plane) {
+            showcasePlanes.push(plane);
+
+            handleExamples(i);
+        }
+    }
 
     function handleExamples(index) {
-        var plane = examplePlanes[index - 1];
+        var plane = showcasePlanes[index];
 
         // if there has been an error during init, plane will be null
         if(plane) {
@@ -161,17 +212,15 @@ window.onload = function(){
 
                 plane.mouseOver = false;
 
-                planeElements[index].addEventListener("mouseenter", function(e) {
+                showcaseElements[index].addEventListener("mouseenter", function(e) {
                     plane.mouseOver = true;
                 });
 
-                planeElements[index].addEventListener("mouseleave", function(e) {
+                showcaseElements[index].addEventListener("mouseleave", function(e) {
                     plane.mouseOver = false;
                 });
 
             }).onRender(function() {
-                //plane.uniforms.time.value++;
-                //if(index == 2) console.log(plane.uniforms.time.value);
                 if(plane.mouseOver) {
                     plane.uniforms.time.value = Math.min(45, plane.uniforms.time.value + 1);
                 }
@@ -180,6 +229,73 @@ window.onload = function(){
                 }
 
                 plane.updatePosition();
+            }).onLeaveView(function() {
+                //console.log("leaving view", plane.index);
+            }).onReEnterView(function() {
+                //console.log("entering view", plane.index);
+            });
+        }
+
+    }
+
+
+    // basic example
+    var basicElement = document.getElementById("basic-example");
+
+    if(basicElement) {
+
+        var basicPlaneParams = {
+            vertexShaderID: "basic-plane-vs", // our vertex shader ID
+            fragmentShaderID: "basic-plane-fs", // our framgent shader ID
+            uniforms: {
+                time: {
+                    name: "uTime",
+                    type: "1f",
+                    value: 0,
+                },
+            },
+        };
+
+        var basicPlane = webGLCurtain.addPlane(basicElement, basicPlaneParams);
+
+        // if there has been an error during init, curtainPlane will be null
+        if(basicPlane) {
+            basicPlane.onRender(function() {
+                basicPlane.uniforms.time.value++;
+
+                basicPlane.updatePosition();
+            });
+        }
+
+    }
+
+
+    // about
+    var aboutElements = document.getElementsByClassName("about-curtain");
+
+    if(aboutElements.length > 0) {
+
+        var aboutPlaneParams = {
+            widthSegments: 10,
+            heightSegments: 10,
+            fov: 35,
+            uniforms: {
+                time: {
+                    name: "uTime",
+                    type: "1f",
+                    value: 0,
+                },
+            },
+        };
+
+        var aboutPlane = webGLCurtain.addPlane(aboutElements[0], aboutPlaneParams);
+
+        // if there has been an error during init, curtainPlane will be null
+        if(aboutPlane) {
+            aboutPlane.onRender(function() {
+                aboutPlane.uniforms.time.value++;
+
+                aboutPlane.updatePosition();
             });
         }
 
