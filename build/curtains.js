@@ -560,14 +560,8 @@ Curtains.prototype._drawScene = function() {
                         this._handleDepth(false);
                     }
 
-                    if(j === 0) {
-                        // draw the plane and bind the buffers
-                        plane._drawPlane(true);
-                    }
-                    else {
-                        // draw the plane without binding buffers
-                        plane._drawPlane(false);
-                    }
+                    // draw the plane
+                    plane._drawPlane();
                 }
 
             }
@@ -2278,11 +2272,8 @@ Curtains.Plane.prototype._bindPlaneTexture = function(texture) {
 
 /***
  We draw the plane, ie bind the buffers, set the active textures and draw it
-
- params :
- @shouldBindBuffers (bool) : defines if we should rebind the buffers or not
  ***/
-Curtains.Plane.prototype._drawPlane = function(shouldBindBuffers) {
+Curtains.Plane.prototype._drawPlane = function() {
     var glContext = this._wrapper.glContext;
 
     // check if our plane is ready to draw
@@ -2308,10 +2299,8 @@ Curtains.Plane.prototype._drawPlane = function(shouldBindBuffers) {
                 this.textures[i]._drawTexture();
             }
 
-            // bind buffers if needed
-            if(shouldBindBuffers) {
-                this._bindPlaneBuffers();
-            }
+            // bind plane buffers
+            this._bindPlaneBuffers();
 
             // the draw call!
             glContext.drawArrays(glContext.TRIANGLES, 0, this._geometry.bufferInfos.numberOfItems);

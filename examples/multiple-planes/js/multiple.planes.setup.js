@@ -32,8 +32,6 @@ window.onload = function(){
     var params = {
         widthSegments: 10,
         heightSegments: 10,
-        //autoloadSources: false,
-        imageCover: false, // we are using the padding-bottom hack to set our plane HTML element size so it will fit our images aspect ratio
         uniforms: {
             planeDeformation: {
                 name: "uPlaneDeformation",
@@ -82,8 +80,7 @@ window.onload = function(){
         // check if our plane is defined and use it
         plane && plane.onLoading(function() {
             //console.log(plane.loadingManager.sourcesLoaded);
-        })
-        .onReady(function() {
+        }).onReady(function() {
             // once everything is ready, display everything
             if(index == planes.length - 1) {
                 document.body.classList.add("planes-loaded");
