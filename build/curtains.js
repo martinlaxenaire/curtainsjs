@@ -2120,7 +2120,6 @@ Curtains.Plane.prototype.loadVideo = function(source) {
 
     // create a new texture that will use our video later
     var texture = this.createTexture(video.sampler);
-    //texture.shouldUpdate = true;
 
     // handle our loaded data event inside the texture and tell our plane when the video is ready to play
     texture._onSourceLoadedHandler = texture._onVideoLoadedData.bind(texture, video);
