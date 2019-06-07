@@ -191,11 +191,11 @@
 
     .plane-wrapper {
         height: 75vh;
-        margin: 7.5vh 0;
+        margin: 7.5vh auto;
     }
 
     .plane-wrapper:nth-child(even) {
-        margin: 7.5vh 0;
+        margin: 7.5vh auto;
     }
 
 }

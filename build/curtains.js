@@ -343,34 +343,12 @@ Curtains.prototype.removePlane = function(plane) {
     plane._canDraw = false;
 
     // remove from draw stack
-
-    // get the right stack where our planed is stored
-    var definition = plane._definition.width * plane._definition.height + plane._definition.width;
     var drawStack = this._drawStack;
-    var stackIndex;
     for(var i = 0; i < drawStack.length; i++) {
-        if(drawStack[i].definition === definition) {
-            stackIndex = i;
+        if(plane.index === drawStack[i]) {
+            this._drawStack.splice(i, 1);
         }
     }
-
-    // we don't want to draw that stack since we are manipulating it
-    drawStack[stackIndex].isReordering = true;
-
-    var planeStackIndex;
-    for(var i = 0; i < drawStack[stackIndex].planesIndex.length; i++) {
-        if(plane.index === drawStack[stackIndex].planesIndex[i]) {
-            planeStackIndex = i;
-        }
-    }
-
-    // before we delete it from the draw stack array we need to update all the indexes that come after it
-    for(var i = planeStackIndex + 1; i < drawStack[stackIndex].planesIndex.length; i++) {
-        drawStack[stackIndex].planesIndex[i]--;
-    }
-
-    // delete it from the draw stack
-    this._drawStack[stackIndex].planesIndex.splice(planeStackIndex, 1);
 
     // now free the webgl part
     plane && plane._dispose();
@@ -392,46 +370,17 @@ Curtains.prototype.removePlane = function(plane) {
     if(this.glContext) this.glContext.clear(this.glContext.DEPTH_BUFFER_BIT | this.glContext.COLOR_BUFFER_BIT);
 
     // we are no longer manipulating the drawstack, we can draw it again
-    drawStack[stackIndex].isReordering = false;
+    //drawStack[stackIndex].isReordering = false;
 };
 
 
 
 /***
- This function will stack planes by their vertices arrays length in order to avoid redundant buffer binding calls
+ This function will stack planes by their indexes
+ We are not necessarily going to draw them in their creation order
  ***/
-Curtains.prototype._stackPlane = function(planeDefinition) {
-    // if it's our first plane, just fill the drawStack array
-    if(this._drawStack.length === 0) {
-        var stack = {
-            definition: planeDefinition,
-            planesIndex: [this.planes.length],
-            isReordering: false,
-        }
-
-        this._drawStack.push(stack);
-    }
-    else {
-        // if it's not our first plane, check whether we already have registered a plane with this definition or not
-        var hasSameDefinition = false;
-        for(var i = 0; i < this._drawStack.length; i++) {
-            if(this._drawStack[i].definition === planeDefinition) {
-                // we already have a plane with this definition, push it inside planesIndex array
-                hasSameDefinition = true;
-                this._drawStack[i].planesIndex.push(this.planes.length);
-            }
-        }
-        // we don't have a plane with this definition, we fill a new stack entry
-        if(!hasSameDefinition) {
-            var stack = {
-                definition: planeDefinition,
-                planesIndex: [this.planes.length],
-                isReordering: false,
-            }
-
-            this._drawStack.push(stack);
-        }
-    }
+Curtains.prototype._stackPlane = function(index) {
+    this._drawStack.push(index);
 };
 
 
@@ -546,25 +495,19 @@ Curtains.prototype._drawScene = function() {
 
     // loop on our stacked planes
     for(var i = 0; i < this._drawStack.length; i++) {
-        if(!this._drawStack[i].isReordering) {
-            for(var j = 0; j < this._drawStack[i].planesIndex.length; j++) {
-
-                var plane = this.planes[this._drawStack[i].planesIndex[j]];
-                // be sure the plane exists
-                if(plane) {
-                    // set/unset the depth test if needed
-                    if(plane._shouldUseDepthTest && !this._shouldHandleDepth) {
-                        this._handleDepth(true);
-                    }
-                    else if(!plane._shouldUseDepthTest && this._shouldHandleDepth) {
-                        this._handleDepth(false);
-                    }
-
-                    // draw the plane
-                    plane._drawPlane();
-                }
-
+        var plane = this.planes[this._drawStack[i]];
+        // be sure the plane exists
+        if(plane) {
+            // set/unset the depth test if needed
+            if(plane._shouldUseDepthTest && !this._shouldHandleDepth) {
+                this._handleDepth(true);
             }
+            else if(!plane._shouldUseDepthTest && this._shouldHandleDepth) {
+                this._handleDepth(false);
+            }
+
+            // draw the plane
+            plane._drawPlane();
         }
     }
 };
@@ -732,7 +675,7 @@ Curtains.Plane.prototype._init = function(plane, params) {
 
         // we need to sort planes by their definitions : widthSegments * heightSegments
         // but we have to keep in mind that 10*15 and 15*10 are not the same vertices definion, so we add widthSegments to differenciate them
-        wrapper._stackPlane(this._definition.width * this._definition.height + this._definition.width);
+        wrapper._stackPlane(this.index);
 
         // set plane definitions, vertices, uvs and stuff
         this._initializeBuffers();
@@ -1938,48 +1881,13 @@ Curtains.Plane.prototype.moveToFront = function() {
     // enable the depth test
     this.enableDepthTest(false);
 
-    // get the right stack where our planed is stored
-    var definition = this._definition.width * this._definition.height + this._definition.width;
     var drawStack = this._wrapper._drawStack;
-    var stack;
     for(var i = 0; i < drawStack.length; i++) {
-        if(drawStack[i].definition === definition) {
-            stack = drawStack[i];
+        if(this.index === drawStack[i]) {
+            drawStack.splice(i, 1);
         }
     }
-
-    // start the reordering process (useful to prevent drawing while manipulating the stack)
-    stack.isReordering = true;
-
-    // get plane index
-    var index = this.index;
-
-    // no need to reorder if the stack has only one plane
-    if(stack.planesIndex.length > 0) {
-        // loop through the plane's stack, remove its index
-        for(var i = 0; i < stack.planesIndex.length; i++) {
-            if(stack.planesIndex[i] === index) {
-                stack.planesIndex.splice(i, 1);
-            }
-        }
-        // adds the plane index at the end of the stack depending on the depth test
-        stack.planesIndex.push(this.index);
-
-    }
-
-    // now we need to do the same with the draw stacks
-    if(drawStack.length > 0) {
-        for(var i = 0; i < drawStack.length; i++) {
-            if(drawStack[i].definition === definition) {
-                drawStack.splice(i, 1);
-            }
-        }
-        // adds the stack index at the end of the draw stacks
-        drawStack.push(stack);
-    }
-
-    // stack has been reordered
-    stack.isReordering = false;
+    drawStack.push(this.index);
 };
 
 
@@ -2298,7 +2206,7 @@ Curtains.Plane.prototype._drawPlane = function() {
                 this.textures[i]._drawTexture();
             }
 
-            // bind plane buffers
+            // bind plane attributes buffers
             this._bindPlaneBuffers();
 
             // the draw call!
