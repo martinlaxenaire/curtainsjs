@@ -1984,9 +1984,9 @@ Curtains.Plane.prototype.loadSource = function(source) {
  @source (image) : html image element
  ***/
 Curtains.Plane.prototype.loadImage = function(source) {
-    image = source;
+    var image = source;
 
-    image.crossOrigin = this.crossOrigin;
+    image.crossOrigin = this.crossOrigin || "anonymous";
     image.sampler = source.getAttribute("data-sampler") || null;
 
     // create a new texture that will use our image later
@@ -2024,7 +2024,7 @@ Curtains.Plane.prototype.loadVideo = function(source) {
 
     video.sampler = source.getAttribute("data-sampler") || null;
 
-    video.crossOrigin = this.crossOrigin;
+    video.crossOrigin = this.crossOrigin || "anonymous";
 
     // create a new texture that will use our video later
     var texture = this.createTexture(video.sampler);
