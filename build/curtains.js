@@ -133,6 +133,9 @@ Curtains.prototype.resize = function() {
             this.planes[i].planeResize();
         }
     }
+
+    // be sure we'll update the scene even if drawing is disabled
+    this.needRender();
 };
 
 
@@ -214,6 +217,9 @@ Curtains.prototype._contextRestored = function() {
             self._onContextRestoredCallback();
         }
     }, 0);
+
+    // redraw scene even if drawing is disabled
+    this.needRender();
 
     // requestAnimationFrame again
     this._animate();
@@ -677,9 +683,11 @@ Curtains.Plane.prototype._init = function(plane, params) {
         // but we have to keep in mind that 10*15 and 15*10 are not the same vertices definion, so we add widthSegments to differenciate them
         wrapper._stackPlane(this.index);
 
+        // set our uniforms
+        this._setUniforms(this.uniforms);
+
         // set plane definitions, vertices, uvs and stuff
         this._initializeBuffers();
-
 
         // finally load all its textures
         // our object that will handle all images loading process
@@ -905,12 +913,6 @@ Curtains.Plane.prototype._setupPlaneProgram = function() {
             isProgramValid = false;
         }
 
-        // Set the current shader in use,
-        glContext.useProgram(this._program);
-
-        // then we set the plane uniforms locations
-        this._setUniforms(this.uniforms);
-
         // projection and model view matrix
         // create our modelview and projection matrix
         this._matrices = {
@@ -1016,10 +1018,13 @@ Curtains.Plane.prototype._restoreContext = function() {
     this._geometry.bufferInfos = null;
     this._material.bufferInfos = null;
 
-    // reset plane shaders, programs and attributes
+    // reset plane shaders, programs and matrices
     var isProgramValid = this._setupPlaneProgram();
 
     if(isProgramValid) {
+        // reset attributes
+        this._setAttributes();
+
         // reset plane uniforms
         this._setUniforms(this.uniforms);
 
@@ -1549,9 +1554,6 @@ Curtains.Plane.prototype.setPerspective = function(fov, near, far) {
  @nextMVMatrix: our new model view matrix
  ***/
 Curtains.Plane.prototype._setMVMatrix = function() {
-    // then we set the plane uniforms locations
-    this._setUniforms(this.uniforms);
-
     var wrapper = this._wrapper;
 
     var identity = new Float32Array([
