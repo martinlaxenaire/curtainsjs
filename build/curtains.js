@@ -2532,10 +2532,10 @@ Curtains.Texture.prototype._getSizes = function() {
     var yOffset = 0;
 
     if(planeRatio > sourceRatio) { // means plane is larger
-        yOffset = Math.min(0, (planeHeight - (planeWidth * (1 / sourceRatio))) / 2);
+        yOffset = Math.min(0, planeHeight - (planeWidth * (1 / sourceRatio)));
     }
     else if(planeRatio < sourceRatio) { // means plane is taller
-        xOffset = Math.min(0, (planeWidth - (planeHeight * sourceRatio)) / 2);
+        xOffset = Math.min(0, planeWidth - (planeHeight * sourceRatio));
     }
 
     var sizes = {
@@ -2597,8 +2597,8 @@ Curtains.Texture.prototype._adjustTextureSize = function() {
 Curtains.Texture.prototype._updateTextureMatrix = function(sizes) {
     // calculate scale to apply to the matrix
     var texScale = {
-        x: sizes.planeWidth / (sizes.planeWidth - (sizes.xOffset * 2)),
-        y: sizes.planeHeight / (sizes.planeHeight - (sizes.yOffset * 2)),
+        x: sizes.planeWidth / (sizes.planeWidth - sizes.xOffset),
+        y: sizes.planeHeight / (sizes.planeHeight - sizes.yOffset),
     };
 
     // apply texture scale
@@ -2607,9 +2607,9 @@ Curtains.Texture.prototype._updateTextureMatrix = function(sizes) {
 
     // translate texture to center it
     var textureTranslation = new Float32Array([
-        1.0,   0.0,  0.0,  0.0,
-        0.0,  1.0,   0.0,  0.0,
-        0.0,  0.0,  1.0,   0.0,
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
         (1 - texScale.x) / 2, (1 - texScale.y) / 2, 0.0, 1.0
     ]);
 
