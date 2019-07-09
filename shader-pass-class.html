@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <!-- Metas -->
-    <title>curtains.js | Documentation | Plane class</title>
+    <title>curtains.js | Documentation | ShaderPass class</title>
     <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
-    <link rel="canonical" href="https://www.curtainsjs.com/plane-class.html">
+    <link rel="canonical" href="https://www.curtainsjs.com/shader-pass-class.html">
 
     <!-- Facebook OG -->
-    <meta property="og:title" content="curtains.js | Documentation | Plane class">
+    <meta property="og:title" content="curtains.js | Documentation | ShaderPass class">
     <meta property="og:type" content="website">
     <meta property="og:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
-    <meta property="og:url" content="https://www.curtainsjs.com/plane-class.html">
+    <meta property="og:url" content="https://www.curtainsjs.com/shader-pass-class.html">
     <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
 
     <!-- Twitter card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@webdesign_ml">
     <meta name="twitter:creator" content="@webdesign_ml">
-    <meta name="twitter:title" content="curtains.js | Documentation | Plane class">
+    <meta name="twitter:title" content="curtains.js | Documentation | ShaderPass class">
     <meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML elements into interactive textured planes.">
     <meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
 
@@ -172,7 +172,7 @@
                             </ul>
                         </div>
                     </li>
-                    <li class="active">
+                    <li>
                         <div class="api-menu-top-link">
                             <a href="plane-class.html">Plane</a>
                         </div>
@@ -315,7 +315,7 @@
                             </ul>
                         </div>
                     </li>
-                    <li>
+                    <li class="active">
                         <div class="api-menu-top-link">
                             <a href="shader-pass-class.html">ShaderPass</a>
                         </div>
@@ -461,16 +461,18 @@
 
                 <div class="api-content-inner">
                     <div class="inner-section">
-                        <h1>Plane class</h1>
+                        <h1>ShaderPass class</h1>
                         <h2 id="basic-usage">Basic usage</h2>
                         <p>
-                            Plane class inherits from the BasePlane class, which is a class that just sets up the WebGL (buffers and attributes) and sources loading parts of a plane.<br />
-                            Plane <strong>extends</strong> the BasePlane class by adding various properties and methods to keep your WebGL plane in sync with its associated HTML element. All sizes and positions are handled by two matrices that you will have to use inside your vertex shader: the model view matrix and the projection matrix.
+                            Shader passes offers the possibility to add <strong>post-processing</strong> to your scene. Think of it as an additional plane that would have the size of your WebGL canvas and that would pack your whole scene into a texture and draw it. You'd then be able to manipulate that texture in your fragment shader.
+                        </p>
+                        <p>
+                            Like the <a href="plane-class.html">Plane</a> class it inherits from the BasePlane class, which is a class that just sets up the WebGL (buffers and attributes) and sources loading parts of a plane.<br />
+                            ShaderPass <strong>extends</strong> the BasePlane class by handling the creation of a frame buffer object and the creation of a render texture.
                         </p>
                         <h3>Creation</h3>
                         <p>
-                            To create a plane, you will need to pass a mandatory HTML element. It will be used to calculate the size and position of your plane.<br />
-                            You will have to use the <a href="curtains-class.html#add-plane">addPlane</a> method of your <a href="curtains-class.html">Curtains</a> class object:
+                            To create a shader pass, you will have to use the <a href="curtains-class.html#add-shader-pass">addShaderPass</a> method of your <a href="curtains-class.html">Curtains</a> class object:
                         </p>
 
                         <div class="code">
@@ -482,20 +484,17 @@
                                 <div>
                                     <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>(<span class="code-string">"canvas"</span>)<span class="code-var">;</span>
                                 </div>
-                            </div>
-
-                            <div class="code-block">
-                                <span class="code-var">var</span> planeElement = document.<span class="code-tag">getElementById</span>(<span class="code-string">"my-plane"</span>)<span class="code-var">;</span>
                             </div>
 
                             <div>
-                                <span class="code-var">var</span> plane = curtains.<span class="code-tag">addPlane</span>(planeElement)<span class="code-var">;</span>
+                                <span class="code-var">var</span> shaderPass = curtains.<span class="code-tag">addShaderPass</span>()<span class="code-var">;</span>
                             </div>
                         </div>
 
+
                         <h3>Parameters</h3>
                         <p>
-                            The code above will create a basic plane but you won't be able to do much with it. The <a href="curtains-class.html#add-plane">addPlane</a> method has a second parameter in which you can pass all the options you need:
+                            The code above will create a basic shader pass but you won't be able to do much with it. The <a href="curtains-class.html#add-shader-pass">addShaderPass</a> method has a parameter in which you can pass all the options you need:
                         </p>
 
                         <div class="code">
@@ -507,10 +506,6 @@
                                 <div>
                                     <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>(<span class="code-string">"canvas"</span>)<span class="code-var">;</span>
                                 </div>
-                            </div>
-
-                            <div class="code-block">
-                                <span class="code-var">var</span> planeElement = document.<span class="code-tag">getElementById</span>(<span class="code-string">"my-plane"</span>)<span class="code-var">;</span>
                             </div>
 
                             <div class="code-block">
@@ -519,13 +514,13 @@
                                 </div>
                                 <div class="code-indent">
                                     <div>
-                                        <span class="code-property">vertexShaderID</span>: <span class="code-string">"my-plane-vs"</span><span class="code-var">,</span> <span class="code-comment">// ID of your vertex shader script tag</span>
+                                        <span class="code-property">vertexShaderID</span>: <span class="code-string">"my-shader-pass-vs"</span><span class="code-var">,</span> <span class="code-comment">// ID of your vertex shader script tag</span>
                                     </div>
                                     <div>
-                                        <span class="code-property">fragmentShaderID</span>: <span class="code-string">"my-plane-fs"</span><span class="code-var">,</span> <span class="code-comment">// ID of your fragment shader script tag</span>
+                                        <span class="code-property">fragmentShaderID</span>: <span class="code-string">"my-shader-pass-fs"</span><span class="code-var">,</span> <span class="code-comment">// ID of your fragment shader script tag</span>
                                     </div>
                                     <div>
-                                        <span class="code-property">uniforms</span>: { <span class="code-comment">// uniforms are what will allow you to interact with your plane</span>
+                                        <span class="code-property">uniforms</span>: { <span class="code-comment">// uniforms are what will allow you to interact with your shader pass</span>
                                     </div>
                                     <div class="code-indent">
                                         <div>
@@ -556,80 +551,140 @@
                             </div>
 
                             <div>
-                                <div class="code-comment">
-                                    // create our plane with the above parameters
-                                </div>
-                                <div>
-                                    <span class="code-var">var</span> plane = curtains.<span class="code-tag">addPlane</span>(planeElement<span class="code-var">,</span> params)<span class="code-var">;</span>
-                                </div>
+                                <span class="code-var">var</span> shaderPass = curtains.<span class="code-tag">addShaderPass</span>(params)<span class="code-var">;</span>
                             </div>
                         </div>
 
                         <p>
-                            See the list of all the addPlane <a href="curtains-class.html#add-plane-parameters">possible parameters</a> to know more.
+                            See the list of all the addShaderPass <a href="curtains-class.html#add-shader-pass-parameters">possible parameters</a> to know more.
                         </p>
-                        <h3>Passing shaders via data attributes</h3>
-                        <p>You can also pass the IDs of the vertex and fragment shaders using respectively data-vs-id and data-fs-id attributes of your plane HTML element:
+
+                        <h3>Shaders</h3>
+                        <p>
+                            Shader passes uses slightly different vertex and fragment shaders than the <a href="plane-class.html">Plane</a> objects.
+                        </p>
+                        <h3>Vertex shader</h3>
+                        <p>
+                            Since shader passes does not have projection and model view matrices, the default vertex shader is extremly simple.<br />
+                            If you add a new texture to your shader pass, do not forget to handle its matrix in this vertex shader.
                         </p>
 
                         <div class="code">
                             <div class="code-block">
-
                                 <div class="code-comment">
-                                    &lt;!-- div used to create our plane --&gt;
+                                    // those are the mandatory attributes that the lib sets
                                 </div>
                                 <div>
-                                    <span class="code-tag">&lt;div</span> id=<span class="code-string">"my-plane"</span> data-vs-id=<span class="code-string">"my-plane-vs"</span> data-fs-id=<span class="code-string">"my-plane-fs"</span><span class="code-tag">&gt;</span>
+                                    <span class="code-var">attribute</span> <span class="code-tag">vec3</span> aVertexPosition<span class="code-var">;</span>
                                 </div>
+                                <div>
+                                    <span class="code-var">attribute</span> <span class="code-tag">vec2</span> aTextureCoord<span class="code-var">;</span>
+                                </div>
+                            </div>
 
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // pass your vertex and texture coords to the fragment shader
+                                </div>
+                                <div>
+                                    <span class="code-var">varying</span> <span class="code-tag">vec3</span> vVertexPosition<span class="code-var">;</span>
+                                </div>
+                                <div>
+                                    <span class="code-var">varying</span> <span class="code-tag">vec2</span> vTextureCoord<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="code-var">void</span> main() {
                             </div>
 
                             <div class="code-indent">
 
+                                <div class="code-block">
+                                    gl_Position = <span class="code-tag">vec4</span>(aVertexPosition<span class="code-var">,</span> <span class="code-number">1.0</span>)<span class="code-var">;</span>
+                                </div>
+
                                 <div class="code-comment">
-                                    &lt;!-- image that will be used as texture by our plane --&gt;
+                                    // set the varyings
+                                </div>
+                                <div class="code-comment">
+                                    // use our aTextureCoord attributes as texture coords in our fragment shader
                                 </div>
                                 <div>
-                                    <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image.jpg"</span> <span class="code-tag">/&gt;</span>
+                                    vvTextureCoord = aTextureCoord<span class="code-var">;</span>
                                 </div>
-
+                                <div>
+                                    vVertexPosition = vertexPosition<span class="code-var">;</span>
+                                </div>
                             </div>
 
-                            <div class="code-tag">
-                                &lt;/div&gt;
+                            <div>
+                                }
+                            </div>
+                        </div>
+
+                        <h3>Fragment shader</h3>
+                        <p>
+                            The ShaderPass object automatically creates a texture holding your WebGL scene upon creation. You will have to display that texture to display your scene. If you want to apply any post processing effect, this will be by manipulating this texture.<br />
+                            This texture sampler name is <strong>uRenderTexture</strong>.
+                        </p>
+
+                        <div class="code">
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // get our varyings
+                                </div>
+                                <div>
+                                    <span class="code-var">varying</span> <span class="code-tag">vec3</span> vVertexPosition<span class="code-var">;</span>
+                                </div>
+                                <div>
+                                    <span class="code-var">varying</span> <span class="code-tag">vec2</span> vTextureCoord<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // our render texture
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uRenderTexture<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div>
+                                    <span class="code-var">void</span> main() {
+                                </div>
+
+                                <div class="code-indent">
+
+                                    <div class="code-comment">
+                                        // display our render texture, which contains out whole WebGL scene
+                                    </div>
+                                    <div>
+                                        gl_FragColor = <span class="code-tag">texture2D</span>(uRenderTexture<span class="code-var">,</span> vTextureCoord)<span class="code-var">;</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    }
+                                </div>
                             </div>
                         </div>
 
                         <h2 id="properties">Properties</h2>
                         <ul>
-                            <li id="always-draw">
-                                <p>
-                                    <strong>alwaysDraw</strong> (boolean): <span class="api-item-version">v2.0</span>
-                                </p>
-                                <p>
-                                    Whether the WebGL renderer should always draw the plane or if it should draw it only when the plane is contained in the canvas viewport. Used for performance optimizations.<br />
-                                    If you're messing with the Z position of your vertices in your shader, or if you use rotations, you should set this option to true when you create your plane.
-                                </p>
-                            </li>
-                            <li id="autoload-sources">
-                                <p>
-                                    <strong>autoloadSources</strong> (boolean): <span class="api-item-version">v2.0</span>
-                                </p>
-                                <p>
-                                    Whether the sources (images, videos and canvases HTML children elements of your plane) should be loaded, and according textures created on init.
-                                </p>
-                            </li>
                             <li id="canvases">
                                 <p>
-                                    <strong>canvases</strong> (array): <span class="api-item-version">v1.4</span>
+                                    <strong>canvases</strong> (array): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    An array containing all the canvases loaded via the load methods into the plane.
+                                    An array containing all the canvases loaded via the load methods into the shader pass.
                                 </p>
                             </li>
                             <li id="cross-origin">
                                 <p>
-                                    <strong>crossOrigin</strong> (string): <span class="api-item-version">v1.4</span>
+                                    <strong>crossOrigin</strong> (string): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
                                     The cross origin process used to load the medias.
@@ -637,63 +692,39 @@
                             </li>
                             <li id="html-element">
                                 <p>
-                                    <strong>htmlElement</strong> (HTML element): <span class="api-item-version">v1.0</span>
+                                    <strong>htmlElement</strong> (HTML element): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    The HTML element used to create your plane. Useful if you want to add event listeners to it.
+                                    The HTML element used to create your shader pass: your <a href="curtains-class.html#container">Curtains wrapper container</a>.
                                 </p>
                             </li>
                             <li id="images">
                                 <p>
-                                    <strong>images</strong> (array): <span class="api-item-version">v1.0</span>
+                                    <strong>images</strong> (array): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    An array containing all the images loaded via the load methods into the plane.
+                                    An array containing all the images loaded via the load methods into the shader pass.
                                 </p>
                             </li>
                             <li id="index">
                                 <p>
-                                    <strong>index</strong> (integer): <span class="api-item-version">v1.0</span>
+                                    <strong>index</strong> (integer): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    The index of your plane in the <a href="curtains-class.html#planes">Curtains planes array</a>.
-                                </p>
-                            </li>
-                            <li id="relative-translation">
-                                <p>
-                                    <strong>relativeTranslation</strong> (object): <span class="api-item-version">v1.0</span>
-                                </p>
-                                <p>
-                                    An object containing the additional translation applied to your plane on x and y axis.
-                                </p>
-                            </li>
-                            <li id="rotation">
-                                <p>
-                                    <strong>rotation</strong> (object): <span class="api-item-version">v1.0</span>
-                                </p>
-                                <p>
-                                    An object containing the rotation applied to your plane on x, y and z axis.
-                                </p>
-                            </li>
-                            <li id="scale">
-                                <p>
-                                    <strong>scale</strong> (object): <span class="api-item-version">v1.0</span>
-                                </p>
-                                <p>
-                                    An object containing the scale applied to your plane on x and y axis.
+                                    The index of your shader pass in the <a href="curtains-class.html#shader-passes">Curtains planes array</a>.
                                 </p>
                             </li>
                             <li id="textures">
                                 <p>
-                                    <strong>textures</strong> (array): <span class="api-item-version">v2.0</span>
+                                    <strong>textures</strong> (array): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    An array containing all the plane's <a href="texture-class.html">Textures</a> already created.
+                                    An array containing all the shader pass' <a href="texture-class.html">Textures</a> already created.
                                 </p>
                             </li>
                             <li id="uniforms">
                                 <p>
-                                    <strong>uniforms</strong> (object): <span class="api-item-version">v1.0</span>
+                                    <strong>uniforms</strong> (object): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
                                     An object containing all the uniforms you passed as parameters.<br />
@@ -702,10 +733,10 @@
                             </li>
                             <li id="videos">
                                 <p>
-                                    <strong>videos</strong> (array): <span class="api-item-version">v1.2</span>
+                                    <strong>videos</strong> (array): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    An array containing all the videos loaded via the load methods into the plane.
+                                    An array containing all the videos loaded via the load methods into the shader pass.
                                 </p>
                             </li>
                         </ul>
@@ -714,10 +745,10 @@
                         <ul>
                             <li id="create-texture">
                                 <p>
-                                    <strong>createTexture</strong>(samplerName): <span class="api-item-version">v2.0</span>
+                                    <strong>createTexture</strong>(samplerName): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    This function will create a new <a href="texture-class.html">Texture</a> and add it to our Plane.<br />
+                                    This function will create a new <a href="texture-class.html">Texture</a> and add it to our ShaderPass.<br />
                                     The newly created texture will be returned.
                                 </p>
                                 <ul class="api-item-parameters">
@@ -729,38 +760,13 @@
                                             string, optionnal
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            a string to set the name of your sampler uniform in your shader. Will also impact the texture matrix uniform name. If not specified, will name your sampler "uSampler" + index of this texture in your plane.
+                                            a string to set the name of your sampler uniform in your shader. Will also impact the texture matrix uniform name. If not specified, will name your sampler "uSampler" + index of this texture in your shader pass.
                                         </span>
                                     </li>
                                 </ul>
                                 <p>
                                     <strong>returns:</strong> the newly created <a href="texture-class.html">Texture</a> if successful.
                                 </p>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a> example.
-                                </p>
-                            </li>
-
-                            <li id="enable-depth-test">
-                                <p>
-                                    <strong>enableDepthTest</strong>(shouldEnableDepthTest): <span class="api-item-version">v1.3</span>
-                                </p>
-                                <p>
-                                    Switches on/off the depth test for that plane. You might want to disable the depth test if you got transparency issues.
-                                </p>
-                                <ul class="api-item-parameters">
-                                    <li>
-                                        <span class="api-item-parameter-label">
-                                            shouldEnableDepthTest
-                                        </span>
-                                        <span class="api-item-parameter-type">
-                                            bool
-                                        </span>
-                                        <span class="api-item-parameter-desc">
-                                            enable or disable the depth test for that plane.
-                                        </span>
-                                    </li>
-                                </ul>
                             </li>
 
                             <li id="get-bounding-rect">
@@ -768,22 +774,19 @@
                                     <strong>getBoundingRect</strong>(): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    Useful to get our plane HTML element bounding rectangle without causing a reflow/layout repaint. Be careful as the values are relative to your <a href="curtains-class.html#pixel-ratio">Curtains pixelRatio</a> value.
+                                    Useful to get our <a href="curtains-class.html#container">container</a> HTML element bounding rectangle without causing a reflow/layout repaint. Be careful as the values are relative to your <a href="curtains-class.html#pixel-ratio">Curtains pixelRatio</a> value.
                                 </p>
                                 <p>
-                                    <strong>returns:</strong> an object containing the plane HTML element width, height, top and left positions.
-                                </p>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a>, <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a>, <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect" target="_blank">Multiple planes scroll effect</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
+                                    <strong>returns:</strong> an object containing the container HTML element width, height, top and left positions.
                                 </p>
                             </li>
 
                             <li id="load-canvas">
                                 <p>
-                                    <strong>loadCanvas</strong>(canvasElement): <span class="api-item-version">v2.0</span>
+                                    <strong>loadCanvas</strong>(canvasElement): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    This function takes a canvas HTML element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your plane.
+                                    This function takes a canvas HTML element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -794,18 +797,15 @@
                                             HTML canvas element
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            a HTML canvas element to load into your plane.
+                                            a HTML canvas element to load into your shader pass.
                                         </span>
                                     </li>
                                 </ul>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a> example.
-                                </p>
                             </li>
 
                             <li id="load-canvases">
                                 <p>
-                                    <strong>loadCanvases</strong>(canvasElements): <span class="api-item-version">v2.0</span>
+                                    <strong>loadCanvases</strong>(canvasElements): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
                                     This function takes an array of canvas HTML elements and creates a <a href="texture-class.html">Texture</a> for each of them.
@@ -819,7 +819,7 @@
                                             array or collection of HTML canvas elements
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            an array or collection of HTML canvas elements to load into your plane.
+                                            an array or collection of HTML canvas elements to load into your shader pass.
                                         </span>
                                     </li>
                                 </ul>
@@ -827,10 +827,10 @@
 
                             <li id="load-image">
                                 <p>
-                                    <strong>loadImage</strong>(imageElement): <span class="api-item-version">v2.0</span>
+                                    <strong>loadImage</strong>(imageElement): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    This function takes an image HTML element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your plane.
+                                    This function takes an image HTML element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -841,15 +841,18 @@
                                             HTML image element
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            a HTML image element to load into your plane.
+                                            a HTML image element to load into your shader pass.
                                         </span>
                                     </li>
                                 </ul>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a> example.
+                                </p>
                             </li>
 
                             <li id="load-images">
                                 <p>
-                                    <strong>loadImages</strong>(imageElements): <span class="api-item-version">v2.0</span>
+                                    <strong>loadImages</strong>(imageElements): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
                                     This function takes an array of image HTML elements and creates a <a href="texture-class.html">Texture</a> for each of them.
@@ -863,21 +866,18 @@
                                             array or collection of HTML image elements
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            an array or collection of HTML image elements to load into your plane.
+                                            an array or collection of HTML image elements to load into your shader pass.
                                         </span>
                                     </li>
                                 </ul>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a> example.
-                                </p>
                             </li>
 
                             <li id="load-source">
                                 <p>
-                                    <strong>loadSource</strong>(sourceElement): <span class="api-item-version">v2.0</span>
+                                    <strong>loadSource</strong>(sourceElement): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    This function takes a source element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your plane.
+                                    This function takes a source element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -888,7 +888,7 @@
                                             either image, canvas or video HTML element
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            an image, canvas or video HTML element to load into your plane.
+                                            an image, canvas or video HTML element to load into your shader pass.
                                         </span>
                                     </li>
                                 </ul>
@@ -896,10 +896,10 @@
 
                             <li id="load-sources">
                                 <p>
-                                    <strong>loadSources</strong>(sourceElements): <span class="api-item-version">v2.0</span>
+                                    <strong>loadSources</strong>(sourceElements): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    This function takes an array of source elements, creates <a href="texture-class.html">Textures</a> using them and loads them into your plane.
+                                    This function takes an array of source elements, creates <a href="texture-class.html">Textures</a> using them and loads them into your shader pass.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -910,7 +910,7 @@
                                             array or collection of either images, canvased or videos HTML elements
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            an array of image, canvas or video HTML elements to load into your plane.
+                                            an array of image, canvas or video HTML elements to load into your shader pass.
                                         </span>
                                     </li>
                                 </ul>
@@ -918,10 +918,10 @@
 
                             <li id="load-video">
                                 <p>
-                                    <strong>loadVideo</strong>(videoElement): <span class="api-item-version">v2.0</span>
+                                    <strong>loadVideo</strong>(videoElement): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    This function takes a video HTML element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your plane.
+                                    This function takes a video HTML element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -932,7 +932,7 @@
                                             HTML video element
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            a HTML video element to load into your plane.
+                                            a HTML video element to load into your shader pass.
                                         </span>
                                     </li>
                                 </ul>
@@ -940,7 +940,7 @@
 
                             <li id="load-videos">
                                 <p>
-                                    <strong>loadVideos</strong>(videoElements): <span class="api-item-version">v2.0</span>
+                                    <strong>loadVideos</strong>(videoElements): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
                                     This function takes an array of video HTML elements and creates a <a href="texture-class.html">Texture</a> for each of them.
@@ -954,7 +954,7 @@
                                             array or collection of HTML video elements
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            an array or collection of HTML video elements to load into your plane.
+                                            an array or collection of HTML video elements to load into your shader pass.
                                         </span>
                                     </li>
                                 </ul>
@@ -962,10 +962,10 @@
 
                             <li id="mouse-to-plane-coords">
                                 <p>
-                                    <strong>mouseToPlaneCoords</strong>(xMousePosition, yMousePosition): <span class="api-item-version">v1.0</span>
+                                    <strong>mouseToPlaneCoords</strong>(xMousePosition, yMousePosition): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    Get the mouse coordinates relative to the plane clip space values. Use it to send to a uniform and interact with your plane. A plane coordinates ranges from (-1, 1) in the top left corner to (1, -1) in the bottom right corner, which means the values along the Y axis are inverted.
+                                    Get the mouse coordinates relative to the shader pass clip space values. Use it to send to a uniform and interact with your shader pass. A shader pass coordinates ranges from (-1, 1) in the top left corner to (1, -1) in the bottom right corner, which means the values along the Y axis are inverted.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -991,216 +991,14 @@
                                         </span>
                                     </li>
                                 </ul>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/vertex-coords-helper/index.html" title="Vertex coordinates helper" target="_blank">Vertex coordinates helper</a>, <a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a>, <a href="examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a>, <a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a> examples.
-                                </p>
-                            </li>
-
-                            <li id="move-to-front">
-                                <p>
-                                    <strong>moveToFront</strong>(): <span class="api-item-version">v1.3</span>
-                                </p>
-                                <p>
-                                    Let the plane overlay all other planes. Be careful as it is silently disabling depth test for that plane, you might want to switch it back on later.
-                                </p>
-                            </li>
-
-                            <li id="plane-resize">
-                                <p>
-                                    <strong>planeResize</strong>(): <span class="api-item-version">v1.0</span>
-                                </p>
-                                <p>
-                                    This method is called internally by the Curtains <a href="curtains-class.html#resize">resize()</a> method each time the window is resized, but you should call it manually each time you're updating a plane size, either via CSS animations or directly in javascript. It will updates its position as well.
-                                </p>
                             </li>
 
                             <li id="play-videos">
                                 <p>
-                                    <strong>playVideos</strong>(): <span class="api-item-version">v1.2</span>
+                                    <strong>playVideos</strong>(): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    This function will automatically start all of your plane videos playback. If you are not calling it after a user action it might not work on mobile.
-                                </p>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a>, <a href="examples/multiple-video-textures/index.html" title="Multiple video textures" target="_blank">Multiple video textures with a displacement shader</a> examples.
-                                </p>
-                            </li>
-
-                            <li id="set-perspective">
-                                <p>
-                                    <strong>setPerspective</strong>(fieldOfView, nearPlane, farPlane): <span class="api-item-version">v1.0</span>
-                                </p>
-                                <p>
-                                    Set the perspective. The smaller the field of view, the more perspective.
-                                </p>
-                                <ul class="api-item-parameters">
-                                    <li>
-                                        <span class="api-item-parameter-label">
-                                            fieldOfView
-                                        </span>
-                                        <span class="api-item-parameter-type">
-                                            integer
-                                        </span>
-                                        <span class="api-item-parameter-desc">
-                                            the perspective field of view. Should be greater than 0 and lower than 180. Default to 75.
-                                        </span>
-                                    </li>
-                                    <li>
-                                        <span class="api-item-parameter-label">
-                                            nearPlane
-                                        </span>
-                                        <span class="api-item-parameter-type">
-                                            float, optionnal
-                                        </span>
-                                        <span class="api-item-parameter-desc">
-                                            closest point where a mesh vertex is displayed. Default to 0.1.
-                                        </span>
-                                    </li>
-                                    <li>
-                                        <span class="api-item-parameter-label">
-                                            farPlane
-                                        </span>
-                                        <span class="api-item-parameter-type">
-                                            float, optionnal
-                                        </span>
-                                        <span class="api-item-parameter-desc">
-                                            farthest point where a mesh vertex is displayed. Default to 150 (two times the field of view).
-                                        </span>
-                                    </li>
-                                </ul>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a>, <a href="examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a>, <a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a> examples.
-                                </p>
-                            </li>
-
-                            <li id="set-relative-position">
-                                <p>
-                                    <strong>setRelativePosition</strong>(translationX, translationY): <span class="api-item-version">v1.0</span>
-                                </p>
-                                <p>
-                                    Set the plane translation based on pixel units. Please note that this will not be applied to your plane HTML element, so it's more like an additional translation.
-                                </p>
-                                <ul class="api-item-parameters">
-                                    <li>
-                                        <span class="api-item-parameter-label">
-                                            translationX
-                                        </span>
-                                        <span class="api-item-parameter-type">
-                                            float
-                                        </span>
-                                        <span class="api-item-parameter-desc">
-                                            the translation value to apply on the X axis in pixel.
-                                        </span>
-                                    </li>
-                                    <li>
-                                        <span class="api-item-parameter-label">
-                                            translationY
-                                        </span>
-                                        <span class="api-item-parameter-type">
-                                            float
-                                        </span>
-                                        <span class="api-item-parameter-desc">
-                                            the translation value to apply on the Y axis in pixel.
-                                        </span>
-                                    </li>
-                                </ul>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
-                                </p>
-                            </li>
-
-                            <li id="set-rotation">
-                                <p>
-                                    <strong>setRotation</strong>(angleX, angleY, angleZ): <span class="api-item-version">v1.0</span>
-                                </p>
-                                <p>
-                                    Set the plane rotation.
-                                </p>
-                                <ul class="api-item-parameters">
-                                    <li>
-                                        <span class="api-item-parameter-label">
-                                            angleX
-                                        </span>
-                                        <span class="api-item-parameter-type">
-                                            float
-                                        </span>
-                                        <span class="api-item-parameter-desc">
-                                            the angle in radians to rotate around the X axis.
-                                        </span>
-                                    </li>
-                                    <li>
-                                        <span class="api-item-parameter-label">
-                                            angleY
-                                        </span>
-                                        <span class="api-item-parameter-type">
-                                            float
-                                        </span>
-                                        <span class="api-item-parameter-desc">
-                                            the angle in radians to rotate around the Y axis.
-                                        </span>
-                                    </li>
-                                    <li>
-                                        <span class="api-item-parameter-label">
-                                            angleZ
-                                        </span>
-                                        <span class="api-item-parameter-type">
-                                            float
-                                        </span>
-                                        <span class="api-item-parameter-desc">
-                                            the angle in radians to rotate around the Z axis.
-                                        </span>
-                                    </li>
-                                </ul>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> example.
-                                </p>
-                            </li>
-
-                            <li id="set-scale">
-                                <p>
-                                    <strong>setScale</strong>(scaleX, scaleY): <span class="api-item-version">v1.0</span>
-                                </p>
-                                <p>
-                                    Set the plane new scale.
-                                </p>
-                                <ul class="api-item-parameters">
-                                    <li>
-                                        <span class="api-item-parameter-label">
-                                            scaleX
-                                        </span>
-                                        <span class="api-item-parameter-type">
-                                            float
-                                        </span>
-                                        <span class="api-item-parameter-desc">
-                                            the scale to set along the X axis.
-                                        </span>
-                                    </li>
-                                    <li>
-                                        <span class="api-item-parameter-label">
-                                            scaleY
-                                        </span>
-                                        <span class="api-item-parameter-type">
-                                            float
-                                        </span>
-                                        <span class="api-item-parameter-desc">
-                                            the scale to set along the Y axis.
-                                        </span>
-                                    </li>
-                                </ul>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
-                                </p>
-                            </li>
-
-                            <li id="update-position">
-                                <p>
-                                    <strong>updatePosition</strong>(): <span class="api-item-version">v1.6</span>
-                                </p>
-                                <p>
-                                    Internally, the planes positions are updated only when the window is resized. But if you are updating your plane HTML element position without resizing the window (typically while scrolling, animating its CSS position or transform values), call this method in your animation loop at the same time.
-                                </p>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a>, <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a>, <a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a>, <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a> examples.
+                                    This function will automatically start all of your shader pass videos playback. If you are not calling it after a user action it might not work on mobile.
                                 </p>
                             </li>
 
@@ -1213,87 +1011,52 @@
                                     <strong>onAfterResize</strong>(): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    This function will be called each time your plane has been resized, after everything has been updated.
+                                    This function will be called each time your container has been resized, after everything has been updated.
                                 </p>
                                 <p>
-                                    <strong>returns:</strong> your Plane object, allowing it to be chainable.
-                                </p>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
-                                </p>
-                            </li>
-                            <li id="on-leave-view">
-                                <p>
-                                    <strong>onLeaveView</strong>(): <span class="api-item-version">v2.0</span>
-                                </p>
-                                <p>
-                                    This function will be triggered each time a plane leaves the Curtains container viewport area, unless <a href="plane-class.html#always-draw">alwaysDraw property</a> is set to true.<br />
-                                    If alwaysDraw property is set to false, an out-of-view plane is not drawn anymore and its textures are no longer updated, but its uniforms are still updated and its onRender callback is still called.<br />
-                                    You might want to pause its videos as well if it contains any.
-                                </p>
-                                <p>
-                                    <strong>returns:</strong> your Plane object, allowing it to be chainable.
-                                </p>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> example.
+                                    <strong>returns:</strong> your ShaderPass object, allowing it to be chainable.
                                 </p>
                             </li>
                             <li id="on-loading">
                                 <p>
-                                    <strong>onLoading</strong>(): <span class="api-item-version">v1.0</span>
+                                    <strong>onLoading</strong>(): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    This function will be fired each time a source element (either an image, a canvas or a video) of the plane has been loaded and is ready to display. Useful to handle a loader.
+                                    This function will be fired each time a source element (either an image, a canvas or a video) of the shader pass has been loaded and is ready to display. Useful to handle a loader.
                                 </p>
                                 <p>
-                                    <strong>returns:</strong> your Plane object, allowing it to be chainable.
+                                    <strong>returns:</strong> your ShaderPass object, allowing it to be chainable.
                                 </p>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a> example.
+                                    <strong>Examples:</strong> used in <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a> example.
                                 </p>
                             </li>
                             <li id="on-ready">
                                 <p>
-                                    <strong>onReady</strong>(): <span class="api-item-version">v1.0</span>
+                                    <strong>onReady</strong>(): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    This function will be called once our plane is all set up and ready to be drawn.<br />
-                                    If <a href="plane-class.html#autoload-sources">autoloadSources</a> is set to true, il will be called after the images, canvas and videos are loaded. Otherwise it will be called almost right away.<br />
-                                    This is where you may want to add event listener to interact with your plane or update its uniforms.
+                                    This function will be called once our shader pass is all set up and ready to be drawn.<br />
                                 </p>
                                 <p>
-                                    <strong>returns:</strong> your Plane object, allowing it to be chainable.
+                                    <strong>returns:</strong> your ShaderPass object, allowing it to be chainable.
                                 </p>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in most <a href="index.html#examples" title="Useful examples">examples</a>.
-                                </p>
-                            </li>
-                            <li id="on-re-enter-view">
-                                <p>
-                                    <strong>onReEnterView</strong>(): <span class="api-item-version">v2.0</span>
-                                </p>
-                                <p>
-                                    This function will be triggered each time a plane reenters the Curtains container viewport area, unless <a href="plane-class.html#always-draw">alwaysDraw property</a> is set to true.
-                                </p>
-                                <p>
-                                    <strong>returns:</strong> your Plane object, allowing it to be chainable.
-                                </p>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> example.
+                                    <strong>Examples:</strong> used in <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a> example.
                                 </p>
                             </li>
                             <li id="on-render">
                                 <p>
-                                    <strong>onRender</strong>(): <span class="api-item-version">v1.0</span>
+                                    <strong>onRender</strong>(): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    This function will be triggered for each plane at each requestAnimationFrame call. Useful to update a time uniform, change plane rotation, scale, etc.
+                                    This function will be triggered for each shader pass at each requestAnimationFrame call. Useful to update a time uniform.
                                 </p>
                                 <p>
-                                    <strong>returns:</strong> your Plane object, allowing it to be chainable.
+                                    <strong>returns:</strong> your ShaderPass object, allowing it to be chainable.
                                 </p>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in most <a href="index.html#examples" title="Useful examples">examples</a>.
+                                    <strong>Examples:</strong> used in <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
                                 </p>
                             </li>
 

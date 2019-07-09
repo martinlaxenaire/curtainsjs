@@ -1,4 +1,4 @@
-window.onload = function(){
+window.addEventListener("DOMContentLoaded", function() {
     // track the mouse positions to send it to the shaders
     var mousePosition = {
         x: 0,
@@ -128,4 +128,4 @@ window.onload = function(){
             }
         }
     }
-}
+});

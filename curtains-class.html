@@ -37,6 +37,7 @@
 
 	<link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body>
@@ -71,274 +72,390 @@
 
 		<section class="content-section api-section">
 
-			<nav id="api-menu-nav">
-				<ul id="api-menu">
-					<li class="active">
-						<div class="api-menu-top-link">
-							<a href="curtains-class.html">Curtains</a>
-						</div>
+            <nav id="api-menu-nav">
+                <ul id="api-menu">
+                    <li class="active">
+                        <div class="api-menu-top-link">
+                            <a href="curtains-class.html">Curtains</a>
+                        </div>
 
-						<div class="api-submenu-content">
-							<div class="api-submenu-title">
-								<a href="curtains-class.html#basic-usage">Basic usage</a>
-							</div>
-							<div class="api-submenu-title">
-								<a href="curtains-class.html#properties">Properties</a>
-							</div>
-							<ul class="api-submenu">
-								<li>
-									<a href="curtains-class.html#container">container</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#gl-canvas">glCanvas</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#gl-context">glContext</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#pixel-ratio">pixelRatio</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#planes">planes</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#production-mode">productionMode</a>
-								</li>
-							</ul>
-							<div class="api-submenu-title">
-								<a href="curtains-class.html#methods">Methods</a>
-							</div>
-							<ul class="api-submenu">
-								<li>
-									<a href="curtains-class.html#add-plane">addPlane</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#disable-drawing">disableDrawing</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#dispose">dispose</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#enable-drawing">enableDrawing</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#need-render">needRender</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#remove-plane">removePlane</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#resize">resize</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#restore-context">restoreContext</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#set-pixel-ratio">setPixelRatio</a>
-								</li>
-							</ul>
-							<div class="api-submenu-title">
-								<a href="curtains-class.html#events">Events</a>
-							</div>
-							<ul class="api-submenu">
-								<li>
-									<a href="curtains-class.html#on-context-lost">onContextLost</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#on-context-restored">onContextRestored</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#on-error">onError</a>
-								</li>
-								<li>
-									<a href="curtains-class.html#on-render">onRender</a>
-								</li>
-							</ul>
-						</div>
-					</li>
-					<li>
-						<div class="api-menu-top-link">
-							<a href="plane-class.html">Plane</a>
-						</div>
+                        <div class="api-submenu-content">
+                            <div class="api-submenu-title">
+                                <a href="curtains-class.html#basic-usage">Basic usage</a>
+                            </div>
+                            <div class="api-submenu-title">
+                                <a href="curtains-class.html#properties">Properties</a>
+                            </div>
+                            <ul class="api-submenu">
+                                <li>
+                                    <a href="curtains-class.html#container">container</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#gl-canvas">glCanvas</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#gl-context">glContext</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#pixel-ratio">pixelRatio</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#planes">planes</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#production-mode">productionMode</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#shader-passes">shaderPasses</a>
+                                </li>
+                            </ul>
+                            <div class="api-submenu-title">
+                                <a href="curtains-class.html#methods">Methods</a>
+                            </div>
+                            <ul class="api-submenu">
+                                <li>
+                                    <a href="curtains-class.html#add-plane">addPlane</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#add-shader-pass">addShaderPass</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#disable-drawing">disableDrawing</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#dispose">dispose</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#enable-drawing">enableDrawing</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#get-bounding-rect">getBoundingRect</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#need-render">needRender</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#remove-plane">removePlane</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#remove-shader-pass">removeShaderPass</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#resize">resize</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#restore-context">restoreContext</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#set-pixel-ratio">setPixelRatio</a>
+                                </li>
+                            </ul>
+                            <div class="api-submenu-title">
+                                <a href="curtains-class.html#events">Events</a>
+                            </div>
+                            <ul class="api-submenu">
+                                <li>
+                                    <a href="curtains-class.html#on-after-resize">onAfterResize</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#on-context-lost">onContextLost</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#on-context-restored">onContextRestored</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#on-error">onError</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#on-render">onRender</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="api-menu-top-link">
+                            <a href="plane-class.html">Plane</a>
+                        </div>
 
-						<div class="api-submenu-content">
-							<div class="api-submenu-title">
-								<a href="plane-class.html#basic-usage">Basic usage</a>
-							</div>
-							<div class="api-submenu-title">
-								<a href="plane-class.html#properties">Properties</a>
-							</div>
-							<ul class="api-submenu">
-								<li>
-									<a href="plane-class.html#always-draw">alwaysDraw</a>
-								</li>
-								<li>
-									<a href="plane-class.html#autoload-sources">autoloadSources</a>
-								</li>
-								<li>
-									<a href="plane-class.html#canvases">canvases</a>
-								</li>
-								<li>
-									<a href="plane-class.html#cross-origin">crossOrigin</a>
-								</li>
-								<li>
-									<a href="plane-class.html#html-element">htmlElement</a>
-								</li>
-								<li>
-									<a href="plane-class.html#image-cover">imageCover</a>
-								</li>
-								<li>
-									<a href="plane-class.html#images">images</a>
-								</li>
-								<li>
-									<a href="plane-class.html#index">index</a>
-								</li>
-								<li>
-									<a href="plane-class.html#relative-translation">relativeTranslation</a>
-								</li>
-								<li>
-									<a href="plane-class.html#rotation">rotation</a>
-								</li>
-								<li>
-									<a href="plane-class.html#scale">scale</a>
-								</li>
-								<li>
-									<a href="plane-class.html#textures">textures</a>
-								</li>
-								<li>
-									<a href="plane-class.html#uniforms">uniforms</a>
-								</li>
-								<li>
-									<a href="plane-class.html#videos">videos</a>
-								</li>
-							</ul>
-							<div class="api-submenu-title">
-								<a href="plane-class.html#methods">Methods</a>
-							</div>
-							<ul class="api-submenu">
-								<li>
-									<a href="plane-class.html#create-texture">createTexture</a>
-								</li>
-								<li>
-									<a href="plane-class.html#enable-depth-test">enableDepthTest</a>
-								</li>
-								<li>
-									<a href="plane-class.html#load-canvas">loadCanvas</a>
-								</li>
-								<li>
-									<a href="plane-class.html#load-canvases">loadCanvases</a>
-								</li>
-								<li>
-									<a href="plane-class.html#load-image">loadImage</a>
-								</li>
-								<li>
-									<a href="plane-class.html#load-images">loadImages</a>
-								</li>
-								<li>
-									<a href="plane-class.html#load-source">loadSource</a>
-								</li>
-								<li>
-									<a href="plane-class.html#load-sources">loadSources</a>
-								</li>
-								<li>
-									<a href="plane-class.html#load-video">loadVideo</a>
-								</li>
-								<li>
-									<a href="plane-class.html#load-videos">loadVideos</a>
-								</li>
-								<li>
-									<a href="plane-class.html#mouse-to-plane-coords">mouseToPlaneCoords</a>
-								</li>
-								<li>
-									<a href="plane-class.html#move-to-front">moveToFront</a>
-								</li>
-								<li>
-									<a href="plane-class.html#plane-resize">planeResize</a>
-								</li>
-								<li>
-									<a href="plane-class.html#play-videos">playVideos</a>
-								</li>
-								<li>
-									<a href="plane-class.html#set-perspective">setPerspective</a>
-								</li>
-								<li>
-									<a href="plane-class.html#set-relative-position">setRelativePosition</a>
-								</li>
-								<li>
-									<a href="plane-class.html#set-rotation">setRotation</a>
-								</li>
-								<li>
-									<a href="plane-class.html#set-scale">setScale</a>
-								</li>
-								<li>
-									<a href="plane-class.html#update-position">updatePosition</a>
-								</li>
-							</ul>
-							<div class="api-submenu-title">
-								<a href="curtains-class.html#events">Events</a>
-							</div>
-							<ul class="api-submenu">
-								<li>
-									<a href="plane-class.html#on-re-enter-view">onReEnterView</a>
-								</li>
-								<li>
-									<a href="plane-class.html#on-leave-view">onLeaveView</a>
-								</li>
-								<li>
-									<a href="plane-class.html#on-loading">onLoading</a>
-								</li>
-								<li>
-									<a href="plane-class.html#on-ready">onReady</a>
-								</li>
-								<li>
-									<a href="plane-class.html#on-render">onRender</a>
-								</li>
-							</ul>
-						</div>
-					</li>
-					<li>
-						<div class="api-menu-top-link">
-							<a href="texture-class.html">Texture</a>
-						</div>
-						<div class="api-submenu-content">
-							<div class="api-submenu-title">
-								<a href="texture-class.html#basic-usage">Basic usage</a>
-							</div>
-							<div class="api-submenu-title">
-								<a href="texture-class.html#properties">Properties</a>
-							</div>
-							<ul class="api-submenu">
-								<li>
-									<a href="texture-class.html#index">index</a>
-								</li>
-								<li>
-									<a href="texture-class.html#scale">scale</a>
-								</li>
-								<li>
-									<a href="texture-class.html#should-update">shouldUpdate</a>
-								</li>
-								<li>
-									<a href="texture-class.html#source">source</a>
-								</li>
-								<li>
-									<a href="texture-class.html#type">type</a>
-								</li>
-							</ul>
-							<div class="api-submenu-title">
-								<a href="texture-class.html#methods">Methods</a>
-							</div>
-							<ul class="api-submenu">
-								<li>
-									<a href="texture-class.html#set-scale">setScale</a>
-								</li>
-								<li>
-									<a href="texture-class.html#set-source">setSource</a>
-								</li>
-							</ul>
-						</div>
-					</li>
-				</ul>
-			</nav>
+                        <div class="api-submenu-content">
+                            <div class="api-submenu-title">
+                                <a href="plane-class.html#basic-usage">Basic usage</a>
+                            </div>
+                            <div class="api-submenu-title">
+                                <a href="plane-class.html#properties">Properties</a>
+                            </div>
+                            <ul class="api-submenu">
+                                <li>
+                                    <a href="plane-class.html#always-draw">alwaysDraw</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#autoload-sources">autoloadSources</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#canvases">canvases</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#cross-origin">crossOrigin</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#html-element">htmlElement</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#images">images</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#index">index</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#relative-translation">relativeTranslation</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#rotation">rotation</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#scale">scale</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#textures">textures</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#uniforms">uniforms</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#videos">videos</a>
+                                </li>
+                            </ul>
+                            <div class="api-submenu-title">
+                                <a href="plane-class.html#methods">Methods</a>
+                            </div>
+                            <ul class="api-submenu">
+                                <li>
+                                    <a href="plane-class.html#create-texture">createTexture</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#enable-depth-test">enableDepthTest</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#get-bounding-rect">getBoundingRect</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#load-canvas">loadCanvas</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#load-canvases">loadCanvases</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#load-image">loadImage</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#load-images">loadImages</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#load-source">loadSource</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#load-sources">loadSources</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#load-video">loadVideo</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#load-videos">loadVideos</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#mouse-to-plane-coords">mouseToPlaneCoords</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#move-to-front">moveToFront</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#plane-resize">planeResize</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#play-videos">playVideos</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#set-perspective">setPerspective</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#set-relative-position">setRelativePosition</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#set-rotation">setRotation</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#set-scale">setScale</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#update-position">updatePosition</a>
+                                </li>
+                            </ul>
+                            <div class="api-submenu-title">
+                                <a href="curtains-class.html#events">Events</a>
+                            </div>
+                            <ul class="api-submenu">
+                                <li>
+                                    <a href="plane-class.html#on-after-resize">onAfterResize</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#on-leave-view">onLeaveView</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#on-loading">onLoading</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#on-ready">onReady</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#on-re-enter-view">onReEnterView</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#on-render">onRender</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="api-menu-top-link">
+                            <a href="shader-pass-class.html">ShaderPass</a>
+                        </div>
+
+                        <div class="api-submenu-content">
+                            <div class="api-submenu-title">
+                                <a href="shader-pass-class.html#basic-usage">Basic usage</a>
+                            </div>
+                            <div class="api-submenu-title">
+                                <a href="shader-pass-class.html#properties">Properties</a>
+                            </div>
+                            <ul class="api-submenu">
+                                <li>
+                                    <a href="shader-pass-class.html#canvases">canvases</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#cross-origin">crossOrigin</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#html-element">htmlElement</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#images">images</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#index">index</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#textures">textures</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#uniforms">uniforms</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#videos">videos</a>
+                                </li>
+                            </ul>
+                            <div class="api-submenu-title">
+                                <a href="shader-pass-class.html#methods">Methods</a>
+                            </div>
+                            <ul class="api-submenu">
+                                <li>
+                                    <a href="shader-pass-class.html#create-texture">createTexture</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#get-bounding-rect">getBoundingRect</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#load-canvas">loadCanvas</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#load-canvases">loadCanvases</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#load-image">loadImage</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#load-images">loadImages</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#load-source">loadSource</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#load-sources">loadSources</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#load-video">loadVideo</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#load-videos">loadVideos</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#mouse-to-plane-coords">mouseToPlaneCoords</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#play-videos">playVideos</a>
+                                </li>
+                            </ul>
+                            <div class="api-submenu-title">
+                                <a href="shader-pass-class.html#events">Events</a>
+                            </div>
+                            <ul class="api-submenu">
+                                <li>
+                                    <a href="shader-pass-class.html#on-after-resize">onAfterResize</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#on-loading">onLoading</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#on-ready">onReady</a>
+                                </li>
+                                <li>
+                                    <a href="shader-pass-class.html#on-render">onRender</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="api-menu-top-link">
+                            <a href="texture-class.html">Texture</a>
+                        </div>
+                        <div class="api-submenu-content">
+                            <div class="api-submenu-title">
+                                <a href="texture-class.html#basic-usage">Basic usage</a>
+                            </div>
+                            <div class="api-submenu-title">
+                                <a href="texture-class.html#properties">Properties</a>
+                            </div>
+                            <ul class="api-submenu">
+                                <li>
+                                    <a href="texture-class.html#index">index</a>
+                                </li>
+                                <li>
+                                    <a href="texture-class.html#scale">scale</a>
+                                </li>
+                                <li>
+                                    <a href="texture-class.html#should-update">shouldUpdate</a>
+                                </li>
+                                <li>
+                                    <a href="texture-class.html#source">source</a>
+                                </li>
+                                <li>
+                                    <a href="texture-class.html#type">type</a>
+                                </li>
+                            </ul>
+                            <div class="api-submenu-title">
+                                <a href="texture-class.html#methods">Methods</a>
+                            </div>
+                            <ul class="api-submenu">
+                                <li>
+                                    <a href="texture-class.html#set-scale">setScale</a>
+                                </li>
+                                <li>
+                                    <a href="texture-class.html#set-source">setSource</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
 
 			<div id="api-content">
 
@@ -349,21 +466,36 @@
 						<p>
 							You will have to create a Curtains object first that will handle the scene containing all your planes. It will also create the WebGL context, append the canvas and handle the requestAnimationFrame loop. You just have to pass the ID of the HTML element that will wrap the canvas :
 						</p>
-						<p>
-						<pre>
-<code>
-var curtains = new Curtains("canvas"); // "canvas" is the ID of our HTML element
-</code>
-								</pre>
-						</p>
+
+
+                        <div class="code">
+
+                            <div>
+                                <div class="code-comment">
+                                    // "canvas" is the ID of our HTML container element
+                                </div>
+                                <div>
+                                    <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>(<span class="code-string">"canvas"</span>)<span class="code-var">;</span>
+                                </div>
+                            </div>
+                        </div>
+
 						<p>
 							You can pass a boolean as a second parameter to indicate whether you want to use the library in production mode. If set to true it will remove all console warnings. Default to false.
 						</p>
-						<pre>
-<code>
-var curtains = new Curtains("canvas", true); // use the library in "production" mode
-</code>
-							</pre>
+
+                        <div class="code">
+
+                            <div>
+                                <div class="code-comment">
+                                    // use the library in "production" mode
+                                </div>
+                                <div>
+                                    <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>(<span class="code-string">"canvas"</span><span class="code-var">, true</span>)<span class="code-var">;</span>
+                                </div>
+                            </div>
+                        </div>
+
 						<h2 id="properties">Properties</h2>
 						<ul>
 							<li id="container">
@@ -403,7 +535,7 @@ var curtains = new Curtains("canvas", true); // use the library in "production" 
 									<strong>planes</strong> (array) <span class="api-item-version">v1.0</span>
 								</p>
 								<p>
-									An array containing all your current <a href="plane-class.html">Planes</a>.
+									An array containing all your current <a href="plane-class.html">Plane</a> elements.
 								</p>
 							</li>
 							<li id="production-mode">
@@ -414,10 +546,18 @@ var curtains = new Curtains("canvas", true); // use the library in "production" 
 									If set to true, will remove all helpful warnings displayed by the library.
 								</p>
 							</li>
+                            <li id="shader-passes">
+                                <p>
+                                    <strong>shaderPasses</strong> (array) <span class="api-item-version">v3.0</span>
+                                </p>
+                                <p>
+                                    An array containing all your current <a href="shader-pass-class.html">ShaderPass</a> elements.
+                                </p>
+                            </li>
 						</ul>
 						<h2 id="methods">Methods</h2>
 						<ul>
-							<li id="add-plane">
+							<p id="add-plane">
 								<p>
 									<strong>addPlane</strong>(planeElement, params): <span class="api-item-version">v1.0</span>
 								</p>
@@ -555,7 +695,7 @@ var curtains = new Curtains("canvas", true); // use the library in "production" 
 											</li>
 											<li>
 												<span class="api-item-parameter-label">
-													crossOrigin
+													fov
 												</span>
 												<span class="api-item-parameter-type">
 													integer, optionnal
@@ -572,38 +712,244 @@ var curtains = new Curtains("canvas", true); // use the library in "production" 
 													object, optionnal
 												</span>
 												<span class="api-item-parameter-desc">
-													the uniforms that will be passed to the shaders (if no uniforms specified there won't be any interaction with the plane). Each uniform should have three properties : a name (string), a type (string, see <a href="https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html" title="all uniforms types" target="_blank">here</a>) and a value.
+													the uniforms that will be passed to the shaders (if no uniforms specified there won't be any interaction with the plane).
 												</span>
+
+                                                <ul class="api-item-parameters-inner-list">
+                                                    <li>
+                                                        <span class="api-item-parameter-label">
+                                                            name
+                                                        </span>
+                                                                <span class="api-item-parameter-type">
+                                                            string
+                                                        </span>
+                                                        <span class="api-item-parameter-desc">
+                                                            The name of the uniform to use in your shaders
+                                                        </span>
+                                                    </li>
+                                                    <li>
+                                                        <span class="api-item-parameter-label">
+                                                            type
+                                                        </span>
+                                                        <span class="api-item-parameter-type">
+                                                            string
+                                                        </span>
+                                                        <span class="api-item-parameter-desc">
+                                                            The type of your uniform (see <a href="https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html" title="all uniforms types" target="_blank">here</a>).
+                                                        </span>
+                                                    </li>
+                                                    <li>
+                                                        <span class="api-item-parameter-label">
+                                                            value
+                                                        </span>
+                                                        <span class="api-item-parameter-type">
+                                                            float, integer or array of floats or integers depending on your uniform type
+                                                        </span>
+                                                        <span class="api-item-parameter-desc">
+                                                            The value of the uniform.
+                                                        </span>
+                                                    </li>
+                                                </ul>
 											</li>
 
 										</ul>
 									</li>
 								</ul>
 								<p>
-									<strong>returns:</strong> the newly created <a href="plane-class.html">Plane</a> if successful.
+									<strong>returns:</strong> the newly created <a href="plane-class.html">Plane</a> if successful, false othterwise.
 								</p>
-								<h3>Parameters basic example</h3>
-								<p>
-								<pre>
-<code>
-var params = {
-    vertexShaderID: "plane-vs", // our vertex shader ID
-    fragmentShaderID: "plane-fs", // our framgent shader ID
-    uniforms: {
-        time: {
-            name: "uTime", // uniform name that will be passed to our shaders
-            type: "1f", // this means our uniform is a float
-            value: 0,
-        },
-    }
-}
-</code>
-							</pre>
-								</p>
+								<h3 id="add-plane-basic-params">Parameters basic example</h3>
+
+
+                                <div class="code">
+
+                                    <div>
+                                        <span class="code-var">var</span> params = {
+                                    </div>
+                                    <div class="code-indent">
+                                        <div>
+                                            <span class="code-property">vertexShaderID</span>: <span class="code-string">"plane-vs"</span><span class="code-var">,</span> <span class="code-comment">// our vertex shader ID</span>
+                                        </div>
+                                        <div>
+                                            <span class="code-property">fragmentShaderID</span>: <span class="code-string">"plane-fs"</span><span class="code-var">,</span> <span class="code-comment">// our framgent shader ID</span>
+                                        </div>
+                                        <div>
+                                            <span class="code-property">uniforms</span>: {
+                                        </div>
+                                        <div class="code-indent">
+                                            <div>
+                                                <span class="code-property">time</span>: {
+                                            </div>
+                                            <div class="code-indent">
+                                                <div>
+                                                    <span class="code-property">name</span>: <span class="code-string">"uTime"</span><span class="code-var">,</span> <span class="code-comment">// uniform name that will be passed to our shaders</span>
+                                                </div>
+                                                <div>
+                                                    <span class="code-property">type</span>: <span class="code-string">"1f"</span><span class="code-var">,</span> <span class="code-comment">// this means our uniform is a float</span>
+                                                </div>
+                                                <div>
+                                                    <span class="code-property">value</span>: <span class="code-number">0</span><span class="code-var">,</span> <span class="code-comment">// initial value of the uniform</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                }<span class="code-var">,</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            }<span class="code-var">,</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        }<span class="code-var">;</span>
+                                    </div>
+
+                                </div>
+
 								<p class="api-item-examples">
 									<strong>Examples:</strong> used in all <a href="index.html#examples" title="Useful examples">examples</a>.
 								</p>
 							</li>
+                            <li id="add-shader-pass">
+                                <p>
+                                    <strong>addShaderPass</strong>(params): <span class="api-item-version">v3.0</span>
+                                </p>
+                                <p>
+                                    This function will create a new <a href="shader-pass-class.html">ShaderPass</a> and add it to our Curtains wrapper.<br />
+                                    The newly created shader pass will be returned.
+                                </p>
+                                <p>
+                                    <em>params</em> (object, optionnal): an object containing the plane parameters:
+                                </p>
+
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            params
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            object, optionnal
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            an object containing the plane parameters:
+                                        </span>
+
+                                        <ul id="add-shader-pass-parameters" class="api-item-parameters-inner-list">
+                                            <li>
+												<span class="api-item-parameter-label">
+													vertexShader
+												</span>
+                                                <span class="api-item-parameter-type">
+													string, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													your vertex shader as a string. Be careful with the line-breaks as it may throw javascript errors. Will look for vertexShaderID param if not specified.
+												</span>
+                                            </li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													vertexShaderID
+												</span>
+                                                <span class="api-item-parameter-type">
+													string, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													the vertex shader ID. If ommited, will look for a data attribute data-vs-id on the plane HTML element. Will use a default vertex shader and throw a warning if nothing specified.
+												</span>
+                                            </li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													fragmentShader
+												</span>
+                                                <span class="api-item-parameter-type">
+													string, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													your fragment shader as a string. Be careful with the line-breaks as it may throw javascript errors. Will look for fragmentShaderID param if not specified.
+												</span>
+                                            </li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													fragmentShaderID
+												</span>
+                                                <span class="api-item-parameter-type">
+													string, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													the fragment shader ID. If ommited, will look for a data attribute data-fs-id on the plane HTML element. Will use a default fragment shader that draws the scene without modifications if nothing specified.
+												</span>
+                                            </li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													crossOrigin
+												</span>
+                                                <span class="api-item-parameter-type">
+													string, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													defines the crossOrigin process to load images if any (default to "anonymous").
+												</span>
+                                            </li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													uniforms
+												</span>
+                                                <span class="api-item-parameter-type">
+													object, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													the uniforms that will be passed to the shaders (if no uniforms specified there won't be any interaction with the plane).
+												</span>
+                                                <ul class="api-item-parameters-inner-list">
+                                                    <li>
+                                                        <span class="api-item-parameter-label">
+                                                            name
+                                                        </span>
+                                                        <span class="api-item-parameter-type">
+                                                            string
+                                                        </span>
+                                                        <span class="api-item-parameter-desc">
+                                                            The name of the uniform to use in your shaders
+                                                        </span>
+                                                    </li>
+                                                    <li>
+                                                        <span class="api-item-parameter-label">
+                                                            type
+                                                        </span>
+                                                        <span class="api-item-parameter-type">
+                                                            string
+                                                        </span>
+                                                        <span class="api-item-parameter-desc">
+                                                            The type of your uniform (see <a href="https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html" title="all uniforms types" target="_blank">here</a>).
+                                                        </span>
+                                                    </li>
+                                                    <li>
+                                                        <span class="api-item-parameter-label">
+                                                            value
+                                                        </span>
+                                                        <span class="api-item-parameter-type">
+                                                            float, integer or array of floats or integers depending on your uniform type
+                                                        </span>
+                                                        <span class="api-item-parameter-desc">
+                                                            The value of the uniform.
+                                                        </span>
+                                                    </li>
+                                                </ul>
+                                            </li>
+
+                                        </ul>
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>returns:</strong> the newly created <a href="shader-pass-class.html">ShaderPass</a> if successful, false othterwise.
+                                </p>
+                                <h3>Parameters basic example</h3>
+                                <p>
+                                    See <a href="#add-plane-basic-params">addPlane</a> basic parameters example.
+                                </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
+                                </p>
+                            </li>
 							<li id="disable-drawing">
 								<p>
 									<strong>disableDrawing</strong>(): <span class="api-item-version">v1.8</span>
@@ -612,7 +958,7 @@ var params = {
 									This function will prevent the scene from being drawn again (putting it in a paused state). You won't be able to update uniforms while the drawing is disabled. Useful to improve performance if you got a static scene.
 								</p>
 								<p class="api-item-examples">
-									<strong>Examples:</strong> used in <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a> example.
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a> and <a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a> examples.
 								</p>
 							</li>
 							<li id="dispose">
@@ -631,9 +977,23 @@ var params = {
 									This function will reenable the scene drawing in case you paused it via disableDrawing(). Could be useful if you want to start drawing the scene again when a user gesture happens for example.
 								</p>
 								<p class="api-item-examples">
-									<strong>Examples:</strong> used in <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a> example.
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a> and <a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a> examples.
 								</p>
 							</li>
+                            <li id="get-bounding-rect">
+                                <p>
+                                    <strong>getBoundingRect</strong>(): <span class="api-item-version">v3.0</span>
+                                </p>
+                                <p>
+                                    Useful to get our <a href="#container">container</a> HTML element bounding rectangle without causing a reflow/layout repaint. Be careful as the values are relative to your <a href="#pixel-ratio">pixelRatio</a> value.
+                                </p>
+                                <p>
+                                    <strong>returns:</strong> an object containing the container HTML element width, height, top and left positions.
+                                </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect" target="_blank">Multiple planes scroll effect</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
+                                </p>
+                            </li>
 							<li id="need-render">
 								<p>
 									<strong>needRender</strong>(): <span class="api-item-version">v1.8</span>
@@ -642,7 +1002,7 @@ var params = {
 									This function will reenable the scene drawing for just one frame. Useful if you want to update uniforms if the drawing is disabled.
 								</p>
 								<p class="api-item-examples">
-									<strong>Examples:</strong> used in <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a> example.
+									<strong>Examples:</strong> used in <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a> and <a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a> examples.
 								</p>
 							</li>
 							<li id="remove-plane">
@@ -652,9 +1012,6 @@ var params = {
 								<p>
 									This function will remove a plane from our Curtains object and delete all of its textures.
 								</p>
-								<!--<p>
-									<em>plane</em> (plane object): the plane to remove
-								</p>-->
 								<ul class="api-item-parameters">
 									<li>
                                         <span class="api-item-parameter-label">
@@ -672,6 +1029,27 @@ var params = {
 									<strong>Examples:</strong> used in <a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a> example.
 								</p>
 							</li>
+                            <li id="remove-shader-pass">
+                                <p>
+                                    <strong>removeShaderPass</strong>(shaderPass):  <span class="api-item-version">v3.0</span>
+                                </p>
+                                <p>
+                                    This function will remove a shader pass from our Curtains object and delete all of its textures.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            shaderPass
+                                        </span>
+                                        <span class="api-item-parameter-type">
+											<a href="shader-pass-class.html">ShaderPass</a> object
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            the shader pass to remove.
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
 							<li id="resize">
 								<p>
 									<strong>resize</strong>():  <span class="api-item-version">v2.0</span><br />
@@ -691,7 +1069,7 @@ var params = {
 
 							<li id="set-pixel-ratio">
 								<p>
-									<strong>setPixelRatio</strong>(pixelRatio):  <span class="api-item-version">v2.0</span><br />
+									<strong>setPixelRatio</strong>(pixelRatio, triggerCallback):  <span class="api-item-version">v2.0</span><br />
 								</p>
 								<p>
 									This function will set a new pixel ratio and resize everything accordingly.<br />
@@ -709,12 +1087,34 @@ var params = {
                                             new pixel ratio to set.
                                         </span>
 									</li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            triggerCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+											bool, optionnal
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            whether <a href="#on-after-resize">onAfterResize</a> callback should be triggered, false by default.
+                                        </span>
+                                    </li>
 								</ul>
 							</li>
 						</ul>
 
 						<h2 id="events">Events</h2>
 						<ul>
+                            <li id="on-after-resize">
+                                <p>
+                                    <strong>onAfterResize</strong>(): <span class="api-item-version">v3.0</span>
+                                </p>
+                                <p>
+                                    This function will be called each time the window has been resized, after everything has been updated.
+                                </p>
+                                <p>
+                                    <strong>returns:</strong> your Curtains object, allowing it to be chainable.
+                                </p>
+                            </li>
 							<li id="on-context-lost">
 								<p>
 									<strong>onContextLost</strong>(): <span class="api-item-version">v2.0</span>

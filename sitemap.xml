@@ -35,6 +35,11 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://www.curtainsjs.com/shader-pass-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://www.curtainsjs.com/texture-class.html</loc>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
@@ -95,6 +100,18 @@
 
     <url>
         <loc>https://www.curtainsjs.com/examples/multiple-video-textures/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/post-processing-displacement/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/post-processing-scroll-effect/index.html</loc>
         <changefreq>yearly</changefreq>
         <priority>0.6</priority>
     </url>

@@ -37,6 +37,7 @@
 
 		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="style.css" type="text/css">
 	</head>
 	<body>
@@ -77,7 +78,7 @@
 
 					<div class="text-section inner-section">
 						<p>
-							<a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v2.0">curtains.js v2.0 (85Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v2.0">curtains.min.js v2.0 (34Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+                            <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v3.0">curtains.js v3.0 (102Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v3.0">curtains.min.js v3.0 (41Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
 						</p>
 					</div>
 
@@ -91,10 +92,21 @@
 
 					<div class="text-section inner-section">
 						<h2>Changelog</h2>
+                        <h3>Version 3.0</h3>
+                        <p>Version 3.0 introduces post processing effects and a few more helpers.<br />
+                            There are no breaking changes since v2.0 so you can update it safely.</p>
+                        <ul>
+                            <li>
+                                Major code refactoring to introduce <a href="shader-pass-class.html">ShaderPass</a> class by creating a BasePlane class. Usual <a href="plane-class.html">Plane</a> class now extends BasePlane class, as does ShaderPass class.
+                            </li>
+                            <li>
+                                Added a bunch of new events and methods, like <a href="plane-class.html#on-after-resize">onAfterResize</a> or <a href="plane-class.html#get-bounding-rect">getBoundingRect</a>.
+                            </li>
+                            <li>
+                                Minor bugs fixes.
+                            </li>
+                        </ul>
 						<h3>Version 2.0</h3>
-						<p>
-							Here's a non exhaustive list of what's new in the 2.0 version of the library:
-						</p>
 						<ul>
 							<li>
 								Added a <a href="texture-class.html">Texture</a> class object and introduced texture matrices as well.

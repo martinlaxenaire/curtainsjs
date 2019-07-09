@@ -149,4 +149,6 @@ function initCurtains() {
     }
 }
 
-initCurtains();
+window.addEventListener("DOMContentLoaded", function() {
+    initCurtains();
+});

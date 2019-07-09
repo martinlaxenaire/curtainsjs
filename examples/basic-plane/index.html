@@ -159,7 +159,7 @@
 		<script src="../../build/curtains.js" type="text/javascript"></script>
 
 		<script type="text/javascript">
-			window.onload = function() {
+            window.addEventListener("DOMContentLoaded", function() {
 				// set up our WebGL context and append the canvas to our wrapper
 				var webGLCurtain = new Curtains("canvas");
 
@@ -177,17 +177,19 @@
 							value: 0,
 						},
 					}
-				}
+				};
 
 				// create our plane mesh
 				var plane = webGLCurtain.addPlane(planeElement, params);
 
-				// set up our basic methods
-				plane.onRender(function() { // fired at each requestAnimationFrame call
-					plane.uniforms.time.value++; // update our time uniform value
-				});
+				if(plane) {
+                    // set up our basic methods
+                    plane.onRender(function() { // fired at each requestAnimationFrame call
+                        plane.uniforms.time.value++; // update our time uniform value
+                    });
+                }
 
-			}
+			});
 		</script>
 
 

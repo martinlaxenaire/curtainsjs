@@ -1,7 +1,7 @@
 window.addEventListener("DOMContentLoaded", function() {
     // we will keep track of the scroll
-    var scrollValue = 0;
-    var lastScrollValue = 0;
+    var scrollValue = window.pageYOffset;
+    var lastScrollValue = window.pageYOffset;
 
     // keep track of the number of plane we're currently drawing
     var planeDrawn = 0;
@@ -34,22 +34,10 @@ window.addEventListener("DOMContentLoaded", function() {
     // get our planes elements
     var planeElements = document.getElementsByClassName("plane");
 
-    // no need for shaders as they were already passed by data attributes
-    var params = {
-        widthSegments: 10,
-        heightSegments: 10,
-        uniforms: {
-            scrollEffect: {
-                name: "uScrollEffect",
-                type: "1f",
-                value: 0,
-            },
-        },
-    };
-
     // add our planes and handle them
     for(var i = 0; i < planeElements.length; i++) {
-        var plane = webGLCurtain.addPlane(planeElements[i], params);
+        // we won't pass any parameters as most of the animations will be done by post-processsing the scene
+        var plane = webGLCurtain.addPlane(planeElements[i]);
 
         if(plane) {
             planes.push(plane);
@@ -64,6 +52,7 @@ window.addEventListener("DOMContentLoaded", function() {
         scrollValue = window.pageYOffset;
 
         var delta = scrollValue - lastScrollValue;
+
         // threshold
         if(delta > 60) {
             delta = 60;
@@ -88,6 +77,7 @@ window.addEventListener("DOMContentLoaded", function() {
         passive: true,
     });
 
+
     // handle all the planes
     function handlePlanes(index) {
         var plane = planes[index];
@@ -109,15 +99,10 @@ window.addEventListener("DOMContentLoaded", function() {
             // apply new parallax values after resize
             applyPlanesParallax(index);
         }).onRender(function() {
-            // apply the rotation
-            plane.setRotation(0, 0, scrollEffect / 750);
 
             // scale plane and its texture
             plane.setScale(1, 1 + Math.abs(scrollEffect) / 300);
             plane.textures[0].setScale(1, 1 + Math.abs(scrollEffect) / 150);
-
-            // update the uniform
-            plane.uniforms.scrollEffect.value = scrollEffect;
         }).onReEnterView(function() {
             // plane is drawn again
             planeDrawn++;
@@ -130,15 +115,57 @@ window.addEventListener("DOMContentLoaded", function() {
     function applyPlanesParallax(index) {
         // calculate the parallax effect
 
-        // get our window size
-        var sceneBoundingRect = webGLCurtain.getBoundingRect();
+        // get our window height: remember our canvas is a bit taller
+        var windowHeight = webGLCurtain.getBoundingRect().height / 1.2;
         // get our plane center coordinate
         var planeBoundingRect = planes[index].getBoundingRect();
         var planeOffsetTop = planeBoundingRect.top + planeBoundingRect.height / 2;
         // get a float value based on window height (0 means the plane is centered)
-        var parallaxEffect = (planeOffsetTop - sceneBoundingRect.height / 2) / sceneBoundingRect.height;
+        var parallaxEffect = (planeOffsetTop - windowHeight / 2) / windowHeight;
 
         // apply the parallax effect
-        planes[index].setRelativePosition(0, parallaxEffect * (sceneBoundingRect.height / 4));
+        planes[index].setRelativePosition(0, parallaxEffect * (windowHeight / 4));
+    }
+
+
+    // post processing
+    var firstShaderPassParams = {
+        vertexShaderID: "inverted-rect-vs",
+        fragmentShaderID: "inverted-rect-fs",
+        uniforms: {
+            scrollEffect: {
+                name: "uScrollEffect",
+                type: "1f",
+                value: 0,
+            },
+        },
+    };
+
+    var firstShaderPass = webGLCurtain.addShaderPass(firstShaderPassParams);
+    if(firstShaderPass) {
+        firstShaderPass.onRender(function() {
+            // update the uniform
+            firstShaderPass.uniforms.scrollEffect.value = scrollEffect;
+        });
+    }
+
+    var secondShaderPassParams = {
+        vertexShaderID: "distortion-vs",
+        fragmentShaderID: "distortion-fs",
+        uniforms: {
+            scrollEffect: {
+                name: "uScrollEffect",
+                type: "1f",
+                value: 0,
+            },
+        },
+    };
+
+    var secondShaderPass = webGLCurtain.addShaderPass(secondShaderPassParams);
+    if(secondShaderPass) {
+        secondShaderPass.onRender(function() {
+            // update the uniform
+            secondShaderPass.uniforms.scrollEffect.value = scrollEffect;
+        });
     }
 });

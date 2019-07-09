@@ -1,4 +1,4 @@
-window.onload = function(){
+window.addEventListener("DOMContentLoaded", function() {
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
 
@@ -32,8 +32,11 @@ window.onload = function(){
     function writeText(plane, canvas) {
         var htmlPlane = plane.htmlElement;
         var htmlPlaneStyle = window.getComputedStyle(htmlPlane);
-        var htmlPlaneWidth = plane._boundingRect.document.width;
-        var htmlPlaneHeight = plane._boundingRect.document.height;
+
+        var planeBoundingRect = plane.getBoundingRect();
+
+        var htmlPlaneWidth = planeBoundingRect.width / webGLCurtain.pixelRatio;
+        var htmlPlaneHeight = planeBoundingRect.height / webGLCurtain.pixelRatio;
 
         // set sizes
         canvas.width = htmlPlaneWidth;
@@ -81,6 +84,8 @@ window.onload = function(){
             var plane = planes[i];
             plane.updatePosition();
         }
+    }, {
+        passive: true,
     });
 
     // on resize rewrite the title in the canvas
@@ -112,4 +117,4 @@ window.onload = function(){
             plane.uniforms.time.value++;
         });
     }
-}
+});

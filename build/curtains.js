@@ -1,9 +1,10 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 2.0.0
+ Version: 3.0.0
  ***/
 
+'use strict';
 
 /*** CURTAINS CLASS ***/
 
@@ -11,14 +12,15 @@
  This is our main class to call to init our curtains
  Basically sets up all necessary intern variables based on params and runs the init method
 
- params :
+ params:
  @containerID (string): the container ID that will hold our canvas
 
- returns :
+ returns:
  @this: our Curtains element
  ***/
 function Curtains(containerID, production) {
     this.planes = [];
+    this.shaderPasses = [];
     this._drawStack = [];
 
     this._drawingEnabled = true;
@@ -41,8 +43,6 @@ function Curtains(containerID, production) {
     }
 
     this._init();
-
-    return this;
 }
 
 /***
@@ -67,8 +67,8 @@ Curtains.prototype._init = function() {
     }
 
     // this will set the size as well
-    var pixelRatio = window.pixelRatio || 1;
-    this.setPixelRatio(pixelRatio);
+    var pixelRatio = window.devicePixelRatio || 1;
+    this.setPixelRatio(pixelRatio, false);
 
     // handling context
     this._loseContextExtension = this.glContext.getExtension('WEBGL_lose_context');
@@ -80,7 +80,7 @@ Curtains.prototype._init = function() {
     this.glCanvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
 
     // handling window resize event
-    this._resizeHandler = this.resize.bind(this);
+    this._resizeHandler = this.resize.bind(this, true);
     window.addEventListener("resize", this._resizeHandler, false);
 
     // we can start rendering now
@@ -91,10 +91,10 @@ Curtains.prototype._init = function() {
 /***
  Set the pixel ratio property and update everything by calling resize method
  ***/
-Curtains.prototype.setPixelRatio = function(pixelRatio) {
+Curtains.prototype.setPixelRatio = function(pixelRatio, triggerCallback) {
     this.pixelRatio = parseFloat(Math.max(pixelRatio, 1)) || 1;
-    // apply new pixel ratio to all our elements
-    this.resize();
+    // apply new pixel ratio to all our elements but don't trigger onAfterResize callback
+    this.resize(triggerCallback);
 };
 
 
@@ -122,9 +122,23 @@ Curtains.prototype._setSize = function() {
 
 
 /***
- Resize our container and all the planes
+ Useful to get our container bounding rectangle without triggering a reflow/layout
+
+ returns :
+ @boundingRectangle (obj): an object containing our container bounding rectangle (width, height, top and left properties)
  ***/
-Curtains.prototype.resize = function() {
+Curtains.prototype.getBoundingRect = function() {
+    return this._boundingRect;
+};
+
+
+/***
+ Resize our container and all the planes
+
+ params:
+ @triggerCallback (boolean): Whether we should trigger onAfterResize callback
+ ***/
+Curtains.prototype.resize = function(triggerCallback) {
     this._setSize();
 
     // resize the planes only if they are fully initiated
@@ -134,27 +148,41 @@ Curtains.prototype.resize = function() {
         }
     }
 
+    // resize the shader passes only if they are fully initiated
+    for(var i = 0; i < this.shaderPasses.length; i++) {
+        if(this.shaderPasses[i]._canDraw) {
+            this.shaderPasses[i].planeResize();
+        }
+    }
+
     // be sure we'll update the scene even if drawing is disabled
     this.needRender();
+
+    var self = this;
+    setTimeout(function() {
+        if(self._onAfterResizeCallback && triggerCallback) {
+            self._onAfterResizeCallback();
+        }
+    }, 0);
 };
 
 
 /***
- Enables the render loop.
+ Enables the render loop
  ***/
 Curtains.prototype.enableDrawing = function() {
     this._drawingEnabled = true;
 };
 
 /***
- Disables the render loop.
+ Disables the render loop
  ***/
 Curtains.prototype.disableDrawing = function() {
     this._drawingEnabled = false;
 };
 
 /***
- Forces the rendering of the next frame, even if disabled.
+ Forces the rendering of the next frame, even if disabled
  ***/
 Curtains.prototype.needRender = function() {
     this._forceRender = true;
@@ -210,6 +238,11 @@ Curtains.prototype._contextRestored = function() {
         this.planes[i]._restoreContext();
     }
 
+    // same goes for shader passes
+    for(var i = 0; i < this.shaderPasses.length; i++) {
+        this.shaderPasses[i]._restoreContext();
+    }
+
     var self = this;
 
     setTimeout(function() {
@@ -234,11 +267,15 @@ Curtains.prototype.dispose = function() {
     while(this.planes.length > 0) {
         this.removePlane(this.planes[0]);
     }
+    // we need to delete the shader passes also
+    while(this.shaderPasses.length > 0) {
+        this.removeShaderPass(this.shaderPasses[0]);
+    }
 
     // wait for all planes to be deleted before stopping everything
     var self = this;
     var deleteInterval = setInterval(function() {
-        if(self.planes.length === 0) {
+        if(self.planes.length === 0 && self.shaderPasses.length === 0) {
             // clear interval
             clearInterval(deleteInterval);
 
@@ -259,8 +296,16 @@ Curtains.prototype.dispose = function() {
                 self._loseContextExtension.loseContext();
             }
 
+            // clear canvas state
+            self.glCanvas.width = self.glCanvas.width;
+
+            self.glContext = null;
+
             // remove canvas from DOM
             self.container.removeChild(self.glCanvas);
+
+            self.container = null;
+            self.glCanvas = null;
         }
     }, 100);
 };
@@ -268,17 +313,24 @@ Curtains.prototype.dispose = function() {
 
 
 /***
- Create plane element
+ Create a new Plane element and ensure its program is valid to return the right value
 
- params :
- @planeHtmlElement (html element) : the html element that we will use for our plane
- @params (obj) : see addPlane method
+ params:
+ @planeHtmlElement (html element): the html element that we will use for our plane
+ @params (obj): see addPlane method
 
- returns :
- @plane: our newly created plane object
+ returns:
+ @plane: our newly created Plane object
  ***/
 Curtains.prototype._createPlane = function(planeHtmlElement, params) {
     var returnedPlane = new Curtains.Plane(this, planeHtmlElement, params);
+
+    if(!returnedPlane._isProgramValid) {
+        returnedPlane = false;
+    }
+    else {
+        this.planes.push(returnedPlane);
+    }
 
     return returnedPlane;
 };
@@ -286,19 +338,18 @@ Curtains.prototype._createPlane = function(planeHtmlElement, params) {
 
 
 /***
- Create a plane element and load its images
+ Create a Plane element and load its images
 
- params :
+ params:
  @planesHtmlElement (html element): the html element that we will use for our plane
  @params (obj): plane params:
  - vertexShaderID (string, optionnal): the vertex shader ID. If not specified, will look for a data attribute data-vs-id on the plane HTML element. Will throw an error if nothing specified
  - fragmentShaderID (string, optionnal): the fragment shader ID. If not specified, will look for a data attribute data-fs-id on the plane HTML element. Will throw an error if nothing specified
  - widthSegments (optionnal): plane definition along the X axis (1 by default)
  - heightSegments (optionnal): plane definition along the Y axis (1 by default)
- - mimicCSS (bool, optionnal): define if the plane should mimic it's html element position (true by default) DEPRECATED
- - alwaysDraw (bool, optionnal): define if the plane should always be drawn or it should be drawn only if its within the canvas (false by default)
- - imageCover (bool, optionnal): define if the images must imitate css background-cover or just fit the plane (true by default) DEPRECATED
- - autoloadSources (bool, optionnal): define if the sources should be load on init automatically (true by default)
+ - mimicCSS (boolean, optionnal): define if the plane should mimic it's html element position (true by default) DEPRECATED
+ - alwaysDraw (boolean, optionnal): define if the plane should always be drawn or it should be drawn only if its within the canvas (false by default)
+ - autoloadSources (boolean, optionnal): define if the sources should be load on init automatically (true by default)
  - crossOrigin (string, optionnal): define the crossOrigin process to load images if any
  - fov (int, optionnal): define the perspective field of view (default to 75)
  - uniforms (obj, otpionnal): the uniforms that will be passed to the shaders (if no uniforms specified there wont be any interaction with the plane)
@@ -338,15 +389,17 @@ Curtains.prototype.addPlane = function(planeHtmlElement, params) {
 
 
 /***
- Completly remove a plane element (delete from draw stack, delete buffers and textures, empties object, remove)
+ Completly remove a Plane element (delete from draw stack, delete buffers and textures, empties object, remove)
 
- params :
- @plane (plane element) : the plane element to remove
+ params:
+ @plane (plane element): the plane element to remove
  ***/
 Curtains.prototype.removePlane = function(plane) {
-
     // first we want to stop drawing it
     plane._canDraw = false;
+
+    // now free the webgl part
+    plane && plane._dispose();
 
     // remove from draw stack
     var drawStack = this._drawStack;
@@ -356,10 +409,7 @@ Curtains.prototype.removePlane = function(plane) {
         }
     }
 
-    // now free the webgl part
-    plane && plane._dispose();
-
-    // remove from our Curtains planes array
+    // remove from our array
     var planeIndex;
     for(var i = 0; i < this.planes.length; i++) {
         if(plane.index === this.planes[i].index) {
@@ -374,11 +424,7 @@ Curtains.prototype.removePlane = function(plane) {
 
     // clear the buffer to clean scene
     if(this.glContext) this.glContext.clear(this.glContext.DEPTH_BUFFER_BIT | this.glContext.COLOR_BUFFER_BIT);
-
-    // we are no longer manipulating the drawstack, we can draw it again
-    //drawStack[stackIndex].isReordering = false;
 };
-
 
 
 /***
@@ -390,45 +436,105 @@ Curtains.prototype._stackPlane = function(index) {
 };
 
 
-
-/*** SHADERS CREATIONS ***/
+/*** POST PROCESSING ***/
 
 /***
- Create our WebGL shaders based on our written shaders
+ Create a new Plane element and ensure its program is valid to return the right value
 
- params :
- @shaderCode (string) : shader code
- @shaderType (shaderType) : WebGL shader type (vertex of fragment)
+ params:
+ @planeHtmlElement (html element): the html element that we will use for our plane
+ @params (obj): see addPlane method
+
+ returns:
+ @plane: our newly created Plane object
+ ***/
+Curtains.prototype._createShaderPass = function(params) {
+    var returnedPlane = new Curtains.ShaderPass(this, params);
+
+    if(!returnedPlane._isProgramValid) {
+        returnedPlane = false;
+    }
+    else {
+        this.shaderPasses.push(returnedPlane);
+    }
+
+    return returnedPlane;
+};
+
+/***
+ Create a new ShaderPass element
+
+ params:
+ @params (obj): plane params:
+ - vertexShaderID (string, optionnal): the vertex shader ID. If not specified, will look for a data attribute data-vs-id on the plane HTML element. Will throw an error if nothing specified
+ - fragmentShaderID (string, optionnal): the fragment shader ID. If not specified, will look for a data attribute data-fs-id on the plane HTML element. Will throw an error if nothing specified
+ - crossOrigin (string, optionnal): define the crossOrigin process to load images if any
+ - uniforms (obj, otpionnal): the uniforms that will be passed to the shaders (if no uniforms specified there wont be any interaction with the plane)
 
  returns :
- @shader (compiled shader): our compiled shader
+ @shaderPass: our newly created ShaderPass object
  ***/
-Curtains.prototype._createShader = function(shaderCode, shaderType) {
-    var shader = this.glContext.createShader(shaderType);
+Curtains.prototype.addShaderPass = function(params) {
+    // if the WebGL context couldn't be created, return null
+    if(!this.glContext) {
+        if(!this.productionMode) console.warn("Unable to create a plane. The WebGl context couldn't be created");
 
-    this.glContext.shaderSource(shader, shaderCode);
-    this.glContext.compileShader(shader);
-
-    if (!this.glContext.getShaderParameter(shader, this.glContext.COMPILE_STATUS)) {
-        if(!this.productionMode) console.warn("Errors occurred while compiling the shader:\n" + this.glContext.getShaderInfoLog(shader));
-
-        // call the error callback if provided
         if(this._onErrorCallback) {
             this._onErrorCallback()
         }
 
         return null;
     }
-    return shader;
+    else {
+
+        // init the plane
+        var shaderPass = this._createShaderPass(params);
+
+        return shaderPass;
+    }
 };
 
+
+/***
+ Completly remove a ShaderPass element
+ does almost the same thing as the removePlane method but handles only shaderPasses array, not drawStack
+
+ params:
+ @plane (plane element): the plane element to remove
+ ***/
+Curtains.prototype.removeShaderPass = function(plane) {
+    // first we want to stop drawing it
+    plane._canDraw = false;
+
+    // now free the webgl part
+    plane && plane._dispose();
+
+    // remove from our array
+    var planeIndex;
+    for(var i = 0; i < this.shaderPasses.length; i++) {
+        if(plane.index === this.shaderPasses[i].index) {
+            planeIndex = i;
+        }
+    }
+
+    // finally erase the plane
+    plane = null;
+    this.shaderPasses[planeIndex] = null;
+    this.shaderPasses.splice(planeIndex, 1);
+
+    // clear the buffer to clean scene
+    if(this.glContext) this.glContext.clear(this.glContext.DEPTH_BUFFER_BIT | this.glContext.COLOR_BUFFER_BIT);
+};
+
+
+/*** DEPTH ***/
 
 /***
  Called to set whether the renderer will handle depth test or not
  Depth test is enabled by default
 
- params :
- @shouldHandleDepth (bool) : if we should enable or disable the depth test
+ params:
+ @shouldHandleDepth (boolean): if we should enable or disable the depth test
  ***/
 Curtains.prototype._handleDepth = function(shouldHandleDepth) {
     this._shouldHandleDepth = shouldHandleDepth;
@@ -444,6 +550,94 @@ Curtains.prototype._handleDepth = function(shouldHandleDepth) {
 };
 
 
+/*** MATRICES MATHS ***/
+
+/***
+ Simple matrix multiplication helper
+
+ params:
+ @a (array): first matrix
+ @b (array): second matrix
+
+ returns:
+ @out: matrix after multiplication
+ ***/
+Curtains.prototype._multiplyMatrix = function(a, b) {
+    var out = [];
+
+    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+    var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+    var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+    var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+
+    // Cache only the current line of the second matrix
+    var b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+    out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+    b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
+    out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+    b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
+    out[8] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[9] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+    b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
+    out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+    return out;
+};
+
+
+/***
+ Simple matrix scaling helper
+
+ params :
+ @matrix (array): initial matrix
+ @scaleX (float): scale along X axis
+ @scaleY (float): scale along Y axis
+ @scaleZ (float): scale along Z axis
+
+ returns :
+ @scaledMatrix: matrix after scaling
+ ***/
+Curtains.prototype._scaleMatrix = function(matrix, scaleX, scaleY, scaleZ) {
+    var scaledMatrix = new Float32Array(16);
+
+    scaledMatrix[0] = scaleX * matrix[0 * 4 + 0];
+    scaledMatrix[1] = scaleX * matrix[0 * 4 + 1];
+    scaledMatrix[2] = scaleX * matrix[0 * 4 + 2];
+    scaledMatrix[3] = scaleX * matrix[0 * 4 + 3];
+    scaledMatrix[4] = scaleY * matrix[1 * 4 + 0];
+    scaledMatrix[5] = scaleY * matrix[1 * 4 + 1];
+    scaledMatrix[6] = scaleY * matrix[1 * 4 + 2];
+    scaledMatrix[7] = scaleY * matrix[1 * 4 + 3];
+    scaledMatrix[8] = scaleZ * matrix[2 * 4 + 0];
+    scaledMatrix[9] = scaleZ * matrix[2 * 4 + 1];
+    scaledMatrix[10] = scaleZ * matrix[2 * 4 + 2];
+    scaledMatrix[11] = scaleZ * matrix[2 * 4 + 3];
+
+    if (matrix !== scaledMatrix) {
+        scaledMatrix[12] = matrix[12];
+        scaledMatrix[13] = matrix[13];
+        scaledMatrix[14] = matrix[14];
+        scaledMatrix[15] = matrix[15];
+    }
+
+    return scaledMatrix;
+};
+
+
 /*** DRAW EVERYTHING ***/
 
 /***
@@ -455,13 +649,14 @@ Curtains.prototype._readyToDraw = function() {
     this.container.appendChild(this.glCanvas);
 
     // allows transparency
-    this.glContext.blendFunc(this.glContext.SRC_ALPHA, this.glContext.ONE_MINUS_SRC_ALPHA);
+    // based on https://limnu.com/webgl-blending-youre-probably-wrong/
     this.glContext.enable(this.glContext.BLEND);
+    this.glContext.blendFunc(this.glContext.ONE, this.glContext.ONE_MINUS_SRC_ALPHA);
 
     // enable depth by default
     this._handleDepth(true);
 
-    console.log("curtains.js - v2.0");
+    console.log("curtains.js - v3.0");
 
     this._animate();
 };
@@ -478,7 +673,7 @@ Curtains.prototype._animate = function() {
 
 /***
  This is our draw call, ie what has to be called at each frame our our requestAnimationFrame loop
- sets our matrix and draw everything
+ draw our planes and shader passes
  ***/
 Curtains.prototype._drawScene = function() {
     // If _forceRender is true, force rendering this frame even if drawing is not enabled.
@@ -495,9 +690,18 @@ Curtains.prototype._drawScene = function() {
         this.__onRenderCallback();
     }
 
-    // clear the color buffer,
-    this.glContext.clearColor(0.0, 0.0, 0.0, 0.0);
-    this.glContext.clearDepth(1.0);
+
+    // enable first frame buffer for shader passes
+    if(this.shaderPasses.length > 0) {
+        this.shaderPasses[0]._enableFrameBuffer();
+    }
+    else {
+        // clear the color and depth buffer,
+        this.glContext.clearColor(0.0, 0.0, 0.0, 0.0);
+        this.glContext.clearDepth(1.0);
+        this.glContext.clear(this.glContext.COLOR_BUFFER_BIT | this.glContext.DEPTH_BUFFER_BIT);
+    }
+
 
     // loop on our stacked planes
     for(var i = 0; i < this._drawStack.length; i++) {
@@ -516,18 +720,45 @@ Curtains.prototype._drawScene = function() {
             plane._drawPlane();
         }
     }
+
+    // if we have shader passes, draw them
+    if(this.shaderPasses.length > 0) {
+        for (var i = 0; i < this.shaderPasses.length; i++) {
+            var shaderPass = this.shaderPasses[i];
+
+            shaderPass._drawPlane();
+        }
+    }
 };
 
 
 /*** EVENTS ***/
 
+
 /***
- This is called when an error has been detected during init
+ This is called each time our container has been resized
 
  params :
  @callback (function) : a function to execute
 
  returns :
+ @this: our plane to handle chaining
+ ***/
+Curtains.prototype.onAfterResize = function(callback) {
+    if(callback) {
+        this._onAfterResizeCallback = callback;
+    }
+
+    return this;
+};
+
+/***
+ This is called when an error has been detected during init
+
+ params:
+ @callback (function): a function to execute
+
+ returns:
  @this: our Curtains element to handle chaining
  ***/
 Curtains.prototype.onError = function(callback) {
@@ -542,10 +773,10 @@ Curtains.prototype.onError = function(callback) {
 /***
  This is called once our context has been lost
 
- params :
- @callback (function) : a function to execute
+ params:
+ @callback (function): a function to execute
 
- returns :
+ returns:
  @this: our Curtains element to handle chaining
  ***/
 Curtains.prototype.onContextLost = function(callback) {
@@ -560,10 +791,10 @@ Curtains.prototype.onContextLost = function(callback) {
 /***
  This is called once our context has been restored
 
- params :
- @callback (function) : a function to execute
+ params:
+ @callback (function): a function to execute
 
- returns :
+ returns:
  @this: our Curtains element to handle chaining
  ***/
 Curtains.prototype.onContextRestored = function(callback) {
@@ -578,10 +809,10 @@ Curtains.prototype.onContextRestored = function(callback) {
 /***
  This is called once at each request animation frame call
 
- params :
- @callback (function) : a function to execute
+ params:
+ @callback (function): a function to execute
 
- returns :
+ returns:
  @this: our Curtains element to handle chaining
  ***/
 Curtains.prototype.onRender = function(callback) {
@@ -595,41 +826,49 @@ Curtains.prototype.onRender = function(callback) {
 
 
 
-/*** PLANE CLASS ***/
+/*** BASEPLANE CLASS ***/
 
 /***
- Here we create our Plane object (note that we are using the Curtains namespace to avoid polluting the global scope)
+ Here we create our BasePlane object (note that we are using the Curtains namespace to avoid polluting the global scope)
  We will create a plane object containing the program, shaders, as well as other useful data
  Once our shaders are linked to a program, we create their matrices and set up their default attributes
 
- params :
- @curtainWrapper : our curtain object that wraps all the planes
- @plane (html element) : html div that contains 0 or more media elements.
- @params (obj) : see addPlanes method of the wrapper
+ params:
+ @curtainWrapper: our curtain object that wraps all the planes
+ @plane (html element): html div that contains 0 or more media elements.
+ @params (obj): see addPlanes method of the wrapper
 
- returns :
- @this: our Plane element
+ returns:
+ @this: our BasePlane element
  ***/
-Curtains.Plane = function(curtainWrapper, plane, params) {
-    this._wrapper = curtainWrapper;
+Curtains.BasePlane = function(curtainWrapper, plane, params) {
+    this._type = "BasicPlane";
 
+    this._wrapper = curtainWrapper;
     this.htmlElement = plane;
 
-    this.index = this._wrapper.planes.length;
-
-    this._init(plane, params);
-
-    this._wrapper.planes.push(this);
-
-    return this;
-}
+    this._initBasePlane(plane, params);
+};
 
 
 /***
  Init our plane object and its properties
  ***/
-Curtains.Plane.prototype._init = function(plane, params) {
+Curtains.BasePlane.prototype._initBasePlane = function(plane, params) {
+    // if params are not defined
     if(!params) params = {};
+
+    this._canDraw = false;
+
+    this._definition = {
+        width: parseInt(params.widthSegments) || 1,
+        height: parseInt(params.heightSegments) || 1
+    };
+
+    // our object that will handle all images loading process
+    this._loadingManager = {
+        sourcesLoaded: 0,
+    };
 
     // first we prepare the shaders to be set up
     this._setupShaders(params);
@@ -637,173 +876,17 @@ Curtains.Plane.prototype._init = function(plane, params) {
     // then we set up the program as compiling can be quite slow
     var isProgramValid = this._setupPlaneProgram();
 
-    // set plane initial parameters
-    this._setInitParams(params);
-
     this.images = [];
     this.videos = [];
     this.canvases = [];
     this.textures = [];
 
-    // if program and shaders are valid, go on
-    if(isProgramValid) {
-        this._setAttributes();
-
-        var wrapper = this._wrapper;
-
-        // set plane sizes
-        this._setDocumentSizes();
-        this._setComputedSizes();
-
-        // set infos that will be used by our model view matrix
-        this.scale = {
-            x: 1,
-            y: 1
-        };
-
-        this.rotation = {
-            x: 0,
-            y: 0,
-            z: 0,
-        };
-
-        this.relativeTranslation = {
-            x: 0,
-            y: 0,
-        };
-
-        // will be our translation in webgl coordinates
-        this._translation = {
-            x: 0,
-            y: 0,
-            z: 0
-        };
-
-        // we need to sort planes by their definitions : widthSegments * heightSegments
-        // but we have to keep in mind that 10*15 and 15*10 are not the same vertices definion, so we add widthSegments to differenciate them
-        wrapper._stackPlane(this.index);
-
-        // set our uniforms
-        this._setUniforms(this.uniforms);
-
-        // set plane definitions, vertices, uvs and stuff
-        this._initializeBuffers();
-
-        // finally load all its textures
-        // our object that will handle all images loading process
-        this._loadingManager = {
-            sourcesLoaded: 0,
-            initSourcesToLoad: 0,
-        };
-
-        // finally load every sources already in our plane html element
-        // load plane sources
-        if(this.autoloadSources) {
-            // load images
-            var imagesArray = [];
-            for(var i = 0; i < this.htmlElement.getElementsByTagName("img").length; i++) {
-                imagesArray.push(this.htmlElement.getElementsByTagName("img")[i]);
-            }
-            if(imagesArray.length > 0) {
-                this.loadSources(imagesArray);
-            }
-
-            // load videos
-            var videosArray = [];
-            for(var i = 0; i < this.htmlElement.getElementsByTagName("video").length; i++) {
-                videosArray.push(this.htmlElement.getElementsByTagName("video")[i]);
-            }
-            if(videosArray.length > 0) {
-                this.loadSources(videosArray);
-            }
-
-            // load canvases
-            var canvasesArray = [];
-            for(var i = 0; i < this.htmlElement.getElementsByTagName("canvas").length; i++) {
-                canvasesArray.push(this.htmlElement.getElementsByTagName("canvas")[i]);
-            }
-            if(canvasesArray.length > 0) {
-                this.loadSources(canvasesArray);
-            }
-
-            this._loadingManager.initSourcesToLoad = imagesArray.length + videosArray.length + canvasesArray.length;
-        }
-
-        if(this._loadingManager.initSourcesToLoad === 0 && !wrapper.productionMode) {
-            // if there's no images, no videos, no canvas, send a warning
-            console.warn("This plane does not contain any image, video or canvas element. You may want to add some later with the loadSource() or loadSources() method.");
-        }
-
-        // handling our plane onReady callback with an interval
-        // maybe i could improve this by using the raf loop and a flag
-        var loadedInterval;
-        var self = this;
-
-        // check if everything is ready depending on the number of sources we need to load on init
-        loadedInterval = setInterval(function() {
-            // everything is loaded
-            if(self._loadingManager.sourcesLoaded >= self._loadingManager.initSourcesToLoad) {
-                clearInterval(loadedInterval);
-
-                if(self._onReadyCallback) {
-                    self._onReadyCallback();
-                }
-            }
-        }, 16);
-    }
-};
-
-
-/***
- Set plane's initial params
-
- params :
- @params (obj) : see addPlanes method of the wrapper
- ***/
-Curtains.Plane.prototype._setInitParams = function(params) {
-    var wrapper = this._wrapper;
-
-    // if our plain is ready to be drawn
-    this._canDraw = false;
-    // if our plane should always be drawn or if it should be drawn only when inside the viewport
-    this.alwaysDraw = params.alwaysDraw || false;
-    // should draw is set to true by default, we'll check it later
-    this._shouldDraw = true;
-
-    this._definition = {
-        width: parseInt(params.widthSegments) || 1,
-        height: parseInt(params.heightSegments) || 1
-    };
-
-
-    if((params.mimicCSS || params.mimicCSS === false) && !wrapper.productionMode) {
-        console.warn("mimicCSS property is deprecated since v2.0 as the planes will always copy their html elements sizes and positions.");
-    }
-
-    // old way to handle image scaling, deprecated
-    this.imageCover = params.imageCover || false;
-    if(this.imageCover && !wrapper.productionMode) {
-        console.warn("imageCover property is deprecated. Please use texture matrix in your shader instead.");
-    }
-
-    // if we decide to load all sources on init or let the user do it manually
-    this.autoloadSources = params.autoloadSources;
-    if(this.autoloadSources === null || this.autoloadSources === undefined) {
-        this.autoloadSources = true;
-    }
-
     this.crossOrigin = params.crossOrigin || "anonymous";
 
-    // set default fov
-    this._fov = params._fov || 75;
-
-    // enable depth test by default
-    this._shouldUseDepthTest = true;
-
-
+    //set up init uniforms
     // handle uniforms
     if(!params.uniforms) {
-        if(!wrapper.productionMode) console.warn("You are setting a plane without uniforms, you won't be able to interact with it. Please check your addPlane method for : ", this.htmlElement);
+        if(!this._wrapper.productionMode) console.warn("You are setting a plane without uniforms, you won't be able to interact with it. Please check your addPlane method for : ", this.htmlElement);
 
         params.uniforms = {};
     }
@@ -824,13 +907,60 @@ Curtains.Plane.prototype._setInitParams = function(params) {
             }
         });
     }
+
+    // if program and shaders are valid, go on
+    if(isProgramValid) {
+        // should draw is set to true by default, we'll check it later
+        this._shouldDraw = true;
+
+        // set plane attributes
+        this._setAttributes();
+
+        // set plane sizes
+        this._setDocumentSizes();
+
+        // set our uniforms
+        this._setUniforms(this.uniforms);
+
+        // set plane definitions, vertices, uvs and stuff
+        this._initializeBuffers();
+
+        this._canDraw = true;
+
+        return this;
+    }
+    else {
+        return isProgramValid;
+    }
 };
+
+
+/***
+ Set a default vertex shader that does nothing but show the plane
+ ***/
+Curtains.BasePlane.prototype._setDefaultVS = function(params) {
+    if(!this._wrapper.productionMode) console.warn("No vertex shader provided, will use a default one");
+
+    return "#ifdef GL_ES\nprecision mediump float;\n#endif\nattribute vec3 aVertexPosition;attribute vec2 aTextureCoord;uniform mat4 uMVMatrix;uniform mat4 uPMatrix;varying vec3 vVertexPosition;varying vec2 vTextureCoord;void main() {vTextureCoord = aTextureCoord;vVertexPosition = aVertexPosition;gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);}";
+};
+
+
+/***
+ Set a default fragment shader that does nothing but draw black pixels
+ ***/
+Curtains.BasePlane.prototype._setDefaultFS = function(params) {
+    return "#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec3 vVertexPosition;varying vec2 vTextureCoord;void main( void ) {gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);}";
+};
+
+
+
+/*** SHADERS CREATIONS ***/
 
 
 /***
  Used internally to set up shaders
  ***/
-Curtains.Plane.prototype._setupShaders = function(params) {
+Curtains.BasePlane.prototype._setupShaders = function(params) {
     var wrapper = this._wrapper;
 
     // handling shaders
@@ -841,9 +971,7 @@ Curtains.Plane.prototype._setupShaders = function(params) {
 
     if(!params.vertexShader) {
         if(!vsId || !document.getElementById(vsId)) {
-            if(!wrapper.productionMode) console.warn("No vertex shader provided, will use a default one");
-
-            vsIdHTML = "#ifdef GL_ES\nprecision mediump float;\n#endif\nattribute vec3 aVertexPosition;attribute vec2 aTextureCoord;uniform mat4 uMVMatrix;uniform mat4 uPMatrix;varying vec3 vVertexPosition;varying vec2 vTextureCoord;void main() {vTextureCoord = aTextureCoord;vVertexPosition = aVertexPosition;gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);}";
+            vsIdHTML = this._setDefaultVS();
         }
         else {
             vsIdHTML = document.getElementById(vsId).innerHTML;
@@ -854,7 +982,7 @@ Curtains.Plane.prototype._setupShaders = function(params) {
         if(!fsId || !document.getElementById(fsId)) {
             if(!wrapper.productionMode) console.warn("No fragment shader provided, will use a default one");
 
-            fsIdHTML = "#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec3 vVertexPosition;varying vec2 vTextureCoord;void main( void ) {gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);}";
+            fsIdHTML = this._setDefaultFS();
         }
         else {
             fsIdHTML = document.getElementById(fsId).innerHTML;
@@ -869,9 +997,39 @@ Curtains.Plane.prototype._setupShaders = function(params) {
 
 
 /***
- Used internally to set up program and attributes
+ Create our WebGL shaders based on our written shaders
+
+ params:
+ @shaderCode (string): shader code
+ @shaderType (shaderType): WebGL shader type (vertex of fragment)
+
+ returns:
+ @shader (compiled shader): our compiled shader
  ***/
-Curtains.Plane.prototype._setupPlaneProgram = function() {
+Curtains.BasePlane.prototype._createShader = function(shaderCode, shaderType) {
+    var glContext = this._wrapper.glContext;
+
+    var shader = glContext.createShader(shaderType);
+
+    glContext.shaderSource(shader, shaderCode);
+    glContext.compileShader(shader);
+
+    if (!glContext.getShaderParameter(shader, glContext.COMPILE_STATUS)) {
+        if(!this._wrapper.productionMode) console.warn("Errors occurred while compiling the shader:\n" + glContext.getShaderInfoLog(shader));
+
+        return null;
+    }
+    return shader;
+};
+
+
+/***
+ Used internally to set up program, create the shaders and attach them to the program
+
+ returns:
+ @isProgramValid (boolean): indicates if our program has succesfully been created
+ ***/
+Curtains.BasePlane.prototype._setupPlaneProgram = function() {
     var isProgramValid = true;
 
     var wrapper = this._wrapper;
@@ -881,16 +1039,11 @@ Curtains.Plane.prototype._setupPlaneProgram = function() {
     this._program = glContext.createProgram();
 
     // Create shaders,
-    this._shaders.vertexShader = wrapper._createShader(this._shaders.vertexShaderCode, glContext.VERTEX_SHADER);
-    this._shaders.fragmentShader = wrapper._createShader(this._shaders.fragmentShaderCode, glContext.FRAGMENT_SHADER);
+    this._shaders.vertexShader = this._createShader(this._shaders.vertexShaderCode, glContext.VERTEX_SHADER);
+    this._shaders.fragmentShader = this._createShader(this._shaders.fragmentShaderCode, glContext.FRAGMENT_SHADER);
 
-    if((!this._shaders.vertexShader || !this._shaders.fragmentShader) && !wrapper.productionMode) {
+    if(!this._shaders.vertexShader || !this._shaders.fragmentShader) {
         if(!wrapper.productionMode) console.warn("Unable to find or compile the vertex or fragment shader");
-
-        // call the error callback if provided
-        if(this._onErrorCallback) {
-            this._onErrorCallback()
-        }
 
         isProgramValid = false;
     }
@@ -905,139 +1058,263 @@ Curtains.Plane.prototype._setupPlaneProgram = function() {
         if (!glContext.getProgramParameter(this._program, glContext.LINK_STATUS)) {
             if(!wrapper.productionMode) console.warn("Unable to initialize the shader program.");
 
-            // call the error callback if provided
-            if(this._onErrorCallback) {
-                this._onErrorCallback()
-            }
-
             isProgramValid = false;
         }
-
-        // projection and model view matrix
-        // create our modelview and projection matrix
-        this._matrices = {
-            mvMatrix: {
-                name: "uMVMatrix",
-                matrix: new Float32Array([
-                    1.0, 0.0, 0.0, 0.0,
-                    0.0, 1.0, 0.0, 0.0,
-                    0.0, 0.0, 1.0, 0.0,
-                    0.0, 0.0, 0.0, 1.0
-                ]),
-                location: glContext.getUniformLocation(this._program, "uMVMatrix"),
-            },
-            pMatrix: {
-                name: "uPMatrix",
-                matrix: new Float32Array([
-                    0.0, 0.0, 0.0, 0.0,
-                    0.0, 0.0, 0.0, 0.0,
-                    0.0, 0.0, 0.0, 0.0,
-                    0.0, 0.0, 0.0, 0.0
-                ]), // will be set after
-                location: glContext.getUniformLocation(this._program, "uPMatrix"),
-            }
-        };
     }
+
+    this._isProgramValid = isProgramValid;
 
     return isProgramValid;
 };
 
 
+/*** PLANE ATTRIBUTES & UNIFORMS ***/
+
+/*** UNIFORMS ***/
 
 /***
- Set our plane dimensions and positions relative to document
+ This is a little helper to set uniforms based on their types
+
+ params :
+ @uniformType (string): the uniform type
+ @uniformLocation (WebGLUniformLocation obj): location of the current program uniform
+ @uniformValue (float/integer or array of float/integer): value to set
  ***/
-Curtains.Plane.prototype._setDocumentSizes = function() {
-    var wrapper = this._wrapper;
+Curtains.BasePlane.prototype._handleUniformSetting = function(uniformType, uniformLocation, uniformValue) {
+    var glContext = this._wrapper.glContext;
 
-    // set our basic initial infos
-    var planeBoundingRect = this.htmlElement.getBoundingClientRect();
+    switch(uniformType) {
+        case "1i":
+            glContext.uniform1i(uniformLocation, uniformValue);
+            break;
+        case "1iv":
+            glContext.uniform1iv(uniformLocation, uniformValue);
+            break;
+        case "1f":
+            glContext.uniform1f(uniformLocation, uniformValue);
+            break;
+        case "1fv":
+            glContext.uniform1fv(uniformLocation, uniformValue);
+            break;
 
-    // just in case the html element is missing from the DOM, set its container values instead
-    if(planeBoundingRect.width === 0 && planeBoundingRect.height === 0) {
-        planeBoundingRect = wrapper._boundingRect;
+        case "2i":
+            glContext.uniform2i(uniformLocation, uniformValue[0], uniformValue[1]);
+            break;
+        case "2iv":
+            glContext.uniform2iv(uniformLocation, uniformValue);
+            break;
+        case "2f":
+            glContext.uniform2f(uniformLocation, uniformValue[0], uniformValue[1]);
+            break;
+        case "2fv":
+            glContext.uniform2fv(uniformLocation, uniformValue);
+            break;
+
+        case "3i":
+            glContext.uniform3i(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2]);
+            break;
+        case "3iv":
+            glContext.uniform3iv(uniformLocation, uniformValue);
+            break;
+        case "3f":
+            glContext.uniform3f(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2]);
+            break;
+        case "3fv":
+            glContext.uniform3fv(uniformLocation, uniformValue);
+            break;
+
+        case "4i":
+            glContext.uniform4i(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2], uniformValue[3]);
+            break;
+        case "4iv":
+            glContext.uniform4iv(uniformLocation, uniformValue);
+            break;
+        case "4f":
+            glContext.uniform4f(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2], uniformValue[3]);
+            break;
+        case "4fv":
+            glContext.uniform4fv(uniformLocation, uniformValue);
+            break;
+
+        case "mat2":
+            glContext.uniformMatrix2fv(uniformLocation, false, uniformValue);
+            break;
+        case "mat3":
+            glContext.uniformMatrix3fv(uniformLocation, false, uniformValue);
+            break;
+        case "mat4":
+            glContext.uniformMatrix4fv(uniformLocation, false, uniformValue);
+            break;
+
+        default:
+            if(!this._wrapper.productionMode) console.warn("This uniform type is not handled : ", uniformType);
     }
-
-    // set plane dimensions in document space
-    this._boundingRect = {
-        document: {
-            width: planeBoundingRect.width * wrapper.pixelRatio,
-            height: planeBoundingRect.height * wrapper.pixelRatio,
-            top: planeBoundingRect.top * wrapper.pixelRatio,
-            left: planeBoundingRect.left * wrapper.pixelRatio,
-        },
-    };
 };
 
 
 /***
- Set our plane dimensions and positions relative to clip spaces
+ This sets our shaders uniforms
+
+ params :
+ @uniforms (obj): uniforms to apply
  ***/
-Curtains.Plane.prototype._setComputedSizes = function() {
+Curtains.BasePlane.prototype._setUniforms = function(uniforms) {
     var wrapper = this._wrapper;
+    var glContext = wrapper.glContext;
+    // ensure we are using the right program
+    glContext.useProgram(this._program);
 
-    // dimensions and positions of our plane in the document and clip spaces
-    // don't forget translations in webgl space are referring to the center of our plane and canvas
-    var planeCenter = {
-        x: (this._boundingRect.document.width / 2) + this._boundingRect.document.left,
-        y: (this._boundingRect.document.height / 2) + this._boundingRect.document.top,
-    };
+    var self = this;
+    // set our uniforms if we got some
+    if(uniforms) {
+        Object.keys(uniforms).map(function(objectKey, index) {
+            var uniform = uniforms[objectKey];
 
-    var wrapperCenter = {
-        x: (wrapper._boundingRect.width / 2) + wrapper._boundingRect.left,
-        y: (wrapper._boundingRect.height / 2) + wrapper._boundingRect.top,
-    };
+            // set our uniform location
+            uniform.location = glContext.getUniformLocation(self._program, uniform.name);
 
-    // our plane clip space informations
-    this._boundingRect.computed = {
-        width: this._boundingRect.document.width / wrapper._boundingRect.width,
-        height: this._boundingRect.document.height / wrapper._boundingRect.height,
-        top: (wrapperCenter.y - planeCenter.y) / wrapper._boundingRect.height,
-        left: (planeCenter.x - wrapperCenter.x) / wrapper._boundingRect.height,
-    };
+            if(!uniform.type) {
+                if(Array.isArray(uniform.value)) {
+                    if(uniform.value.length === 4) {
+                        uniform.type = "4f";
+
+                        if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a 4f (array of 4 floats) uniform type");
+                    }
+                    else if(uniform.value.length === 3) {
+                        uniform.type = "3f";
+
+                        if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a 3f (array of 3 floats) uniform type");
+                    }
+                    else if(uniform.value.length === 2) {
+                        uniform.type = "2f";
+
+                        if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a 2f (array of 2 floats) uniform type");
+                    }
+                }
+                else if(uniform.value.constructor === Float32Array) {
+                    if(uniform.value.length === 16) {
+                        uniform.type = "mat4";
+
+                        if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a mat4 (4x4 matrix array) uniform type");
+                    }
+                    else if(uniform.value.length === 9) {
+                        uniform.type = "mat3";
+
+                        if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a mat3 (3x3 matrix array) uniform type");
+                    }
+                    else  if(uniform.value.length === 4) {
+                        uniform.type = "mat2";
+
+                        if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a mat2 (2x2 matrix array) uniform type");
+                    }
+                }
+                else {
+                    uniform.type = "1f";
+
+                    if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a 1f (float) uniform type");
+                }
+            }
+
+            // set the uniforms
+            self._handleUniformSetting(uniform.type, uniform.location, uniform.value);
+        });
+    }
 };
 
 
+/***
+ This updates all uniforms of a plane that were set by the user
+ It is called at each draw call
+ ***/
+Curtains.BasePlane.prototype._updateUniforms = function(uniforms) {
+    if(uniforms) {
+        var self = this;
+        Object.keys(uniforms).map(function(objectKey) {
+
+            var uniform = uniforms[objectKey];
+
+            var location = uniform.location;
+            var value = uniform.value;
+            var type = uniform.type;
+
+            // update our uniforms
+            self._handleUniformSetting(type, location, value);
+        });
+    }
+};
+
+/*** ATTRIBUTES ***/
 
 /***
- Used internally handle context restore
+ This set our plane vertex shader attributes
+
+ BE CAREFUL : if an attribute is set here, it MUST be DECLARED and USED inside our plane vertex shader
  ***/
-Curtains.Plane.prototype._restoreContext = function() {
-    this._canDraw = false;
+Curtains.BasePlane.prototype._setAttributes = function() {
+    // set default attributes
+    var attributes = {
+        vertexPosition: "aVertexPosition",
+        textureCoord: "aTextureCoord",
+    };
 
-    // remove and reset everything that depends on the context
-    this._shaders.vertexShader = null;
-    this._shaders.fragmentShader = null;
+    if(!this._attributes) this._attributes = {};
 
-    this._program = null;
+    var self = this;
+    Object.keys(attributes).map(function(objectKey, index) {
+        var value = attributes[objectKey];
+        self._attributes[objectKey] = {
+            name: value,
+            location: self._wrapper.glContext.getAttribLocation(self._program, value),
+        };
+    });
+};
 
-    this._matrices = null;
 
-    this._attributes = null;
+/***
+ This method creates our vertex and texture coord buffers
+ ***/
+Curtains.BasePlane.prototype._initializeBuffers = function() {
+    var wrapper = this._wrapper;
+    var glContext = wrapper.glContext;
 
-    this._geometry.bufferInfos = null;
-    this._material.bufferInfos = null;
+    // we could not use plane._size property here because it might have changed since its creation
+    // if the plane does not have any texture yet, a window resize does not trigger the resize function
 
-    // reset plane shaders, programs and matrices
-    var isProgramValid = this._setupPlaneProgram();
-
-    if(isProgramValid) {
-        // reset attributes
-        this._setAttributes();
-
-        // reset plane uniforms
-        this._setUniforms(this.uniforms);
-
-        // reinitialize buffers
-        this._initializeBuffers();
-
-        // reset textures
-        for(var i = 0; i < this.textures.length; i++) {
-            var source = this.textures[i].source;
-            this.textures[i]._init();
-            this.textures[i].setSource(source);
-        }
+    // if this our first time we need to create our geometry and material objects
+    if(!this._geometry && !this._material) {
+        this._setPlaneVertices();
     }
+
+    if(!this._attributes) return;
+
+    // now we'll create vertices and uvs attributes
+    this._geometry.bufferInfos = {
+        id: glContext.createBuffer(),
+        itemSize: 3,
+        numberOfItems: this._geometry.vertices.length / 3, // divided by item size
+    };
+
+    glContext.enableVertexAttribArray(this._attributes.vertexPosition.location);
+
+    glContext.bindBuffer(glContext.ARRAY_BUFFER, this._geometry.bufferInfos.id);
+    glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(this._geometry.vertices), glContext.STATIC_DRAW);
+
+    // Set where the vertexPosition attribute gets its data,
+    glContext.vertexAttribPointer(this._attributes.vertexPosition.location, this._geometry.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
+
+
+    this._material.bufferInfos = {
+        id: glContext.createBuffer(),
+        itemSize: 3,
+        numberOfItems: this._material.uvs.length / 3, // divided by item size
+    };
+
+    glContext.enableVertexAttribArray(this._attributes.textureCoord.location);
+
+    glContext.bindBuffer(glContext.ARRAY_BUFFER, this._material.bufferInfos.id);
+    glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(this._material.uvs), glContext.STATIC_DRAW);
+
+    glContext.vertexAttribPointer(this._attributes.textureCoord.location, this._material.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
 };
 
 
@@ -1048,7 +1325,7 @@ Curtains.Plane.prototype._restoreContext = function() {
  we first create our UVs on a grid from [0, 0, 0] to [1, 1, 0]
  then we use the UVs to create our vertices coords
  ***/
-Curtains.Plane.prototype._setPlaneVertices = function() {
+Curtains.BasePlane.prototype._setPlaneVertices = function() {
     // geometry vertices
     this._geometry = {
         vertices: [],
@@ -1123,365 +1400,899 @@ Curtains.Plane.prototype._setPlaneVertices = function() {
 
 
 /***
- This method has to be called externally after our textures have been created
- Creates our buffers : vertex buffer and texture coord buffer
- We also resize our textures to be sure they'll fit our plane
+ Used internally handle context restoration
+ ***/
+Curtains.BasePlane.prototype._restoreContext = function() {
+    this._canDraw = false;
 
- Once everything is done we call our ready callback function
+    // remove and reset everything that depends on the context
+    this._shaders.vertexShader = null;
+    this._shaders.fragmentShader = null;
+
+    this._program = null;
+
+    if(this._matrices) {
+        this._matrices = null;
+    }
+
+    this._attributes = null;
+
+    this._geometry.bufferInfos = null;
+    this._material.bufferInfos = null;
+
+    // reset also frame and depth buffer if needed
+    if(this._type === "ShaderPass") {
+        this._frameBuffer = null;
+        this._depthBuffer = null;
+    }
+
+    // reset plane shaders, programs and matrices
+    var isProgramValid = this._setupPlaneProgram();
+
+    if(isProgramValid) {
+        // reset attributes
+        this._setAttributes();
+
+        // reset plane uniforms
+        this._setUniforms(this.uniforms);
+
+        // reinitialize buffers
+        this._initializeBuffers();
+
+
+        // reset textures
+        for(var i = 0; i < this.textures.length; i++) {
+            var source = this.textures[i].source;
+
+            // if our texture is a render texture use special init
+            if(this.textures[i].type === "texturePass") {
+                this.textures[i]._initShaderPassTexture();
+            }
+            else {
+                // else use standard init and reset source
+                this.textures[i]._init();
+                this.textures[i].setSource(source);
+            }
+        }
+
+        // if this is a Plane object we need to reset its matrices, perspective and position
+        if(this._type === "Plane") {
+            this._initMatrices();
+
+            // set our initial perspective matrix
+            this.setPerspective(this._fov, 0.1, this._fov * 2);
+
+            this._applyCSSPositions();
+        }
+        else {
+            // if this is a ShaderPlane object, recreate its frame buffer
+            this._createFrameBuffer();
+        }
+
+        this._canDraw = true;
+    }
+};
+
+
+/*** PLANE SIZES AND TEXTURES HANDLING ***/
+
+/***
+ Set our plane dimensions and positions relative to document
+ ***/
+Curtains.BasePlane.prototype._setDocumentSizes = function() {
+    var wrapper = this._wrapper;
+
+    // set our basic initial infos
+    var planeBoundingRect = this.htmlElement.getBoundingClientRect();
+
+    // just in case the html element is missing from the DOM, set its container values instead
+    if(planeBoundingRect.width === 0 && planeBoundingRect.height === 0) {
+        planeBoundingRect = wrapper._boundingRect;
+    }
+
+    if(!this._boundingRect) this._boundingRect = {};
+
+    // set plane dimensions in document space
+    this._boundingRect.document = {
+        width: planeBoundingRect.width * wrapper.pixelRatio,
+        height: planeBoundingRect.height * wrapper.pixelRatio,
+        top: planeBoundingRect.top * wrapper.pixelRatio,
+        left: planeBoundingRect.left * wrapper.pixelRatio,
+    };
+};
+
+
+/***
+ Useful to get our plane bounding rectangle without triggering a reflow/layout
+
+ returns :
+ @boundingRectangle (obj): an object containing our plane bounding rectangle (width, height, top and left properties)
+ ***/
+Curtains.BasePlane.prototype.getBoundingRect = function() {
+    return this._boundingRect.document;
+};
+
+
+/***
+ Handles each plane resizing
+ used internally when our container is resized
+ ***/
+Curtains.BasePlane.prototype.planeResize = function() {
+    // reset plane dimensions
+    this._setDocumentSizes();
+
+    // if this is a Plane object we need to update its perspective and positions
+    if(this._type === "Plane") {
+        // reset perspective
+        this.setPerspective(this._fov, 0.1, this._fov * 2);
+
+        // set its new computed sizes
+        this._setComputedSizes();
+
+        // apply new position
+        this._applyCSSPositions();
+    }
+
+    // resize all textures
+    for(var i = 0; i < this.textures.length; i++) {
+        this.textures[i]._adjustTextureSize();
+    }
+
+    // resize our frame and depth buffers by binding them again
+    if(this._type === "ShaderPass") {
+        this._wrapper.glContext.bindFramebuffer(this._wrapper.glContext.FRAMEBUFFER, this._frameBuffer);
+        this._bindDepthBuffer();
+    }
+
+    // handle our after resize event
+    var self = this;
+    setTimeout(function() {
+        if(self._onAfterResizeCallback) {
+            self._onAfterResizeCallback();
+        }
+    });
+};
+
+
+
+/*** IMAGES, VIDEOS AND CANVASES LOADING ***/
+
+/***
+ This method creates a new Texture associated to the plane
 
  params :
- @widthSegments (integer): plane definition along X axis
- @heightSegments (integer): plane definition along Y axis
+ @type (string) : texture type, either image, video or canvas
+
+ returns :
+ @t: our newly created texture
  ***/
-Curtains.Plane.prototype._initializeBuffers = function() {
-    var wrapper = this._wrapper;
-    var glContext = wrapper.glContext;
+Curtains.BasePlane.prototype.createTexture = function(sampler, isTexturePass) {
+    var t = new Curtains.Texture(this, {
+        index: this.textures.length,
+        sampler: sampler,
+        isTexturePass: isTexturePass,
+    });
 
-    // we could not use plane._size property here because it might have changed since its creation
-    // if the plane does not have any texture yet, a window resize does not trigger the resize function
+    // add our texture to the textures array
+    this.textures.push(t);
 
-    // if this our first time we need to create our geometry and material objects
-    if(!this._geometry && !this._material) {
-        this._setPlaneVertices();
+    return t;
+};
+
+
+/***
+ This method handles the sources loading process
+
+ params :
+ @sourcesArray (array) : array of html images, videos or canvases elements
+ ***/
+Curtains.BasePlane.prototype.loadSources = function(sourcesArray) {
+    for(var i = 0; i < sourcesArray.length; i++) {
+        this.loadSource(sourcesArray[i]);
     }
+};
+
+
+/***
+ This method loads one source
+ It checks what type of source it is then use the right loader
+
+ params :
+ @source (html element) : html image, video or canvas element
+ ***/
+Curtains.BasePlane.prototype.loadSource = function(source) {
+    if(source.tagName.toUpperCase() === "IMG") {
+        this.loadImage(source);
+    }
+    else if(source.tagName.toUpperCase() === "VIDEO") {
+        this.loadVideo(source);
+    }
+    else if(source.tagName.toUpperCase() === "CANVAS") {
+        this.loadCanvas(source);
+    }
+    else if(!this._wrapper.productionMode) {
+        console.warn("this HTML tag could not be converted into a texture:", source.tagName);
+    }
+};
+
+
+/***
+ This method loads an image
+ Creates a new texture object right away and once the image is loaded it uses it as our WebGL texture
+
+ params :
+ @source (image) : html image element
+ ***/
+Curtains.BasePlane.prototype.loadImage = function(source) {
+    var image = source;
+
+    image.crossOrigin = this.crossOrigin || "anonymous";
+    image.sampler = source.getAttribute("data-sampler") || null;
+
+    // create a new texture that will use our image later
+    var texture = this.createTexture(image.sampler);
+
+    // handle our loaded data event inside the texture and tell our plane when the video is ready to play
+    texture._onSourceLoadedHandler = texture._onSourceLoaded.bind(texture, image);
+    image.addEventListener('load', texture._onSourceLoadedHandler, false);
+
+    // If the image is in the cache of the browser,
+    // the 'load' event might have been triggered
+    // before we registered the event handler.
+    if(image.complete) {
+        texture._onSourceLoaded(image);
+    }
+
+    // add the image to our array
+    this.images.push(image);
+};
+
+
+/***
+ This method loads a video
+ Creates a new texture object right away and once the video has enough data it uses it as our WebGL texture
+
+ params :
+ @source (video) : html video element
+ ***/
+Curtains.BasePlane.prototype.loadVideo = function(source) {
+    var video = source;
+
+    video.preload = true;
+    video.muted = true;
+    video.loop = true;
+
+    video.sampler = source.getAttribute("data-sampler") || null;
+
+    video.crossOrigin = this.crossOrigin || "anonymous";
+
+    // create a new texture that will use our video later
+    var texture = this.createTexture(video.sampler);
+
+    // handle our loaded data event inside the texture and tell our plane when the video is ready to play
+    texture._onSourceLoadedHandler = texture._onVideoLoadedData.bind(texture, video);
+    video.addEventListener('canplaythrough', texture._onSourceLoadedHandler, false);
+
+    // If the video is in the cache of the browser,
+    // the 'canplaythrough' event might have been triggered
+    // before we registered the event handler.
+    if(video.readyState >= video.HAVE_FUTURE_DATA) {
+        texture._onSourceLoaded(video);
+    }
+
+    // start loading our video
+    video.load();
+
+    this.videos.push(video);
+};
+
+
+/***
+ This method loads a canvas
+ Creates a new texture object right away and uses the canvas as our WebGL texture
+
+ params :
+ @source (canvas) : html canvas element
+ ***/
+Curtains.BasePlane.prototype.loadCanvas = function(source) {
+    var canvas = source;
+    canvas.sampler = source.getAttribute("data-sampler") || null;
+
+    var texture = this.createTexture(canvas.sampler);
+
+    this.canvases.push(canvas);
+
+    texture._onSourceLoaded(canvas);
+};
+
+
+/*** DEPRECATED LOADERS ***/
+
+/***
+ Loads an array of images
+
+ params :
+ @imagesArray (array) : array of html image elements
+
+ returns :
+ @this: our plane to handle chaining
+ ***/
+Curtains.BasePlane.prototype.loadImages = function(imagesArray) {
+    for(var i = 0; i < imagesArray.length; i++) {
+        this.loadImage(imagesArray[i]);
+    }
+};
+
+/***
+ Loads an array of videos
+
+ params :
+ @videosArray (array) : array of html video elements
+
+ returns :
+ @this: our plane to handle chaining
+ ***/
+Curtains.BasePlane.prototype.loadVideos = function(videosArray) {
+    for(var i = 0; i < videosArray.length; i++) {
+        this.loadVideo(videosArray[i]);
+    }
+};
+
+/***
+ Loads an array of canvases
+
+ params :
+ @canvasesArray (array) : array of html canvas elements
+
+ returns :
+ @this: our plane to handle chaining
+ ***/
+Curtains.BasePlane.prototype.loadCanvases = function(canvasesArray) {
+    for(var i = 0; i < canvasesArray.length; i++) {
+        this.loadCanvas(canvasesArray[i]);
+    }
+};
+
+
+
+/***
+ This has to be called in order to play the planes videos
+ We need this because on mobile devices we can't start playing a video without a user action
+ Once the video has started playing we set an interval and update a new frame to our our texture at a 30FPS rate
+ ***/
+Curtains.BasePlane.prototype.playVideos = function() {
+    for(var i = 0; i < this.textures.length; i++) {
+        var texture = this.textures[i];
+
+        if(texture.type === "video") {
+            var playPromise = texture.source.play();
+
+            // In browsers that don’t yet support this functionality,
+            // playPromise won’t be defined.
+            var self = this;
+            if (playPromise !== undefined) {
+                playPromise.catch(function(error) {
+                    if(!self._wrapper.productionMode) console.warn("Could not play the video : ", error);
+                });
+            }
+        }
+    }
+};
+
+
+/*** INTERACTION ***/
+
+/***
+ This function takes the mouse position relative to the document and returns it relative to our plane
+ It ranges from -1 to 1 on both axis
+
+ params :
+ @xPosition (float): position to convert on X axis
+ @yPosition (float): position to convert on Y axis
+
+ returns :
+ @mousePosition: the mouse position relative to our plane in WebGL space coordinates
+ ***/
+Curtains.BasePlane.prototype.mouseToPlaneCoords = function(xMousePosition, yMousePosition) {
+    // remember our ShaderPass objects don't have a scale property
+    var scale = this.scale ? this.scale : {x: 1, y: 1};
+
+    // we need to adjust our plane document bounding rect to it's webgl scale
+    var scaleAdjustment = {
+        x: (this._boundingRect.document.width - this._boundingRect.document.width * scale.x) / 2,
+        y: (this._boundingRect.document.height - this._boundingRect.document.height * scale.y) / 2,
+    };
+
+    // also we need to divide by pixel ratio
+    var planeBoundingRect = {
+        width: (this._boundingRect.document.width * scale.x) / this._wrapper.pixelRatio,
+        height: (this._boundingRect.document.height * scale.y) / this._wrapper.pixelRatio,
+        top: (this._boundingRect.document.top + scaleAdjustment.y) / this._wrapper.pixelRatio,
+        left: (this._boundingRect.document.left + scaleAdjustment.x) / this._wrapper.pixelRatio,
+    };
+
+    // mouse position conversion from document to plane space
+    var mousePosition = {
+        x: (((xMousePosition - planeBoundingRect.left) / planeBoundingRect.width) * 2) - 1,
+        y: 1 - (((yMousePosition - planeBoundingRect.top) / planeBoundingRect.height) * 2)
+    };
+
+    return mousePosition;
+};
+
+
+/***
+ Used inside our draw call to set the correct plane buffers before drawing it
+ ***/
+Curtains.BasePlane.prototype._bindPlaneBuffers = function() {
+    var glContext = this._wrapper.glContext;
+
+    // Set the vertices buffer
+    glContext.enableVertexAttribArray(this._attributes.vertexPosition.location);
+    glContext.bindBuffer(glContext.ARRAY_BUFFER, this._geometry.bufferInfos.id);
+
+    glContext.vertexAttribPointer(this._attributes.vertexPosition.location, this._geometry.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
+
+
+    // Set where the texture coord attribute gets its data,
+    glContext.enableVertexAttribArray(this._attributes.textureCoord.location);
+    glContext.bindBuffer(glContext.ARRAY_BUFFER, this._material.bufferInfos.id);
+
+    glContext.vertexAttribPointer(this._attributes.textureCoord.location, this._material.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
+};
+
+
+/***
+ This is used to set the WebGL context active texture and bind it
+
+ params :
+ @texture (texture object) : Our texture object containing our WebGL texture and its index
+ ***/
+Curtains.BasePlane.prototype._bindPlaneTexture = function(texture) {
+    var glContext = this._wrapper.glContext;
+
+    // tell WebGL we want to affect the texture at the plane's index unit
+    glContext.activeTexture(glContext.TEXTURE0 + texture.index);
+    // bind the texture to the plane's index unit
+    glContext.bindTexture(glContext.TEXTURE_2D, texture._sampler.texture);
+};
+
+
+/*** DRAW THE PLANE ***/
+
+/***
+ We draw the plane, ie bind the buffers, set the active textures and draw it
+ If the plane type is a ShaderPass we also need to bind the right frame buffers
+ ***/
+Curtains.BasePlane.prototype._drawPlane = function() {
+    var glContext = this._wrapper.glContext;
+
+    // check if our plane is ready to draw
+    if(this._canDraw) {
+        // ensure we're using the right program
+        glContext.useProgram(this._program);
+
+        // even if our plane should not be drawn we still execute its onRender callback and update its uniforms
+        if(this._onRenderCallback) {
+            this._onRenderCallback();
+        }
+
+        // if this is a frame buffer, check if theres one more coming next and eventually bind it
+        if(this._type === "ShaderPass" && this.index + 1 <= this._wrapper.shaderPasses.length - 1) {
+            this._wrapper.shaderPasses[this.index + 1]._enableFrameBuffer();
+        }
+
+        // update all uniforms set up by the user
+        this._updateUniforms(this.uniforms);
+
+        // bind plane attributes buffers
+        this._bindPlaneBuffers();
+
+        // now check if we really need to draw it and its textures
+        if(this._shouldDraw) {
+
+            // draw all our plane textures
+            for(var i = 0; i < this.textures.length; i++) {
+                // draw (bind and maybe update) our texture
+                this.textures[i]._drawTexture();
+            }
+
+            // we have finished to apply our frame buffers, now render to canvas
+            if(this._type === "ShaderPass" && this.index === this._wrapper.shaderPasses.length - 1) {
+                glContext.bindFramebuffer(glContext.FRAMEBUFFER, null);
+            }
+
+            // the draw call!
+            glContext.drawArrays(glContext.TRIANGLES, 0, this._geometry.bufferInfos.numberOfItems);
+        }
+    }
+};
+
+
+/***
+ This deletes all our plane webgl bindings and its textures
+ ***/
+Curtains.BasePlane.prototype._dispose = function() {
+    var glContext = this._wrapper.glContext;
+
+    // unbind and delete the textures
+    for(var i = 0; i < this.textures.length; i++) {
+        this.textures[i]._dispose();
+    }
+    this.textures = null;
+
+    if(glContext) {
+        // delete buffers
+        // each time we check for existing properties to avoid errors
+        if(this._geometry) {
+            glContext.bindBuffer(glContext.ARRAY_BUFFER, this._geometry.bufferInfos.id);
+            glContext.bufferData(glContext.ARRAY_BUFFER, 1, glContext.STATIC_DRAW);
+            glContext.deleteBuffer(this._geometry.bufferInfos.id);
+            this._geometry = null;
+        }
+
+        if(this._material) {
+            glContext.bindBuffer(glContext.ARRAY_BUFFER, this._material.bufferInfos.id);
+            glContext.bufferData(glContext.ARRAY_BUFFER, 1, glContext.STATIC_DRAW);
+            glContext.deleteBuffer(this._material.bufferInfos.id);
+            this._material = null;
+        }
+
+        // delete frame buffers
+        if(this._frameBuffer) {
+            this._wrapper.glContext.deleteFramebuffer(this.framebuffer);
+            this.framebuffer = null;
+        }
+        if(this._depthBuffer) {
+            this._wrapper.glContext.deleteRenderbuffer(this._depthBuffer);
+            this._depthBuffer = null;
+        }
+
+        // delete the shaders
+        if(this._shaders) {
+            glContext.deleteShader(this._shaders.fragmentShader);
+            glContext.deleteShader(this._shaders.vertexShader);
+            this._shaders = null;
+        }
+
+        // and delete the program at last
+        if(this._program) {
+            glContext.deleteProgram(this._program);
+            this._program = null;
+        }
+    }
+};
+
+
+
+/*** BASE PLANE EVENTS ***/
+
+
+/***
+ This is called each time a plane has been resized
+
+ params :
+ @callback (function) : a function to execute
+
+ returns :
+ @this: our plane to handle chaining
+ ***/
+Curtains.BasePlane.prototype.onAfterResize = function(callback) {
+    if(callback) {
+        this._onAfterResizeCallback = callback;
+    }
+
+    return this;
+};
+
+/***
+ This is called each time a plane's image has been loaded. Useful to handle a loader
+
+ params :
+ @callback (function) : a function to execute
+
+ returns :
+ @this: our plane to handle chaining
+ ***/
+Curtains.BasePlane.prototype.onLoading = function(callback) {
+    if(callback) {
+        this._onPlaneLoadingCallback = callback;
+    }
+
+    return this;
+};
+
+
+/***
+ This is called when a plane is ready to be drawn
+
+ params :
+ @callback (function) : a function to execute
+
+ returns :
+ @this: our plane to handle chaining
+ ***/
+Curtains.BasePlane.prototype.onReady = function(callback) {
+    if(callback) {
+        this._onReadyCallback = callback;
+    }
+
+    return this;
+};
+
+
+/***
+ This is called at each requestAnimationFrame call
+
+ params :
+ @callback (function) : a function to execute
+
+ returns :
+ @this: our plane to handle chaining
+ ***/
+Curtains.BasePlane.prototype.onRender = function(callback) {
+    if(callback) {
+        this._onRenderCallback = callback;
+    }
+
+    return this;
+};
+
+
+
+
+/*** PLANE CLASS ***/
+
+/***
+ Here we create our Plane object (note that we are using the Curtains namespace to avoid polluting the global scope)
+ It will inherits from ou BasePlane class that handles all the WebGL part
+ Plane class will add:
+ - sizing and positioning and everything that relates to the DOM like draw checks and reenter/leave events
+ - projection and view matrices and everything that is related like perspective, scale, rotation...
+ - sources auto loading and onReady callback
+ - depth related things
+
+ params :
+ @curtainWrapper : our curtain object that wraps all the planes
+ @plane (html element) : html div that contains 0 or more media elements.
+ @params (obj) : see addPlanes method of the wrapper
+
+ returns :
+ @this: our Plane element
+ ***/
+Curtains.Plane = function(curtainWrapper, plane, params) {
+    // inherit
+    Curtains.BasePlane.call(this, curtainWrapper, plane, params);
+
+    this.index = this._wrapper.planes.length;
+    this._type = "Plane";
+    this._canDraw = false;
+
+    // if params is not defined
+    if(!params) params = {};
+
+    this._setInitParams(params);
+
+    // if program is valid, go on
+    if(this._isProgramValid) {
+
+        // init our plane
+        this._initPositions();
+        this._initSources();
+    }
+    else {
+        if(this._wrapper._onErrorCallback) {
+            // if it's not valid call the wrapper error callback
+            this._wrapper._onErrorCallback();
+        }
+    }
+};
+Curtains.Plane.prototype = Object.create(Curtains.BasePlane.prototype);
+Curtains.Plane.prototype.constructor = Curtains.Plane;
+
+
+/***
+ Set plane's initial params like rotation, scale, translation, fov
+
+ params :
+ @params (obj) : see addPlanes method of the wrapper
+ ***/
+Curtains.Plane.prototype._setInitParams = function(params) {
+    var wrapper = this._wrapper;
+
+    // if our plain is ready to be drawn
+    this._canDraw = false;
+    // if our plane should always be drawn or if it should be drawn only when inside the viewport
+    this.alwaysDraw = params.alwaysDraw || false;
+
+
+    if((params.mimicCSS || params.mimicCSS === false) && !wrapper.productionMode) {
+        console.warn("mimicCSS property is deprecated since v2.0 as the planes will always copy their html elements sizes and positions.");
+    }
+
+    this.rotation = {
+        x: 0,
+        y: 0,
+        z: 0,
+    };
+
+    this.relativeTranslation = {
+        x: 0,
+        y: 0,
+    };
+
+    // will be our translation in webgl coordinates
+    this._translation = {
+        x: 0,
+        y: 0,
+        z: 0
+    };
+
+    this.scale = {
+        x: 1,
+        y: 1,
+    };
+
+    // we need to sort planes by their definitions : widthSegments * heightSegments
+    // but we have to keep in mind that 10*15 and 15*10 are not the same vertices definion, so we add widthSegments to differenciate them
+    wrapper._stackPlane(this.index);
+
+    // if we decide to load all sources on init or let the user do it manually
+    this.autoloadSources = params.autoloadSources;
+    if(this.autoloadSources === null || this.autoloadSources === undefined) {
+        this.autoloadSources = true;
+    }
+
+    // set default fov
+    this._fov = params._fov || 75;
+
+    // enable depth test by default
+    this._shouldUseDepthTest = true;
+};
+
+
+/***
+ Init our plane position: set its matrices, its position and perspective
+ ***/
+Curtains.Plane.prototype._initPositions = function() {
+    // set its matrices
+    this._initMatrices();
 
     // apply our css positions
     this._applyCSSPositions();
 
     // set our initial perspective matrix
     this.setPerspective(this._fov, 0.1, this._fov * 2);
-
-    if(!this._attributes) return;
-
-    // now we'll create vertices and uvs attributes
-    this._geometry.bufferInfos = {
-        id: glContext.createBuffer(),
-        itemSize: 3,
-        numberOfItems: this._geometry.vertices.length / 3, // divided by item size
-    };
-
-    glContext.bindBuffer(glContext.ARRAY_BUFFER, this._geometry.bufferInfos.id);
-    glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(this._geometry.vertices), glContext.STATIC_DRAW);
-
-    // Set where the vertexPosition attribute gets its data,
-    glContext.vertexAttribPointer(this._attributes.vertexPosition.location, this._geometry.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
-    glContext.enableVertexAttribArray(this._attributes.vertexPosition.location);
+};
 
 
-    this._material.bufferInfos = {
-        id: glContext.createBuffer(),
-        itemSize: 3,
-        numberOfItems: this._material.uvs.length / 3, // divided by item size
-    };
 
-    glContext.bindBuffer(glContext.ARRAY_BUFFER, this._material.bufferInfos.id);
-    glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(this._material.uvs), glContext.STATIC_DRAW);
+/***
+ Load our initial sources if needed and calls onReady callback
+ ***/
+Curtains.Plane.prototype._initSources = function() {
+    // finally load every sources already in our plane html element
+    // load plane sources
+    if (this.autoloadSources) {
+        // load images
+        var imagesArray = [];
+        for (var i = 0; i < this.htmlElement.getElementsByTagName("img").length; i++) {
+            imagesArray.push(this.htmlElement.getElementsByTagName("img")[i]);
+        }
+        if (imagesArray.length > 0) {
+            this.loadSources(imagesArray);
+        }
 
-    glContext.vertexAttribPointer(this._attributes.textureCoord.location, this._material.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
-    glContext.enableVertexAttribArray(this._attributes.textureCoord.location);
+        // load videos
+        var videosArray = [];
+        for (var i = 0; i < this.htmlElement.getElementsByTagName("video").length; i++) {
+            videosArray.push(this.htmlElement.getElementsByTagName("video")[i]);
+        }
+        if (videosArray.length > 0) {
+            this.loadSources(videosArray);
+        }
 
-    // everything is set up, we can draw the plane now
+        // load canvases
+        var canvasesArray = [];
+        for (var i = 0; i < this.htmlElement.getElementsByTagName("canvas").length; i++) {
+            canvasesArray.push(this.htmlElement.getElementsByTagName("canvas")[i]);
+        }
+        if (canvasesArray.length > 0) {
+            this.loadSources(canvasesArray);
+        }
+
+        this._loadingManager.initSourcesToLoad = imagesArray.length + videosArray.length + canvasesArray.length;
+    }
+
+    if (this._loadingManager.initSourcesToLoad === 0 && !this._wrapper.productionMode) {
+        // if there's no images, no videos, no canvas, send a warning
+        console.warn("This plane does not contain any image, video or canvas element. You may want to add some later with the loadSource() or loadSources() method.");
+    }
+
+    // handling our plane onReady callback with an interval
+    // maybe i could improve this by using the raf loop and a flag
+    var loadedInterval;
+    var self = this;
+
+    // check if everything is ready depending on the number of sources we need to load on init
+    loadedInterval = setInterval(function () {
+        // everything is loaded
+        if (self._loadingManager.sourcesLoaded >= self._loadingManager.initSourcesToLoad) {
+            clearInterval(loadedInterval);
+
+            if (self._onReadyCallback) {
+                self._onReadyCallback();
+            }
+        }
+    }, 16);
+
     this._canDraw = true;
 };
 
 
-
-/*** FINISH INIT ***/
-
-
-/*** PLANE ATTRIBUTES & UNIFORMS ***/
-
-/*** ATTRIBUTES ***/
-
 /***
- This set our plane vertex shader attributes
- used internally but can be used externally as well
-
- BE CAREFUL : if an attribute is set here, it MUST be DECLARED and USED inside our plane vertex shader
+ Init our plane model view and projection matrices and set their uniform locations
  ***/
-Curtains.Plane.prototype._setAttributes = function() {
-    // set default attributes
-    var attributes = {
-        vertexPosition: "aVertexPosition",
-        textureCoord: "aTextureCoord",
-    };
-
-    if(!this._attributes) this._attributes = {};
-
-    var self = this;
-    Object.keys(attributes).map(function(objectKey, index) {
-        var value = attributes[objectKey];
-        self._attributes[objectKey] = {
-            name: value,
-            location: self._wrapper.glContext.getAttribLocation(self._program, value),
-        };
-    });
-};
-
-
-
-/*** UNIFORMS ***/
-
-/***
- This is a little helper to set uniforms based on their types
-
- params :
- @uniformType (string): the uniform type
- @uniformLocation (WebGLUniformLocation obj): location of the current program uniform
- @uniformValue (float/integer or array of float/integer): value to set
- ***/
-Curtains.Plane.prototype._handleUniformSetting = function(uniformType, uniformLocation, uniformValue) {
+Curtains.Plane.prototype._initMatrices = function() {
     var glContext = this._wrapper.glContext;
 
-    switch(uniformType) {
-        case "1i":
-            glContext.uniform1i(uniformLocation, uniformValue);
-            break;
-        case "1iv":
-            glContext.uniform1iv(uniformLocation, uniformValue);
-            break;
-        case "1f":
-            glContext.uniform1f(uniformLocation, uniformValue);
-            break;
-        case "1fv":
-            glContext.uniform1fv(uniformLocation, uniformValue);
-            break;
-
-        case "2i":
-            glContext.uniform2i(uniformLocation, uniformValue[0], uniformValue[1]);
-            break;
-        case "2iv":
-            glContext.uniform2iv(uniformLocation, uniformValue);
-            break;
-        case "2f":
-            glContext.uniform2f(uniformLocation, uniformValue[0], uniformValue[1]);
-            break;
-        case "2fv":
-            glContext.uniform2fv(uniformLocation, uniformValue);
-            break;
-
-        case "3i":
-            glContext.uniform3i(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2]);
-            break;
-        case "3iv":
-            glContext.uniform3iv(uniformLocation, uniformValue);
-            break;
-        case "3f":
-            glContext.uniform3f(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2]);
-            break;
-        case "3fv":
-            glContext.uniform3fv(uniformLocation, uniformValue);
-            break;
-
-        case "4i":
-            glContext.uniform4i(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2], uniformValue[3]);
-            break;
-        case "4iv":
-            glContext.uniform4iv(uniformLocation, uniformValue);
-            break;
-        case "4f":
-            glContext.uniform4f(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2], uniformValue[3]);
-            break;
-        case "4fv":
-            glContext.uniform4fv(uniformLocation, uniformValue);
-            break;
-
-        case "mat2":
-            glContext.uniformMatrix2fv(uniformLocation, false, uniformValue);
-            break;
-        case "mat3":
-            glContext.uniformMatrix3fv(uniformLocation, false, uniformValue);
-            break;
-        case "mat4":
-            glContext.uniformMatrix4fv(uniformLocation, false, uniformValue);
-            break;
-
-        default:
-            if(!this._wrapper.productionMode) console.warn("This uniform type is not handled : ", uniformType);
-    }
+    // projection and model view matrix
+    // create our modelview and projection matrix
+    this._matrices = {
+        mvMatrix: {
+            name: "uMVMatrix",
+            matrix: new Float32Array([
+                1.0, 0.0, 0.0, 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0
+            ]),
+            location: glContext.getUniformLocation(this._program, "uMVMatrix"),
+        },
+        pMatrix: {
+            name: "uPMatrix",
+            matrix: new Float32Array([
+                0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0
+            ]), // will be set after
+            location: glContext.getUniformLocation(this._program, "uPMatrix"),
+        }
+    };
 };
 
 
 /***
- This set our shaders uniforms
-
- params :
- @uniforms (obj): uniforms to apply
+ Set our plane dimensions and positions relative to clip spaces
  ***/
-Curtains.Plane.prototype._setUniforms = function(uniforms) {
+Curtains.Plane.prototype._setComputedSizes = function() {
     var wrapper = this._wrapper;
-    // ensure we are using the right program
-    wrapper.glContext.useProgram(this._program);
 
-    var self = this;
-    // set our uniforms if we got some
-    if(uniforms) {
-        Object.keys(uniforms).map(function(objectKey, index) {
-            var uniform = uniforms[objectKey];
+    // dimensions and positions of our plane in the document and clip spaces
+    // don't forget translations in webgl space are referring to the center of our plane and canvas
+    var planeCenter = {
+        x: (this._boundingRect.document.width / 2) + this._boundingRect.document.left,
+        y: (this._boundingRect.document.height / 2) + this._boundingRect.document.top,
+    };
 
-            // set our uniform location
-            self.uniforms[objectKey].location = wrapper.glContext.getUniformLocation(self._program, uniform.name);
+    var wrapperCenter = {
+        x: (wrapper._boundingRect.width / 2) + wrapper._boundingRect.left,
+        y: (wrapper._boundingRect.height / 2) + wrapper._boundingRect.top,
+    };
 
-            if(!uniform.type) {
-                if(Array.isArray(uniform.value)) {
-                    if(uniform.value.length === 4) {
-                        uniform.type = "4f";
-
-                        if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a 4f (array of 4 floats) uniform type");
-                    }
-                    else if(uniform.value.length === 3) {
-                        uniform.type = "3f";
-
-                        if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a 3f (array of 3 floats) uniform type");
-                    }
-                    else if(uniform.value.length === 2) {
-                        uniform.type = "2f";
-
-                        if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a 2f (array of 2 floats) uniform type");
-                    }
-                }
-                else if(uniform.value.constructor === Float32Array) {
-                    if(uniform.value.length === 16) {
-                        uniform.type = "mat4";
-
-                        if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a mat4 (4x4 matrix array) uniform type");
-                    }
-                    else if(uniform.value.length === 9) {
-                        uniform.type = "mat3";
-
-                        if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a mat3 (3x3 matrix array) uniform type");
-                    }
-                    else  if(uniform.value.length === 4) {
-                        uniform.type = "mat2";
-
-                        if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a mat2 (2x2 matrix array) uniform type");
-                    }
-                }
-                else {
-                    uniform.type = "1f";
-
-                    if(!wrapper.productionMode) console.warn("No uniform type declared for " + uniform.name + ", applied a 1f (float) uniform type");
-                }
-            }
-
-            // set the uniforms
-            self._handleUniformSetting(uniform.type, self.uniforms[objectKey].location, uniform.value);
-        });
-    }
-};
-
-
-/***
- This updates all uniforms of a plane that were set by the user
- It is called at each draw call
- ***/
-Curtains.Plane.prototype._updateUniforms = function() {
-    if(this.uniforms) {
-        var self = this;
-        Object.keys(self.uniforms).map(function(objectKey) {
-
-            var uniform = self.uniforms[objectKey];
-
-            var location = uniform.location;
-            var value = uniform.value;
-            var type = uniform.type;
-
-            // update our uniforms
-            self._handleUniformSetting(type, location, value);
-        });
-    }
+    // our plane clip space informations
+    this._boundingRect.computed = {
+        width: this._boundingRect.document.width / wrapper._boundingRect.width,
+        height: this._boundingRect.document.height / wrapper._boundingRect.height,
+        top: (wrapperCenter.y - planeCenter.y) / wrapper._boundingRect.height,
+        left: (planeCenter.x - wrapperCenter.x) / wrapper._boundingRect.height,
+    };
 };
 
 
 
-/*** PLANES SIZES, SCALES AND ROTATIONS ***/
-
-
-/***
- Simple matrix multiplication helper
-
- params :
- @a (array): first matrix
- @b (array): second matrix
-
- returns :
- @out: matrix after multiplication
- ***/
-Curtains.Plane.prototype._multiplyMatrix = function(a, b) {
-    var out = [];
-
-    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
-    var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
-    var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
-    var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
-
-    // Cache only the current line of the second matrix
-    var b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
-    out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-    out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-    out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-    out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-
-    b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
-    out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-    out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-    out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-    out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-
-    b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
-    out[8] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-    out[9] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-    out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-    out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-
-    b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
-    out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-    out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-    out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-    out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-
-    return out;
-};
-
-
-/***
- Simple matrix scaling helper
-
- params :
- @matrix (array): initial matrix
- @scaleX (float): scale along X axis
- @scaleY (float): scale along Y axis
- @scaleZ (float): scale along Z axis
-
- returns :
- @scaledMatrix: matrix after scaling
- ***/
-Curtains.Plane.prototype._scaleMatrix = function(matrix, scaleX, scaleY, scaleZ) {
-    var scaledMatrix = new Float32Array(16);
-
-    scaledMatrix[0] = scaleX * matrix[0 * 4 + 0];
-    scaledMatrix[1] = scaleX * matrix[0 * 4 + 1];
-    scaledMatrix[2] = scaleX * matrix[0 * 4 + 2];
-    scaledMatrix[3] = scaleX * matrix[0 * 4 + 3];
-    scaledMatrix[4] = scaleY * matrix[1 * 4 + 0];
-    scaledMatrix[5] = scaleY * matrix[1 * 4 + 1];
-    scaledMatrix[6] = scaleY * matrix[1 * 4 + 2];
-    scaledMatrix[7] = scaleY * matrix[1 * 4 + 3];
-    scaledMatrix[8] = scaleZ * matrix[2 * 4 + 0];
-    scaledMatrix[9] = scaleZ * matrix[2 * 4 + 1];
-    scaledMatrix[10] = scaleZ * matrix[2 * 4 + 2];
-    scaledMatrix[11] = scaleZ * matrix[2 * 4 + 3];
-
-    if (matrix !== scaledMatrix) {
-        scaledMatrix[12] = matrix[12];
-        scaledMatrix[13] = matrix[13];
-        scaledMatrix[14] = matrix[14];
-        scaledMatrix[15] = matrix[15];
-    }
-
-    return scaledMatrix;
-};
-
+/*** PLANES SCALES AND ROTATIONS ***/
 
 /***
  This will set our perspective matrix
@@ -1609,11 +2420,11 @@ Curtains.Plane.prototype._setMVMatrix = function() {
     // first multiply identity matrix with translation
     // second, rotate around X, Y then Z
     // third multiply by scale
-    var nextMVMatrix = this._multiplyMatrix(identity, planeTranslation);
-    nextMVMatrix = this._multiplyMatrix(nextMVMatrix, xRotation);
-    nextMVMatrix = this._multiplyMatrix(nextMVMatrix, yRotation);
-    nextMVMatrix = this._multiplyMatrix(nextMVMatrix, zRotation);
-    nextMVMatrix = this._multiplyMatrix(nextMVMatrix, scale);
+    var nextMVMatrix = wrapper._multiplyMatrix(identity, planeTranslation);
+    nextMVMatrix = wrapper._multiplyMatrix(nextMVMatrix, xRotation);
+    nextMVMatrix = wrapper._multiplyMatrix(nextMVMatrix, yRotation);
+    nextMVMatrix = wrapper._multiplyMatrix(nextMVMatrix, zRotation);
+    nextMVMatrix = wrapper._multiplyMatrix(nextMVMatrix, scale);
 
     if(this._matrices) {
         this._matrices.mvMatrix.matrix = nextMVMatrix;
@@ -1750,42 +2561,6 @@ Curtains.Plane.prototype._documentToPlaneSpace = function(xPosition, yPosition) 
 
 
 /***
- This function takes the mouse position relative to the document and returns it relative to our plane
- It ranges from -1 to 1 on both axis
-
- params :
- @xPosition (float): position to convert on X axis
- @yPosition (float): position to convert on Y axis
-
- returns :
- @mousePosition: the mouse position relative to our plane in WebGL space coordinates
- ***/
-Curtains.Plane.prototype.mouseToPlaneCoords = function(xMousePosition, yMousePosition) {
-    // we need to adjust our plane document bounding rect to it's webgl scale
-    var scaleAdjustment = {
-        x: (this._boundingRect.document.width - this._boundingRect.document.width * this.scale.x) / 2,
-        y: (this._boundingRect.document.height - this._boundingRect.document.height * this.scale.y) / 2,
-    };
-
-    // also we need to divide by pixel ratio
-    var planeBoundingRect = {
-        width: (this._boundingRect.document.width * this.scale.x) / this._wrapper.pixelRatio,
-        height: (this._boundingRect.document.height * this.scale.y) / this._wrapper.pixelRatio,
-        top: (this._boundingRect.document.top + scaleAdjustment.y) / this._wrapper.pixelRatio,
-        left: (this._boundingRect.document.left + scaleAdjustment.x) / this._wrapper.pixelRatio,
-    };
-
-    // mouse position conversion from document to plane space
-    var mousePosition = {
-        x: (((xMousePosition - planeBoundingRect.left) / planeBoundingRect.width) * 2) - 1,
-        y: 1 - (((yMousePosition - planeBoundingRect.top) / planeBoundingRect.height) * 2)
-    };
-
-    return mousePosition;
-};
-
-
-/***
  This function checks if the plane is currently visible in the canvas and sets _shouldDraw property according to this test
  This checks DOM positions for now but we might want to improve it to use real frustum calculations
  ***/
@@ -1893,412 +2668,7 @@ Curtains.Plane.prototype.moveToFront = function() {
 };
 
 
-
-/*** PLANE SIZES AND TEXTURES HANDLING ***/
-
-
-/***
- Handles each plane resizing
- used internally when our container is resized
- ***/
-Curtains.Plane.prototype.planeResize = function() {
-    // reset perspective
-    this.setPerspective(this._fov, 0.1, this._fov * 2);
-
-    // reset plane dimensions
-    this._setDocumentSizes();
-    this._setComputedSizes();
-
-    // apply new position
-    this._applyCSSPositions();
-
-    // resize all textures
-    for(var i = 0; i < this.textures.length; i++) {
-        this.textures[i]._adjustTextureSize();
-    }
-};
-
-
-
-
-/*** IMAGES, VIDEOS AND CANVASES LOADING ***/
-
-/***
- This method creates a new Texture associated to the plane
-
- params :
- @type (string) : texture type, either image, video or canvas
-
- returns :
- @t: our newly created texture
- ***/
-Curtains.Plane.prototype.createTexture = function(sampler) {
-    var t = new Curtains.Texture(this, {
-        index: this.textures.length,
-        sampler: sampler,
-    });
-
-    return t;
-};
-
-
-/***
- This method handles the sources loading process
-
- params :
- @sourcesArray (array) : array of html images, videos or canvases elements
- ***/
-Curtains.Plane.prototype.loadSources = function(sourcesArray) {
-    for(var i = 0; i < sourcesArray.length; i++) {
-        this.loadSource(sourcesArray[i]);
-    }
-};
-
-
-/***
- This method loads one source
- It checks what type of source it is then use the right loader
-
- params :
- @source (html element) : html image, video or canvas element
- ***/
-Curtains.Plane.prototype.loadSource = function(source) {
-    if(source.tagName.toUpperCase() === "IMG") {
-        this.loadImage(source);
-    }
-    else if(source.tagName.toUpperCase() === "VIDEO") {
-        this.loadVideo(source);
-    }
-    else if(source.tagName.toUpperCase() === "CANVAS") {
-        this.loadCanvas(source);
-    }
-    else if(!this._wrapper.productionMode) {
-        console.warn("this HTML tag could not be converted into a texture:", source.tagName);
-    }
-};
-
-
-/***
- This method loads an image
- Creates a new texture object right away and once the image is loaded it uses it as our WebGL texture
-
- params :
- @source (image) : html image element
- ***/
-Curtains.Plane.prototype.loadImage = function(source) {
-    var image = source;
-
-    image.crossOrigin = this.crossOrigin || "anonymous";
-    image.sampler = source.getAttribute("data-sampler") || null;
-
-    // create a new texture that will use our image later
-    var texture = this.createTexture(image.sampler);
-
-    // handle our loaded data event inside the texture and tell our plane when the video is ready to play
-    texture._onSourceLoadedHandler = texture._onSourceLoaded.bind(texture, image);
-    image.addEventListener('load', texture._onSourceLoadedHandler, false);
-
-    // If the image is in the cache of the browser,
-    // the 'load' event might have been triggered
-    // before we registered the event handler.
-    if(image.complete) {
-        texture._onSourceLoaded(image);
-    }
-
-    // add the image to our array
-    this.images.push(image);
-};
-
-
-/***
- This method loads a video
- Creates a new texture object right away and once the video has enough data it uses it as our WebGL texture
-
- params :
- @source (video) : html video element
- ***/
-Curtains.Plane.prototype.loadVideo = function(source) {
-    var video = source;
-
-    video.preload = true;
-    video.muted = true;
-    video.loop = true;
-
-    video.sampler = source.getAttribute("data-sampler") || null;
-
-    video.crossOrigin = this.crossOrigin || "anonymous";
-
-    // create a new texture that will use our video later
-    var texture = this.createTexture(video.sampler);
-
-    // handle our loaded data event inside the texture and tell our plane when the video is ready to play
-    texture._onSourceLoadedHandler = texture._onVideoLoadedData.bind(texture, video);
-    video.addEventListener('canplaythrough', texture._onSourceLoadedHandler, false);
-
-    // If the video is in the cache of the browser,
-    // the 'canplaythrough' event might have been triggered
-    // before we registered the event handler.
-    if(video.readyState >= video.HAVE_FUTURE_DATA) {
-        texture._onSourceLoaded(video);
-    }
-
-    // start loading our video
-    video.load();
-
-    this.videos.push(video);
-};
-
-
-/***
- This method loads a canvas
- Creates a new texture object right away and uses the canvas as our WebGL texture
-
- params :
- @source (canvas) : html canvas element
- ***/
-Curtains.Plane.prototype.loadCanvas = function(source) {
-    var canvas = source;
-    canvas.sampler = source.getAttribute("data-sampler") || null;
-
-    var texture = this.createTexture(canvas.sampler);
-
-    this.canvases.push(canvas);
-
-    texture._onSourceLoaded(canvas);
-};
-
-
-/*** DEPRECATED LOADERS ***/
-
-/***
- Loads an array of images
-
- params :
- @imagesArray (array) : array of html image elements
-
- returns :
- @this: our plane to handle chaining
- ***/
-Curtains.Plane.prototype.loadImages = function(imagesArray) {
-    for(var i = 0; i < imagesArray.length; i++) {
-        this.loadImage(imagesArray[i]);
-    }
-};
-
-/***
- Loads an array of videos
-
- params :
- @videosArray (array) : array of html video elements
-
- returns :
- @this: our plane to handle chaining
- ***/
-Curtains.Plane.prototype.loadVideos = function(videosArray) {
-    for(var i = 0; i < videosArray.length; i++) {
-        this.loadVideo(videosArray[i]);
-    }
-};
-
-/***
- Loads an array of canvases
-
- params :
- @canvasesArray (array) : array of html canvas elements
-
- returns :
- @this: our plane to handle chaining
- ***/
-Curtains.Plane.prototype.loadCanvases = function(canvasesArray) {
-    for(var i = 0; i < canvasesArray.length; i++) {
-        this.loadCanvas(canvasesArray[i]);
-    }
-};
-
-
-
-/***
- This has to be called in order to play the planes videos
- We need this because on mobile devices we can't start playing a video without a user action
- Once the video has started playing we set an interval and update a new frame to our our texture at a 30FPS rate
- ***/
-Curtains.Plane.prototype.playVideos = function() {
-    for(var i = 0; i < this.textures.length; i++) {
-        var texture = this.textures[i];
-
-        if(texture.type === "video") {
-            var playPromise = texture.source.play();
-
-            // In browsers that don’t yet support this functionality,
-            // playPromise won’t be defined.
-            var self = this;
-            if (playPromise !== undefined) {
-                playPromise.catch(function(error) {
-                    if(!self._wrapper.productionMode) console.warn("Could not play the video : ", error);
-                });
-            }
-        }
-    }
-};
-
-
-/***
- Used inside our draw call to set the correct plane buffers before drawing it
- ***/
-Curtains.Plane.prototype._bindPlaneBuffers = function() {
-    var glContext = this._wrapper.glContext;
-
-    // Set the vertices buffer
-    glContext.bindBuffer(glContext.ARRAY_BUFFER, this._geometry.bufferInfos.id);
-
-    glContext.vertexAttribPointer(this._attributes.vertexPosition.location, this._geometry.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
-    glContext.enableVertexAttribArray(this._attributes.vertexPosition.location);
-
-    // Set where the texture coord attribute gets its data,
-    glContext.bindBuffer(glContext.ARRAY_BUFFER, this._material.bufferInfos.id);
-
-    glContext.vertexAttribPointer(this._attributes.textureCoord.location, this._material.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
-    glContext.enableVertexAttribArray(this._attributes.textureCoord.location);
-};
-
-
-/***
- This is used to set the WebGL context active texture and bind it
-
- params :
- @texture (texture object) : Our texture object containing our WebGL texture and its index
- ***/
-Curtains.Plane.prototype._bindPlaneTexture = function(texture) {
-    var glContext = this._wrapper.glContext;
-    // tell WebGL we want to affect the texture at the plane's index unit
-    glContext.activeTexture(glContext.TEXTURE0 + texture.index);
-    // bind the texture to the plane's index unit
-    glContext.bindTexture(glContext.TEXTURE_2D, texture._sampler.texture);
-};
-
-
-/*** DRAW THE PLANE ***/
-
-/***
- We draw the plane, ie bind the buffers, set the active textures and draw it
- ***/
-Curtains.Plane.prototype._drawPlane = function() {
-    var glContext = this._wrapper.glContext;
-
-    // check if our plane is ready to draw
-    if(this._canDraw) {
-        // ensure we're using the right program
-        glContext.useProgram(this._program);
-
-        // even if our plane should not be drawn we still execute its onRender callback and update its uniforms
-
-        // execute our plane onRender callback
-        if(this._onRenderCallback) {
-            this._onRenderCallback();
-        }
-
-        // update all uniforms set up by the user
-        this._updateUniforms();
-
-        // now check if we really need to draw it and its textures
-        if(this._shouldDraw) {
-            // draw all our plane textures
-            for(var i = 0; i < this.textures.length; i++) {
-                // draw (bind and maybe update) our texture
-                this.textures[i]._drawTexture();
-            }
-
-            // bind plane attributes buffers
-            this._bindPlaneBuffers();
-
-            // the draw call!
-            glContext.drawArrays(glContext.TRIANGLES, 0, this._geometry.bufferInfos.numberOfItems);
-        }
-    }
-};
-
-
-/***
- This deletes all our plane webgl bindings and its textures
- ***/
-Curtains.Plane.prototype._dispose = function() {
-    var glContext = this._wrapper.glContext;
-
-    // unbind and delete the textures
-    for(var i = 0; i < this.textures.length; i++) {
-        this.textures[i]._dispose();
-    }
-    this.textures = null;
-
-    if(glContext) {
-        // delete buffers
-        // each time we check for existing properties to avoid errors
-        if(this._geometry) {
-            glContext.bindBuffer(glContext.ARRAY_BUFFER, this._geometry.bufferInfos.id);
-            glContext.bufferData(glContext.ARRAY_BUFFER, 1, glContext.STATIC_DRAW);
-            glContext.deleteBuffer(this._geometry.bufferInfos.id);
-            this._geometry = null;
-        }
-
-        if(this._material) {
-            glContext.bindBuffer(glContext.ARRAY_BUFFER, this._material.bufferInfos.id);
-            glContext.bufferData(glContext.ARRAY_BUFFER, 1, glContext.STATIC_DRAW);
-            glContext.deleteBuffer(this._material.bufferInfos.id);
-            this._material = null;
-        }
-
-        // delete the shaders
-        if(this._shaders) {
-            glContext.deleteShader(this._shaders.fragmentShader);
-            glContext.deleteShader(this._shaders.vertexShader);
-            this._shaders = null;
-        }
-
-        // and delete the program at last
-        if(this._program) {
-            glContext.deleteProgram(this._program);
-            this._program = null;
-        }
-    }
-};
-
-
 /*** PLANE EVENTS ***/
-
-/***
- This is called each time a plane's image has been loaded. Useful to handle a loader
-
- params :
- @callback (function) : a function to execute
-
- returns :
- @this: our plane to handle chaining
- ***/
-Curtains.Plane.prototype.onLoading = function(callback) {
-    if(callback) {
-        this._onPlaneLoadingCallback = callback;
-    }
-
-    return this;
-};
-
-
-/***
- This is called when a plane is ready to be drawn
-
- params :
- @callback (function) : a function to execute
-
- returns :
- @this: our plane to handle chaining
- ***/
-Curtains.Plane.prototype.onReady = function(callback) {
-    if(callback) {
-        this._onReadyCallback = callback;
-    }
-
-    return this;
-};
 
 
 /***
@@ -2337,21 +2707,151 @@ Curtains.Plane.prototype.onLeaveView = function(callback) {
 };
 
 
+
+
+/*** SHADERPASS CLASS ***/
+
 /***
- This is called at each requestAnimationFrame call
+ Here we create our ShaderPass object (note that we are using the Curtains namespace to avoid polluting the global scope)
+ It will inherits from ou BasePlane class that handles all the WebGL part
+ ShaderPass class will handle the frame buffer
 
  params :
- @callback (function) : a function to execute
+ @curtainWrapper : our curtain object that (we will use its container property and its size)
+ @params (obj) : see addShaderPass method of the wrapper
 
  returns :
- @this: our plane to handle chaining
+ @this: our ShaderPass element
  ***/
-Curtains.Plane.prototype.onRender = function(callback) {
-    if(callback) {
-        this._onRenderCallback = callback;
+Curtains.ShaderPass = function(curtainWrapper, params) {
+    if(!params) params = {};
+
+    // force plane defintion to 1x1
+    params.widthSegments = 1;
+    params.heightSegments = 1;
+
+    // inherit
+    Curtains.BasePlane.call(this, curtainWrapper, curtainWrapper.container, params);
+
+    this.index = this._wrapper.shaderPasses.length;
+    this._type = "ShaderPass";
+
+    // if the program is valid, go on
+    if(this._isProgramValid) {
+        this._initShaderPassPlane();
+    }
+};
+Curtains.ShaderPass.prototype = Object.create(Curtains.BasePlane.prototype);
+Curtains.ShaderPass.prototype.constructor = Curtains.ShaderPass;
+
+
+/***
+ Here we init additionnal shader pass planes properties
+ This mainly consists in creating our render texture and add a frame buffer object
+
+ params:
+ @plane (html element): html div that contains one or more image.
+ @params (obj): see createTexture method of the Plane
+
+ returns:
+ @this: our newly created texture object
+ ***/
+Curtains.ShaderPass.prototype._initShaderPassPlane = function() {
+    // create our render texture
+    this.createTexture("uRenderTexture", true);
+
+    // create our frame buffer
+    this._createFrameBuffer();
+
+    // on ready callback
+    var self = this;
+    setTimeout(function() {
+        if(self._onReadyCallback) {
+            self._onReadyCallback();
+        }
+    }, 0);
+
+    this._canDraw = true;
+};
+
+
+/***
+ Here we override the parent _setDefaultVS method
+ because shader passes vs don't have projection and model view matrices
+ ***/
+Curtains.ShaderPass.prototype._setDefaultVS = function(params) {
+    return "#ifdef GL_ES\nprecision mediump float;\n#endif\nattribute vec3 aVertexPosition;attribute vec2 aTextureCoord;varying vec3 vVertexPosition;varying vec2 vTextureCoord;void main() {vTextureCoord = aTextureCoord;vVertexPosition = aVertexPosition;gl_Position = vec4(aVertexPosition, 1.0);}";
+};
+
+
+/***
+ Here we override the parent _setDefaultFS method
+ taht way we can still draw our render texture
+ ***/
+Curtains.ShaderPass.prototype._setDefaultFS = function(params) {
+    return "#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec3 vVertexPosition;varying vec2 vTextureCoord;uniform sampler2D uRenderTexture;void main( void ) {gl_FragColor = texture2D(uRenderTexture, vTextureCoord);}";
+};
+
+
+/***
+ Enables our frame buffer
+ Called at each tick to add a shader pass
+ Note that we need to clear the scene after is has been enabled
+ ***/
+Curtains.ShaderPass.prototype._enableFrameBuffer = function() {
+    var glContext = this._wrapper.glContext;
+
+    // render to our target texture by binding the framebuffer
+    if(this._frameBuffer) {
+        glContext.bindFramebuffer(glContext.FRAMEBUFFER, this._frameBuffer);
+
+        // clear the color and depth buffer,
+        glContext.clearColor(0.0, 0.0, 0.0, 0.0);
+        glContext.clearDepth(1.0);
+        glContext.clear(glContext.COLOR_BUFFER_BIT | glContext.DEPTH_BUFFER_BIT);
     }
 
-    return this;
+    glContext.viewport(0, 0, glContext.drawingBufferWidth, glContext.drawingBufferHeight);
+};
+
+
+/***
+ Enables our frame buffer
+ Called at each tick to add a shader pass
+ Note that we need to clear the scene after is has been enabled
+ ***/
+Curtains.ShaderPass.prototype._bindDepthBuffer = function() {
+    var glContext = this._wrapper.glContext;
+
+    // render to our target texture by binding the framebuffer
+    if(this._depthBuffer) {
+        glContext.bindRenderbuffer(glContext.RENDERBUFFER, this._depthBuffer);
+
+        // allocate renderbuffer
+        glContext.renderbufferStorage(glContext.RENDERBUFFER, glContext.DEPTH_COMPONENT16, this._boundingRect.document.width, this._boundingRect.document.height);
+
+        // attach renderbuffer
+        glContext.framebufferRenderbuffer(glContext.FRAMEBUFFER, glContext.DEPTH_ATTACHMENT, glContext.RENDERBUFFER, this._depthBuffer);
+    }
+};
+
+
+/***
+ Here we create our frame buffer object
+ We're also adding a render buffer object to handle depth inside our shader pass
+ ***/
+Curtains.ShaderPass.prototype._createFrameBuffer = function() {
+    var glContext = this._wrapper.glContext;
+
+    this._frameBuffer = glContext.createFramebuffer();
+    glContext.bindFramebuffer(glContext.FRAMEBUFFER, this._frameBuffer);
+
+    // attach the texture as the first color attachment
+    glContext.framebufferTexture2D(glContext.FRAMEBUFFER, glContext.COLOR_ATTACHMENT0, glContext.TEXTURE_2D, this.textures[0]._sampler.texture, 0);
+
+    // create a depth renderbuffer
+    this._depthBuffer = glContext.createRenderbuffer();
+    this._bindDepthBuffer();
 };
 
 
@@ -2361,17 +2861,27 @@ Curtains.Plane.prototype.onRender = function(callback) {
 /***
  Here we create our Texture object (note that we are using the Curtains namespace to avoid polluting the global scope)
 
- params :
- @plane (html element) : html div that contains one or more image.
- @params (obj) : see createTexture method of the Plane
+ params:
+ @plane (html element): html div that contains one or more image.
+ @params (obj): see createTexture method of the Plane
 
- returns :
+ returns:
  @this: our newly created texture object
  ***/
 Curtains.Texture = function(plane, params) {
     // set up base properties
     this._plane = plane;
     this._wrapper = plane._wrapper;
+
+    if(!plane._isProgramValid && !params.isTexturePass) {
+        if(!this._wrapper.productionMode) {
+            console.warn("Unable to create the texture because the program is not valid");
+        }
+
+        return;
+    }
+
+    this.index = plane.textures.length;
 
     // prepare texture sampler
     this._sampler = {
@@ -2389,9 +2899,12 @@ Curtains.Texture = function(plane, params) {
     };
 
     // init texture
-    this._init();
-
-    plane.textures.push(this);
+    if(params.isTexturePass) {
+        this._initShaderPassTexture();
+    }
+    else {
+        this._init();
+    }
 
     return this;
 };
@@ -2416,8 +2929,6 @@ Curtains.Texture.prototype._init = function() {
     // draw a black plane before the real texture's content has been loaded
     glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, 1, 1, 0, glContext.RGBA, glContext.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
 
-    this.index = plane.textures.length;
-
     // our texture source hasn't been loaded yet
     this._sourceLoaded = false;
 
@@ -2438,6 +2949,46 @@ Curtains.Texture.prototype._init = function() {
         matrix: null,
         location: glContext.getUniformLocation(this._plane._program, textureMatrix)
     };
+
+    this._sampler.name = samplerUniformLocation;
+};
+
+
+/***
+ Init our render texture object (it is a texture representing our scene before our shader pass)
+ ***/
+Curtains.Texture.prototype._initShaderPassTexture = function() {
+    var glContext = this._wrapper.glContext;
+
+    // set a special type
+    this.type = "texturePass";
+
+    // set its size to our parent plane, in this case our canvas
+    this._size = {
+        width: this._plane._boundingRect.document.width,
+        height: this._plane._boundingRect.document.height,
+    };
+
+    // create a textue
+    this._sampler.texture = glContext.createTexture();
+
+    // bind the texture
+    glContext.bindTexture(glContext.TEXTURE_2D, this._sampler.texture);
+
+    // set its location based on our sampler name
+    glContext.useProgram(this._plane._program);
+    this._sampler.location = glContext.getUniformLocation(this._plane._program, this._sampler.name);
+
+    // tell the shader we bound the texture to our last texture unit
+    glContext.uniform1i(this._sampler.location, this.index);
+
+    // define its size
+    glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, this._size.width, this._size.height, 0, glContext.RGBA, glContext.UNSIGNED_BYTE, null);
+
+    // set the filtering so we don't need mips
+    glContext.texParameteri(glContext.TEXTURE_2D, glContext.TEXTURE_MIN_FILTER, glContext.LINEAR);
+    glContext.texParameteri(glContext.TEXTURE_2D, glContext.TEXTURE_WRAP_S, glContext.CLAMP_TO_EDGE);
+    glContext.texParameteri(glContext.TEXTURE_2D, glContext.TEXTURE_WRAP_T, glContext.CLAMP_TO_EDGE);
 };
 
 
@@ -2446,10 +2997,19 @@ Curtains.Texture.prototype._init = function() {
 /***
  This use our source as texture
 
- params :
- @source (images/video/canvas) : either an image, a video or a canvas
+ params:
+ @source (images/video/canvas): either an image, a video or a canvas
  ***/
 Curtains.Texture.prototype.setSource = function(source) {
+    // if our program hasn't been validated we can't set a texture source
+    if(!this._plane._isProgramValid) {
+        if(!this._wrapper.productionMode) {
+            console.warn("Unable to set the texture source because the program is not valid");
+        }
+
+        return;
+    }
+
     this.source = source;
 
     if(source.tagName.toUpperCase() === "IMG") {
@@ -2472,8 +3032,8 @@ Curtains.Texture.prototype.setSource = function(source) {
     }
 
     this._size = {
-        width: this.source.width || this.source.videoWidth,
-        height: this.source.height || this.source.videoHeight,
+        width: this.source.naturalWidth || this.source.width || this.source.videoWidth,
+        height: this.source.naturalHeight || this.source.height || this.source.videoHeight,
     };
 
     var glContext = this._wrapper.glContext;
@@ -2514,12 +3074,15 @@ Curtains.Texture.prototype._update = function() {
 /***
  This is used to calculate how to crop/center an texture
 
- returns :
- @sizes: an object containing plane sizes, source sizes and x and y offset to center the source in the plane
+ returns:
+ @sizes (obj): an object containing plane sizes, source sizes and x and y offset to center the source in the plane
  ***/
 Curtains.Texture.prototype._getSizes = function() {
-    var planeWidth  = this._plane._boundingRect.document.width * this._plane.scale.x;
-    var planeHeight = this._plane._boundingRect.document.height * this._plane.scale.y;
+    // remember our ShaderPass objects don't have a scale property
+    var scale = this._plane.scale ? this._plane.scale : {x: 1, y: 1};
+
+    var planeWidth  = this._plane._boundingRect.document.width * scale.x;
+    var planeHeight = this._plane._boundingRect.document.height * scale.y;
 
     var sourceWidth = this._size.width;
     var sourceHeight = this._size.height;
@@ -2554,7 +3117,7 @@ Curtains.Texture.prototype._getSizes = function() {
 /***
  Set the texture scale and then update its matrix
 
- params :
+ params:
  @scaleX (float): scale to apply on X axis
  @scaleY (float): scale to apply on Y axis
  ***/
@@ -2579,8 +3142,18 @@ Curtains.Texture.prototype.setScale = function(scaleX, scaleY) {
  else if it is an image we draw it inside a canvas and use that canvas as our texture
  ***/
 Curtains.Texture.prototype._adjustTextureSize = function() {
-    // no point in resizing texture if it does not have a source yet
-    if(this.source) {
+    if(this.type === "texturePass") {
+        var glContext = this._wrapper.glContext;
+
+        this._size.width = this._plane._boundingRect.document.width;
+        this._size.height = this._plane._boundingRect.document.height;
+
+        glContext.bindTexture(glContext.TEXTURE_2D, this._sampler.texture);
+
+        glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, this._size.width, this._size.height, 0, glContext.RGBA, glContext.UNSIGNED_BYTE, null);
+    }
+    else if(this.source) {
+        // no point in resizing texture if it does not have a source yet
         var sizes = this._getSizes();
 
         // always update texture matrix anyway
@@ -2591,8 +3164,8 @@ Curtains.Texture.prototype._adjustTextureSize = function() {
 /***
  This updates our textures matrix uniform based on plane and sources sizes
 
- params :
- @sizes (object) : object containing plane sizes, source sizes and x and y offset to center the source in the plane
+ params:
+ @sizes (object): object containing plane sizes, source sizes and x and y offset to center the source in the plane
  ***/
 Curtains.Texture.prototype._updateTextureMatrix = function(sizes) {
     // calculate scale to apply to the matrix
@@ -2614,7 +3187,7 @@ Curtains.Texture.prototype._updateTextureMatrix = function(sizes) {
     ]);
 
     // scale texture
-    this._textureMatrix.matrix = this._plane._scaleMatrix(
+    this._textureMatrix.matrix = this._wrapper._scaleMatrix(
         textureTranslation,
         texScale.x,
         texScale.y,

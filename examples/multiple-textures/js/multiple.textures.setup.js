@@ -1,4 +1,4 @@
-window.onload = function() {
+window.addEventListener("DOMContentLoaded", function() {
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
 
@@ -124,4 +124,4 @@ window.onload = function() {
             multiTexturesPlane.uniforms.transitionTimer.value = slideshowState.transitionTimer;
         });
     }
-}
+});

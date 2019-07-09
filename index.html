@@ -37,6 +37,7 @@
 
 		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="style.css" type="text/css">
 	</head>
 	<body>
@@ -86,25 +87,30 @@
 								Shaders are the next front-end web developpment big thing, with the ability to create very powerful 3D interactions and animations. A lot of very good javascript libraries already handle WebGL but with most of them it's kind of a headache to position your meshes relative to the DOM elements of your web page.
 							</p>
 							<p>
-								curtains.js was created with just that issue in mind. It is a small vanilla WebGL javascript library that converts HTML elements containing images, videos and canvases into 3D WebGL textured planes, allowing you to animate them via shaders.<br />
+								curtains.js was created with just that issue in mind. It is a small vanilla WebGL javascript library that converts HTML elements containing images, videos and canvases into 3D WebGL textured planes, allowing you to animate them via shaders.
+                            </p>
+                            <p>
 								You can define each plane size and position via CSS, which makes it super easy to add WebGL responsive planes all over your pages.
+                            </p>
+                            <p>
+                                You can also add post processing effects to your scene to spice up the whole thing.
 							</p>
 							<p>
-								V2.0 introduces major improvements on performance and capabilities. Be sure to check the <a href="documentation.html" title="curtains.js documentation">documentation</a> and examples to see what's possible.
+								Be sure to check the <a href="documentation.html" title="curtains.js documentation">documentation</a> and examples to see what's possible.
 							</p>
 						</div>
 
 						<div class="text-section">
 							<h2>Download</h2>
 							<p>
-								<a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v2.0">curtains.js v2.0 (85Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v2.0">curtains.min.js v2.0 (34Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+								<a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v3.0">curtains.js v3.0 (102Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v3.0">curtains.min.js v3.0 (41Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
 							</p>
 						</div>
 
 						<div class="text-section">
 							<h2 id="examples">Examples</h2>
 							<p>
-								All the examples are fully commented so do not hesitate to have a look at the source code.
+								All the examples are fully commented: do not hesitate to have a look at the source code.
 							</p>
 							<h3>Images</h3>
 							<p>
@@ -126,6 +132,11 @@
 								<a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a><br />
                                 <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a>
 							</p>
+                            <h3>Post processing</h3>
+                            <p>
+                                <a href="examples/post-processing-displacement/index.html" title="Simple canvas plane" target="_blank">Post processing displacement effect</a><br />
+                                <a href="examples/post-processing-scroll-effect/index.html" title="Simple canvas plane" target="_blank">Post processing multiple passes</a>
+                            </p>
 						</div>
 
 						<div class="text-section">
@@ -142,27 +153,27 @@
 							<h2>Installation</h2>
 							<div>
 								In a browser:
-								<pre>
-<code>
-&lt;script src="curtains.min.js"&gt;&lt;/script&gt;
-</code>
-								</pre>
+
+                                <div class="code">
+                                    <span class="code-tag">&lt;script</span> src=<span class="code-string">"curtains.min.js"</span><span class="code-tag">&gt;&lt;/script&gt;</span>
+
+                                </div>
+
 							</div>
 							<div>
 								Using npm:
-								<pre>
-<code>
-npm i curtainsjs
-</code>
-								</pre>
+
+                                <div class="code">
+                                    npm i curtainsjs
+                                </div>
+
 							</div>
 							<div>
 								Load ES module:
-								<pre>
-<code>
-import {Curtains} from 'curtainsjs';
-</code>
-								</pre>
+
+                                <div class="code">
+                                    <span class="code-var">import</span> {<span class="code-tag">Curtains</span>} <span class="code-var">from</span> <span class="code-string">'curtainsjs'</span><span class="code-var">;</span>
+                                </div>
 							</div>
 						</div>
 

@@ -1,4 +1,4 @@
-window.onload = function(){
+window.addEventListener("DOMContentLoaded", function() {
     // track the mouse positions to display them on screen
     var mousePosition = {
         x: 0,
@@ -72,4 +72,4 @@ window.onload = function(){
         document.getElementById("mouse-coords-helper-x").textContent = mouseCoords.x;
         document.getElementById("mouse-coords-helper-y").textContent = mouseCoords.y;
     }
-}
+});

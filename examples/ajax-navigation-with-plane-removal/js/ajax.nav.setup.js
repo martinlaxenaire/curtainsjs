@@ -180,4 +180,6 @@ function archiveNavigation() {
     handleNavigation();
 }
 
-archiveNavigation();
+window.addEventListener("DOMContentLoaded", function() {
+    archiveNavigation();
+});

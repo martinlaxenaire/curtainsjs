@@ -18,14 +18,6 @@ function initCurtains() {
     var planeElements = document.getElementsByClassName("curtain");
 
 
-    // our texture canvas
-    var simpleCanvas = document.getElementById("canvas-texture");
-    var simpleCanvasContext = simpleCanvas.getContext("2d");
-
-    // size our canvas
-    simpleCanvas.width = planeElements[0].clientWidth;
-    simpleCanvas.height = planeElements[0].clientHeight;
-
     // handling errors
     webGLCurtain.onError(function() {
         // we will add a class to the document body to display original canvas
@@ -94,45 +86,60 @@ function initCurtains() {
     // create our plane
     var simplePlane = webGLCurtain.addPlane(planeElements[0], params);
 
-    simplePlane && simplePlane.onReady(function() {
-        // display the button
-        document.body.classList.add("curtains-ready");
+    // i our plane has been successfully created
+    if(simplePlane) {
+        // our texture canvas
+        var simpleCanvas = document.getElementById("canvas-texture");
+        var simpleCanvasContext = simpleCanvas.getContext("2d");
 
-        // set a fov of 35 to exagerate perspective
-        simplePlane.setPerspective(35);
+        // get our plane dimensions
+        var planeBoundingRect = simplePlane.getBoundingRect();
 
-        // now that our plane is ready we can listen to mouse move event
-        var wrapper = document.getElementById("page-wrap");
+        // size our canvas
+        // we are dividing it by the pixel ratio value to gain performance
+        simpleCanvas.width = planeBoundingRect.width / webGLCurtain.pixelRatio;
+        simpleCanvas.height = planeBoundingRect.height / webGLCurtain.pixelRatio;
 
-        wrapper.addEventListener("mousemove", function(e) {
-            handleMovement(e, simplePlane);
+        simplePlane.onReady(function() {
+            // display the button
+            document.body.classList.add("curtains-ready");
+
+            // set a fov of 35 to exagerate perspective
+            simplePlane.setPerspective(35);
+
+            // now that our plane is ready we can listen to mouse move event
+            var wrapper = document.getElementById("page-wrap");
+
+            wrapper.addEventListener("mousemove", function(e) {
+                handleMovement(e, simplePlane);
+            });
+
+            wrapper.addEventListener("touchmove", function(e) {
+                handleMovement(e, simplePlane);
+            });
+
+            // on resize, update the resolution uniform
+            window.addEventListener("resize", function() {
+                simplePlane.uniforms.resolution.value = [pixelRatio * planeElements[0].clientWidth, pixelRatio * planeElements[0].clientHeight];
+
+                // resize our canvas
+                simpleCanvas.width = planeElements[0].clientWidth;
+                simpleCanvas.height = planeElements[0].clientHeight;
+            });
+
+        }).onRender(function() {
+            // increment our time uniform
+            simplePlane.uniforms.time.value++;
+
+            // send the new mouse move strength value
+            simplePlane.uniforms.mouseMoveStrength.value = mouseDelta;
+            // decrease the mouse move strenght a bit : if the user doesn't move the mouse, effect will fade away
+            mouseDelta = Math.max(0, mouseDelta * 0.995);
+
+            // animate our texture canvas
+            animateTextureCanvas();
         });
-
-        wrapper.addEventListener("touchmove", function(e) {
-            handleMovement(e, simplePlane);
-        });
-
-        // on resize, update the resolution uniform
-        window.addEventListener("resize", function() {
-            simplePlane.uniforms.resolution.value = [pixelRatio * planeElements[0].clientWidth, pixelRatio * planeElements[0].clientHeight];
-
-            // resize our canvas
-            simpleCanvas.width = planeElements[0].clientWidth;
-            simpleCanvas.height = planeElements[0].clientHeight;
-        });
-
-    }).onRender(function() {
-        // increment our time uniform
-        simplePlane.uniforms.time.value++;
-
-        // send the new mouse move strength value
-        simplePlane.uniforms.mouseMoveStrength.value = mouseDelta;
-        // decrease the mouse move strenght a bit : if the user doesn't move the mouse, effect will fade away
-        mouseDelta = Math.max(0, mouseDelta * 0.995);
-
-        // animate our texture canvas
-        animateTextureCanvas();
-    });
+    }
 
     // handle the mouse move event
     function handleMovement(e, plane) {
@@ -174,4 +181,6 @@ function initCurtains() {
     }
 }
 
-initCurtains();
+window.addEventListener("DOMContentLoaded", function() {
+    initCurtains();
+});

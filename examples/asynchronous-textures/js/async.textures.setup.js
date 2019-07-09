@@ -1,10 +1,13 @@
-window.onload = function() {
+window.addEventListener("DOMContentLoaded", function() {
     // here we will handle which texture is visible and the timer to transition between images
     var activeTexture = 1;
     var transitionTimer = 0;
 
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
+
+    // disable drawing for now
+    webGLCurtain.disableDrawing();
 
     webGLCurtain.onError(function() {
         // we will add a class to the document body to display original images
@@ -42,6 +45,9 @@ window.onload = function() {
 
             // images are loaded, we are ready to attach event listener and do stuff
             planeElements[0].addEventListener("click", function() {
+                // enable drawing to display transitions
+                webGLCurtain.enableDrawing();
+
                 // switch the active texture
                 if(activeTexture == 1) {
                     activeTexture = 2;
@@ -68,6 +74,7 @@ window.onload = function() {
 
         // then we add images to it, could be after an event or an AJAX call
         document.getElementById("load-images").addEventListener("click", function() {
+
             document.getElementById("page-wrap").classList.add("load-images");
 
             // get our images in the HTML, but it could be inside an AJAX response
@@ -82,6 +89,9 @@ window.onload = function() {
             asyncTexturesPlane.onLoading(function() {
                 imagesLoaded++;
                 if(imagesLoaded == imagesToLoad) {
+                    // everything is ready, we need to render at least one frame
+                    webGLCurtain.needRender();
+
                     // if window has been resized between plane creation and image loading, we need to trigger a resize
                     asyncTexturesPlane.planeResize();
                     // show our plane now
@@ -91,4 +101,4 @@ window.onload = function() {
 
         });
     }
-}
+});

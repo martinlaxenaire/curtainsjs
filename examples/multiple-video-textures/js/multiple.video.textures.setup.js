@@ -1,4 +1,4 @@
-window.onload = function() {
+window.addEventListener("DOMContentLoaded", function() {
     // here we will handle which texture is visible and the timer to transition between images
     var activeTexture = 1;
     var transitionTimer = 0;
@@ -79,4 +79,4 @@ window.onload = function() {
         // update our transition timer uniform
         multiTexturesPlane.uniforms.transitionTimer.value = transitionTimer;
     });
-}
+});

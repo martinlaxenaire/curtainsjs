@@ -1,7 +1,7 @@
 window.addEventListener("DOMContentLoaded", function() {
     // we will keep track of the scroll
-    var scrollValue = 0;
-    var lastScrollValue = 0;
+    var scrollValue = window.pageYOffset;
+    var lastScrollValue = window.pageYOffset;
 
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains("canvas");
@@ -39,7 +39,7 @@ window.addEventListener("DOMContentLoaded", function() {
                 value: 0,
             },
         }
-    }
+    };
 
     // add our planes and handle them
     for(var i = 0; i < planeElements.length; i++) {
@@ -122,4 +122,44 @@ window.addEventListener("DOMContentLoaded", function() {
         }, 50);
 
     });
+
+
+    // post processing
+    var shaderPassParams = {
+        fragmentShaderID: "displacement-fs",
+        uniforms: {
+            timer: {
+                name: "uTimer",
+                type: "1f",
+                value: 0,
+            },
+            displacement: {
+                name: "uDisplacement",
+                type: "1f",
+                value: 0,
+            },
+        },
+    };
+
+    var shaderPass = webGLCurtain.addShaderPass(shaderPassParams);
+    // we will need to load a new image
+    var image = new Image();
+    image.src = "../medias/displacement.jpg";
+    // set its data-sampler attribute to use in fragment shader
+    image.setAttribute("data-sampler", "displacementTexture");
+
+    // if our shader pass has been successfully created
+    if(shaderPass) {
+        // load our displacement image
+        shaderPass.loadImage(image);
+        shaderPass.onLoading(function() {
+            console.log("shader pass image loaded");
+        }).onReady(function() {
+            console.log("shader pass is ready");
+        }).onRender(function() {
+            // update the uniforms
+            shaderPass.uniforms.timer.value++;
+            shaderPass.uniforms.displacement.value = planesDeformations / 60;
+        });
+    }
 });

@@ -1,4 +1,4 @@
-window.onload = function(){
+function displayCurtains() {
     var mousePosition = {
         x: 0,
         y: 0,
@@ -61,26 +61,32 @@ window.onload = function(){
     function writeTitle(plane, canvas) {
         var title = document.getElementById("site-title");
         var titleStyle = window.getComputedStyle(title);
-        var htmlPlaneWidth = plane._boundingRect.document.width;
-        var htmlPlaneHeight = plane._boundingRect.document.height;
+
+        var subtitle = document.getElementById("site-subtitle");
+        var subtitleHeight = subtitle.clientHeight;
+
+        var planeBoundinRect = plane.getBoundingRect();
+
+        var htmlPlaneWidth = planeBoundinRect.width;
+        var htmlPlaneHeight = planeBoundinRect.height;
 
         // set sizes
         canvas.width = htmlPlaneWidth;
         canvas.height = htmlPlaneHeight;
         var context = canvas.getContext("2d");
 
-        context.width = htmlPlaneWidth * webGLCurtain.pixelRatio;
-        context.height = htmlPlaneHeight * webGLCurtain.pixelRatio;
+        context.width = htmlPlaneWidth;
+        context.height = htmlPlaneHeight;
 
         // draw our title with the original style
         context.fillStyle = titleStyle.color;
-        context.font = titleStyle.fontSize + " " + titleStyle.fontFamily;
+        context.font = parseFloat(titleStyle.fontSize) * webGLCurtain.pixelRatio + "px " + titleStyle.fontFamily;
         context.fontStyle = titleStyle.fontStyle;
         context.textAlign = "center";
 
-        // vertical alignment is a bit hacky
+        // vertical alignment
         context.textBaseline = "middle";
-        context.fillText("curtains.js", htmlPlaneWidth / 2, title.offsetTop);
+        context.fillText("curtains.js", htmlPlaneWidth / 2, htmlPlaneHeight / 2 - subtitleHeight / 2);
 
         context.imageSmoothingEnabled = true;
 
@@ -124,9 +130,6 @@ window.onload = function(){
 
         // if there has been an error during init, curtainPlane will be null
         if(curtainPlane) {
-            var gl = webGLCurtain.glContext;
-            gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-
             var canvas = document.createElement("canvas");
             writeTitle(curtainPlane, canvas);
 
@@ -302,3 +305,7 @@ window.onload = function(){
     }
 
 }
+
+window.addEventListener("DOMContentLoaded", function() {
+    displayCurtains();
+});

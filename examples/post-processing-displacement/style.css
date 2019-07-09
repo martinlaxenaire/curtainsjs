@@ -31,6 +31,22 @@
         flex-wrap: wrap;
     }
 
+    .landscape-wrapper {
+        position: relative;
+        height: 0;
+        width: 100%;
+        overflow: hidden;
+        padding-bottom: 66.6%;
+    }
+
+    .landscape-inner {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
     #page-wrap {
         position: relative;
     }
@@ -40,12 +56,15 @@
     /* our canvas will be a bit taller than our window to avoid "glitched" top and bottom edges */
     #canvas {
         position: fixed;
-        top: -5vh;
+        top: -10vh;
         right: 0;
         left: 0;
-        height: 110vh;
+        height: 120vh;
+
         z-index: 10;
+
         opacity: 0;
+
         transition: opacity 0.5s ease-in;
     }
 
@@ -53,41 +72,16 @@
         opacity: 1;
     }
 
-    #back-to-lib-link {
-        display: inline-block;
-        position: fixed;
-        top: 0;
-        right: 0;
-        padding: 0.25em 0.5em;
-        background: #ee6557;
-        color: white;
-        text-decoration: none;
-        z-index: 20;
-        font-size: 0.85em;
-    }
-
-    #back-to-lib-link:hover {
-        background: black;
-    }
-
     /*** content ***/
 
     #content {
         position: relative;
         z-index: 15;
-        max-width: 1440px;
-        margin: 0 auto;
-        padding: 40px 0 0 0;
-    }
 
-    #debug {
-        position: fixed;
-        bottom: 0;
-        right: 0;
-        background: white;
-        font-size: 0.9em;
-        padding: 0.25em 0.5em;
-        z-index: 10;
+
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 40px 0;
     }
 
     #planes {
@@ -102,35 +96,26 @@
     }
 
     .plane-wrapper {
+        width: 50%;
+        float: left;
         position: relative;
-
-        width: 75%;
-        height: 60vh;
-        margin: 10vh 25% 10vh 0;
-    }
-
-    .plane-wrapper:nth-child(even) {
-        margin: 10vh 0 10vh 25%;
-    }
-
-    .plane-wrapper:first-child {
-        margin-top: 5vh;
-    }
-
-    .plane-wrapper:last-child {
-        margin-bottom: 20vh;
     }
 
     .plane-title {
+        background: #ee6557;
         color: white;
         position: absolute;
-        top: 25%;
-        left: 25%;
+        top: 0.25em;
+        left: 0;
         font-size: 2em;
-        font-weight: 700;
-        background: #ee6557;
+        font-weight: bold;
         display: inline-block;
         padding: 0.125em 0.25em;
+    }
+
+    .plane-inner {
+        padding: 40px;
+        box-sizing: border-box;
     }
 
     .plane {
@@ -143,6 +128,29 @@
 
     .plane img {
         display: none;
+
+        /*display: block;
+        width: 100%;
+        height: auto;
+        opacity: 0.3;*/
+    }
+
+
+    #add-more-planes-wrapper {
+        text-align: center;
+        margin-top: 40px;
+    }
+
+    #add-more-planes {
+        cursor: pointer;
+        background: #ee6557;
+        color: white;
+        display: inline-block;
+        padding: 0.25em 0.5em;
+    }
+
+    #add-more-planes:hover {
+        background: black;
     }
 
 
@@ -152,16 +160,10 @@
         z-index: 1;
     }
 
-    .no-curtains .plane {
-        display: flex;
-        overflow: hidden;
-    }
-
     .no-curtains .plane img {
         display: block;
-        min-width: 100%;
-        min-height: 100%;
-        object-fit: cover;
+        width: 100%;
+        height: auto;
     }
 
 }
@@ -175,18 +177,13 @@
         margin: 0 20px;
     }
 
-    .plane-wrapper {
-        width: 87.5%;
-        height: 60vh;
-        margin: 10vh 12.5% 10vh 0;
+    .plane-title {
+        top: 0;
+        font-size: 1.5em;
     }
 
-    .plane-wrapper:nth-child(even) {
-        margin: 10vh 0 10vh 12.5%;
-    }
-
-    .plane-wrapper:last-child {
-        margin-bottom: 20vh;
+    .plane-inner {
+        padding: 20px;
     }
 
 }
@@ -199,16 +196,13 @@
     }
 
     .plane-wrapper {
-        height: 75vh;
-        margin: 7.5vh auto;
+        width: 100%;
+        float: none;
+        margin-bottom: 10px;
     }
 
-    .plane-wrapper:nth-child(even) {
-        margin: 7.5vh auto;
-    }
-
-    .plane-wrapper:last-child {
-        margin-bottom: 12.5vh;
+    .plane-inner {
+        padding: 10px;
     }
 
 }
