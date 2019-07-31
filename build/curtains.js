@@ -2565,6 +2565,8 @@ Curtains.Plane.prototype._documentToPlaneSpace = function(xPosition, yPosition) 
  This checks DOM positions for now but we might want to improve it to use real frustum calculations
  ***/
 Curtains.Plane.prototype._shouldDrawCheck = function() {
+    var wrapper = this._wrapper;
+
     // we could think of a way to add margin to the should draw check
     var MARGIN = 0;
 
@@ -2576,10 +2578,10 @@ Curtains.Plane.prototype._shouldDrawCheck = function() {
 
     // get plane actual boundaries including its scale and relative translation
     var actualPlaneBounds = {
-        top: this._boundingRect.document.top + this.relativeTranslation.y * this._wrapper.pixelRatio + scaleAdjustment.y,
-        right: this._boundingRect.document.left + this.relativeTranslation.x * this._wrapper.pixelRatio + this._boundingRect.document.width - scaleAdjustment.x,
-        bottom: this._boundingRect.document.top + this.relativeTranslation.y * this._wrapper.pixelRatio + this._boundingRect.document.height - scaleAdjustment.y,
-        left: this._boundingRect.document.left + this.relativeTranslation.x * this._wrapper.pixelRatio + scaleAdjustment.x,
+        top: this._boundingRect.document.top + this.relativeTranslation.y * wrapper.pixelRatio + scaleAdjustment.y,
+        right: this._boundingRect.document.left + this.relativeTranslation.x * wrapper.pixelRatio + this._boundingRect.document.width - scaleAdjustment.x,
+        bottom: this._boundingRect.document.top + this.relativeTranslation.y * wrapper.pixelRatio + this._boundingRect.document.height - scaleAdjustment.y,
+        left: this._boundingRect.document.left + this.relativeTranslation.x * wrapper.pixelRatio + scaleAdjustment.x,
     };
 
     var self = this;
@@ -2587,10 +2589,10 @@ Curtains.Plane.prototype._shouldDrawCheck = function() {
     // if we decide to draw the plane only when visible inside the canvas
     // we got to check if its actually inside the canvas
     if(
-        actualPlaneBounds.right < -MARGIN
-        || actualPlaneBounds.left > this._wrapper._boundingRect.width + MARGIN
-        || actualPlaneBounds.bottom < -MARGIN
-        || actualPlaneBounds.top > this._wrapper._boundingRect.height + MARGIN
+        actualPlaneBounds.right < wrapper._boundingRect.left - MARGIN
+        || actualPlaneBounds.left > wrapper._boundingRect.width.left + wrapper._boundingRect.width + MARGIN
+        || actualPlaneBounds.bottom < wrapper._boundingRect.top - MARGIN
+        || actualPlaneBounds.top > wrapper._boundingRect.top + wrapper._boundingRect.height + MARGIN
     ) {
         if(this._shouldDraw) {
             this._shouldDraw = false;
