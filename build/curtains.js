@@ -2590,7 +2590,7 @@ Curtains.Plane.prototype._shouldDrawCheck = function() {
     // we got to check if its actually inside the canvas
     if(
         actualPlaneBounds.right < wrapper._boundingRect.left - MARGIN
-        || actualPlaneBounds.left > wrapper._boundingRect.width.left + wrapper._boundingRect.width + MARGIN
+        || actualPlaneBounds.left > wrapper._boundingRect.left + wrapper._boundingRect.width + MARGIN
         || actualPlaneBounds.bottom < wrapper._boundingRect.top - MARGIN
         || actualPlaneBounds.top > wrapper._boundingRect.top + wrapper._boundingRect.height + MARGIN
     ) {
