@@ -569,6 +569,15 @@
         background: #f49c9c;
     }
 
+    .api-item-warning {
+        display: inline-block;
+        font-size: 0.8em;
+        padding: 0.125em 0.25em;
+        margin: 0 0.5em;
+        color: white;
+        background: #cc5050;
+    }
+
     .api-section em {
         color: #d17379;
     }

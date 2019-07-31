@@ -2576,10 +2576,10 @@ Curtains.Plane.prototype._shouldDrawCheck = function() {
 
     // get plane actual boundaries including its scale and relative translation
     var actualPlaneBounds = {
-        top: this._boundingRect.document.top + this.relativeTranslation.y + scaleAdjustment.y,
-        right: this._boundingRect.document.left + this.relativeTranslation.x + this._boundingRect.document.width - scaleAdjustment.x,
-        bottom: this._boundingRect.document.top + this.relativeTranslation.y + this._boundingRect.document.height - scaleAdjustment.y,
-        left: this._boundingRect.document.left + this.relativeTranslation.x + scaleAdjustment.x,
+        top: this._boundingRect.document.top + this.relativeTranslation.y * this._wrapper.pixelRatio + scaleAdjustment.y,
+        right: this._boundingRect.document.left + this.relativeTranslation.x * this._wrapper.pixelRatio + this._boundingRect.document.width - scaleAdjustment.x,
+        bottom: this._boundingRect.document.top + this.relativeTranslation.y * this._wrapper.pixelRatio + this._boundingRect.document.height - scaleAdjustment.y,
+        left: this._boundingRect.document.left + this.relativeTranslation.x * this._wrapper.pixelRatio + scaleAdjustment.x,
     };
 
     var self = this;

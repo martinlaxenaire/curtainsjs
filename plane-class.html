@@ -1007,7 +1007,7 @@
 
                             <li id="plane-resize">
                                 <p>
-                                    <strong>planeResize</strong>(): <span class="api-item-version">v1.0</span>
+                                    <strong>planeResize</strong>(): <span class="api-item-version">v1.0</span> <span class="api-item-warning">triggers reflow</span>
                                 </p>
                                 <p>
                                     This method is called internally by the Curtains <a href="curtains-class.html#resize">resize()</a> method each time the window is resized, but you should call it manually each time you're updating a plane size, either via CSS animations or directly in javascript. It will updates its position as well.
@@ -1078,7 +1078,8 @@
                                     <strong>setRelativePosition</strong>(translationX, translationY): <span class="api-item-version">v1.0</span>
                                 </p>
                                 <p>
-                                    Set the plane translation based on pixel units. Please note that this will not be applied to your plane HTML element, so it's more like an additional translation.
+                                    Set the plane translation based on pixel units. Please note that this will not be applied to your plane HTML element, so it's more like an additional translation.<br />
+                                    Note that if you are using a virtual scroll library, you can also use it to update your plane position without causing a reflow and improve performance.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -1194,10 +1195,11 @@
 
                             <li id="update-position">
                                 <p>
-                                    <strong>updatePosition</strong>(): <span class="api-item-version">v1.6</span>
+                                    <strong>updatePosition</strong>(): <span class="api-item-version">v1.6</span> <span class="api-item-warning">triggers reflow</span>
                                 </p>
                                 <p>
-                                    Internally, the planes positions are updated only when the window is resized. But if you are updating your plane HTML element position without resizing the window (typically while scrolling, animating its CSS position or transform values), call this method in your animation loop at the same time.
+                                    Internally, the planes positions are updated only when the window is resized. But if you are updating your plane HTML element position without resizing the window (typically while scrolling, animating its CSS position or transform values), call this method in your animation loop at the same time.<br />
+                                    This method calls getBoundingClientRect() therefore causing a reflow/layout repaint of the page. See <a href="#set-relative-position">setRelativePosition</a> to update your plane position without any reflow.
                                 </p>
                                 <p class="api-item-examples">
                                     <strong>Examples:</strong> used in <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a>, <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a>, <a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a>, <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a> examples.
