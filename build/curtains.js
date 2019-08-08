@@ -1014,11 +1014,15 @@ Curtains.BasePlane.prototype._createShader = function(shaderCode, shaderType) {
     glContext.shaderSource(shader, shaderCode);
     glContext.compileShader(shader);
 
-    if (!glContext.getShaderParameter(shader, glContext.COMPILE_STATUS)) {
-        if(!this._wrapper.productionMode) console.warn("Errors occurred while compiling the shader:\n" + glContext.getShaderInfoLog(shader));
+    // check shader compilation status only when not in production mode
+    if(!this._wrapper.productionMode) {
+        if (!glContext.getShaderParameter(shader, glContext.COMPILE_STATUS)) {
+            console.warn("Errors occurred while compiling the shader:\n" + glContext.getShaderInfoLog(shader));
 
-        return null;
+            return null;
+        }
     }
+
     return shader;
 };
 
@@ -1054,11 +1058,13 @@ Curtains.BasePlane.prototype._setupPlaneProgram = function() {
         glContext.attachShader(this._program, this._shaders.fragmentShader);
         glContext.linkProgram(this._program);
 
-        // Check the shader program creation status,
-        if (!glContext.getProgramParameter(this._program, glContext.LINK_STATUS)) {
-            if(!wrapper.productionMode) console.warn("Unable to initialize the shader program.");
+        // check the shader program creation status only when not in production mode
+        if(!wrapper.productionMode) {
+            if (!glContext.getProgramParameter(this._program, glContext.LINK_STATUS)) {
+                console.warn("Unable to initialize the shader program.");
 
-            isProgramValid = false;
+                isProgramValid = false;
+            }
         }
     }
 
@@ -1252,21 +1258,17 @@ Curtains.BasePlane.prototype._updateUniforms = function(uniforms) {
  ***/
 Curtains.BasePlane.prototype._setAttributes = function() {
     // set default attributes
-    var attributes = {
-        vertexPosition: "aVertexPosition",
-        textureCoord: "aTextureCoord",
-    };
-
     if(!this._attributes) this._attributes = {};
 
-    var self = this;
-    Object.keys(attributes).map(function(objectKey, index) {
-        var value = attributes[objectKey];
-        self._attributes[objectKey] = {
-            name: value,
-            location: self._wrapper.glContext.getAttribLocation(self._program, value),
-        };
-    });
+    this._attributes.vertexPosition = {
+        name: "aVertexPosition",
+        location: this._wrapper.glContext.getAttribLocation(this._program, "aVertexPosition"),
+    };
+
+    this._attributes.textureCoord = {
+        name: "aTextureCoord",
+        location: this._wrapper.glContext.getAttribLocation(this._program, "aTextureCoord"),
+    };
 };
 
 
