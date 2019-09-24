@@ -159,9 +159,11 @@
 		<script src="../../build/curtains.js" type="text/javascript"></script>
 
 		<script type="text/javascript">
-            window.addEventListener("DOMContentLoaded", function() {
+            window.addEventListener("load", function() {
 				// set up our WebGL context and append the canvas to our wrapper
-				var webGLCurtain = new Curtains("canvas");
+				var webGLCurtain = new Curtains({
+                    container: "canvas"
+                });
 
 				// get our plane element
 				var planeElement = document.getElementsByClassName("plane")[0];

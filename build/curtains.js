@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 3.0.1
+ Version: 4.0.0
  ***/
 
 'use strict';
@@ -18,7 +18,7 @@
  returns:
  @this: our Curtains element
  ***/
-function Curtains(containerID, production) {
+function Curtains(params) {
     this.planes = [];
     this.shaderPasses = [];
     this._drawStack = [];
@@ -26,10 +26,50 @@ function Curtains(containerID, production) {
     this._drawingEnabled = true;
     this._forceRender = false;
 
-    // set container
-    this.container = document.getElementById(containerID || "canvas");
+    // handle old version init param
+    if(typeof params === "string") {
+        console.warn("Since v4.0 you should use an object to pass your container and other parameters. Please refer to the docs: https://www.curtainsjs.com/documentation.html");
+        var container = params;
+        params = {
+            container: container
+        };
+    }
 
-    this.productionMode = production || false;
+    // set container
+    if(!params.container) {
+        var container = document.createElement("div");
+        container.setAttribute("id", "curtains-canvas");
+        document.body.appendChild(container);
+        this.container = container;
+    }
+    else {
+        if(typeof params.container === "string") {
+            this.container = document.getElementById(params.container);
+        }
+        else if(params.container instanceof Element) {
+            this.container = params.container;
+        }
+    }
+
+    // if we should use auto resize (default to true)
+    this._autoResize = params.autoResize;
+    if(this._autoResize === null || this._autoResize === undefined) {
+        this._autoResize = true;
+    }
+
+    // if we should use auto render (default to true)
+    this._autoRender = params.autoRender;
+    if(this._autoRender === null || this._autoRender === undefined) {
+        this._autoRender = true;
+    }
+
+    // if we should watch the scroll (default to true)
+    this._watchScroll = params.watchScroll;
+    if(this._watchScroll === null || this._watchScroll === undefined) {
+        this._watchScroll = true;
+    }
+
+    this.productionMode = params.production || false;
 
     if(!this.container) {
         if(!this.productionMode) console.warn("You must specify a valid container ID");
@@ -66,10 +106,6 @@ Curtains.prototype._init = function() {
         return;
     }
 
-    // this will set the size as well
-    var pixelRatio = window.devicePixelRatio || 1;
-    this.setPixelRatio(pixelRatio, false);
-
     // handling context
     this._loseContextExtension = this.glContext.getExtension('WEBGL_lose_context');
 
@@ -79,14 +115,38 @@ Curtains.prototype._init = function() {
     this._contextRestoredHandler = this._contextRestored.bind(this);
     this.glCanvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
 
+    // handling scroll event
+    this._scrollManager = {
+        handler: this._scroll.bind(this, true),
+        shouldWatch: this._watchScroll,
+
+        // init values even if we won't necessarily use them
+        xOffset: window.pageXOffset,
+        yOffset: window.pageYOffset,
+        lastXDelta: 0,
+        lastYDelta: 0,
+    };
+    if(this._watchScroll) {
+        window.addEventListener("scroll", this._scrollManager.handler, {passive: true});
+    }
+
+    // this will set the size as well
+    var pixelRatio = window.devicePixelRatio || 1;
+    this.setPixelRatio(pixelRatio, false);
+
     // handling window resize event
-    this._resizeHandler = this.resize.bind(this, true);
-    window.addEventListener("resize", this._resizeHandler, false);
+    this._resizeHandler = null;
+    if(this._autoResize) {
+        this._resizeHandler = this.resize.bind(this, true);
+        window.addEventListener("resize", this._resizeHandler, false);
+    }
 
     // we can start rendering now
     this._readyToDraw();
 };
 
+
+/*** SIZING ***/
 
 /***
  Set the pixel ratio property and update everything by calling resize method
@@ -102,14 +162,39 @@ Curtains.prototype.setPixelRatio = function(pixelRatio, triggerCallback) {
  Set our container and canvas sizes
  ***/
 Curtains.prototype._setSize = function() {
-    // if container size has changed
+    // get our container bounding client rectangle
     var containerBoundingRect = this.container.getBoundingClientRect();
+
+    // use the bounding rect values
     this._boundingRect = {
         width: containerBoundingRect.width * this.pixelRatio,
         height: containerBoundingRect.height * this.pixelRatio,
         top: containerBoundingRect.top * this.pixelRatio,
         left: containerBoundingRect.left * this.pixelRatio,
     };
+
+    // iOS Safari > 8+ has a known bug due to navigation bar appearing/disappearing
+    // this causes wrong bounding client rect calculations, especially negative top value when it shouldn't
+    // to fix this we'll use a dirty but useful workaround
+
+    // first we check if we're on iOS Safari
+    var isSafari = !!navigator.userAgent.match(/Version\/[\d\.]+.*Safari/);
+    var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+    if(isSafari && iOS) {
+        // if we are on iOS Safari we'll need a custom function to retrieve our container absolute top position
+        function getTopOffset(el) {
+            var topOffset = 0;
+            while(el && !isNaN(el.offsetTop)) {
+                topOffset += el.offsetTop - el.scrollTop;
+                el = el.offsetParent;
+            }
+            return topOffset;
+        }
+
+        // use it to update our top value
+        this._boundingRect.top = getTopOffset(this.container) * this.pixelRatio;
+    }
 
     this.glCanvas.style.width  = Math.floor(this._boundingRect.width / this.pixelRatio) + "px";
     this.glCanvas.style.height = Math.floor(this._boundingRect.height / this.pixelRatio) + "px";
@@ -118,6 +203,12 @@ Curtains.prototype._setSize = function() {
     this.glCanvas.height = Math.floor(this._boundingRect.height);
 
     this.glContext.viewport(0, 0, this.glContext.drawingBufferWidth, this.glContext.drawingBufferHeight);
+
+    // update scroll values ass well
+    if(this._scrollManager.shouldWatch) {
+        this._scrollManager.xOffset = window.pageXOffset;
+        this._scrollManager.yOffset = window.pageYOffset;
+    }
 };
 
 
@@ -166,6 +257,100 @@ Curtains.prototype.resize = function(triggerCallback) {
     }, 0);
 };
 
+
+/*** SCROLLING ***/
+
+/***
+ Handles the different values associated with a scroll event (scroll and delta values)
+ If no plane watch the scroll then those values won't be retrieved to avoid unnecessary reflow calls
+ If at least a plane is watching, update all watching planes positions based on the scroll values
+ And force render for at least one frame to actually update the scene
+ ***/
+Curtains.prototype._scroll = function() {
+    // get our scroll values
+    var scrollValues = {
+        x: window.pageXOffset,
+        y: window.pageYOffset,
+    };
+
+    // update scroll manager values
+    this.updateScrollValues(scrollValues.x, scrollValues.y);
+
+    // shouldWatch should be true if at least one plane watches the scroll
+    if(this._scrollManager.shouldWatch) {
+
+        for(var i = 0; i < this.planes.length; i++) {
+            // if our plane is watching the scroll, update its position
+            if(this.planes[i].watchScroll) {
+                this.planes[i].updateScrollPosition();
+            }
+        }
+
+        // be sure we'll update the scene even if drawing is disabled
+        this.needRender();
+    }
+
+    // TODO trigger our scroll callback even if we are not actively watching scroll?
+    var self = this;
+    setTimeout(function() {
+        if(self._onScrollCallback) {
+            self._onScrollCallback();
+        }
+    }, 0);
+};
+
+
+/***
+ Updates the scroll manager X and Y scroll values as well as last X and Y deltas
+ Internally called by the scroll handler if at least one plane is watching the scroll
+ Could be called externally as well if the user wants to handle the scroll by himself
+
+ params:
+ @x (float): scroll value along X axis
+ @y (float): scroll value along Y axis
+ ***/
+Curtains.prototype.updateScrollValues = function(x, y) {
+    // get our scroll delta values
+    var lastScrollXValue = this._scrollManager.xOffset;
+    this._scrollManager.xOffset = x;
+    this._scrollManager.lastXDelta = lastScrollXValue - this._scrollManager.xOffset;
+
+    var lastScrollYValue = this._scrollManager.yOffset;
+    this._scrollManager.yOffset = y;
+    this._scrollManager.lastYDelta = lastScrollYValue - this._scrollManager.yOffset;
+};
+
+
+/***
+ Returns last delta scroll values
+
+ returns:
+ @delta (obj): an object containing X and Y last delta values
+ ***/
+Curtains.prototype.getScrollDeltas = function() {
+    return {
+        x: this._scrollManager.lastXDelta,
+        y: this._scrollManager.lastYDelta,
+    };
+};
+
+
+/***
+ Returns last window scroll values
+
+ returns:
+ @scrollValue (obj): an object containing X and Y last scroll values
+ ***/
+Curtains.prototype.getScrollValues = function() {
+    return {
+        x: this._scrollManager.xOffset,
+        y: this._scrollManager.yOffset,
+    };
+};
+
+
+
+/*** ENABLING / DISABLING DRAWING ***/
 
 /***
  Enables the render loop
@@ -283,10 +468,17 @@ Curtains.prototype.dispose = function() {
             self.glContext.clear(self.glContext.DEPTH_BUFFER_BIT | self.glContext.COLOR_BUFFER_BIT);
 
             // cancel animation frame
-            window.cancelAnimationFrame(self._animationFrameID);
+            if(self._animationFrameID) {
+                window.cancelAnimationFrame(self._animationFrameID);
+            }
 
             // remove event listeners
-            window.removeEventListener("resize", self._resizeHandler, false);
+            if(this._resizeHandler) {
+                window.removeEventListener("resize", self._resizeHandler, false);
+            }
+            if(this._watchScroll) {
+                window.removeEventListener("scroll", this._scrollManager.handler, {passive: true});
+            }
 
             self.glCanvas.removeEventListener("webglcontextlost", self._contextLostHandler, false);
             self.glCanvas.removeEventListener("webglcontextrestored", self._contextRestoredHandler, false);
@@ -638,6 +830,110 @@ Curtains.prototype._scaleMatrix = function(matrix, scaleX, scaleY, scaleZ) {
 };
 
 
+
+/***
+ Creates a matrix from a quaternion rotation, vector translation and vector scale
+ Equivalent for applying translation, rotation and scale matrices but much faster
+ Source code from: http://glmatrix.net/docs/mat4.js.html
+
+ params :
+ @translation (array): translation vector: [X, Y, Z]
+ @rotation (array): rotation vector: [X, Y, Z]
+ @scale (array): scale vector: [X, Y, Z]
+
+ returns :
+ @transformationMatrix: matrix after transformations
+ ***/
+Curtains.prototype._applyTransformationsMatrix = function(translation, rotation, scale) {
+    var transformationMatrix = new Float32Array(16);
+
+    // handling our rotation quaternion
+    var quaternion = new Float32Array(4);
+
+    var ax = rotation[0] * 0.5;
+    var ay = rotation[1] * 0.5;
+    var az = rotation[2] * 0.5;
+
+    var sinx = Math.sin(ax);
+    var cosx = Math.cos(ax);
+    var siny = Math.sin(ay);
+    var cosy = Math.cos(ay);
+    var sinz = Math.sin(az);
+    var cosz = Math.cos(az);
+
+    // our quaternion assuming we are doing a XYZ euler rotation
+    quaternion[0] = sinx * cosy * cosz - cosx * siny * sinz;
+    quaternion[1] = cosx * siny * cosz + sinx * cosy * sinz;
+    quaternion[2] = cosx * cosy * sinz - sinx * siny * cosz;
+    quaternion[3] = cosx * cosy * cosz + sinx * siny * sinz;
+
+    // applying our transformations all at once!
+    // quaternion math
+    var x = quaternion[0], y = quaternion[1], z = quaternion[2], w = quaternion[3];
+    var x2 = x + x;
+    var y2 = y + y;
+    var z2 = z + z;
+
+    var xx = x * x2;
+    var xy = x * y2;
+    var xz = x * z2;
+    var yy = y * y2;
+    var yz = y * z2;
+    var zz = z * z2;
+    var wx = w * x2;
+    var wy = w * y2;
+    var wz = w * z2;
+    var sx = scale[0];
+    var sy = scale[1];
+    var sz = scale[2];
+
+    transformationMatrix[0] = (1 - (yy + zz)) * sx;
+    transformationMatrix[1] = (xy + wz) * sx;
+    transformationMatrix[2] = (xz - wy) * sx;
+    transformationMatrix[3] = 0;
+    transformationMatrix[4] = (xy - wz) * sy;
+    transformationMatrix[5] = (1 - (xx + zz)) * sy;
+    transformationMatrix[6] = (yz + wx) * sy;
+    transformationMatrix[7] = 0;
+    transformationMatrix[8] = (xz + wy) * sz;
+    transformationMatrix[9] = (yz - wx) * sz;
+    transformationMatrix[10] = (1 - (xx + yy)) * sz;
+    transformationMatrix[11] = 0;
+    transformationMatrix[12] = translation[0];
+    transformationMatrix[13] = translation[1];
+    transformationMatrix[14] = translation[2];
+    transformationMatrix[15] = 1;
+
+    return transformationMatrix;
+};
+
+
+/***
+ Apply a matrix to a point
+ Useful to convert a point position from plane local world to webgl space using projection view matrix for example
+ Taken from THREE.js: https://github.com/mrdoob/three.js/blob/master/src/math/Vector3.js
+
+ params :
+ @point (array): point to which we apply the matrix
+ @matrix (array): 4x4 matrix used
+
+ returns :
+ @point: point after matrix application
+ ***/
+Curtains.prototype._applyMatrixToPoint = function(point, matrix) {
+    var x = point[0], y = point[1], z = point[2];
+
+    // implicit 1 in the 4rth dimension
+    var w = 1 / (matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15]);
+
+    point[0] = (matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12]) * w;
+    point[1] = (matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13]) * w;
+    point[2] = (matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14]) * w;
+
+    return point;
+};
+
+
 /*** DRAW EVERYTHING ***/
 
 /***
@@ -656,9 +952,12 @@ Curtains.prototype._readyToDraw = function() {
     // enable depth by default
     this._handleDepth(true);
 
-    console.log("curtains.js - v3.0");
+    console.log("curtains.js - v4.0");
 
-    this._animate();
+    this._animationFrameID = null;
+    if(this._autoRender) {
+        this._animate();
+    }
 };
 
 
@@ -666,7 +965,7 @@ Curtains.prototype._readyToDraw = function() {
  This just handles our drawing animation frame
  ***/
 Curtains.prototype._animate = function() {
-    this._drawScene();
+    this.render();
     this._animationFrameID = window.requestAnimationFrame(this._animate.bind(this));
 };
 
@@ -675,7 +974,7 @@ Curtains.prototype._animate = function() {
  This is our draw call, ie what has to be called at each frame our our requestAnimationFrame loop
  draw our planes and shader passes
  ***/
-Curtains.prototype._drawScene = function() {
+Curtains.prototype.render = function() {
     // If _forceRender is true, force rendering this frame even if drawing is not enabled.
     // If not, only render if enabled.
     if(!this._drawingEnabled && !this._forceRender) return;
@@ -742,7 +1041,7 @@ Curtains.prototype._drawScene = function() {
  @callback (function) : a function to execute
 
  returns :
- @this: our plane to handle chaining
+ @this: our Curtains element to handle chaining
  ***/
 Curtains.prototype.onAfterResize = function(callback) {
     if(callback) {
@@ -818,6 +1117,24 @@ Curtains.prototype.onContextRestored = function(callback) {
 Curtains.prototype.onRender = function(callback) {
     if(callback) {
         this.__onRenderCallback = callback;
+    }
+
+    return this;
+};
+
+
+/***
+ This is called each time window is scrolled and if our scrollManager is active
+
+ params :
+ @callback (function) : a function to execute
+
+ returns :
+ @this: our Curtains element to handle chaining
+ ***/
+Curtains.prototype.onScroll = function(callback) {
+    if(callback) {
+        this._onScrollCallback = callback;
     }
 
     return this;
@@ -1272,54 +1589,6 @@ Curtains.BasePlane.prototype._setAttributes = function() {
 };
 
 
-/***
- This method creates our vertex and texture coord buffers
- ***/
-Curtains.BasePlane.prototype._initializeBuffers = function() {
-    var wrapper = this._wrapper;
-    var glContext = wrapper.glContext;
-
-    // we could not use plane._size property here because it might have changed since its creation
-    // if the plane does not have any texture yet, a window resize does not trigger the resize function
-
-    // if this our first time we need to create our geometry and material objects
-    if(!this._geometry && !this._material) {
-        this._setPlaneVertices();
-    }
-
-    if(!this._attributes) return;
-
-    // now we'll create vertices and uvs attributes
-    this._geometry.bufferInfos = {
-        id: glContext.createBuffer(),
-        itemSize: 3,
-        numberOfItems: this._geometry.vertices.length / 3, // divided by item size
-    };
-
-    glContext.enableVertexAttribArray(this._attributes.vertexPosition.location);
-
-    glContext.bindBuffer(glContext.ARRAY_BUFFER, this._geometry.bufferInfos.id);
-    glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(this._geometry.vertices), glContext.STATIC_DRAW);
-
-    // Set where the vertexPosition attribute gets its data,
-    glContext.vertexAttribPointer(this._attributes.vertexPosition.location, this._geometry.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
-
-
-    this._material.bufferInfos = {
-        id: glContext.createBuffer(),
-        itemSize: 3,
-        numberOfItems: this._material.uvs.length / 3, // divided by item size
-    };
-
-    glContext.enableVertexAttribArray(this._attributes.textureCoord.location);
-
-    glContext.bindBuffer(glContext.ARRAY_BUFFER, this._material.bufferInfos.id);
-    glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(this._material.uvs), glContext.STATIC_DRAW);
-
-    glContext.vertexAttribPointer(this._attributes.textureCoord.location, this._material.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
-};
-
-
 /*** PLANE VERTICES AND BUFFERS ***/
 
 /***
@@ -1398,6 +1667,54 @@ Curtains.BasePlane.prototype._setPlaneVertices = function() {
             this._geometry.vertices.push(0);
         }
     }
+};
+
+
+/***
+ This method creates our vertex and texture coord buffers
+ ***/
+Curtains.BasePlane.prototype._initializeBuffers = function() {
+    var wrapper = this._wrapper;
+    var glContext = wrapper.glContext;
+
+    // we could not use plane._size property here because it might have changed since its creation
+    // if the plane does not have any texture yet, a window resize does not trigger the resize function
+
+    // if this our first time we need to create our geometry and material objects
+    if(!this._geometry && !this._material) {
+        this._setPlaneVertices();
+    }
+
+    if(!this._attributes) return;
+
+    // now we'll create vertices and uvs attributes
+    this._geometry.bufferInfos = {
+        id: glContext.createBuffer(),
+        itemSize: 3,
+        numberOfItems: this._geometry.vertices.length / 3, // divided by item size
+    };
+
+    glContext.enableVertexAttribArray(this._attributes.vertexPosition.location);
+
+    glContext.bindBuffer(glContext.ARRAY_BUFFER, this._geometry.bufferInfos.id);
+    glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(this._geometry.vertices), glContext.STATIC_DRAW);
+
+    // Set where the vertexPosition attribute gets its data,
+    glContext.vertexAttribPointer(this._attributes.vertexPosition.location, this._geometry.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
+
+
+    this._material.bufferInfos = {
+        id: glContext.createBuffer(),
+        itemSize: 3,
+        numberOfItems: this._material.uvs.length / 3, // divided by item size
+    };
+
+    glContext.enableVertexAttribArray(this._attributes.textureCoord.location);
+
+    glContext.bindBuffer(glContext.ARRAY_BUFFER, this._material.bufferInfos.id);
+    glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(this._material.uvs), glContext.STATIC_DRAW);
+
+    glContext.vertexAttribPointer(this._attributes.textureCoord.location, this._material.bufferInfos.itemSize, glContext.FLOAT, false, 0, 0);
 };
 
 
@@ -1508,10 +1825,90 @@ Curtains.BasePlane.prototype._setDocumentSizes = function() {
  Useful to get our plane bounding rectangle without triggering a reflow/layout
 
  returns :
- @boundingRectangle (obj): an object containing our plane bounding rectangle (width, height, top and left properties)
+ @boundingRectangle (obj): an object containing our plane HTML element bounding rectangle (width, height, top, bottom, right and left properties)
  ***/
 Curtains.BasePlane.prototype.getBoundingRect = function() {
-    return this._boundingRect.document;
+    return {
+        width: this._boundingRect.document.width,
+        height: this._boundingRect.document.height,
+        top: this._boundingRect.document.top,
+        left: this._boundingRect.document.left,
+
+        // right = left + width, bottom = top + height
+        right: this._boundingRect.document.left + this._boundingRect.document.width,
+        bottom: this._boundingRect.document.top + this._boundingRect.document.height,
+    };
+}
+
+
+/***
+ Useful to get our WebGL plane bounding rectangle
+ Takes all transformations into account
+ Used internally for frustum culling
+
+ returns :
+ @boundingRectangle (obj): an object containing our plane WebGL element bounding rectangle (width, height, top, bottom, right and left properties)
+ ***/
+Curtains.BasePlane.prototype.getWebGLBoundingRect = function() {
+    var wrapper = this._wrapper;
+
+    var vPMatrix = this._matrices.viewProjectionMatrix;
+
+    // check that our view projection matrix is defined
+    if(vPMatrix) {
+        // we are going to get our plane's four corners relative to our view projection matrix
+        var corners = [
+            wrapper._applyMatrixToPoint([-1, 1, 0], vPMatrix), // plane's top left corner
+            wrapper._applyMatrixToPoint([1, 1, 0], vPMatrix), // plane's top right corner
+            wrapper._applyMatrixToPoint([1, -1, 0], vPMatrix), // plane's bottom right corner
+            wrapper._applyMatrixToPoint([-1, -1, 0], vPMatrix) // plane's bottom left corner
+        ];
+
+        // we need to check for the X and Y min and max values
+        // use arbitrary integers that will be overrided anyway
+        var minX = 1000000;
+        var maxX = -1000000;
+
+        var minY = 1000000;
+        var maxY = -1000000;
+
+        for(var i = 0; i < corners.length; i++) {
+            var corner = corners[i];
+            // convert from coordinates range of [-1, 1] to coordinates range of [0, 1]
+            corner[0] = (corner[0] + 1) / 2;
+            corner[1] = 1 - (corner[1] + 1) / 2;
+
+            if(corner[0] < minX) {
+                minX = corner[0];
+            }
+            else if(corner[0] > maxX) {
+                maxX = corner[0];
+            }
+
+            if(corner[1] < minY) {
+                minY = corner[1];
+            }
+            else if(corner[1] > maxY) {
+                maxY = corner[1];
+            }
+        }
+
+        // return our values ranging from 0 to 1 multiplied by our canvas sizes + canvas top and left offsets
+        return {
+            width: (maxX - minX) * wrapper._boundingRect.width / wrapper.pixelRatio,
+            height: (maxY - minY) * wrapper._boundingRect.height / wrapper.pixelRatio,
+            top: (minY * wrapper._boundingRect.height + wrapper._boundingRect.top) / wrapper.pixelRatio,
+            left: (minX * wrapper._boundingRect.width + wrapper._boundingRect.left) / wrapper.pixelRatio,
+
+            // add left and width to get right property
+            right: (minX * wrapper._boundingRect.width + wrapper._boundingRect.left + (maxX - minX) * wrapper._boundingRect.width) / wrapper.pixelRatio,
+            // add top and height to get bottom property
+            bottom: (minY * wrapper._boundingRect.height + wrapper._boundingRect.top + (maxY - minY) * wrapper._boundingRect.height) / wrapper.pixelRatio,
+        };
+    }
+    else {
+        return this._boundingRect.document;
+    }
 };
 
 
@@ -1525,11 +1922,11 @@ Curtains.BasePlane.prototype.planeResize = function() {
 
     // if this is a Plane object we need to update its perspective and positions
     if(this._type === "Plane") {
-        // reset perspective
-        this.setPerspective(this._fov, 0.1, this._fov * 2);
-
         // set its new computed sizes
         this._setComputedSizes();
+
+        // reset perspective
+        this.setPerspective(this._fov, 0.1, this._fov * 2);
 
         // apply new position
         this._applyCSSPositions();
@@ -2102,15 +2499,22 @@ Curtains.Plane.prototype.constructor = Curtains.Plane;
 Curtains.Plane.prototype._setInitParams = function(params) {
     var wrapper = this._wrapper;
 
-    // if our plain is ready to be drawn
-    this._canDraw = false;
-    // if our plane should always be drawn or if it should be drawn only when inside the viewport
+    // if our plane should always be drawn or if it should be drawn only when inside the viewport (frustum culling)
     this.alwaysDraw = params.alwaysDraw || false;
 
-
-    if((params.mimicCSS || params.mimicCSS === false) && !wrapper.productionMode) {
-        console.warn("mimicCSS property is deprecated since v2.0 as the planes will always copy their html elements sizes and positions.");
+    // draw check margins in pixels
+    // positive numbers means it can be displayed even when outside the viewport
+    // negative numbers means it can be hidden even when inside the viewport
+    var drawCheckMargins = {
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+    };
+    if(params.drawCheckMargins) {
+        drawCheckMargins = params.drawCheckMargins;
     }
+    this.drawCheckMargins = drawCheckMargins;
 
     this.rotation = {
         x: 0,
@@ -2146,7 +2550,19 @@ Curtains.Plane.prototype._setInitParams = function(params) {
     }
 
     // set default fov
-    this._fov = params._fov || 75;
+    this._fov = params.fov || 75;
+
+    // if we should watch scroll
+    if(params.watchScroll === null || params.watchScroll === undefined) {
+        this.watchScroll = this._wrapper._watchScroll;
+    }
+    else {
+        this.watchScroll = params.watchScroll || false;
+    }
+    // start listening for scroll
+    if(this.watchScroll) {
+        this._wrapper._scrollManager.shouldWatch = true;
+    }
 
     // enable depth test by default
     this._shouldUseDepthTest = true;
@@ -2160,11 +2576,11 @@ Curtains.Plane.prototype._initPositions = function() {
     // set its matrices
     this._initMatrices();
 
-    // apply our css positions
-    this._applyCSSPositions();
-
     // set our initial perspective matrix
     this.setPerspective(this._fov, 0.1, this._fov * 2);
+
+    // apply our css positions
+    this._applyCSSPositions();
 };
 
 
@@ -2229,6 +2645,14 @@ Curtains.Plane.prototype._initSources = function() {
     }, 16);
 
     this._canDraw = true;
+
+    // be sure we'll update the scene even if drawing is disabled
+    this._wrapper.needRender();
+
+    // everything is ready, check if we should draw the plane
+    if(!this.alwaysDraw) {
+        this._shouldDrawCheck();
+    }
 };
 
 
@@ -2335,9 +2759,16 @@ Curtains.Plane.prototype._setPerspectiveMatrix = function(fov, near, far) {
  @far (float): the farthest point where object are displayed
  ***/
 Curtains.Plane.prototype.setPerspective = function(fov, near, far) {
-    var fieldOfView = parseInt(fov) || 75;
-    if(fieldOfView < 0) {
-        fieldOfView = 0;
+    var fieldOfView;
+    if(fov === null || typeof fov !== "number") {
+        fieldOfView = 75;
+    }
+    else {
+        fieldOfView = parseInt(fov)
+    }
+
+    if(fieldOfView < 1) {
+        fieldOfView = 1;
     }
     else if(fieldOfView > 180) {
         fieldOfView = 180;
@@ -2353,7 +2784,9 @@ Curtains.Plane.prototype.setPerspective = function(fov, near, far) {
         this._wrapper.glContext.uniformMatrix4fv(this._matrices.pMatrix.location, false, this._matrices.pMatrix.matrix);
 
         // set mvMatrix as well cause we need to update z translation based on new fov
-        this._setMVMatrix();
+        if(this._canDraw) {
+            this._setMVMatrix();
+        }
     }
 };
 
@@ -2369,70 +2802,31 @@ Curtains.Plane.prototype.setPerspective = function(fov, near, far) {
 Curtains.Plane.prototype._setMVMatrix = function() {
     var wrapper = this._wrapper;
 
-    var identity = new Float32Array([
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    ]);
-
-    var planeTranslation = new Float32Array([
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        this._translation.x,  this._translation.y,  this._translation.z - (this._fov / 2),  1.0
-    ]);
-
-    var xRotation = new Float32Array([
-        1.0, 0.0, 0.0, 0.0,
-        0.0, Math.cos(this.rotation.x), Math.sin(this.rotation.x), 0.0,
-        0.0, -Math.sin(this.rotation.x), Math.cos(this.rotation.x), 0.0,
-        0.0, 0.0, 0.0, 1.0
-    ]);
-
-    var yRotation = new Float32Array([
-        Math.cos(this.rotation.y), 0.0, -Math.sin(this.rotation.y), 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        Math.sin(this.rotation.y), 0.0, Math.cos(this.rotation.y), 0.0,
-        0.0, 0.0, 0.0, 1.0
-    ]);
-
-    var zRotation = new Float32Array([
-        Math.cos(this.rotation.z), Math.sin(this.rotation.z), 0.0, 0.0,
-        -Math.sin(this.rotation.z), Math.cos(this.rotation.z), 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    ]);
-
     // here we will silently set our scale based on the canvas size and the plane inner size
     var relativeScale = {
         x: this.scale.x * ((wrapper._boundingRect.width / wrapper._boundingRect.height) * this._boundingRect.computed.width / 2),
         y: this.scale.y * this._boundingRect.computed.height / 2,
     };
 
-    var scale = new Float32Array([
-        relativeScale.x, 0.0, 0.0, 0.0,
-        0.0, relativeScale.y, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    ]);
-
-
-    // we calculate the new model view matrix based on translation, rotation and scale
-    // first multiply identity matrix with translation
-    // second, rotate around X, Y then Z
-    // third multiply by scale
-    var nextMVMatrix = wrapper._multiplyMatrix(identity, planeTranslation);
-    nextMVMatrix = wrapper._multiplyMatrix(nextMVMatrix, xRotation);
-    nextMVMatrix = wrapper._multiplyMatrix(nextMVMatrix, yRotation);
-    nextMVMatrix = wrapper._multiplyMatrix(nextMVMatrix, zRotation);
-    nextMVMatrix = wrapper._multiplyMatrix(nextMVMatrix, scale);
+    // translation (we're translating the planes under the hood from fov / 2 along Z axis)
+    var translation = [this._translation.x, this._translation.y, this._translation.z - (this._fov / 2)];
+    var rotation = [this.rotation.x, this.rotation.y, this.rotation.z];
+    var scale = [relativeScale.x, relativeScale.y, 1];
 
     if(this._matrices) {
-        this._matrices.mvMatrix.matrix = nextMVMatrix;
+        // set model view matrix with our transformations
+        this._matrices.mvMatrix.matrix = wrapper._applyTransformationsMatrix(translation, rotation, scale);
 
         wrapper.glContext.useProgram(this._program);
         wrapper.glContext.uniformMatrix4fv(this._matrices.mvMatrix.location, false, this._matrices.mvMatrix.matrix);
+
+        // this is the result of our projection matrix * our mv matrix, useful for bounding box calculations and frustum culling
+        this._matrices.viewProjectionMatrix = wrapper._multiplyMatrix(this._matrices.pMatrix.matrix, this._matrices.mvMatrix.matrix);
+    }
+
+    // check if we should draw the plane but only if everything has been initialized
+    if(!this.alwaysDraw && this._canDraw) {
+        this._shouldDrawCheck();
     }
 };
 
@@ -2444,30 +2838,36 @@ Curtains.Plane.prototype._setMVMatrix = function() {
  params :
  @scaleX (float): scale to apply on X axis
  @scaleY (float): scale to apply on Y axis
- @scaleZ (float): scale to apply on Z axis
  ***/
 Curtains.Plane.prototype.setScale = function(scaleX, scaleY) {
-    scaleX = parseFloat(scaleX) || 1;
-    scaleX = Math.max(scaleX, 0.001); // ensure we won't have a 0 scale
-
-    scaleY = parseFloat(scaleY) || 1;
-    scaleY = Math.max(scaleY, 0.001); // ensure we won't have a 0 scale
-
-    this.scale = {
-        x: scaleX,
-        y: scaleY
-    };
-
-    if(!this.alwaysDraw) {
-        this._shouldDrawCheck();
+    if(scaleX === null || typeof scaleX !== "number") {
+        scaleX = 1;
+    }
+    else {
+        scaleX = Math.max(parseFloat(scaleX), 0.001); // ensure we won't have a 0 scale
     }
 
-    // set mvMatrix
-    this._setMVMatrix();
+    if(scaleY === null || typeof scaleY !== "number") {
+        scaleY = 1;
+    }
+    else {
+        scaleY = Math.max(parseFloat(scaleY), 0.001); // ensure we won't have a 0 scale
+    }
 
-    // adjust textures size
-    for(var i = 0; i < this.textures.length; i++) {
-        this.textures[i]._adjustTextureSize();
+    // only apply if values changed
+    if(scaleX !== this.scale.x || scaleY !== this.scale.y) {
+        this.scale = {
+            x: scaleX,
+            y: scaleY
+        };
+
+        // set mvMatrix
+        this._setMVMatrix();
+
+        // adjust textures size
+        for (var i = 0; i < this.textures.length; i++) {
+            this.textures[i]._adjustTextureSize();
+        }
     }
 };
 
@@ -2486,14 +2886,17 @@ Curtains.Plane.prototype.setRotation = function(angleX, angleY, angleZ) {
     angleY = parseFloat(angleY) || 0;
     angleZ = parseFloat(angleZ) || 0;
 
-    this.rotation = {
-        x: angleX,
-        y: angleY,
-        z: angleZ
-    };
+    // only apply if values changed
+    if(angleX !== this.rotation.x || angleY !== this.rotation.y || angleZ !== this.rotation.z) {
+        this.rotation = {
+            x: angleX,
+            y: angleY,
+            z: angleZ
+        };
 
-    // set mvMatrix
-    this._setMVMatrix();
+        // set mvMatrix
+        this._setMVMatrix();
+    }
 };
 
 
@@ -2512,11 +2915,6 @@ Curtains.Plane.prototype._setTranslation = function() {
 
     this._translation.x = this._boundingRect.computed.left + relativePosition.x;
     this._translation.y = this._boundingRect.computed.top + relativePosition.y;
-
-    // check if we should draw the plane
-    if(!this.alwaysDraw) {
-        this._shouldDrawCheck();
-    }
 
     // set mvMatrix
     this._setMVMatrix();
@@ -2569,32 +2967,18 @@ Curtains.Plane.prototype._documentToPlaneSpace = function(xPosition, yPosition) 
 Curtains.Plane.prototype._shouldDrawCheck = function() {
     var wrapper = this._wrapper;
 
-    // we could think of a way to add margin to the should draw check
-    var MARGIN = 0;
-
-    // we need to take scale into account
-    var scaleAdjustment = {
-        x: (this._boundingRect.document.width - this._boundingRect.document.width * this.scale.x) / 2,
-        y: (this._boundingRect.document.height - this._boundingRect.document.height * this.scale.y) / 2,
-    };
-
-    // get plane actual boundaries including its scale and relative translation
-    var actualPlaneBounds = {
-        top: this._boundingRect.document.top + this.relativeTranslation.y * wrapper.pixelRatio + scaleAdjustment.y,
-        right: this._boundingRect.document.left + this.relativeTranslation.x * wrapper.pixelRatio + this._boundingRect.document.width - scaleAdjustment.x,
-        bottom: this._boundingRect.document.top + this.relativeTranslation.y * wrapper.pixelRatio + this._boundingRect.document.height - scaleAdjustment.y,
-        left: this._boundingRect.document.left + this.relativeTranslation.x * wrapper.pixelRatio + scaleAdjustment.x,
-    };
+    // get plane bounding rect
+    var actualPlaneBounds = this.getWebGLBoundingRect();
 
     var self = this;
 
     // if we decide to draw the plane only when visible inside the canvas
     // we got to check if its actually inside the canvas
     if(
-        actualPlaneBounds.right < wrapper._boundingRect.left - MARGIN
-        || actualPlaneBounds.left > wrapper._boundingRect.left + wrapper._boundingRect.width + MARGIN
-        || actualPlaneBounds.bottom < wrapper._boundingRect.top - MARGIN
-        || actualPlaneBounds.top > wrapper._boundingRect.top + wrapper._boundingRect.height + MARGIN
+        actualPlaneBounds.right < wrapper._boundingRect.left - this.drawCheckMargins.right
+        || actualPlaneBounds.left > wrapper._boundingRect.left + wrapper._boundingRect.width + this.drawCheckMargins.left
+        || actualPlaneBounds.bottom < wrapper._boundingRect.top - this.drawCheckMargins.bottom
+        || actualPlaneBounds.top > wrapper._boundingRect.top + wrapper._boundingRect.height + this.drawCheckMargins.top
     ) {
         if(this._shouldDraw) {
             this._shouldDraw = false;
@@ -2633,14 +3017,31 @@ Curtains.Plane.prototype._applyCSSPositions = function() {
 
 
 /***
- This function update the plane position based on its CSS positions and transformations values.
+ This function updates the plane position based on its CSS positions and transformations values.
  Useful if the HTML element has been moved while the container size has not changed.
  ***/
 Curtains.Plane.prototype.updatePosition = function() {
-    // set the new plane sizes and positions relative to document
+    // set the new plane sizes and positions relative to document by triggering getBoundingClientRect()
     this._setDocumentSizes();
+
     // apply them
     this._applyCSSPositions();
+};
+
+
+/***
+ This function updates the plane position based on the Curtains wrapper scroll manager values
+ ***/
+Curtains.Plane.prototype.updateScrollPosition = function() {
+    // actually update the plane position only if last X delta or last Y delta is not equal to 0
+    if(this._wrapper._scrollManager.lastXDelta || this._wrapper._scrollManager.lastYDelta) {
+        // set new positions based on our delta without triggering reflow
+        this._boundingRect.document.top += this._wrapper._scrollManager.lastYDelta * this._wrapper.pixelRatio;
+        this._boundingRect.document.left += this._wrapper._scrollManager.lastXDelta * this._wrapper.pixelRatio;
+
+        // apply them
+        this._applyCSSPositions();
+    }
 };
 
 
@@ -2776,6 +3177,9 @@ Curtains.ShaderPass.prototype._initShaderPassPlane = function() {
     }, 0);
 
     this._canDraw = true;
+
+    // be sure we'll update the scene even if drawing is disabled
+    this._wrapper.needRender();
 };
 
 
@@ -3057,6 +3461,9 @@ Curtains.Texture.prototype.setSource = function(source) {
 
     // set our webgl texture
     glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, source);
+
+    // update our scene
+    this._wrapper.needRender();
 };
 
 

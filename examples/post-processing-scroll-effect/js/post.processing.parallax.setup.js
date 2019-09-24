@@ -1,14 +1,12 @@
-window.addEventListener("DOMContentLoaded", function() {
-    // we will keep track of the scroll
-    var scrollValue = window.pageYOffset;
-    var lastScrollValue = window.pageYOffset;
-
+window.addEventListener("load", function() {
     // keep track of the number of plane we're currently drawing
     var planeDrawn = 0;
     var debugElement = document.getElementById("debug-value");
 
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains("canvas");
+    var webGLCurtain = new Curtains({
+        container: "canvas"
+    });
 
     webGLCurtain.onRender(function() {
         // update our planes deformation
@@ -22,6 +20,31 @@ window.addEventListener("DOMContentLoaded", function() {
 
         // update our number of planes drawn debug value
         debugElement.innerText = planeDrawn;
+    }).onScroll(function() {
+        // get scroll deltas to apply the effect on scroll
+        var delta = webGLCurtain.getScrollDeltas();
+
+        // invert value for the effect
+        delta.y = -delta.y;
+
+        // threshold
+        if(delta.y > 60) {
+            delta.y = 60;
+        }
+        else if(delta.y < -60) {
+            delta.y = -60;
+        }
+
+        if(Math.abs(delta.y) > Math.abs(scrollEffect)) {
+            scrollEffect = delta.y;
+        }
+
+        // update the plane positions during scroll
+        for(var i = 0; i < planes.length; i++) {
+            // apply additional translation, scale and rotation
+            applyPlanesParallax(i);
+        }
+
     }).onError(function() {
         // we will add a class to the document body to display original images
         document.body.classList.add("no-curtains", "planes-loaded");
@@ -36,8 +59,7 @@ window.addEventListener("DOMContentLoaded", function() {
 
     // add our planes and handle them
     for(var i = 0; i < planeElements.length; i++) {
-        // we won't pass any parameters as most of the animations will be done by post-processsing the scene
-        var plane = webGLCurtain.addPlane(planeElements[i]);
+        var plane = webGLCurtain.addPlane(planeElements[i]); // we don't need any params here
 
         if(plane) {
             planes.push(plane);
@@ -45,37 +67,6 @@ window.addEventListener("DOMContentLoaded", function() {
             handlePlanes(i);
         }
     }
-
-    // listen to scroll
-    window.addEventListener("scroll", function(e) {
-        lastScrollValue = scrollValue;
-        scrollValue = window.pageYOffset;
-
-        var delta = scrollValue - lastScrollValue;
-
-        // threshold
-        if(delta > 60) {
-            delta = 60;
-        }
-        else if(delta < -60) {
-            delta = -60;
-        }
-
-        if(Math.abs(delta) > Math.abs(scrollEffect)) {
-            scrollEffect = delta;
-        }
-
-        // update the plane positions during scroll
-        for(var i = 0; i < planes.length; i++) {
-            // update plane position on scroll
-            planes[i].updatePosition();
-
-            // apply additional translation, scale and rotation
-            applyPlanesParallax(i);
-        }
-    }, {
-        passive: true,
-    });
 
 
     // handle all the planes

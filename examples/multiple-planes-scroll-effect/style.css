@@ -40,10 +40,10 @@
     /* our canvas will be a bit taller than our window to avoid "glitched" top and bottom edges */
     #canvas {
         position: fixed;
-        top: -5vh;
+        top: 0;
         right: 0;
         left: 0;
-        height: 110vh;
+        height: 100vh;
         z-index: 10;
         opacity: 0;
         transition: opacity 0.5s ease-in;

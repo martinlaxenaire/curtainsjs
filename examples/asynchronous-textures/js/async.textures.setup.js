@@ -1,10 +1,13 @@
-window.addEventListener("DOMContentLoaded", function() {
+window.addEventListener("load", function() {
     // here we will handle which texture is visible and the timer to transition between images
     var activeTexture = 1;
     var transitionTimer = 0;
 
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains("canvas");
+    var webGLCurtain = new Curtains({
+        container: "canvas",
+        watchScroll: false // no need to listen for the scroll in this example
+    });
 
     // disable drawing for now
     webGLCurtain.disableDrawing();
@@ -30,7 +33,7 @@ window.addEventListener("DOMContentLoaded", function() {
                 value: 0,
             },
         },
-    }
+    };
 
     // first we create en empty plane
     // it won't appear because it does not have any texture, but it will be there !

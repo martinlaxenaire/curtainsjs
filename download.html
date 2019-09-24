@@ -78,7 +78,7 @@
 
 					<div class="text-section inner-section">
 						<p>
-                            <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v3.0">curtains.js v3.0 (102Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v3.0">curtains.min.js v3.0 (41Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+                            <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v4.0">curtains.js v4.0 (116Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v4.0">curtains.min.js v4.0 (45Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
 						</p>
 					</div>
 
@@ -92,9 +92,30 @@
 
 					<div class="text-section inner-section">
 						<h2>Changelog</h2>
+                        <h3>Version 4.0</h3>
+                        <p>
+                            Version 4.0 introduces optional native scroll handling (planes position are automatically updated when the users scrolls), but it also lets you define if you want to listen to the resize event or use the internal request animation frame loop. With those options you can chose to handle those things by yourself and therefore improve performance by keeping a single resize or request animation frame loop for your websites.<br />
+                            The Curtains object now accepts an object as <a href="curtains-class.html#curtains-init-params">init params</a>.
+                        </p>
+                        <ul>
+                            <li>
+                                New Curtains object initial parameters with the ability to define which events you want to listen to.
+                            </li>
+                            <li>
+                                A few new helper methods and event to handle scroll related things.
+                            </li>
+                            <li>
+                                Real frustum culling to draw only the planes that actually need to be render. Comes with a handy <a href="plane-class.html#draw-check-margins">drawCheckMargins</a> parameter in case you are displacing vertices positions in your vertex shader.
+                            </li>
+                            <li>
+                                Performance improvements and bugs fixes.
+                            </li>
+                        </ul>
                         <h3>Version 3.0</h3>
-                        <p>Version 3.0 introduces post processing effects and a few more helpers.<br />
-                            There are no breaking changes since v2.0 so you can update it safely.</p>
+                        <p>
+                            Version 3.0 introduces post processing effects and a few more helpers.<br />
+                            There are no breaking changes since v2.0 so you can update it safely.
+                        </p>
                         <ul>
                             <li>
                                 Major code refactoring to introduce <a href="shader-pass-class.html">ShaderPass</a> class by creating a BasePlane class. Usual <a href="plane-class.html">Plane</a> class now extends BasePlane class, as does ShaderPass class.

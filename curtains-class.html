@@ -132,6 +132,12 @@
                                     <a href="curtains-class.html#get-bounding-rect">getBoundingRect</a>
                                 </li>
                                 <li>
+                                    <a href="curtains-class.html#get-scroll-deltas">getScrollDeltas</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#get-scroll-values">getScrollValues</a>
+                                </li>
+                                <li>
                                     <a href="curtains-class.html#need-render">needRender</a>
                                 </li>
                                 <li>
@@ -141,6 +147,9 @@
                                     <a href="curtains-class.html#remove-shader-pass">removeShaderPass</a>
                                 </li>
                                 <li>
+                                    <a href="curtains-class.html#render">render</a>
+                                </li>
+                                <li>
                                     <a href="curtains-class.html#resize">resize</a>
                                 </li>
                                 <li>
@@ -148,6 +157,9 @@
                                 </li>
                                 <li>
                                     <a href="curtains-class.html#set-pixel-ratio">setPixelRatio</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#update-scroll-values">updateScrollValues</a>
                                 </li>
                             </ul>
                             <div class="api-submenu-title">
@@ -168,6 +180,9 @@
                                 </li>
                                 <li>
                                     <a href="curtains-class.html#on-render">onRender</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#on-scroll">onScroll</a>
                                 </li>
                             </ul>
                         </div>
@@ -198,6 +213,9 @@
                                     <a href="plane-class.html#cross-origin">crossOrigin</a>
                                 </li>
                                 <li>
+                                    <a href="plane-class.html#draw-check-margins">drawCheckMargins</a>
+                                </li>
+                                <li>
                                     <a href="plane-class.html#html-element">htmlElement</a>
                                 </li>
                                 <li>
@@ -224,6 +242,9 @@
                                 <li>
                                     <a href="plane-class.html#videos">videos</a>
                                 </li>
+                                <li>
+                                    <a href="plane-class.html#watch-scroll">watchScroll</a>
+                                </li>
                             </ul>
                             <div class="api-submenu-title">
                                 <a href="plane-class.html#methods">Methods</a>
@@ -237,6 +258,9 @@
                                 </li>
                                 <li>
                                     <a href="plane-class.html#get-bounding-rect">getBoundingRect</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#get-webgl-bounding-rect">getWebGLBoundingRect</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#load-canvas">loadCanvas</a>
@@ -288,6 +312,9 @@
                                 </li>
                                 <li>
                                     <a href="plane-class.html#update-position">updatePosition</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#update-scroll-position">updateScrollPosition</a>
                                 </li>
                             </ul>
                             <div class="api-submenu-title">
@@ -464,7 +491,7 @@
 						<h1>Curtains class</h1>
 						<h2 id="basic-usage">Basic usage</h2>
 						<p>
-							You will have to create a Curtains object first that will handle the scene containing all your planes. It will also create the WebGL context, append the canvas and handle the requestAnimationFrame loop. You just have to pass the ID of the HTML element that will wrap the canvas :
+							You will have to create a Curtains object first that will handle the scene containing all your planes. It will also create the WebGL context, append the canvas and handle the requestAnimationFrame loop. You just have to pass the HTML element (or its ID) that will wrap the canvas :
 						</p>
 
 
@@ -475,26 +502,111 @@
                                     // "canvas" is the ID of our HTML container element
                                 </div>
                                 <div>
-                                    <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>(<span class="code-string">"canvas"</span>)<span class="code-var">;</span>
+                                    <div>
+                                        <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({
+                                    </div>
+                                    <div class="code-indent">
+                                        <span class="code-property">container</span>: document.<span class="code-tag">getElementById</span>(<span class="code-string">"canvas"</span>) <span class="code-comment">// we could have just pass "canvas" instead</span>
+                                    </div>
+                                    <div>
+                                        })<span class="code-var">;</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
 						<p>
-							You can pass a boolean as a second parameter to indicate whether you want to use the library in production mode. If set to true it will remove all console warnings. Default to false.
+							There are other options that you can pass as parameters. For example, you can specify whether you want to use the library in production mode:
 						</p>
 
                         <div class="code">
 
                             <div>
-                                <div class="code-comment">
-                                    // use the library in "production" mode
+                                <div>
+                                    <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({
+                                </div>
+                                <div class="code-indent">
+                                    <div>
+                                        <span class="code-property">container</span>: <span class="code-string">"canvas"</span><span class="code-var">,</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">production</span>: <span class="code-var">true</span> <span class="code-comment">// use the library in "production" mode</span>
+                                    </div>
                                 </div>
                                 <div>
-                                    <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>(<span class="code-string">"canvas"</span><span class="code-var">, true</span>)<span class="code-var">;</span>
+                                    })<span class="code-var">;</span>
                                 </div>
                             </div>
                         </div>
+
+                        <h3 id="curtains-init-params">
+                            Parameters
+                        </h3>
+
+                        <p>
+                            Here is a complete list of all the parameters:
+                        </p>
+                        <ul class="api-item-parameters">
+                            <li>
+                                <span class="api-item-parameter-label">
+                                    container
+                                </span>
+                                <span class="api-item-parameter-type">
+                                    HTML Element or string
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    the HTML Element or ID of the HTML Element that will wrap the canvas. If not specified, will append a div with a "curtains-canvas" ID just before the body closing tag.
+                                </span>
+                            </li>
+
+                            <li>
+                                <span class="api-item-parameter-label">
+                                    production
+                                </span>
+                                <span class="api-item-parameter-type">
+                                    bool, optionnal
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    Whether the library should throw useful console warnings or not. Default to false.
+                                </span>
+                            </li>
+
+                            <li>
+                                <span class="api-item-parameter-label">
+                                    autoRender
+                                </span>
+                                <span class="api-item-parameter-type">
+                                    bool, optionnal
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    Whether the library should create a request animation frame loop to render the scene. Set it to false if you want to handle this by yourself using the <a href="curtains-class.html#render">render()</a> method. Default to true.
+                                </span>
+                            </li>
+
+                            <li>
+                                <span class="api-item-parameter-label">
+                                    autoResize
+                                </span>
+                                <span class="api-item-parameter-type">
+                                    bool, optionnal
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    Whether the library should listen to the window resize event and actually resize the scene. Set it to false if you want to handle this by yourself using the <a href="curtains-class.html#resize">resize()</a> method. Default to true.
+                                </span>
+                            </li>
+
+                            <li>
+                                <span class="api-item-parameter-label">
+                                    watchScroll
+                                </span>
+                                <span class="api-item-parameter-type">
+                                    bool, optionnal
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    Whether the library should listen to the window scroll event. Set it to false if you want to handle this by yourself. Default to true.
+                                </span>
+                            </li>
+                        </ul>
 
 						<h2 id="properties">Properties</h2>
 						<ul>
@@ -668,9 +780,80 @@
 													bool, optionnal
 												</span>
 												<span class="api-item-parameter-desc">
-													defines if the plane should always be drawn or if it should be drawn only if its within the canvas (false by default).
+													Whether to use frustum culling: defines if the plane should always be drawn or if it should not be drawn if it lies completely outside of the scene (false by default).
 												</span>
 											</li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													drawCheckMargins
+												</span>
+                                                <span class="api-item-parameter-type">
+													object, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													Additional margins to add in the draw check calculations, in pixels.<br />
+                                                    Positive value means the plane will be drawn even if outside the canvas by less than the value, negative value means the plane will be hidden if inside the canvas by more than the value.<br />
+                                                    Useful if you're messing with the vertices positions in your vertex shader.
+												</span>
+
+                                                <ul class="api-item-parameters-inner-list">
+                                                    <li>
+                                                        <span class="api-item-parameter-label">
+                                                            top
+                                                        </span>
+                                                        <span class="api-item-parameter-type">
+                                                            float
+                                                        </span>
+                                                        <span class="api-item-parameter-desc">
+                                                            margin to apply when comparing the top side of the plane and the bottom side of the canvas (0 by default).
+                                                        </span>
+                                                    </li>
+                                                    <li>
+                                                        <span class="api-item-parameter-label">
+                                                            right
+                                                        </span>
+                                                        <span class="api-item-parameter-type">
+                                                            float
+                                                        </span>
+                                                        <span class="api-item-parameter-desc">
+                                                            margin to apply when comparing the right side of the plane and the left side of the canvas (0 by default).
+                                                        </span>
+                                                    </li>
+                                                    <li>
+                                                        <span class="api-item-parameter-label">
+                                                            bottom
+                                                        </span>
+                                                        <span class="api-item-parameter-type">
+                                                            float
+                                                        </span>
+                                                        <span class="api-item-parameter-desc">
+                                                            margin to apply when comparing the bottom side of the plane and the top side of the canvas (0 by default).
+                                                        </span>
+                                                    </li>
+                                                    <li>
+                                                        <span class="api-item-parameter-label">
+                                                            left
+                                                        </span>
+                                                        <span class="api-item-parameter-type">
+                                                            float
+                                                        </span>
+                                                        <span class="api-item-parameter-desc">
+                                                            margin to apply when comparing the left side of the plane and the right side of the canvas (0 by default).
+                                                        </span>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													watchScroll
+												</span>
+                                                <span class="api-item-parameter-type">
+													bool, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													Whether the plane should auto update its position when the user scrolls (false by default).
+												</span>
+                                            </li>
 											<li>
 												<span class="api-item-parameter-label">
 													autoloadSources
@@ -771,7 +954,7 @@
                                             <span class="code-property">vertexShaderID</span>: <span class="code-string">"plane-vs"</span><span class="code-var">,</span> <span class="code-comment">// our vertex shader ID</span>
                                         </div>
                                         <div>
-                                            <span class="code-property">fragmentShaderID</span>: <span class="code-string">"plane-fs"</span><span class="code-var">,</span> <span class="code-comment">// our framgent shader ID</span>
+                                            <span class="code-property">fragmentShaderID</span>: <span class="code-string">"plane-fs"</span><span class="code-var">,</span> <span class="code-comment">// our fragment shader ID</span>
                                         </div>
                                         <div>
                                             <span class="code-property">uniforms</span>: {
@@ -994,6 +1177,37 @@
                                     <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect" target="_blank">Multiple planes scroll effect</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
                                 </p>
                             </li>
+
+                            <li id="get-scroll-deltas">
+                                <p>
+                                    <strong>getScrollDeltas</strong>(): <span class="api-item-version">v4.0</span>
+                                </p>
+                                <p>
+                                    Get the last scroll delta values along X and Y axis. Call it after having called <a href="curtains-class.html#update-scroll-values">updateScrollValues()</a> or inside the <a href="curtains-class.html#on-scroll">onScroll()</a> event if scroll watching is active.
+                                </p>
+                                <p>
+                                    <strong>returns:</strong> an object containing the last scroll delta values along X and Y axis.
+                                </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a>, <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a>, <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
+                                </p>
+                            </li>
+
+                            <li id="get-scroll-values">
+                                <p>
+                                    <strong>getScrollValues</strong>(): <span class="api-item-version">v4.0</span>
+                                </p>
+                                <p>
+                                    Get the current scroll values along X and Y axis. Call it after having called <a href="curtains-class.html#update-scroll-values">updateScrollValues()</a> or inside the <a href="curtains-class.html#on-scroll">onScroll()</a> event if scroll watching is active.
+                                </p>
+                                <p>
+                                    <strong>returns:</strong> an object containing the current scroll values along X and Y axis.
+                                </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a>, <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a>, <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
+                                </p>
+                            </li>
+
 							<li id="need-render">
 								<p>
 									<strong>needRender</strong>(): <span class="api-item-version">v1.8</span>
@@ -1050,6 +1264,14 @@
                                     </li>
                                 </ul>
                             </li>
+                            <li id="render">
+                                <p>
+                                    <strong>render</strong>(): <span class="api-item-version">v4.0</span>
+                                </p>
+                                <p>
+                                    This function renders your scene if drawing is enabled. Useful if you're using your own request animation frame loop.
+                                </p>
+                            </li>
 							<li id="resize">
 								<p>
 									<strong>resize</strong>():  <span class="api-item-version">v2.0</span> <span class="api-item-warning">triggers reflow</span>
@@ -1100,6 +1322,44 @@
                                     </li>
 								</ul>
 							</li>
+
+                            <li id="update-scroll-values">
+                                <p>
+                                    <strong>updateScrollValues</strong>(xOffset, yOffset):  <span class="api-item-version">v4.0</span>
+                                </p>
+                                <p>
+                                    Updates the scroll values. Use it before updating your planes positions with <a href="plane-class.html#update-scroll-position">updateScrollPosition()</a> while scrolling.<br />
+                                    Called internally if scroll watching is active.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            xOffset
+                                        </span>
+                                        <span class="api-item-parameter-type">
+											float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            scroll value along X axis.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            yOffset
+                                        </span>
+                                        <span class="api-item-parameter-type">
+											float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            scroll value along Y axis.
+                                        </span>
+                                    </li>
+                                </ul>
+
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect-custom-scroll/index.html" title="Multiple planes scroll effect with Locomotive scroll" target="_blank">Multiple planes scroll effect with Locomotive scroll</a> example.
+                                </p>
+                            </li>
 						</ul>
 
 						<h2 id="events">Events</h2>
@@ -1165,6 +1425,20 @@
 									<strong>Examples:</strong> used in <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a>, <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> examples.
 								</p>
 							</li>
+                            <li id="on-scroll">
+                                <p>
+                                    <strong>onScroll</strong>(): <span class="api-item-version">v4.0</span>
+                                </p>
+                                <p>
+                                    This function is called each time a window scroll event is fired and scroll watching is active.
+                                </p>
+                                <p>
+                                    <strong>returns:</strong> your Curtains object, allowing it to be chainable.
+                                </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a>, <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a>, <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
+                                </p>
+                            </li>
 						</ul>
 					</div>
 				</div>

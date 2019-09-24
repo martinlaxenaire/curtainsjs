@@ -132,6 +132,12 @@
                                     <a href="curtains-class.html#get-bounding-rect">getBoundingRect</a>
                                 </li>
                                 <li>
+                                    <a href="curtains-class.html#get-scroll-deltas">getScrollDeltas</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#get-scroll-values">getScrollValues</a>
+                                </li>
+                                <li>
                                     <a href="curtains-class.html#need-render">needRender</a>
                                 </li>
                                 <li>
@@ -141,6 +147,9 @@
                                     <a href="curtains-class.html#remove-shader-pass">removeShaderPass</a>
                                 </li>
                                 <li>
+                                    <a href="curtains-class.html#render">render</a>
+                                </li>
+                                <li>
                                     <a href="curtains-class.html#resize">resize</a>
                                 </li>
                                 <li>
@@ -148,6 +157,9 @@
                                 </li>
                                 <li>
                                     <a href="curtains-class.html#set-pixel-ratio">setPixelRatio</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#update-scroll-values">updateScrollValues</a>
                                 </li>
                             </ul>
                             <div class="api-submenu-title">
@@ -168,6 +180,9 @@
                                 </li>
                                 <li>
                                     <a href="curtains-class.html#on-render">onRender</a>
+                                </li>
+                                <li>
+                                    <a href="curtains-class.html#on-scroll">onScroll</a>
                                 </li>
                             </ul>
                         </div>
@@ -198,6 +213,9 @@
                                     <a href="plane-class.html#cross-origin">crossOrigin</a>
                                 </li>
                                 <li>
+                                    <a href="plane-class.html#draw-check-margins">drawCheckMargins</a>
+                                </li>
+                                <li>
                                     <a href="plane-class.html#html-element">htmlElement</a>
                                 </li>
                                 <li>
@@ -224,6 +242,9 @@
                                 <li>
                                     <a href="plane-class.html#videos">videos</a>
                                 </li>
+                                <li>
+                                    <a href="plane-class.html#watch-scroll">watchScroll</a>
+                                </li>
                             </ul>
                             <div class="api-submenu-title">
                                 <a href="plane-class.html#methods">Methods</a>
@@ -237,6 +258,9 @@
                                 </li>
                                 <li>
                                     <a href="plane-class.html#get-bounding-rect">getBoundingRect</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#get-webgl-bounding-rect">getWebGLBoundingRect</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#load-canvas">loadCanvas</a>
@@ -288,6 +312,9 @@
                                 </li>
                                 <li>
                                     <a href="plane-class.html#update-position">updatePosition</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#update-scroll-position">updateScrollPosition</a>
                                 </li>
                             </ul>
                             <div class="api-submenu-title">
@@ -480,7 +507,7 @@
                                     // "canvas" is the ID of our HTML container element
                                 </div>
                                 <div>
-                                    <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>(<span class="code-string">"canvas"</span>)<span class="code-var">;</span>
+                                    <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
                                 </div>
                             </div>
 
@@ -505,7 +532,7 @@
                                     // "canvas" is the ID of our HTML container element
                                 </div>
                                 <div>
-                                    <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>(<span class="code-string">"canvas"</span>)<span class="code-var">;</span>
+                                    <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
                                 </div>
                             </div>
 
@@ -607,8 +634,7 @@
                                     <strong>alwaysDraw</strong> (boolean): <span class="api-item-version">v2.0</span>
                                 </p>
                                 <p>
-                                    Whether the WebGL renderer should always draw the plane or if it should draw it only when the plane is contained in the canvas viewport. Used for performance optimizations.<br />
-                                    If you're messing with the Z position of your vertices in your shader, or if you use rotations, you should set this option to true when you create your plane.
+                                    Whether the WebGL renderer should always draw the plane or if it should draw it only when the plane is contained in the canvas viewport. Used for performance optimizations.
                                 </p>
                             </li>
                             <li id="autoload-sources">
@@ -634,6 +660,62 @@
                                 <p>
                                     The cross origin process used to load the medias.
                                 </p>
+                            </li>
+                            <li id="draw-check-margins">
+                                <p>
+                                    <strong>drawCheckMargins</strong> (object): <span class="api-item-version">v4.0</span>
+                                </p>
+                                <p>
+                                    Additional margins to add in the draw check calculations, in pixels.<br />
+                                    Positive value means the plane will be drawn even if outside the canvas by less than the value, negative value means the plane will be hidden if inside the canvas by more than the value.<br />
+                                    Useful if you're messing with the vertices positions in your vertex shader.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            top
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            margin to apply when comparing the top side of the plane and the bottom side of the canvas (0 by default).
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            right
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            margin to apply when comparing the right side of the plane and the left side of the canvas (0 by default).
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            bottom
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            margin to apply when comparing the bottom side of the plane and the top side of the canvas (0 by default).
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            left
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            margin to apply when comparing the left side of the plane and the right side of the canvas (0 by default).
+                                        </span>
+                                    </li>
+                                </ul>
                             </li>
                             <li id="html-element">
                                 <p>
@@ -708,6 +790,14 @@
                                     An array containing all the videos loaded via the load methods into the plane.
                                 </p>
                             </li>
+                            <li id="watch-scroll">
+                                <p>
+                                    <strong>watchScroll</strong> (bool): <span class="api-item-version">v4.0</span>
+                                </p>
+                                <p>
+                                    Whether your plane's position should be automatically updated when the user scrolls.
+                                </p>
+                            </li>
                         </ul>
 
                         <h2 id="methods">Methods</h2>
@@ -771,10 +861,22 @@
                                     Useful to get our plane HTML element bounding rectangle without causing a reflow/layout repaint. Be careful as the values are relative to your <a href="curtains-class.html#pixel-ratio">Curtains pixelRatio</a> value.
                                 </p>
                                 <p>
-                                    <strong>returns:</strong> an object containing the plane HTML element width, height, top and left positions.
+                                    <strong>returns:</strong> an object containing the plane HTML element width, height, top, right, bottom and left positions in pixels.
                                 </p>
                                 <p class="api-item-examples">
                                     <strong>Examples:</strong> used in <a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a>, <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a>, <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect" target="_blank">Multiple planes scroll effect</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
+                                </p>
+                            </li>
+
+                            <li id="get-webgl-bounding-rect">
+                                <p>
+                                    <strong>getWebGLBoundingRect</strong>(): <span class="api-item-version">v4.0</span>
+                                </p>
+                                <p>
+                                    Useful to get our plane WebGL element bounding rectangle relative to the viewport, with all transformations applied. Used internally in the draw check function (frustum culling).
+                                </p>
+                                <p>
+                                    <strong>returns:</strong> an object containing the plane WebGL element width, height, top, right, bottom and left positions in pixels.
                                 </p>
                             </li>
 
@@ -1031,7 +1133,8 @@
                                     <strong>setPerspective</strong>(fieldOfView, nearPlane, farPlane): <span class="api-item-version">v1.0</span>
                                 </p>
                                 <p>
-                                    Set the perspective. The smaller the field of view, the more perspective.
+                                    Set the perspective. The smaller the field of view, the more perspective.<br />
+                                    All the internal maths are done assuming the camera Z position is always equal to (fieldOfView / 2) if you ever need it.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -1203,6 +1306,18 @@
                                 </p>
                                 <p class="api-item-examples">
                                     <strong>Examples:</strong> used in <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a>, <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a>, <a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a>, <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a> examples.
+                                </p>
+                            </li>
+
+                            <li id="update-scroll-position">
+                                <p>
+                                    <strong>updateScrollPosition</strong>(): <span class="api-item-version">v4.0</span>
+                                </p>
+                                <p>
+                                    Use it if you want to handle the scroll event by yourself, like with a virtual scroll library. You will have to pass the scroll values to the Curtains class with <a href="curtains-class.html#update-scroll-values">updateScrollValues()</a> before calling this method.
+                                </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect-custom-scroll/index.html" title="Multiple planes scroll effect with Locomotive scroll" target="_blank">Multiple planes scroll effect with Locomotive scroll</a> example.
                                 </p>
                             </li>
 

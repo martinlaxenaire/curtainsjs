@@ -85,6 +85,9 @@
 								<li>
 									<a href="#image-uniform-sampler" title="Textures uniform sampler names">Textures uniform sampler names</a>
 								</li>
+                                <li>
+                                    <a href="#handling-scroll-event" title="Handling scroll event">Handling scroll event</a>
+                                </li>
 								<li>
 									<a href="#videos-textures" title="Videos as textures">Videos as textures</a>
 								</li>
@@ -262,16 +265,16 @@
 
                             <div class="code">
                                 <div class="code-comment">
-                                    // wait for the DOM to be ready
+                                    // wait for everything to be ready
                                 </div>
-                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"DOMContentLoaded"</span>, <span class="code-var">function</span>() {
+                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"load"</span>, <span class="code-var">function</span>() {
                                 <div class="code-block code-indent">
                                     <div class="code-block">
                                         <div class="code-comment">
                                             // set up our WebGL context and append the canvas to our wrapper
                                         </div>
                                         <div>
-                                            <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>(<span class="code-string">"canvas"</span>)<span class="code-var">;</span>
+                                            <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
                                         </div>
                                     </div>
 
@@ -728,6 +731,183 @@
 
 						</div>
 
+                        <div id="handling-scroll-event" class="text-section inner-section">
+                            <h2>Handling scroll event</h2>
+                            <p>
+                                By default since version 4.0 your planes positions are now updated while you scroll the page. You can define each plane ability to update its position according to the scroll by setting its own watchScroll property.
+                            </p>
+                            <p>
+                                This means that the library automatically listens to the scroll event. But you might not want to listen to that event at all and handle this by yourself:
+                            </p>
+
+                            <h3>Doing it your own way</h3>
+                            <p>
+                                If you don't want the library to listen to the scroll under the hood, just set the watchScroll parameter to false when initializing your Curtains object. You will then have to listen to the scroll by yourself and update your plane's position manually.<br />
+                                This could be pretty handy if you're using a virtual scroll library for example like here: <a href="examples/multiple-planes-scroll-effect-custom-scroll/index.html" title="Multiple planes scroll effect with Locomotive scroll" target="_blank">Multiple planes scroll effect with Locomotive scroll</a>.
+                            </p>
+
+                            <div class="code">
+                                <div class="code-comment">
+                                    // wait for everything to be ready
+                                </div>
+                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"load"</span>, <span class="code-var">function</span>() {
+                                <div class="code-block code-indent">
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // set up our WebGL context and append the canvas to our wrapper
+                                        </div>
+                                        <div>
+                                            <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><div><span class="code-property">container</span>: <span class="code-string">"canvas"</span><span class="code-var">,</span></div><div><span class="code-property">watchScroll</span>: <span class="code-var">false</span></div></div>})<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // get our plane element
+                                        </div>
+                                        <span class="code-var">var</span> planeElement = document.<span class="code-tag">getElementsByClassName</span>(<span class="code-string">"plane"</span>)[<span class="code-number">0</span>]<span class="code-var">;</span>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // set our initial parameters (basic uniforms)
+                                        </div>
+                                        <div>
+                                            <span class="code-var">var</span> params = {
+                                        </div>
+                                        <div class="code-indent">
+                                            <div>
+                                                <span class="code-property">vertexShaderID</span>: <span class="code-string">"plane-vs"</span><span class="code-var">,</span> <span class="code-comment">// our vertex shader ID</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">fragmentShaderID</span>: <span class="code-string">"plane-fs"</span><span class="code-var">,</span> <span class="code-comment">// our fragment shader ID</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">uniforms</span>: {
+                                            </div>
+                                            <div class="code-indent">
+                                                <div>
+                                                    <span class="code-property">time</span>: {
+                                                </div>
+                                                <div class="code-indent">
+                                                    <div>
+                                                        <span class="code-property">name</span>: <span class="code-string">"uTime"</span><span class="code-var">,</span> <span class="code-comment">// uniform name that will be passed to our shaders</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">type</span>: <span class="code-string">"1f"</span><span class="code-var">,</span> <span class="code-comment">// this means our uniform is a float</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">value</span>: <span class="code-number">0</span><span class="code-var">,</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    }<span class="code-var">,</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                }<span class="code-var">,</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            }<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // create our plane
+                                        </div>
+                                        <div>
+                                            <span class="code-var">var</span> plane = curtains.<span class="code-tag">addPlane</span>(planeElement<span class="code-var">,</span> params)<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // if our plane has been successfully created
+                                        </div>
+                                        <span class="code-var">if</span>(plane) {
+                                        <div class="code-indent">
+                                            plane.<span class="code-tag">onRender</span>(<span class="code-var">function</span>() {
+                                            <div class="code-indent">
+                                                <div class="code-comment">
+                                                    // use the onRender method of our plane fired at each requestAnimationFrame call
+                                                </div>
+                                                plane.<span class="code-property">uniforms</span>.<span class="code-property">time</span>.<span class="code-property">value</span>++<span class="code-var">;</span> <span class="code-comment">// update our time uniform value</span>
+                                            </div>
+                                            })<span class="code-var">;</span>
+                                        </div>
+                                        }
+                                    </div>
+
+                                    <div>
+
+                                        <div class="code-comment">
+                                            // listen to the scroll event
+                                        </div>
+                                        <div class="code-comment">
+                                            // could be your virtual scroll library custom scroll event
+                                        </div>
+                                        window.<span class="code-tag">addEventListener</span>(<span class="code-string">"scroll"</span>, <span class="code-var">function</span>() {
+                                        <div class="code-indent">
+                                            <div class="code-block">
+                                                <div class="code-comment">
+                                                    // get our scroll values
+                                                </div>
+                                                <span class="code-var">var</span> scrollValues = {
+                                                <div class="code-indent">
+                                                    <div>
+                                                        <span class="code-property">x</span>: window.<span class="code-property">pageXOffset</span><span class="code-var">,</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">y</span>: window.<span class="code-property">pageYOffset</span><span class="code-var">,</span>
+                                                    </div>
+                                                </div>
+
+                                                }<span class="code-var">;</span>
+                                            </div>
+
+                                            <div class="code-block">
+                                                <div class="code-comment">
+                                                    // pass those values to the lib
+                                                </div>
+                                                <div>
+                                                    curtains.<span class="code-tag">updateScrollValues</span>(scrollValues.<span class="code-property">x</span>, scrollValues.<span class="code-property">y</span>)<span class="code-var">;</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="code-comment">
+                                                // if our plane still exists
+                                            </div>
+                                            <div>
+                                                <span class="code-var">if</span>(plane) {
+                                            </div>
+                                            <div class="code-indent">
+                                                <div class="code-comment">
+                                                    // auto update the plane position based on the scroll values we passed to the lib
+                                                </div>
+                                                plane.<span class="code-tag">updateScrollPosition</span>()<span class="code-var">;</span>
+                                            </div>
+                                            <div>
+                                                }
+                                            </div>
+                                        </div>
+                                        }<span class="code-var">,</span> {
+                                        <div class="code-indent"><span class="code-property">passive</span>: <span class="code-var">true</span></div>
+                                        })<span class="code-var">;</span>
+                                    </div>
+
+                                </div>
+                                })<span class="code-var">;</span>
+                            </div>
+
+                            <p>
+                                Note that this is how the library handles the scroll internally by default.<br />
+                                This is the most performant way to keep your whole scene in sync with the scroll as it requires only one layout repaint call.
+                            </p>
+
+                        </div>
+
 						<div id="videos-textures" class="text-section inner-section">
 							<h2>Using videos as textures</h2>
 							<p>
@@ -811,16 +991,16 @@
 
                             <div class="code">
                                 <div class="code-comment">
-                                    // wait for the DOM to be ready
+                                    // wait for everything to be ready
                                 </div>
-                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"DOMContentLoaded"</span>, <span class="code-var">function</span>() {
+                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"load"</span>, <span class="code-var">function</span>() {
                                 <div class="code-block code-indent">
                                     <div class="code-block">
                                         <div class="code-comment">
                                             // set up our WebGL context and append the canvas to our wrapper
                                         </div>
                                         <div>
-                                            <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>(<span class="code-string">"canvas"</span>)<span class="code-var">;</span>
+                                            <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
                                         </div>
                                     </div>
 
@@ -972,16 +1152,16 @@
 
                             <div class="code">
                                 <div class="code-comment">
-                                    // wait for the DOM to be ready
+                                    // wait for everything to be ready
                                 </div>
-                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"DOMContentLoaded"</span>, <span class="code-var">function</span>() {
+                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"load"</span>, <span class="code-var">function</span>() {
                                 <div class="code-block code-indent">
                                     <div class="code-block">
                                         <div class="code-comment">
                                             // set up our WebGL context and append the canvas to our wrapper
                                         </div>
                                         <div>
-                                            <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>(<span class="code-string">"canvas"</span>)<span class="code-var">;</span>
+                                            <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
                                         </div>
                                     </div>
 
@@ -1151,16 +1331,16 @@
 
                             <div class="code">
                                 <div class="code-comment">
-                                    // wait for the DOM to be ready
+                                    // wait for everything to be ready
                                 </div>
-                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"DOMContentLoaded"</span>, <span class="code-var">function</span>() {
+                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"load"</span>, <span class="code-var">function</span>() {
                                 <div class="code-indent">
                                     <div class="code-block">
                                         <div class="code-comment">
                                             // "canvas" is the ID of our HTML container element
                                         </div>
                                         <div>
-                                            <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>(<span class="code-string">"canvas"</span>)<span class="code-var">;</span>
+                                            <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
                                         </div>
                                     </div>
 
@@ -1373,6 +1553,12 @@
 						<div id="performance-tips" class="text-section inner-section">
 							<h2>Performance tips</h2>
 							<ul>
+                                <li>
+                                    Try to use only one global request animation frame loop and one scroll event listener in your application. You could either hook to the library <a href="curtains-class.html#on-render">onRender()</a> and <a href="curtains-class.html#on-scroll">onScroll()</a> events or handle this by yourself by not instancing them in the first place thanks to the init params.
+                                </li>
+                                <li>
+                                    Disable and reenable the scene drawing each time you can. This can save a lot of performance and battery usage when your WebGL scene is idling.
+                                </li>
 								<li>
 									Plane's canvases textures are updated at each frame (videos are updated at 30FPS), which has a significant impact on performance. When those textures are not visible (if they are hidden by another texture, or if you have finished drawing on your canvas...), you should set those <a href="texture-class.html#should-update">textures shouldUpdate property</a> to false, and switch it back to true before displaying them again.
 								</li>
@@ -1413,6 +1599,10 @@
                             <p>
                                 <a href="examples/post-processing-displacement/index.html" title="Simple canvas plane" target="_blank">Post processing displacement effect</a><br />
                                 <a href="examples/post-processing-scroll-effect/index.html" title="Simple canvas plane" target="_blank">Post processing multiple passes</a>
+                            </p>
+                            <h3>Custom scroll</h3>
+                            <p>
+                                <a href="examples/multiple-planes-scroll-effect-custom-scroll/index.html" title="Multiple planes scroll effect with Locomotive scroll" target="_blank">Multiple planes scroll effect with Locomotive scroll</a>
                             </p>
 						</div>
 

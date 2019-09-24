@@ -12,7 +12,10 @@ function initCurtains() {
     var mouseDelta = 0;
 
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains("canvas");
+    var webGLCurtain = new Curtains({
+        container: "canvas",
+        watchScroll: false // no need to listen for the scroll in this example
+    });
 
     // get our plane element
     var planeElements = document.getElementsByClassName("curtain");
@@ -149,6 +152,6 @@ function initCurtains() {
     }
 }
 
-window.addEventListener("DOMContentLoaded", function() {
+window.addEventListener("load", function() {
     initCurtains();
 });

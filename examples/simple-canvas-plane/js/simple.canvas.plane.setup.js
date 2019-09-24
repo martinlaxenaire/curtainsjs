@@ -12,7 +12,10 @@ function initCurtains() {
     var mouseDelta = 0;
 
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains("canvas");
+    var webGLCurtain = new Curtains({
+        container: "canvas",
+        watchScroll: false // no need to listen for the scroll in this example
+    });
 
     // get our plane element
     var planeElements = document.getElementsByClassName("curtain");
@@ -81,7 +84,7 @@ function initCurtains() {
                 value: 0,
             }
         }
-    }
+    };
 
     // create our plane
     var simplePlane = webGLCurtain.addPlane(planeElements[0], params);
@@ -120,11 +123,15 @@ function initCurtains() {
 
             // on resize, update the resolution uniform
             window.addEventListener("resize", function() {
-                simplePlane.uniforms.resolution.value = [pixelRatio * planeElements[0].clientWidth, pixelRatio * planeElements[0].clientHeight];
+                // get our plane dimensions
+                var planeBoundingRect = simplePlane.getBoundingRect();
 
-                // resize our canvas
-                simpleCanvas.width = planeElements[0].clientWidth;
-                simpleCanvas.height = planeElements[0].clientHeight;
+                simplePlane.uniforms.resolution.value = [planeBoundingRect.width * webGLCurtain.pixelRatio, planeBoundingRect.height * webGLCurtain.pixelRatio];
+
+                // size our canvas
+                // we are dividing it by the pixel ratio value to gain performance
+                simpleCanvas.width = planeBoundingRect.width / webGLCurtain.pixelRatio;
+                simpleCanvas.height = planeBoundingRect.height / webGLCurtain.pixelRatio;
             });
 
         }).onRender(function() {
@@ -181,6 +188,6 @@ function initCurtains() {
     }
 }
 
-window.addEventListener("DOMContentLoaded", function() {
+window.addEventListener("load", function() {
     initCurtains();
 });

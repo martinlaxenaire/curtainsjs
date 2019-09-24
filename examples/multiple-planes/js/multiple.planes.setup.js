@@ -1,10 +1,8 @@
-window.addEventListener("DOMContentLoaded", function() {
-    // we will keep track of the scroll
-    var scrollValue = 0;
-    var lastScrollValue = 0;
-
+window.addEventListener("load", function() {
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains("canvas");
+    var webGLCurtain = new Curtains({
+        container: "canvas"
+    });
 
     webGLCurtain.onRender(function() {
         // update our planes deformation
@@ -14,6 +12,24 @@ window.addEventListener("DOMContentLoaded", function() {
         }
         else {
             planesDeformations = Math.min(0, planesDeformations + 1);
+        }
+    }).onScroll(function() {
+        // get scroll deltas to apply the effect on scroll
+        var delta = webGLCurtain.getScrollDeltas();
+
+        // invert value for the effect
+        delta.y = -delta.y;
+
+        // threshold
+        if(delta.y > 60) {
+            delta.y = 60;
+        }
+        else if(delta.y < -60) {
+            delta.y = -60;
+        }
+
+        if(Math.abs(delta.y) > Math.abs(planesDeformations)) {
+            planesDeformations = delta.y;
         }
     }).onError(function() {
         // we will add a class to the document body to display original images
@@ -32,6 +48,12 @@ window.addEventListener("DOMContentLoaded", function() {
     var params = {
         widthSegments: 10,
         heightSegments: 10,
+        drawCheckMargins: {
+            top: 100,
+            right: 0,
+            bottom: 100,
+            left: 0,
+        },
         uniforms: {
             planeDeformation: {
                 name: "uPlaneDeformation",
@@ -39,7 +61,7 @@ window.addEventListener("DOMContentLoaded", function() {
                 value: 0,
             },
         }
-    }
+    };
 
     // add our planes and handle them
     for(var i = 0; i < planeElements.length; i++) {
@@ -48,36 +70,11 @@ window.addEventListener("DOMContentLoaded", function() {
         handlePlanes(i);
     }
 
-    // listen to scroll
-    window.addEventListener("scroll", function(e) {
-        lastScrollValue = scrollValue;
-        scrollValue = window.pageYOffset;
-
-        var delta = scrollValue - lastScrollValue;
-        // threshold
-        if(delta > 60) {
-            delta = 60;
-        }
-        else if(delta < -60) {
-            delta = -60;
-        }
-
-        if(Math.abs(delta) > Math.abs(planesDeformations)) {
-            planesDeformations = delta;
-        }
-
-        // update the plane positions during scroll
-        for(var i = 0; i < planes.length; i++) {
-            planes[i].updatePosition();
-        }
-    }, {
-        passive: true,
-    });
-
-
     // handle all the planes
     function handlePlanes(index) {
         var plane = planes[index];
+
+        console.log(plane);
 
         // check if our plane is defined and use it
         plane && plane.onLoading(function() {

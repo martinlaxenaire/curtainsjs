@@ -1,4 +1,4 @@
-window.addEventListener("DOMContentLoaded", function() {
+window.addEventListener("load", function() {
     // track the mouse positions to display them on screen
     var mousePosition = {
         x: 0,
@@ -9,7 +9,6 @@ window.addEventListener("DOMContentLoaded", function() {
     var params = {
         vertexShaderID: "coord-helper-vs",
         fragmentShaderID: "coord-helper-fs",
-        imageCover: false, // even if we won't use our black pixel, that way it would cover the whole plane
         uniforms: {
             mousePosition: { // our mouse position
                 name: "uMousePosition",
@@ -17,10 +16,13 @@ window.addEventListener("DOMContentLoaded", function() {
                 value: [mousePosition.x, mousePosition.y],
             },
         }
-    }
+    };
 
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains("canvas");
+    var webGLCurtain = new Curtains({
+        container: "canvas",
+        watchScroll: false // no need to listen for the scroll in this example
+    });
 
     // handling errors
     webGLCurtain.onError(function() {

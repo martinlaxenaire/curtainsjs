@@ -48,7 +48,9 @@ function displayCurtains() {
     }
 
 
-    var webGLCurtain = new Curtains("canvas");
+    var webGLCurtain = new Curtains({
+        container: "canvas"
+    });
 
     // handling errors
     webGLCurtain.onError(function() {
@@ -62,8 +64,9 @@ function displayCurtains() {
         var title = document.getElementById("site-title");
         var titleStyle = window.getComputedStyle(title);
 
-        var subtitle = document.getElementById("site-subtitle");
-        var subtitleHeight = subtitle.clientHeight;
+        var titleTopPosition = title.offsetTop * webGLCurtain.pixelRatio - plane.htmlElement.offsetTop * webGLCurtain.pixelRatio;
+        // adjust small offset due to font interpretation?
+        titleTopPosition += title.clientHeight * webGLCurtain.pixelRatio * 0.1;
 
         var planeBoundinRect = plane.getBoundingRect();
 
@@ -85,15 +88,13 @@ function displayCurtains() {
         context.textAlign = "center";
 
         // vertical alignment
-        context.textBaseline = "middle";
-        context.fillText("curtains.js", htmlPlaneWidth / 2, htmlPlaneHeight / 2 - subtitleHeight / 2);
-
-        context.imageSmoothingEnabled = true;
+        context.textBaseline = "top";
+        context.fillText(title.innerText, htmlPlaneWidth / 2, titleTopPosition);
 
         if(curtainPlane.textures && curtainPlane.textures.length > 1) {
             setTimeout(function() {
                 curtainPlane.textures[1].shouldUpdate = false;
-            }, 50);
+            }, 200);
         }
     }
 
@@ -105,8 +106,13 @@ function displayCurtains() {
         var curtainPlaneParams = {
             widthSegments: 50,
             heightSegments: 37,
-            //fov: 15,
-            alwaysDraw: true, // set to true because the webgl part is overflowing the original plane
+            fov: 10,
+            drawCheckMargins: {
+                top: 0,
+                right: 0,
+                bottom: 100,
+                left: 0,
+            },
             uniforms: {
                 mouseTime: {
                     name: "uMouseTime",
@@ -131,24 +137,16 @@ function displayCurtains() {
         // if there has been an error during init, curtainPlane will be null
         if(curtainPlane) {
             var canvas = document.createElement("canvas");
-            writeTitle(curtainPlane, canvas);
 
             canvas.setAttribute("data-sampler", "titleSampler");
             canvas.style.display = "none";
 
+            canvas.width = curtainPlane.getBoundingRect().width;
+            canvas.height = curtainPlane.getBoundingRect().height;
+
             curtainPlane.loadCanvas(canvas);
 
-            curtainPlane.onLoading(function() {
-                if(curtainPlane._loadingManager.sourcesLoaded == 2) {
-                    setTimeout(function() {
-                        curtainPlane.textures[1].shouldUpdate = false;
-                        mouseDelta = 1;
-                        document.body.classList.add("curtain-ready");
-                    }, 50);
-                }
-            }).onReady(function() {
-                curtainPlane.setPerspective(10);
-
+            curtainPlane.onReady(function() {
                 var wrapper = document.getElementById("page-wrap");
 
                 wrapper.addEventListener("mousemove", function(e) {
@@ -157,20 +155,45 @@ function displayCurtains() {
 
                 wrapper.addEventListener("touchmove", function(e) {
                     handleMovement(e, curtainPlane);
-                });
+                }, {passive: true});
+
+                // title
+                if(document.fonts) {
+                    document.fonts.ready.then(function () {
+                        writeTitle(curtainPlane, canvas);
+
+                        setTimeout(function() {
+                            document.body.classList.add("curtain-ready");
+                            mouseDelta = 1;
+                        }, 100);
+                    });
+                }
+                else {
+                    setTimeout(function() {
+                        writeTitle(curtainPlane, canvas);
+
+                        setTimeout(function() {
+                            document.body.classList.add("curtain-ready");
+                            mouseDelta = 1;
+                        }, 20);
+                    }, 750);
+                }
 
                 window.addEventListener("resize", function() {
                     // update title texture
                     curtainPlane.textures[1].shouldUpdate = true;
                     writeTitle(curtainPlane, curtainPlane.textures[1].source);
                 });
+
             }).onRender(function() {
                 curtainPlane.uniforms.mouseTime.value++;
 
                 curtainPlane.uniforms.mouseMoveStrength.value = mouseDelta;
                 mouseDelta = Math.max(0, mouseDelta * 0.995);
-
-                curtainPlane.updatePosition();
+            }).onReEnterView(function() {
+                // force title drawing if it was hidden on page load
+                curtainPlane.textures[1].shouldUpdate = true;
+                writeTitle(curtainPlane, canvas);
             });
         }
 
@@ -186,7 +209,6 @@ function displayCurtains() {
         fragmentShaderID: "simple-shader-fs",
         widthSegments: 10,
         heightSegments: 1,
-        //alwaysDraw: true, // firefox bug ?!
         uniforms: {
             time: {
                 name: "uTime",
@@ -265,8 +287,6 @@ function displayCurtains() {
         if(basicPlane) {
             basicPlane.onRender(function() {
                 basicPlane.uniforms.time.value++;
-
-                basicPlane.updatePosition();
             });
         }
 
@@ -297,8 +317,6 @@ function displayCurtains() {
         if(aboutPlane) {
             aboutPlane.onRender(function() {
                 aboutPlane.uniforms.time.value++;
-
-                aboutPlane.updatePosition();
             });
         }
 
@@ -306,6 +324,6 @@ function displayCurtains() {
 
 }
 
-window.addEventListener("DOMContentLoaded", function() {
+window.addEventListener("load", function() {
     displayCurtains();
 });

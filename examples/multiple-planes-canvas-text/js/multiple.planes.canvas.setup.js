@@ -1,6 +1,8 @@
-window.addEventListener("DOMContentLoaded", function() {
+window.addEventListener("load", function() {
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains("canvas");
+    var webGLCurtain = new Curtains({
+        container: "canvas"
+    });
 
     webGLCurtain.onError(function() {
         // we will add a class to the document body to display original images
@@ -77,16 +79,6 @@ window.addEventListener("DOMContentLoaded", function() {
             handlePlanes(i);
         }
     }
-
-    // update planes position on scroll
-    window.addEventListener("scroll", function() {
-        for(var i = 0; i < planes.length; i++) {
-            var plane = planes[i];
-            plane.updatePosition();
-        }
-    }, {
-        passive: true,
-    });
 
     // on resize rewrite the title in the canvas
     window.addEventListener("resize", function() {

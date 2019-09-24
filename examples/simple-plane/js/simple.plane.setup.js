@@ -1,4 +1,4 @@
-window.addEventListener("DOMContentLoaded", function() {
+window.addEventListener("load", function() {
     // track the mouse positions to send it to the shaders
     var mousePosition = {
         x: 0,
@@ -12,7 +12,10 @@ window.addEventListener("DOMContentLoaded", function() {
     var mouseDelta = 0;
 
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains("canvas");
+    var webGLCurtain = new Curtains({
+        container: "canvas",
+        watchScroll: false // no need to listen for the scroll in this example
+    });
 
     // handling errors
     webGLCurtain.onError(function() {

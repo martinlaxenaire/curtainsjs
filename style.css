@@ -119,6 +119,7 @@
         position: relative;
         z-index: 15;
         overflow-x: hidden;
+        padding-top: 2.9em;
     }
 
     #content a {
@@ -134,8 +135,11 @@
         padding: 0.75em 0;
         background: #f0858d;
         font-weight: 700;
-        position: relative;
-        z-index: 2;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
     }
 
     #header-wrapper {
@@ -186,10 +190,12 @@
         color: inherit;
         position: relative;
         z-index: 20;
-        margin: 0;
         font-family: 'Abril Fatface', Verdana, sans-serif;
         font-weight: normal;
         padding: 0 20px;
+
+        line-height: 1;
+        margin: 0 0 0.2em 0;
 
         opacity: 1;
         transition: opacity 0.3s ease-in-out;
@@ -274,7 +280,7 @@
     }
 
     .code-indent {
-        padding-left: 2.5em;
+        padding-left: 2.375em;
     }
 
     .code-tag {
@@ -646,11 +652,11 @@
     }
 
     .api-content-inner .api-item-parameters li .api-item-parameters-inner-list li .api-item-parameters-inner-list li span {
-        background: #f0f0f0;
+        background: #f3f3f3;
     }
 
     .api-content-inner .api-item-parameters li .api-item-parameters-inner-list li .api-item-parameters-inner-list li:nth-child(even) span {
-        background: #f6f6f6;
+        background: #f9f9f9;
     }
 
     .api-item-examples {

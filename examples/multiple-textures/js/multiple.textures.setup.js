@@ -1,6 +1,9 @@
-window.addEventListener("DOMContentLoaded", function() {
+window.addEventListener("load", function() {
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains("canvas");
+    var webGLCurtain = new Curtains({
+        container: "canvas",
+        watchScroll: false // no need to listen for the scroll in this example
+    });
 
     // get our plane element
     var planeElements = document.getElementsByClassName("multi-textures");

@@ -1,6 +1,8 @@
 function archiveNavigation() {
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains("canvas");
+    var webGLCurtain = new Curtains({
+        container: "canvas"
+    });
 
     webGLCurtain.onError(function() {
         // we will add a class to the document body to display original images
@@ -170,16 +172,9 @@ function archiveNavigation() {
         }
     }
 
-    // update planes positions during scroll
-    window.addEventListener("scroll", function(e) {
-        for(var i = 0; i < planes.length; i++) {
-            if(planes[i]) planes[i].updatePosition();
-        }
-    });
-
     handleNavigation();
 }
 
-window.addEventListener("DOMContentLoaded", function() {
+window.addEventListener("load", function() {
     archiveNavigation();
 });
