@@ -1895,15 +1895,15 @@ Curtains.BasePlane.prototype.getWebGLBoundingRect = function() {
 
         // return our values ranging from 0 to 1 multiplied by our canvas sizes + canvas top and left offsets
         return {
-            width: (maxX - minX) * wrapper._boundingRect.width / wrapper.pixelRatio,
-            height: (maxY - minY) * wrapper._boundingRect.height / wrapper.pixelRatio,
-            top: (minY * wrapper._boundingRect.height + wrapper._boundingRect.top) / wrapper.pixelRatio,
-            left: (minX * wrapper._boundingRect.width + wrapper._boundingRect.left) / wrapper.pixelRatio,
+            width: (maxX - minX) * wrapper._boundingRect.width,
+            height: (maxY - minY) * wrapper._boundingRect.height,
+            top: minY * wrapper._boundingRect.height + wrapper._boundingRect.top,
+            left: minX * wrapper._boundingRect.width + wrapper._boundingRect.left,
 
             // add left and width to get right property
-            right: (minX * wrapper._boundingRect.width + wrapper._boundingRect.left + (maxX - minX) * wrapper._boundingRect.width) / wrapper.pixelRatio,
+            right: minX * wrapper._boundingRect.width + wrapper._boundingRect.left + (maxX - minX) * wrapper._boundingRect.width,
             // add top and height to get bottom property
-            bottom: (minY * wrapper._boundingRect.height + wrapper._boundingRect.top + (maxY - minY) * wrapper._boundingRect.height) / wrapper.pixelRatio,
+            bottom: minY * wrapper._boundingRect.height + wrapper._boundingRect.top + (maxY - minY) * wrapper._boundingRect.height,
         };
     }
     else {
