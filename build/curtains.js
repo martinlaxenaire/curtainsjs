@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 4.0.0
+ Version: 4.0.2
  ***/
 
 'use strict';
@@ -3446,10 +3446,10 @@ Curtains.Texture.prototype.setSource = function(source) {
 
     var glContext = this._wrapper.glContext;
 
-    glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, true);
-
     // Bind the texture the target (TEXTURE_2D) of the active texture unit.
     glContext.bindTexture(glContext.TEXTURE_2D, this._sampler.texture);
+
+    glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, true);
 
     // Set the parameters so we can render any size image.
     glContext.texParameteri(glContext.TEXTURE_2D, glContext.TEXTURE_WRAP_S, glContext.CLAMP_TO_EDGE);
@@ -3459,8 +3459,12 @@ Curtains.Texture.prototype.setSource = function(source) {
 
     this._adjustTextureSize();
 
-    // set our webgl texture
-    glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, source);
+    // set our webgl texture only if it is not a video
+    // if it is a video it won't be ready yet and throw a warning in chrome
+    // besides it will be updated anyway as soon as it will start playing
+    if(this.type !== "video") {
+        glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, source);
+    }
 
     // update our scene
     this._wrapper.needRender();
@@ -3654,7 +3658,8 @@ Curtains.Texture.prototype._drawTexture = function() {
     // bind the texture
     this._plane._bindPlaneTexture(this);
 
-    if(this.type === "video" && this.source && this.source.readyState >= this.source.HAVE_CURRENT_DATA) {
+    // check if the video is actually really playing
+    if(this.type === "video" && this.source && this.source.readyState >= this.source.HAVE_CURRENT_DATA && !this.source.paused && this.source.currentTime > 0 && !this.source.ended) {
         this._willUpdate = !this._willUpdate;
     }
 

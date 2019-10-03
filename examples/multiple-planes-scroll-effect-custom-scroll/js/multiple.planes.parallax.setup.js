@@ -58,7 +58,7 @@ window.addEventListener("load", function() {
         }
 
         if(smoothScroll.isMobile && Math.abs(delta.y) > Math.abs(scrollEffect)) {
-            scrollEffect = delta.y * 1.5;
+            scrollEffect = delta.y;
         }
         else {
             scrollEffect = delta.y * 1.5;
@@ -74,9 +74,6 @@ window.addEventListener("load", function() {
             // update the plane deformation uniform as well
             planes[i].uniforms.scrollEffect.value = scrollEffect;
         }
-
-        // render scene
-        webGLCurtain.needRender();
     }
 
     // custom scroll event
@@ -85,6 +82,9 @@ window.addEventListener("load", function() {
         webGLCurtain.disableDrawing();
         smoothScroll.on('scroll', function(obj) {
             updateScroll(obj.scroll.x, obj.scroll.y);
+
+            // render scene
+            webGLCurtain.needRender();
         });
     }
     else {
