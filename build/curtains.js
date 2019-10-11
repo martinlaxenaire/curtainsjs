@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 4.0.2
+ Version: 4.0.3
  ***/
 
 'use strict';
@@ -69,6 +69,8 @@ function Curtains(params) {
         this._watchScroll = true;
     }
 
+    this.pixelRatio = params.pixelRatio || window.devicePixelRatio || 1;
+
     this.productionMode = params.production || false;
 
     if(!this.container) {
@@ -131,8 +133,7 @@ Curtains.prototype._init = function() {
     }
 
     // this will set the size as well
-    var pixelRatio = window.devicePixelRatio || 1;
-    this.setPixelRatio(pixelRatio, false);
+    this.setPixelRatio(this.pixelRatio, false);
 
     // handling window resize event
     this._resizeHandler = null;
