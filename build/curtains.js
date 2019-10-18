@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 4.0.3
+ Version: 4.0.4
  ***/
 
 'use strict';
