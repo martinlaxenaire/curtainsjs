@@ -3480,6 +3480,11 @@ Curtains.Texture.prototype.setSource = function(source) {
 Curtains.Texture.prototype._update = function() {
     var glContext = this._wrapper.glContext;
 
+    // fix weird bug where sometimes canvas texture Y flip is not applied
+    if(this.type === "canvas") {
+        glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, true);
+    }
+
     glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, glContext.RGBA, glContext.UNSIGNED_BYTE, this.source);
 };
 

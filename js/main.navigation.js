@@ -157,34 +157,36 @@ function displayCurtains() {
                     handleMovement(e, curtainPlane);
                 }, {passive: true});
 
-                // title
-                if(document.fonts) {
-                    document.fonts.ready.then(function () {
-                        writeTitle(curtainPlane, canvas);
-
-                        setTimeout(function() {
-                            document.body.classList.add("curtain-ready");
-                            mouseDelta = 1;
-                        }, 100);
-                    });
-                }
-                else {
-                    setTimeout(function() {
-                        writeTitle(curtainPlane, canvas);
-
-                        setTimeout(function() {
-                            document.body.classList.add("curtain-ready");
-                            mouseDelta = 1;
-                        }, 20);
-                    }, 750);
-                }
-
                 window.addEventListener("resize", function() {
                     // update title texture
                     curtainPlane.textures[1].shouldUpdate = true;
                     writeTitle(curtainPlane, curtainPlane.textures[1].source);
                 });
 
+            }).onLoading(function() {
+                if(curtainPlane.canvases && curtainPlane.canvases.length > 0) {
+                    // title
+                    if(document.fonts) {
+                        document.fonts.ready.then(function () {
+                            writeTitle(curtainPlane, canvas);
+
+                            setTimeout(function() {
+                                document.body.classList.add("curtain-ready");
+                                mouseDelta = 1;
+                            }, 100);
+                        });
+                    }
+                    else {
+                        setTimeout(function() {
+                            writeTitle(curtainPlane, canvas);
+
+                            setTimeout(function() {
+                                document.body.classList.add("curtain-ready");
+                                mouseDelta = 1;
+                            }, 20);
+                        }, 750);
+                    }
+                }
             }).onRender(function() {
                 curtainPlane.uniforms.mouseTime.value++;
 

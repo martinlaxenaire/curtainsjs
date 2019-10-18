@@ -7,7 +7,7 @@
     You can define each plane size and position via CSS, which makes it super easy to add WebGL responsive planes all over your pages.
 </p>
 <p style="text-align: center;">
-    <img src="/images/promo.gif" alt="curtains.js demo gif" width="300" height="225" />
+    <img src="https://www.curtainsjs.com/images/promo.gif" alt="curtains.js demo gif" width="300" height="225" />
 </p>
 <h2>Knowledge and technical requirements</h2>
 <p>
@@ -101,7 +101,7 @@ body {
 <h3>Javascript</h3>
 
 ```javascript
-window.addEventListener("load", function() {
+window.addEventListener("DOMContentLoaded", function() {
     // set up our WebGL context and append the canvas to our wrapper
     var curtains = new Curtains({
         container: "canvas"
@@ -134,7 +134,7 @@ window.addEventListener("load", function() {
         });
     }
     
-}); 
+});
 ```
 
 <h3>Shaders</h3>
