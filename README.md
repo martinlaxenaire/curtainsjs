@@ -7,7 +7,7 @@
     You can define each plane size and position via CSS, which makes it super easy to add WebGL responsive planes all over your pages.
 </p>
 <p style="text-align: center;">
-    <img src="https://www.curtainsjs.com/images/promo.gif" alt="curtains.js demo gif" width="300" height="225" />
+    ![curtains.js demo gif](https://www.curtainsjs.com/images/promo.gif)
 </p>
 <h2>Knowledge and technical requirements</h2>
 <p>
