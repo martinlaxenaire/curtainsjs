@@ -1565,6 +1565,9 @@
 								<li>
 									Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size. It goes the same for videos of course: try to keep them as light as possible.
 								</li>
+                                <li>
+                                    Shader passes are expensive, use them with caution.
+                                </li>
 								<li>
 							        Try to use as less javascript as possible in the onRender() methods as this get executed at each draw call.
 							    </li>
@@ -1573,7 +1576,8 @@
 						<div id="useful-examples" class="text-section inner-section">
 							<h2>Useful examples</h2>
 							<p>
-								Do not hesitate to check their source code as they are all fully commented:
+								Those examples might seem a little rough: they don't use any tweening or animation engine to keep the code centered around the library usage itself. You should definitely consider using easings in your own animations.<br />
+                                Do not hesitate to check their source code as they are all fully commented:
 							</p>
 							<h3>Images</h3>
 							<p>

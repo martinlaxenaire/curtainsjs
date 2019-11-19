@@ -473,6 +473,9 @@
                             </div>
                             <ul class="api-submenu">
                                 <li>
+                                    <a href="texture-class.html#need-update">needUpdate</a>
+                                </li>
+                                <li>
                                     <a href="texture-class.html#set-scale">setScale</a>
                                 </li>
                                 <li>
@@ -1357,10 +1360,10 @@
                             </li>
                             <li id="on-loading">
                                 <p>
-                                    <strong>onLoading</strong>(): <span class="api-item-version">v1.0</span>
+                                    <strong>onLoading</strong>(texture): <span class="api-item-version">v1.0</span>
                                 </p>
                                 <p>
-                                    This function will be fired each time a source element (either an image, a canvas or a video) of the plane has been loaded and is ready to display. Useful to handle a loader.
+                                    This function will be fired each time a source element (either an image, a canvas or a video) of the plane has been loaded and is ready to display. You'll have access here to the newly created texture. Useful to handle a loader or manipulate the texture.
                                 </p>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.

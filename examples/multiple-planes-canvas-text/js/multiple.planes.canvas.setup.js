@@ -19,8 +19,6 @@ window.addEventListener("load", function() {
     var params = {
         vertexShaderID: "text-vs",
         fragmentShaderID: "text-fs",
-        widthSegments: 10,
-        heightSegments: 10,
         uniforms: {
             time: {
                 name: "uTime",
@@ -57,6 +55,11 @@ window.addEventListener("load", function() {
         // vertical alignment is a bit hacky
         context.textBaseline = "middle";
         context.fillText(htmlPlane.innerText, 0, htmlPlaneHeight / 1.8);
+
+        // update our canvas texture once on next draw call
+        if(plane.textures.length > 0) {
+            plane.textures[0].needUpdate();
+        }
     }
 
     // add our planes and handle them
@@ -84,12 +87,8 @@ window.addEventListener("load", function() {
     window.addEventListener("resize", function() {
         for(var i = 0; i < planes.length; i++) {
             var plane = planes[i];
-            // we will update our canvas so we should update the texture as well
-            plane.textures[0].shouldUpdate = true;
-            // write the title with the new dimensions
+            // update our canvas
             writeText(plane, plane.textures[0].source);
-            // our canvas has been updated, we can stop updating our texture
-            plane.textures[0].shouldUpdate = false;
         }
     });
 
@@ -98,12 +97,9 @@ window.addEventListener("load", function() {
     function handlePlanes(index) {
         var plane = planes[index];
 
-        plane.onLoading(function() {
+        plane.onLoading(function(texture) {
             // our canvas texture is ready
-            // wait a little time and then prevent it from updating each frame
-            setTimeout(function() {
-                plane.textures[0].shouldUpdate = false;
-            }, 50);
+            texture.shouldUpdate = false;
         }).onRender(function() {
             // update the time uniform
             plane.uniforms.time.value++;

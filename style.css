@@ -244,6 +244,11 @@
         margin-bottom: 40px;
     }
 
+    .inner-section h1, .inner-section h2, .inner-section li[id] {
+        margin-top: -2.5em;
+        padding-top: 2.5em;
+    }
+
     .inner-section:last-child {
         margin-bottom: 0;
     }
@@ -556,7 +561,7 @@
     }
 
     #api-content h2 {
-        margin-top: 1.5em;
+        margin-top: -1em;
     }
 
     .api-item-version {

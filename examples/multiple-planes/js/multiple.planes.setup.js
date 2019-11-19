@@ -74,8 +74,6 @@ window.addEventListener("load", function() {
     function handlePlanes(index) {
         var plane = planes[index];
 
-        console.log(plane);
-
         // check if our plane is defined and use it
         plane && plane.onLoading(function() {
             //console.log(plane.loadingManager.sourcesLoaded);

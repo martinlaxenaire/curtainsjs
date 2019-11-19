@@ -473,6 +473,9 @@
                             </div>
                             <ul class="api-submenu">
                                 <li>
+                                    <a href="texture-class.html#need-update">needUpdate</a>
+                                </li>
+                                <li>
                                     <a href="texture-class.html#set-scale">setScale</a>
                                 </li>
                                 <li>
@@ -638,10 +641,10 @@
                                     // use our aTextureCoord attributes as texture coords in our fragment shader
                                 </div>
                                 <div>
-                                    vvTextureCoord = aTextureCoord<span class="code-var">;</span>
+                                    vTextureCoord = aTextureCoord<span class="code-var">;</span>
                                 </div>
                                 <div>
-                                    vVertexPosition = vertexPosition<span class="code-var">;</span>
+                                    vVertexPosition = aVertexPosition<span class="code-var">;</span>
                                 </div>
                             </div>
 
@@ -738,7 +741,7 @@
                                     <strong>index</strong> (integer): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    The index of your shader pass in the <a href="curtains-class.html#shader-passes">Curtains planes array</a>.
+                                    The index of your shader pass in the <a href="curtains-class.html#shader-passes">Curtains shaderPasses array</a>.
                                 </p>
                             </li>
                             <li id="textures">
@@ -1046,10 +1049,10 @@
                             </li>
                             <li id="on-loading">
                                 <p>
-                                    <strong>onLoading</strong>(): <span class="api-item-version">v3.0</span>
+                                    <strong>onLoading</strong>(texture): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
-                                    This function will be fired each time a source element (either an image, a canvas or a video) of the shader pass has been loaded and is ready to display. Useful to handle a loader.
+                                    This function will be fired each time a source element (either an image, a canvas or a video) of the plane has been loaded and is ready to display. You'll have access here to the newly created texture. Useful to handle a loader or manipulate the texture.
                                 </p>
                                 <p>
                                     <strong>returns:</strong> your ShaderPass object, allowing it to be chainable.

@@ -473,6 +473,9 @@
                             </div>
                             <ul class="api-submenu">
                                 <li>
+                                    <a href="texture-class.html#need-update">needUpdate</a>
+                                </li>
+                                <li>
                                     <a href="texture-class.html#set-scale">setScale</a>
                                 </li>
                                 <li>
@@ -681,7 +684,7 @@
 						</ul>
 						<h2 id="methods">Methods</h2>
 						<ul>
-							<p id="add-plane">
+							<li id="add-plane">
 								<p>
 									<strong>addPlane</strong>(planeElement, params): <span class="api-item-version">v1.0</span>
 								</p>
@@ -784,6 +787,17 @@
 													the plane's definition along the Y axis (1 by default).
 												</span>
 											</li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													transparent
+												</span>
+                                                <span class="api-item-parameter-type">
+													bool, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													if your plane should handle transparency and therefore be drawn after the planes that do not use transparency (false by default).
+												</span>
+                                            </li>
 											<li>
 												<span class="api-item-parameter-label">
 													alwaysDraw
@@ -1236,7 +1250,7 @@
 									<strong>removePlane</strong>(plane):  <span class="api-item-version">v1.5</span>
 								</p>
 								<p>
-									This function will remove a plane from our Curtains object and delete all of its textures.
+									This function will remove a plane from our Curtains object and delete all of its textures. It will also update all other planes indexes.
 								</p>
 								<ul class="api-item-parameters">
 									<li>

@@ -149,8 +149,8 @@ window.addEventListener("load", function() {
     if(shaderPass) {
         // load our displacement image
         shaderPass.loadImage(image);
-        shaderPass.onLoading(function() {
-            console.log("shader pass image loaded");
+        shaderPass.onLoading(function(texture) {
+            console.log("shader pass image has been loaded and texture has been created:", texture);
         }).onReady(function() {
             console.log("shader pass is ready");
         }).onRender(function() {

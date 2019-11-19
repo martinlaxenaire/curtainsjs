@@ -92,9 +92,10 @@ function displayCurtains() {
         context.fillText(title.innerText, htmlPlaneWidth / 2, titleTopPosition);
 
         if(curtainPlane.textures && curtainPlane.textures.length > 1) {
-            setTimeout(function() {
+            /*setTimeout(function() {
                 curtainPlane.textures[1].shouldUpdate = false;
-            }, 200);
+            }, 200);*/
+            curtainPlane.textures[1].needUpdate();
         }
     }
 
@@ -159,33 +160,31 @@ function displayCurtains() {
 
                 window.addEventListener("resize", function() {
                     // update title texture
-                    curtainPlane.textures[1].shouldUpdate = true;
+                    //curtainPlane.textures[1].shouldUpdate = true;
                     writeTitle(curtainPlane, curtainPlane.textures[1].source);
                 });
 
-            }).onLoading(function() {
+            }).onLoading(function(texture) {
+                texture.shouldUpdate = false;
                 if(curtainPlane.canvases && curtainPlane.canvases.length > 0) {
                     // title
                     if(document.fonts) {
                         document.fonts.ready.then(function () {
                             writeTitle(curtainPlane, canvas);
-
-                            setTimeout(function() {
-                                document.body.classList.add("curtain-ready");
-                                mouseDelta = 1;
-                            }, 100);
                         });
                     }
                     else {
                         setTimeout(function() {
                             writeTitle(curtainPlane, canvas);
-
-                            setTimeout(function() {
-                                document.body.classList.add("curtain-ready");
-                                mouseDelta = 1;
-                            }, 20);
                         }, 750);
                     }
+                }
+
+                if(curtainPlane.textures.length === 2) {
+                    setTimeout(function() {
+                        document.body.classList.add("curtain-ready");
+                        mouseDelta = 1;
+                    }, 200);
                 }
             }).onRender(function() {
                 curtainPlane.uniforms.mouseTime.value++;
@@ -194,7 +193,7 @@ function displayCurtains() {
                 mouseDelta = Math.max(0, mouseDelta * 0.995);
             }).onReEnterView(function() {
                 // force title drawing if it was hidden on page load
-                curtainPlane.textures[1].shouldUpdate = true;
+                //curtainPlane.textures[1].shouldUpdate = true;
                 writeTitle(curtainPlane, canvas);
             });
         }
@@ -206,22 +205,23 @@ function displayCurtains() {
     var showcaseElements = document.getElementsByClassName("showcase-curtain");
     var showcasePlanes = [];
 
-    var showcaseParams = {
-        vertexShaderID: "simple-shader-vs",
-        fragmentShaderID: "simple-shader-fs",
-        widthSegments: 10,
-        heightSegments: 1,
-        uniforms: {
-            time: {
-                name: "uTime",
-                type: "1f",
-                value: 0,
-            },
-        },
-    };
-
     for(var i = 0; i < showcaseElements.length; i++) {
+        var showcaseParams = {
+            vertexShaderID: "simple-shader-vs",
+            fragmentShaderID: "simple-shader-fs",
+            widthSegments: 10,
+            heightSegments: 1,
+            uniforms: {
+                time: {
+                    name: "uTime",
+                    type: "1f",
+                    value: 0,
+                },
+            },
+        };
+
         var plane = webGLCurtain.addPlane(showcaseElements[i], showcaseParams);
+        console.log(plane);
 
         if(plane) {
             showcasePlanes.push(plane);
