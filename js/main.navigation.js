@@ -248,11 +248,12 @@ function displayCurtains() {
                 });
 
             }).onRender(function() {
+                // use damping
                 if(plane.mouseOver) {
-                    plane.uniforms.time.value = Math.min(45, plane.uniforms.time.value + 1);
+                    plane.uniforms.time.value += (45 - plane.uniforms.time.value) * 0.075;
                 }
                 else {
-                    plane.uniforms.time.value = Math.max(0, plane.uniforms.time.value - 1);
+                    plane.uniforms.time.value += (0 - plane.uniforms.time.value) * 0.075;
                 }
 
                 plane.updatePosition();

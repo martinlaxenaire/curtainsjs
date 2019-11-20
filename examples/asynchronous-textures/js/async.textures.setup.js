@@ -66,10 +66,12 @@ window.addEventListener("load", function() {
         }).onRender(function() {
             // increase/decrease our timer based on active texture
             if(activeTexture == 2) {
-                transitionTimer = Math.min(60, transitionTimer + 1);
+                // use damping to smoothen transition
+                transitionTimer += (60 - transitionTimer) * 0.05;
             }
             else {
-                transitionTimer = Math.max(0, transitionTimer - 1);
+                // use damping to smoothen transition
+                transitionTimer += (0 - transitionTimer) * 0.05;
             }
             // update the uniform
             asyncTexturesPlane.uniforms.transitionTimer.value = transitionTimer;

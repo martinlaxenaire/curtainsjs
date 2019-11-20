@@ -50,11 +50,15 @@ window.addEventListener("load", function() {
 
         // when our plane is ready we add a click event listener that will switch the active texture value
         planeElements[0].addEventListener("click", function() {
-            if(activeTexture == 1) {
+            if(activeTexture === 1) {
                 activeTexture = 2;
+                // play next video
+                multiTexturesPlane.videos[0].play();
             }
             else {
                 activeTexture = 1;
+                // play next video
+                multiTexturesPlane.videos[1].play();
             }
         });
 
@@ -68,16 +72,35 @@ window.addEventListener("load", function() {
             // display canvas and hide the button
             document.body.classList.add("video-started");
 
+            // play all videos to force uploading the first frame of each texture
             multiTexturesPlane.playVideos();
+            // now pause the first video (the one that is hidden)
+            setTimeout(function() {
+                multiTexturesPlane.videos[0].pause();
+            }, 100);
         }, false);
 
     }).onRender(function() {
         // increase or decrease our timer based on the active texture value
-        if(activeTexture == 2) {
-            transitionTimer = Math.min(60, transitionTimer + 1);
+        if(activeTexture === 2) {
+            // lerp values to smoothen animation
+            transitionTimer = (1 - 0.05) * transitionTimer + 0.05 * 60;
+
+            // transition is over, pause previous video
+            if(transitionTimer >= 59 && transitionTimer !== 60) {
+                transitionTimer = 60;
+                multiTexturesPlane.videos[1].pause();
+            }
         }
         else {
-            transitionTimer = Math.max(0, transitionTimer - 1);
+            // lerp values to smoothen animation
+            transitionTimer = (1 - 0.05) * transitionTimer;
+
+            // transition is over, pause previous video
+            if(transitionTimer <= 1 && transitionTimer !== 0) {
+                transitionTimer = 0;
+                multiTexturesPlane.videos[0].pause();
+            }
         }
         // update our transition timer uniform
         multiTexturesPlane.uniforms.transitionTimer.value = transitionTimer;

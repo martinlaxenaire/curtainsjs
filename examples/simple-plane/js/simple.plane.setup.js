@@ -78,11 +78,6 @@ window.addEventListener("load", function() {
             handleMovement(e, simplePlane);
         });
 
-        // on resize, update the resolution uniform
-        window.addEventListener("resize", function() {
-            simplePlane.uniforms.resolution.value = [pixelRatio * planeElements[0].clientWidth, pixelRatio * planeElements[0].clientHeight];
-        });
-
     }).onRender(function() {
         // increment our time uniform
         simplePlane.uniforms.time.value++;
@@ -91,6 +86,9 @@ window.addEventListener("load", function() {
         simplePlane.uniforms.mouseMoveStrength.value = mouseDelta;
         // decrease the mouse move strenght a bit : if the user doesn't move the mouse, effect will fade away
         mouseDelta = Math.max(0, mouseDelta * 0.995);
+    }).onAfterResize(function() {
+        var planeBoundingRect = simplePlane.getBoundingRect();
+        simplePlane.uniforms.resolution.value = [planeBoundingRect.width, planeBoundingRect.height];
     });
 
     // handle the mouse move event

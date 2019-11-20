@@ -120,7 +120,13 @@ window.addEventListener("load", function() {
         }).onRender(function() {
             // increase or decrease our timer based on the active texture value
             if(slideshowState.isChanging) {
-                slideshowState.transitionTimer = Math.min(90, slideshowState.transitionTimer + 1);
+                // use damping to smoothen transition
+                slideshowState.transitionTimer += (90 - slideshowState.transitionTimer) * 0.04;
+
+                // force end of animation as damping is slower the closer we get from the end value
+                if(slideshowState.transitionTimer >= 88.5 && slideshowState.transitionTimer !== 90) {
+                    slideshowState.transitionTimer = 90;
+                }
             }
 
             // update our transition timer uniform
