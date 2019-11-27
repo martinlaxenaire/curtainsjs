@@ -121,19 +121,6 @@ function initCurtains() {
                 handleMovement(e, simplePlane);
             });
 
-            // on resize, update the resolution uniform
-            window.addEventListener("resize", function() {
-                // get our plane dimensions
-                var planeBoundingRect = simplePlane.getBoundingRect();
-
-                simplePlane.uniforms.resolution.value = [planeBoundingRect.width * webGLCurtain.pixelRatio, planeBoundingRect.height * webGLCurtain.pixelRatio];
-
-                // size our canvas
-                // we are dividing it by the pixel ratio value to gain performance
-                simpleCanvas.width = planeBoundingRect.width / webGLCurtain.pixelRatio;
-                simpleCanvas.height = planeBoundingRect.height / webGLCurtain.pixelRatio;
-            });
-
         }).onRender(function() {
             // increment our time uniform
             simplePlane.uniforms.time.value++;
@@ -145,6 +132,16 @@ function initCurtains() {
 
             // animate our texture canvas
             animateTextureCanvas();
+        }).onAfterResize(function() {
+            // get our plane dimensions
+            var planeBoundingRect = simplePlane.getBoundingRect();
+
+            simplePlane.uniforms.resolution.value = [planeBoundingRect.width * webGLCurtain.pixelRatio, planeBoundingRect.height * webGLCurtain.pixelRatio];
+
+            // size our canvas
+            // we are dividing it by the pixel ratio value to gain performance
+            simpleCanvas.width = planeBoundingRect.width / webGLCurtain.pixelRatio;
+            simpleCanvas.height = planeBoundingRect.height / webGLCurtain.pixelRatio;
         });
     }
 

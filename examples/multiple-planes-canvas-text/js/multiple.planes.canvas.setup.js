@@ -58,6 +58,9 @@ window.addEventListener("load", function() {
 
         // update our canvas texture once on next draw call
         if(plane.textures.length > 0) {
+            // we just changed the texture source sizes, we need to update its texture matrix
+            plane.textures[0].resize();
+            // update the webgl texture on next draw call
             plane.textures[0].needUpdate();
         }
     }
@@ -70,8 +73,6 @@ window.addEventListener("load", function() {
             // create our text texture as soon as our plane has been created
             // first we need a canvas
             var canvas = document.createElement("canvas");
-            // we write our title in our canvas
-            writeText(plane, canvas);
             // then we add a data sampler attribute to our canvas
             canvas.setAttribute("data-sampler", "planeTexture");
             // and load it into our plane
@@ -83,15 +84,6 @@ window.addEventListener("load", function() {
         }
     }
 
-    // on resize rewrite the title in the canvas
-    window.addEventListener("resize", function() {
-        for(var i = 0; i < planes.length; i++) {
-            var plane = planes[i];
-            // update our canvas
-            writeText(plane, plane.textures[0].source);
-        }
-    });
-
 
     // handle all the planes
     function handlePlanes(index) {
@@ -100,9 +92,15 @@ window.addEventListener("load", function() {
         plane.onLoading(function(texture) {
             // our canvas texture is ready
             texture.shouldUpdate = false;
+
+            // we write our title in our canvas
+            writeText(plane, texture.source);
         }).onRender(function() {
             // update the time uniform
             plane.uniforms.time.value++;
+        }).onAfterResize(function() {
+            // update our canvas sizes and rewrite our title
+            writeText(plane, plane.textures[0].source);
         });
     }
 });

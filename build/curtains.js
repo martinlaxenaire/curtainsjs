@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 4.1.0
+ Version: 4.2.0
  https://www.curtainsjs.com/
  ***/
 
@@ -24,8 +24,14 @@ function Curtains(params) {
     this.shaderPasses = [];
 
     this._drawStacks = {
-        "opaque": [],
-        "transparent": [],
+        "opaque": {
+            length: 0,
+            programs: [],
+        },
+        "transparent": {
+            length: 0,
+            programs: [],
+        },
     };
 
     this._drawingEnabled = true;
@@ -120,7 +126,7 @@ Curtains.prototype._init = function() {
         programs: [],
 
         // last buffer sizes drawn (avoid redundant buffer bindings)
-        lastBufferDimension: 0,
+        currentBuffersID: 0,
     };
 
     // handling context
@@ -611,7 +617,7 @@ Curtains.prototype._isEqualShader = function(firstShader, secondShader) {
  returns:
  @program (object): our program object, false if ceation failed
  ***/
-Curtains.prototype._setupProgram = function(vs, fs) {
+Curtains.prototype._setupProgram = function(vs, fs, type) {
     var glContext = this.glContext;
 
     var existingProgram = {};
@@ -628,12 +634,12 @@ Curtains.prototype._setupProgram = function(vs, fs) {
         return existingProgram;
     }
     else {
-        return this._createProgram(vs, fs);
+        return this._createProgram(vs, fs, type);
     }
 };
 
 
-Curtains.prototype._createProgram = function(vs, fs) {
+Curtains.prototype._createProgram = function(vs, fs, type) {
     var glContext = this.glContext;
     var isProgramValid = true;
 
@@ -676,11 +682,14 @@ Curtains.prototype._createProgram = function(vs, fs) {
             fsCode: fs,
             fragmentShader: fragmentShader,
             program: webglProgram,
+            type: type,
         };
 
-        // create a new entry in our draw stack array
-        this._drawStacks["opaque"]["program-" + program.id] = [];
-        this._drawStacks["transparent"]["program-" + program.id] = [];
+        // create a new entry in our draw stack array if it's a regular plane
+        if(type === "Plane") {
+            this._drawStacks["opaque"]["programs"]["program-" + program.id] = [];
+            this._drawStacks["transparent"]["programs"]["program-" + program.id] = [];
+        }
 
         // add it to our program manager programs list
         this._drawStateManager.programs.push(program);
@@ -815,9 +824,12 @@ Curtains.prototype.removePlane = function(plane) {
     // now rebuild the drawStacks
     // start by clearing all drawstacks
     for(var i = 0; i < this._drawStateManager.programs.length; i++) {
-        this._drawStacks["opaque"]["program-" + this._drawStateManager.programs[i].id] = [];
-        this._drawStacks["transparent"]["program-" +  + this._drawStateManager.programs[i].id] = [];
+        this._drawStacks["opaque"]["programs"]["program-" + this._drawStateManager.programs[i].id] = [];
+        this._drawStacks["transparent"]["programs"]["program-" +  + this._drawStateManager.programs[i].id] = [];
     }
+    this._drawStacks["opaque"].length = 0;
+    this._drawStacks["transparent"].length = 0;
+
     // restack our planes with new indexes
     for(var i = 0; i < this.planes.length; i++) {
         this.planes[i].index = i;
@@ -835,7 +847,13 @@ Curtains.prototype.removePlane = function(plane) {
  ***/
 Curtains.prototype._stackPlane = function(plane) {
     var stackType = plane._transparent ? "transparent" : "opaque";
-    this._drawStacks[stackType]["program-" + plane._usedProgram.id].push(plane.index);
+    if(stackType === "transparent") {
+        this._drawStacks[stackType]["programs"]["program-" + plane._usedProgram.id].unshift(plane.index);
+    }
+    else {
+        this._drawStacks[stackType]["programs"]["program-" + plane._usedProgram.id].push(plane.index);
+    }
+    this._drawStacks[stackType].length++;
 };
 
 
@@ -967,7 +985,7 @@ Curtains.prototype._handleDepth = function(shouldHandleDepth) {
  ***/
 Curtains.prototype._multiplyMatrix = function(a, b) {
     var out = new Float32Array(16);
-    
+
     out[0] = b[0]*a[0] + b[1]*a[4] + b[2]*a[8] + b[3]*a[12];
     out[1] = b[0]*a[1] + b[1]*a[5] + b[2]*a[9] + b[3]*a[13];
     out[2] = b[0]*a[2] + b[1]*a[6] + b[2]*a[10] + b[3]*a[14];
@@ -1149,7 +1167,7 @@ Curtains.prototype._readyToDraw = function() {
     // enable depth by default
     this._handleDepth(true);
 
-    console.log("curtains.js - v4.1");
+    console.log("curtains.js - v4.2");
 
     this._animationFrameID = null;
     if(this._autoRender) {
@@ -1171,8 +1189,8 @@ Curtains.prototype._animate = function() {
  Loop through one of our stack (opaque or transparent objects) and draw its planes
  ***/
 Curtains.prototype._drawPlaneStack = function(stackType) {
-    for(var key in this._drawStacks[stackType]) {
-        var program = this._drawStacks[stackType][key];
+    for(var key in this._drawStacks[stackType]["programs"]) {
+        var program = this._drawStacks[stackType]["programs"][key];
         for(var i = 0; i < program.length; i++) {
             var plane = this.planes[program[i]];
             // be sure the plane exists
@@ -1218,10 +1236,17 @@ Curtains.prototype.render = function() {
         this.glContext.clear(this.glContext.COLOR_BUFFER_BIT | this.glContext.DEPTH_BUFFER_BIT);
     }
 
-
     // loop on our stacked planes
     this._drawPlaneStack("opaque");
-    this._drawPlaneStack("transparent");
+
+    // draw transparent planes if needed
+    if(this._drawStacks["transparent"].length) {
+        // clear our depth buffer to display transparent objects
+        this.glContext.clearDepth(1.0);
+        this.glContext.clear(this.glContext.DEPTH_BUFFER_BIT);
+
+        this._drawPlaneStack("transparent");
+    }
 
     // if we have shader passes, draw them
     if(this.shaderPasses.length > 0) {
@@ -1362,7 +1387,7 @@ Curtains.prototype.onScroll = function(callback) {
  @this: our BasePlane element
  ***/
 Curtains.BasePlane = function(curtainWrapper, plane, params) {
-    this._type = "BasicPlane";
+    this._type = this._type || "BasicPlane";
 
     this._wrapper = curtainWrapper;
     this.htmlElement = plane;
@@ -1397,7 +1422,7 @@ Curtains.BasePlane.prototype._initBasePlane = function(params) {
 
     // unique plane buffers dimensions based on width and height
     // used to avoid unnecessary buffer bindings during draw loop
-    this._definition.uniqueComputedDimension = this._definition.width * this._definition.height + this._definition.width;
+    this._definition.buffersID = this._definition.width * this._definition.height + this._definition.width;
 
     // our object that will handle all images loading process
     this._loadingManager = {
@@ -1408,7 +1433,7 @@ Curtains.BasePlane.prototype._initBasePlane = function(params) {
     var shaders = this._setupShaders(params);
 
     // then we set up the program as compiling can be quite slow
-    this._usedProgram = this._wrapper._setupProgram(shaders.vertexShaderCode, shaders.fragmentShaderCode);
+    this._usedProgram = this._wrapper._setupProgram(shaders.vertexShaderCode, shaders.fragmentShaderCode, this._type);
 
     this.images = [];
     this.videos = [];
@@ -1438,6 +1463,9 @@ Curtains.BasePlane.prototype._initBasePlane = function(params) {
             };
         }
     }
+
+    // allow the user to add custom data to the plane
+    this.userData = {};
 
     // if program and shaders are valid, go on
     if(this._usedProgram) {
@@ -1869,7 +1897,7 @@ Curtains.BasePlane.prototype._restoreContext = function() {
     }
 
     // reset the used program based on our previous shaders code strings
-    this._usedProgram = this._wrapper._setupProgram(this._usedProgram.vsCode, this._usedProgram.fsCode);
+    this._usedProgram = this._wrapper._setupProgram(this._usedProgram.vsCode, this._usedProgram.fsCode, this._type);
 
     if(this._usedProgram) {
         // reset attributes
@@ -2057,7 +2085,7 @@ Curtains.BasePlane.prototype.planeResize = function() {
 
     // resize all textures
     for(var i = 0; i < this.textures.length; i++) {
-        this.textures[i]._adjustTextureSize();
+        this.textures[i].resize();
     }
 
     // resize our frame and depth buffers by binding them again
@@ -2420,9 +2448,9 @@ Curtains.BasePlane.prototype._drawPlane = function() {
             this._updateUniforms();
 
             // bind plane attributes buffers
-            if(wrapper._drawStateManager.lastBufferDimension !== this._definition.uniqueComputedDimension) {
+            if(wrapper._drawStateManager.currentBuffersID !== this._definition.buffersID) {
                 this._bindPlaneBuffers();
-                wrapper._drawStateManager.lastBufferDimension = this._definition.uniqueComputedDimension;
+                wrapper._drawStateManager.currentBuffersID = this._definition.buffersID;
             }
 
             // draw all our plane textures
@@ -2582,11 +2610,13 @@ Curtains.BasePlane.prototype.onRender = function(callback) {
  @this: our Plane element
  ***/
 Curtains.Plane = function(curtainWrapper, plane, params) {
+    this._type = "Plane";
+
     // inherit
     Curtains.BasePlane.call(this, curtainWrapper, plane, params);
 
-    this.index = this._wrapper.planes.length;
-    this._type = "Plane";
+    var wrapper = this._wrapper;
+    this.index = wrapper.planes.length;
     this._canDraw = false;
 
     // if params is not defined
@@ -2596,14 +2626,17 @@ Curtains.Plane = function(curtainWrapper, plane, params) {
 
     // if program is valid, go on
     if(this._usedProgram) {
+        // add our plane to the draw stack
+        wrapper._stackPlane(this);
+
         // init our plane
         this._initPositions();
         this._initSources();
     }
     else {
-        if(this._wrapper._onErrorCallback) {
+        if(wrapper._onErrorCallback) {
             // if it's not valid call the wrapper error callback
-            this._wrapper._onErrorCallback();
+            wrapper._onErrorCallback();
         }
     }
 };
@@ -2663,9 +2696,6 @@ Curtains.Plane.prototype._setInitParams = function(params) {
         y: 1,
     };
 
-    // add our plane to the draw stack
-    wrapper._stackPlane(this);
-
     // if we decide to load all sources on init or let the user do it manually
     this.autoloadSources = params.autoloadSources;
     if(this.autoloadSources === null || this.autoloadSources === undefined) {
@@ -2679,14 +2709,14 @@ Curtains.Plane.prototype._setInitParams = function(params) {
 
     // if we should watch scroll
     if(params.watchScroll === null || params.watchScroll === undefined) {
-        this.watchScroll = this._wrapper._watchScroll;
+        this.watchScroll = wrapper._watchScroll;
     }
     else {
         this.watchScroll = params.watchScroll || false;
     }
     // start listening for scroll
     if(this.watchScroll) {
-        this._wrapper._scrollManager.shouldWatch = true;
+        wrapper._scrollManager.shouldWatch = true;
     }
 
     // enable depth test by default
@@ -2984,7 +3014,7 @@ Curtains.Plane.prototype.setScale = function(scaleX, scaleY) {
 
         // adjust textures size
         for (var i = 0; i < this.textures.length; i++) {
-            this.textures[i]._adjustTextureSize();
+            this.textures[i].resize();
         }
 
         // we should update the plane mvMatrix
@@ -3185,13 +3215,18 @@ Curtains.Plane.prototype.moveToFront = function() {
     this.enableDepthTest(false);
 
     var drawType = this._transparent ? "transparent" : "opaque";
-    var drawStack = this._wrapper._drawStacks[drawType]["program-" + this._usedProgram.id];
+    var drawStack = this._wrapper._drawStacks[drawType]["programs"]["program-" + this._usedProgram.id];
     for(var i = 0; i < drawStack.length; i++) {
         if(this.index === drawStack[i]) {
             drawStack.splice(i, 1);
         }
     }
-    drawStack.push(this.index);
+    if(drawType === "transparent") {
+        drawStack.unshift(this.index);
+    }
+    else {
+        drawStack.push(this.index);
+    }
 
     // now move its program stack array on top as well
     for(var key in this._wrapper._drawStacks[drawType]) {
@@ -3199,7 +3234,7 @@ Curtains.Plane.prototype.moveToFront = function() {
             delete this._wrapper._drawStacks[drawType][key];
         }
     }
-    this._wrapper._drawStacks[drawType]["program-" + this._usedProgram.id] = drawStack;
+    this._wrapper._drawStacks[drawType]["programs"]["program-" + this._usedProgram.id] = drawStack;
 };
 
 
@@ -3281,11 +3316,12 @@ Curtains.ShaderPass = function(curtainWrapper, params) {
     params.widthSegments = 1;
     params.heightSegments = 1;
 
+    this._type = "ShaderPass";
+
     // inherit
     Curtains.BasePlane.call(this, curtainWrapper, curtainWrapper.container, params);
 
     this.index = this._wrapper.shaderPasses.length;
-    this._type = "ShaderPass";
 
     // if the program is valid, go on
     if(this._usedProgram) {
@@ -3607,7 +3643,7 @@ Curtains.Texture.prototype.setSource = function(source) {
     glContext.texParameteri(glContext.TEXTURE_2D, glContext.TEXTURE_MIN_FILTER, glContext.LINEAR);
     glContext.texParameteri(glContext.TEXTURE_2D, glContext.TEXTURE_MAG_FILTER, glContext.LINEAR);
 
-    this._adjustTextureSize();
+    this.resize();
 
     // set our webgl texture only if it is not a video
     // if it is a video it won't be ready yet and throw a warning in chrome
@@ -3711,26 +3747,34 @@ Curtains.Texture.prototype.setScale = function(scaleX, scaleY) {
         y: scaleY,
     };
 
-    this._adjustTextureSize();
+    this.resize();
 };
 
 /***
- This is used to crop/center an texture
+ This is used to crop/center a texture
  If the texture is using texture matrix then we just have to update its matrix
- else if it is an image we draw it inside a canvas and use that canvas as our texture
+ If it is a render pass texture we just upload the texture with its new size on the GPU
  ***/
-Curtains.Texture.prototype._adjustTextureSize = function() {
+Curtains.Texture.prototype.resize = function() {
     if(this.type === "texturePass") {
         var glContext = this._wrapper.glContext;
 
-        this._size.width = this._plane._boundingRect.document.width;
-        this._size.height = this._plane._boundingRect.document.height;
+        this._size = {
+            width: this._plane._boundingRect.document.width,
+            height: this._plane._boundingRect.document.height,
+        };
 
         glContext.bindTexture(glContext.TEXTURE_2D, this._sampler.texture);
 
         glContext.texImage2D(glContext.TEXTURE_2D, 0, glContext.RGBA, this._size.width, this._size.height, 0, glContext.RGBA, glContext.UNSIGNED_BYTE, null);
     }
     else if(this.source) {
+        // reset texture sizes (useful for canvas because their dimensions might change on resize)
+        this._size = {
+            width: this.source.naturalWidth || this.source.width || this.source.videoWidth,
+            height: this.source.naturalHeight || this.source.height || this.source.videoHeight,
+        };
+
         // no point in resizing texture if it does not have a source yet
         var sizes = this._getSizes();
 
@@ -3826,7 +3870,7 @@ Curtains.Texture.prototype._drawTexture = function() {
         this._willUpdate = !this._willUpdate;
     }
 
-    if(this._forceUpdate || this._willUpdate && this.shouldUpdate) {
+    if(this._forceUpdate || (this._willUpdate && this.shouldUpdate)) {
         this._update();
     }
 

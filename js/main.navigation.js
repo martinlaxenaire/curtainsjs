@@ -92,9 +92,7 @@ function displayCurtains() {
         context.fillText(title.innerText, htmlPlaneWidth / 2, titleTopPosition);
 
         if(curtainPlane.textures && curtainPlane.textures.length > 1) {
-            /*setTimeout(function() {
-                curtainPlane.textures[1].shouldUpdate = false;
-            }, 200);*/
+            curtainPlane.textures[1].resize();
             curtainPlane.textures[1].needUpdate();
         }
     }
@@ -142,9 +140,6 @@ function displayCurtains() {
             canvas.setAttribute("data-sampler", "titleSampler");
             canvas.style.display = "none";
 
-            canvas.width = curtainPlane.getBoundingRect().width;
-            canvas.height = curtainPlane.getBoundingRect().height;
-
             curtainPlane.loadCanvas(canvas);
 
             curtainPlane.onReady(function() {
@@ -157,12 +152,6 @@ function displayCurtains() {
                 wrapper.addEventListener("touchmove", function(e) {
                     handleMovement(e, curtainPlane);
                 }, {passive: true});
-
-                window.addEventListener("resize", function() {
-                    // update title texture
-                    //curtainPlane.textures[1].shouldUpdate = true;
-                    writeTitle(curtainPlane, curtainPlane.textures[1].source);
-                });
 
             }).onLoading(function(texture) {
                 texture.shouldUpdate = false;
@@ -193,7 +182,8 @@ function displayCurtains() {
                 mouseDelta = Math.max(0, mouseDelta * 0.995);
             }).onReEnterView(function() {
                 // force title drawing if it was hidden on page load
-                //curtainPlane.textures[1].shouldUpdate = true;
+                curtainPlane.textures[1].needUpdate();
+            }).onAfterResize(function() {
                 writeTitle(curtainPlane, canvas);
             });
         }
@@ -221,7 +211,6 @@ function displayCurtains() {
         };
 
         var plane = webGLCurtain.addPlane(showcaseElements[i], showcaseParams);
-        console.log(plane);
 
         if(plane) {
             showcasePlanes.push(plane);
