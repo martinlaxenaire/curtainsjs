@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 4.2.0
+ Version: 4.3.0
  https://www.curtainsjs.com/
  ***/
 
@@ -1167,7 +1167,7 @@ Curtains.prototype._readyToDraw = function() {
     // enable depth by default
     this._handleDepth(true);
 
-    console.log("curtains.js - v4.2");
+    console.log("curtains.js - v4.3");
 
     this._animationFrameID = null;
     if(this._autoRender) {
@@ -1471,6 +1471,8 @@ Curtains.BasePlane.prototype._initBasePlane = function(params) {
     if(this._usedProgram) {
         // should draw is set to true by default, we'll check it later
         this._shouldDraw = true;
+        // let the user decide whether the plane should be drawn
+        this.visible = true;
 
         // set plane attributes
         this._setAttributes();
@@ -1811,19 +1813,19 @@ Curtains.BasePlane.prototype._setPlaneVertices = function() {
             this._geometry.vertices.push(0);
 
             this._material.uvs.push(u + (1 / this._definition.width));
-            this._material.uvs.push(v + (1 / this._definition.height));
-            this._material.uvs.push(0);
-
-            this._geometry.vertices.push(((u + (1 / this._definition.width)) - 0.5) * 2);
-            this._geometry.vertices.push(((v + (1 / this._definition.height)) - 0.5) * 2);
-            this._geometry.vertices.push(0);
-
-            this._material.uvs.push(u + (1 / this._definition.width));
             this._material.uvs.push(v);
             this._material.uvs.push(0);
 
             this._geometry.vertices.push(((u + (1 / this._definition.width)) - 0.5) * 2);
             this._geometry.vertices.push((v - 0.5) * 2);
+            this._geometry.vertices.push(0);
+
+            this._material.uvs.push(u + (1 / this._definition.width));
+            this._material.uvs.push(v + (1 / this._definition.height));
+            this._material.uvs.push(0);
+
+            this._geometry.vertices.push(((u + (1 / this._definition.width)) - 0.5) * 2);
+            this._geometry.vertices.push(((v + (1 / this._definition.height)) - 0.5) * 2);
             this._geometry.vertices.push(0);
         }
     }
@@ -2443,7 +2445,7 @@ Curtains.BasePlane.prototype._drawPlane = function() {
         }
 
         // now check if we really need to draw it and its textures
-        if(this._shouldDraw) {
+        if(this._shouldDraw && this.visible) {
             // update all uniforms set up by the user
             this._updateUniforms();
 
