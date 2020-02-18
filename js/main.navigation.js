@@ -281,7 +281,6 @@ function displayCurtains() {
                 basicPlane.uniforms.time.value++;
             });
         }
-
     }
 
 

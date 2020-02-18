@@ -40,6 +40,11 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://www.curtainsjs.com/render-target-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://www.curtainsjs.com/texture-class.html</loc>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
@@ -111,6 +116,12 @@
     </url>
 
     <url>
+        <loc>https://www.curtainsjs.com/examples/pinpg-pong-shading-flowmap/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
         <loc>https://www.curtainsjs.com/examples/post-processing-displacement/index.html</loc>
         <changefreq>yearly</changefreq>
         <priority>0.6</priority>
@@ -118,6 +129,12 @@
 
     <url>
         <loc>https://www.curtainsjs.com/examples/post-processing-scroll-effect/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/post-processing-transform-origin/index.html</loc>
         <changefreq>yearly</changefreq>
         <priority>0.6</priority>
     </url>

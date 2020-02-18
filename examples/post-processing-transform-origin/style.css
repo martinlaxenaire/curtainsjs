@@ -1,0 +1,151 @@
+@media screen {
+
+    html, body {
+        min-height: 100%;
+    }
+
+    body {
+        margin: 0;
+        font-size: 18px;
+        font-family: 'PT Sans', Verdana, sans-serif;
+        background: #ffffff;
+        line-height: 1.4;
+    }
+
+    /*** layout ***/
+
+    #page-wrap {
+        position: relative;
+    }
+
+    /*** canvas ***/
+
+    #canvas {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 10;
+    }
+
+    #back-to-lib-link {
+        display: inline-block;
+        position: fixed;
+        top: 0;
+        right: 0;
+        padding: 0.25em 0.5em;
+        background: #ee6557;
+        color: white;
+        text-decoration: none;
+        z-index: 20;
+        font-size: 0.85em;
+    }
+
+    #back-to-lib-link:hover {
+        background: black;
+    }
+
+    /*** content ***/
+
+    #content {
+        position: relative;
+        z-index: 15;
+        touch-action: none; /* disable pull to refresh on mobile */
+    }
+
+    #planes {
+        overflow: hidden;
+        width: 100%;
+        height: 100vh;
+    }
+
+    #titles {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        font-size: 2vw;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+    #titles h1 {
+        margin: 0;
+        color: #ee6557;
+    }
+
+    .plane {
+        position: absolute;
+        top: 30vh;
+        right: 20vw;
+        bottom: 30vh;
+        left: 20vw;
+    }
+
+    .plane img {
+        display: none;
+    }
+
+
+    /*** handling errors ***/
+
+    .no-curtains #content {
+        touch-action: auto; /* enable pull to refresh on mobile */
+    }
+
+    .no-curtains #titles {
+        position: relative;
+        top: auto;
+        right: auto;
+        bottom: auto;
+        left: auto;
+        margin: 5vh auto;
+    }
+
+    .no-curtains #planes {
+        height: auto;
+    }
+
+    .no-curtains .plane {
+        display: flex;
+        overflow: hidden;
+        position: relative;
+        top: auto;
+        right: auto;
+        bottom: auto;
+        left: auto;
+        width: 75vw;
+        height: 60vh;
+        margin: 10vh auto;
+    }
+
+    .no-curtains .plane img {
+        display: block;
+        min-width: 100%;
+        min-height: 100%;
+        object-fit: cover;
+    }
+
+}
+
+
+
+
+@media screen and (orientation: portrait) {
+
+    #titles {
+        font-size: 4vw;
+    }
+
+    .plane {
+        position: absolute;
+        top: 40vh;
+        right: 10vw;
+        bottom: 40vh;
+        left: 10vw;
+    }
+
+}

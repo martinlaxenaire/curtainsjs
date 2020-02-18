@@ -1557,6 +1557,9 @@
                                     Try to use only one global request animation frame loop and one scroll event listener in your application. You could either hook to the library <a href="curtains-class.html#on-render">onRender()</a> and <a href="curtains-class.html#on-scroll">onScroll()</a> events or handle this by yourself by not instancing them in the first place thanks to the init params.
                                 </li>
                                 <li>
+                                    If you have a significant number of planes that are using the same shaders, try to set their init paramater <a href="plane-classe.html#share-program">shareProgram</a> property to true as it can speed up their creation a lot.
+                                </li>
+                                <li>
                                     Disable and reenable the scene drawing each time you can. This can save a lot of performance and battery usage when your WebGL scene is idling.
                                 </li>
 								<li>
@@ -1601,8 +1604,13 @@
 							</p>
                             <h3>Post processing</h3>
                             <p>
-                                <a href="examples/post-processing-displacement/index.html" title="Simple canvas plane" target="_blank">Post processing displacement effect</a><br />
-                                <a href="examples/post-processing-scroll-effect/index.html" title="Simple canvas plane" target="_blank">Post processing multiple passes</a>
+                                <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a><br />
+                                <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a><br />
+                                <a href="examples/post-processing-transform-origin/index.html" title="Post processing scrolling wheel with custom transform origin" target="_blank">Post processing scrolling wheel with custom transform origin</a>
+                            </p>
+                            <h3>FBOs swapping / ping pong shading</h3>
+                            <p>
+                                <a href="examples/ping-pong-shading-flowmap/index.html" title="Ping pong shading flowmap example" target="_blank">Ping pong shading flowmap example</a><br />
                             </p>
                             <h3>Custom scroll</h3>
                             <p>

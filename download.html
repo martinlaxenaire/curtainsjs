@@ -78,7 +78,7 @@
 
 					<div class="text-section inner-section">
 						<p>
-                            <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v4.3">curtains.js v4.3 (124Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v4.3">curtains.min.js v4.3 (49Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+                            <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v5.0">curtains.js v5.0 (141Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v5.0">curtains.min.js v5.0 (56Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
 						</p>
 					</div>
 
@@ -92,6 +92,29 @@
 
 					<div class="text-section inner-section">
 						<h2>Changelog</h2>
+                        <h3>Version 5.0</h3>
+                        <p>
+                            Version 5.0 introduces <a href="render-target-class.html">RenderTarget</a> class. It allows you to render any plane as a texture by setting it a render target. The <a href="shader-pass-class.html">ShaderPass</a> class now also use that class internally.<br>
+                            It also now uses <strong>WebGL2</strong> whenever possible.<br />
+                            As usual, there are no breaking changes so you can update safely to this version.
+                        </p>
+                        <ul>
+                            <li>
+                                New RenderTarget class.
+                            </li>
+                            <li>
+                                New <a href="texture-class.html#set-from-texture">setFromTexture</a> method to copy a texture into another texture.
+                            </li>
+                            <li>
+                                Planes now have a <a href="plane-class.html#transform-origin">transform origin</a> property that you can change anytime with the <a href="plane-class.html#set-transform-origin">setTransformOrigin</a> method.
+                            </li>
+                            <li>
+                                Possibility to set the alpha and premultiplied alpha WebGL context options on init.
+                            </li>
+                            <li>
+                                A lot of performance improvements by reducing the number of WebGL calls and bugs fixes.
+                            </li>
+                        </ul>
                         <h3>Version 4.0</h3>
                         <p>
                             Version 4.0 introduces optional native scroll handling (planes position are automatically updated when the users scrolls), but it also lets you define if you want to listen to the resize event or use the internal request animation frame loop. With those options you can chose to handle those things by yourself and therefore improve performance by keeping a single resize or request animation frame loop for your websites.<br />

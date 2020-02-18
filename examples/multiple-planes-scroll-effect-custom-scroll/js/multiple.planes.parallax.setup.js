@@ -100,6 +100,7 @@ window.addEventListener("load", function() {
 
     // no need for shaders as they were already passed by data attributes
     var params = {
+        shareProgram: true, // share planes program to improve plane creation speed
         widthSegments: 10,
         heightSegments: 10,
         uniforms: {

@@ -46,6 +46,7 @@ window.addEventListener("load", function() {
     // all planes will have the same parameters
     // we don't need to specifiate vertexShaderID and fragmentShaderID because we already passed it via the data attributes of the plane HTML element
     var params = {
+        shareProgram: true, // share planes program to improve plane creation speed
         widthSegments: 10,
         heightSegments: 10,
         drawCheckMargins: {

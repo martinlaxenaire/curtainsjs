@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+	<!-- Metas -->
+	<title>curtains.js | Ping pong shading flowmap example</title>
+	<meta name="description" content="Flowmap WebGL effect using frame buffer objects swapping with curtains.js">
+	<link rel="canonical" href="https://www.curtainsjs.com/examples/ping-pong-shading-flowmap/index.html">
+
+	<!-- Facebook OG -->
+	<meta property="og:title" content="curtains.js | Ping pong shading flowmap example">
+	<meta property="og:type" content="website">
+	<meta property="og:description" content="Flowmap WebGL effect using frame buffer objects swapping with curtains.js">
+	<meta property="og:url" content="https://www.curtainsjs.com/examples/ping-pong-shading-flowmap/index.html">
+	<meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+	<!-- Twitter card -->
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:site" content="@webdesign_ml">
+	<meta name="twitter:creator" content="@webdesign_ml">
+	<meta name="twitter:title" content="curtains.js | Ping pong shading flowmap example">
+	<meta name="twitter:description" content="Flowmap WebGL effect using frame buffer objects swapping with curtains.js">
+	<meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+	<!-- Favicon -->
+	<link rel="apple-touch-icon" sizes="180x180" href="../../images/favicons/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="../../images/favicons/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="../../images/favicons/favicon-16x16.png">
+	<link rel="manifest" href="../../images/favicons/site.webmanifest">
+	<link rel="mask-icon" href="../../images/favicons/safari-pinned-tab.svg" color="#202340">
+	<link rel="shortcut icon" href="../../images/favicons/favicon.ico">
+	<meta name="msapplication-TileColor" content="#202340">
+	<meta name="msapplication-config" content="../../images/favicons/browserconfig.xml">
+	<meta name="theme-color" content="#202340">
+
+	<link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
+	<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+<div id="page-wrap">
+
+	<div id="canvas"></div>
+
+	<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
+
+	<div id="content">
+
+        <div id="canvas"></div>
+
+        <div id="flowmap">
+            <img src="../medias/plane-texture-2.jpg" data-sampler="planeTexture" />
+        </div>
+	</div>
+</div>
+
+
+<script id="flowmap-vs" type="x-shader/x-vertex">
+    #ifdef GL_ES
+    precision highp float;
+    #endif
+
+    // default mandatory variables
+    attribute vec3 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+
+    // custom variables
+    varying vec3 vVertexPosition;
+    varying vec2 vTextureCoord;
+
+    void main() {
+
+        vec3 vertexPosition = aVertexPosition;
+
+        gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+
+        // varyings
+        vTextureCoord = aTextureCoord;
+        vVertexPosition = vertexPosition;
+    }
+</script>
+
+<script id="flowmap-fs" type="x-shader/x-fragment">
+
+    #ifdef GL_ES
+    precision highp float;
+    #endif
+
+    varying vec3 vVertexPosition;
+    varying vec2 vTextureCoord;
+
+    uniform sampler2D uFlowMap;
+
+    uniform vec2 uMousePosition;
+    uniform float uFalloff;
+    uniform float uAlpha;
+    uniform float uDissipation;
+    uniform float uCursorGrow;
+
+    uniform vec2 uVelocity;
+    uniform float uAspect;
+
+    void main( void ) {
+        // convert to -1 / 1
+        vec2 textCoords = vTextureCoord * 2.0 - 1.0;
+
+        // make the cursor grow with time
+        textCoords /= uCursorGrow;
+        // adjust cursor position based on its growth
+        textCoords += uCursorGrow * uMousePosition / (1.0 / (uCursorGrow - 1.0) * pow(uCursorGrow, 2.0));
+
+        // convert back to 0 / 1
+        textCoords = (textCoords + 1.0) / 2.0;
+
+        vec4 color = texture2D(uFlowMap, textCoords) * uDissipation;
+
+        vec2 mouseTexPos = (uMousePosition + 1.0) * 0.5;
+        vec2 cursor = vTextureCoord - mouseTexPos;
+        cursor.x *= uAspect;
+
+        vec3 stamp = vec3(uVelocity * vec2(1.0, -1.0), 1.0 - pow(1.0 - min(1.0, length(uVelocity)), 3.0));
+        float falloff = smoothstep(uFalloff, 0.0, length(cursor)) * uAlpha;
+        color.rgb = mix(color.rgb, stamp, vec3(falloff));
+
+        // handle premultiply alpha
+        color.rgb = color.rgb * color.a;
+
+        gl_FragColor = color;
+    }
+</script>
+
+
+<script id="flowmap-displacement-vs" type="x-shader/x-vertex">
+    #ifdef GL_ES
+    precision highp float;
+    #endif
+
+    // default mandatory variables
+    attribute vec3 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+
+    uniform mat4 planeTextureMatrix;
+
+    // custom variables
+    varying vec3 vVertexPosition;
+    varying vec2 vPlaneTextureCoord;
+    varying vec2 vTextureCoord;
+
+    void main() {
+
+        vec3 vertexPosition = aVertexPosition;
+
+        gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+
+        // varyings
+        vTextureCoord = aTextureCoord;
+        vPlaneTextureCoord = (planeTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+        vVertexPosition = vertexPosition;
+    }
+</script>
+
+<script id="flowmap-displacement-fs" type="x-shader/x-fragment">
+
+    #ifdef GL_ES
+    precision highp float;
+    #endif
+
+    varying vec3 vVertexPosition;
+    varying vec2 vPlaneTextureCoord;
+    varying vec2 vTextureCoord;
+
+    uniform sampler2D planeTexture;
+    uniform sampler2D uFlowTexture;
+
+    void main( void ) {
+        // our flowmap
+        vec4 flowTexture = texture2D(uFlowTexture, vTextureCoord);
+
+        // distort our image texture based on the flowmap values
+        vec2 distortedCoords = vPlaneTextureCoord;
+        distortedCoords -= flowTexture.xy * 0.1;
+
+        // get our final texture based on the displaced coords
+        vec4 texture = texture2D(planeTexture, distortedCoords);
+
+        // get a B&W version of our image texture
+        vec4 textureBW = vec4(1.0);
+        textureBW.rgb = vec3(texture.r * 0.3 + texture.g * 0.59 + texture.b * 0.11);
+
+        // mix the BW image and the colored one based on our flowmap color values
+        float mixValue = clamp((abs(flowTexture.r) + abs(flowTexture.g) + abs(flowTexture.b)) * 1.5, 0.0, 1.0);
+        texture = mix(texture, textureBW, mixValue);
+
+        // switch between this 2 lines to see what we have drawn onto our flowmap
+        //gl_FragColor = flowTexture;
+        gl_FragColor = texture;
+    }
+</script>
+
+
+<script src="../../build/curtains.js" type="text/javascript"></script>
+<script src="js/flowmap.setup.js" type="text/javascript"></script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-141413267-1');
+</script>
+
+</body>
+</html>
