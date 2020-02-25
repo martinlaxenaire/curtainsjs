@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 5.0.0
+ Version: 5.0.1
  https://www.curtainsjs.com/
  ***/
 
@@ -3360,7 +3360,7 @@ Curtains.Plane.prototype._setMVMatrix = function() {
 
         this._matrices.mvMatrix.matrix = this._curtains._multiplyMatrix(matrixFromOrigin, scaleMatrix);
 
-            // this is the result of our projection matrix * our mv matrix, useful for bounding box calculations and frustum culling
+        // this is the result of our projection matrix * our mv matrix, useful for bounding box calculations and frustum culling
         this._matrices.mVPMatrix = this._curtains._multiplyMatrix(this._matrices.pMatrix.matrix, this._matrices.mvMatrix.matrix);
 
         // check if we should draw the plane but only if everything has been initialized
@@ -3554,10 +3554,10 @@ Curtains.Plane.prototype._shouldDrawCheck = function() {
     // if we decide to draw the plane only when visible inside the canvas
     // we got to check if its actually inside the canvas
     if(
-        actualPlaneBounds.right < this._curtains._boundingRect.left - this.drawCheckMargins.right
-        || actualPlaneBounds.left > this._curtains._boundingRect.left + this._curtains._boundingRect.width + this.drawCheckMargins.left
-        || actualPlaneBounds.bottom < this._curtains._boundingRect.top - this.drawCheckMargins.bottom
-        || actualPlaneBounds.top > this._curtains._boundingRect.top + this._curtains._boundingRect.height + this.drawCheckMargins.top
+        Math.round(actualPlaneBounds.right) <= this._curtains._boundingRect.left - this.drawCheckMargins.right
+        || Math.round(actualPlaneBounds.left) >= this._curtains._boundingRect.left + this._curtains._boundingRect.width + this.drawCheckMargins.left
+        || Math.round(actualPlaneBounds.bottom) <= this._curtains._boundingRect.top - this.drawCheckMargins.bottom
+        || Math.round(actualPlaneBounds.top) >= this._curtains._boundingRect.top + this._curtains._boundingRect.height + this.drawCheckMargins.top
     ) {
         if(this._shouldDraw) {
             this._shouldDraw = false;
@@ -3714,8 +3714,8 @@ Curtains.Plane.prototype.onLeaveView = function(callback) {
  params :
  @curtainWrapper : our curtain object that wraps all the planes
  @params (object, optionnal): additionnal params
-    - plane (plane object, optionnal): the plane to attach this render target to. Set under the hood by shader passes
-    - depth (bool, optionnal): whether the render target should use a depth buffer and handle depth
+ - plane (plane object, optionnal): the plane to attach this render target to. Set under the hood by shader passes
+ - depth (bool, optionnal): whether the render target should use a depth buffer and handle depth
 
  returns :
  @this: our render target element
@@ -4210,7 +4210,7 @@ Curtains.Texture.prototype.setSource = function(source) {
     else if(source.tagName.toUpperCase() === "VIDEO") {
         this.type = "video";
         // a video should be updated by default
-        // _willUpdate property will be alternatively set to true/false elsewhere to display the video at 30fps
+        // _willUpdate property will be set to true if the video has data to draw
         this.shouldUpdate = true;
     }
     else if(source.tagName.toUpperCase() === "CANVAS") {
@@ -4244,10 +4244,6 @@ Curtains.Texture.prototype.setSource = function(source) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-    if(this._curtains._isWebGL2) {
-        gl.generateMipmap(gl.TEXTURE_2D);
-    }
 
     this.resize();
 
@@ -4484,12 +4480,17 @@ Curtains.Texture.prototype._drawTexture = function() {
     this._parent._bindPlaneTexture(this);
 
     // check if the video is actually really playing
-    if(this.type === "video" && this.source && this.source.readyState >= this.source.HAVE_CURRENT_DATA && !this.source.paused && this.source.currentTime > 0 && !this.source.ended) {
-        this._willUpdate = !this._willUpdate;
+    if(this.type === "video" && this.source && this.source.readyState >= this.source.HAVE_CURRENT_DATA) {
+        this._willUpdate = true;
     }
 
     if(this._forceUpdate || (this._willUpdate && this.shouldUpdate)) {
         this._update();
+    }
+
+    // reset the video willUpdate flag
+    if(this.type === "video") {
+        this._willUpdate = false;
     }
 
     this._forceUpdate = false;
