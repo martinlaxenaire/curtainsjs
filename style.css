@@ -244,9 +244,9 @@
         margin-bottom: 40px;
     }
 
-    .inner-section h1, .inner-section h2, .inner-section li[id] {
-        margin-top: -2.5em;
-        padding-top: 2.5em;
+    .inner-section h1, .inner-section h2, .inner-section h3, .inner-section li[id], ul.api-item-parameters {
+        margin-top: -3.25em;
+        padding-top: 3.25em;
     }
 
     .inner-section:last-child {
@@ -561,7 +561,7 @@
     }
 
     #api-content h2 {
-        margin-top: -1em;
+        margin-top: -2em;
     }
 
     .api-item-version {
@@ -587,6 +587,10 @@
         margin: 0 0.5em;
         color: white;
         background: #cc5050;
+    }
+
+    .api-item-version-update {
+        background: #f7cdcf;
     }
 
     .api-section em {

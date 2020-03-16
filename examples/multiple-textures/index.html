@@ -45,7 +45,9 @@
 
 			<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
 
-			<div class="flex-wrapper multi-textures" data-vs-id="multiple-textures-vs" data-fs-id="multiple-textures-fs">
+            <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/examples/multiple-textures/js/multiple.textures.setup.js" title="Show source code" id="source-code-link" target="_blank">&lt;/ &gt;</a>
+
+			<div class="flex-wrapper multi-textures">
 				<span>Click me !</span>
 				<!-- notice here we are using the data-sampler attribute to name our displacement sampler uniform -->
 				<img src="../medias/displacement.jpg" data-sampler="displacement" />
@@ -55,93 +57,6 @@
 				<img src="../medias/plane-texture-4.jpg" />
 			</div>
 		</div>
-
-        <script id="multiple-textures-vs" type="x-shader/x-vertex">
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-
-			// default mandatory variables
-			attribute vec3 aVertexPosition;
-			attribute vec2 aTextureCoord;
-
-			uniform mat4 uMVMatrix;
-    		uniform mat4 uPMatrix;
-
-			// varyings : notice we've got 3 texture coords varyings
-			// one for the displacement texture
-			// one for our visible texture
-			// and one for the upcoming texture
-			varying vec3 vVertexPosition;
-			varying vec2 vTextureCoord;
-			varying vec2 vActiveTextureCoord;
-			varying vec2 vNextTextureCoord;
-
-			// textures matrices
-			uniform mat4 activeTexMatrix;
-			uniform mat4 nextTexMatrix;
-
-			// custom uniforms
-			uniform float uTransitionTimer;
-			uniform vec2 uResolution;
-
-
-			void main() {
-
-				vec3 vertexPosition = aVertexPosition;
-
-			   	gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
-
-			   	// varyings
-			   	vTextureCoord = aTextureCoord;
-			   	vActiveTextureCoord = (activeTexMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
-			   	vNextTextureCoord = (nextTexMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
-
-			   	vVertexPosition = vertexPosition;
-			}
-        </script>
-        <script id="multiple-textures-fs" type="x-shader/x-fragment">
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-
-			varying vec3 vVertexPosition;
-			varying vec2 vTextureCoord;
-			varying vec2 vActiveTextureCoord;
-			varying vec2 vNextTextureCoord;
-
-			// custom uniforms
-			uniform float uTransitionTimer;
-			uniform vec2 uResolution;
-
-			// our textures samplers
-			// notice how it matches the sampler attributes of the textures we created dynamically
-			uniform sampler2D activeTex;
-			uniform sampler2D nextTex;
-			uniform sampler2D displacement;
-
-			void main( void ) {
-				// our displacement texture
-				vec4 displacementTexture = texture2D(displacement, vTextureCoord);
-
-				// slides transitions based on displacement and transition timer
-				vec2 firstDisplacementCoords = vActiveTextureCoord + displacementTexture.r * ((cos((uTransitionTimer + 90.0) / (90.0 / 3.141592)) + 1.0) / 1.25);
-				vec4 firstDistortedColor = texture2D(activeTex, vec2(vActiveTextureCoord.x, firstDisplacementCoords.y));
-
-				// same as above but we substract the effect
-				vec2 secondDisplacementCoords = vNextTextureCoord - displacementTexture.r * ((cos(uTransitionTimer / (90.0 / 3.141592)) + 1.0) / 1.25);
-				vec4 secondDistortedColor = texture2D(nextTex, vec2(vNextTextureCoord.x, secondDisplacementCoords.y));
-
-				// mix both texture
-				vec4 finalColor = mix(firstDistortedColor, secondDistortedColor, 1.0 - ((cos(uTransitionTimer / (90.0 / 3.141592)) + 1.0) / 2.0));
-
-				// handling premultiplied alpha
-				finalColor = vec4(finalColor.rgb * finalColor.a, finalColor.a);
-
-				gl_FragColor = finalColor;
-			}
-        </script>
-
 
 		<script src="../../build/curtains.js" type="text/javascript"></script>
         <script src="js/multiple.textures.setup.js" type="text/javascript"></script>

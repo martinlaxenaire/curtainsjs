@@ -45,6 +45,8 @@
 
 	<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
 
+    <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/examples/post-processing-transform-origin/js/post.processing.rotation.setup.js" title="Show source code" id="source-code-link" target="_blank">&lt;/ &gt;</a>
+
 	<div id="content">
 
 		<div id="planes">
@@ -55,27 +57,27 @@
                 </h1>
             </div>
 
-            <div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs">
+            <div class="plane">
                 <img src="../medias/plane-texture-1.jpg" data-sampler="planeTexture" />
             </div>
 
-            <div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs">
+            <div class="plane">
                 <img src="../medias/plane-texture-2.jpg" data-sampler="planeTexture" />
             </div>
 
-            <div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs">
+            <div class="plane">
                 <img src="../medias/plane-texture-3.jpg" data-sampler="planeTexture" />
             </div>
 
-            <div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs">
+            <div class="plane">
                 <img src="../medias/plane-texture-4.jpg" data-sampler="planeTexture" />
             </div>
 
-            <div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs">
+            <div class="plane">
                 <img src="../medias/plane-texture-1.jpg" data-sampler="planeTexture" />
             </div>
 
-            <div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs">
+            <div class="plane">
                 <img src="../medias/plane-texture-2.jpg" data-sampler="planeTexture" />
             </div>
 
@@ -84,109 +86,6 @@
 
 	</div>
 </div>
-
-<script id="multiple-planes-vs" type="x-shader/x-vertex">
-    #ifdef GL_ES
-    precision mediump float;
-    #endif
-
-    // default mandatory variables
-    attribute vec3 aVertexPosition;
-    attribute vec2 aTextureCoord;
-
-    uniform mat4 uMVMatrix;
-    uniform mat4 uPMatrix;
-
-    uniform mat4 planeTextureMatrix;
-
-    // custom variables
-    varying vec3 vVertexPosition;
-    varying vec2 vTextureMatrixCoord;
-
-    uniform float uScrollEffect;
-
-    void main() {
-
-        vec3 vertexPosition = aVertexPosition;
-
-        gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
-
-        // varyings
-        vVertexPosition = vertexPosition;
-        vTextureMatrixCoord = (planeTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
-    }
-</script>
-<script id="multiple-planes-fs" type="x-shader/x-fragment">
-    #ifdef GL_ES
-    precision mediump float;
-    #endif
-
-    varying vec3 vVertexPosition;
-    varying vec2 vTextureCoord;
-    varying vec2 vTextureMatrixCoord;
-
-    uniform sampler2D planeTexture;
-
-    void main( void ) {
-        // slides transitions
-        vec4 finalColor = texture2D(planeTexture, vTextureMatrixCoord);
-
-        gl_FragColor = finalColor;
-    }
-</script>
-
-
-<script id="rotation-vs" type="x-shader/x-vertex">
-    #ifdef GL_ES
-    precision mediump float;
-    #endif
-
-    // default mandatory variables
-    attribute vec3 aVertexPosition;
-    attribute vec2 aTextureCoord;
-
-    // custom variables
-    varying vec3 vVertexPosition;
-    varying vec2 vTextureCoord;
-
-    void main() {
-        gl_Position = vec4(aVertexPosition, 1.0);
-
-        // varyings
-        vVertexPosition = aVertexPosition;
-        vTextureCoord = aTextureCoord;
-    }
-</script>
-<script id="rotation-fs" type="x-shader/x-fragment">
-    #ifdef GL_ES
-    precision mediump float;
-    #endif
-
-    varying vec3 vVertexPosition;
-    varying vec2 vTextureCoord;
-
-    uniform sampler2D renderTexture;
-
-    uniform float uRotationEffect;
-
-    void main( void ) {
-        vec2 textCoords = vTextureCoord;
-
-        // calculate an effect that spreads from the left-center point
-        float rgbEffect = uRotationEffect * distance(textCoords, vec2(0.0, 0.5));
-
-        // apply a simple rgb shift based on that effect
-        vec4 red = texture2D(renderTexture, textCoords + rgbEffect * 0.005);
-        vec4 green = texture2D(renderTexture, vTextureCoord);
-        vec4 blue = texture2D(renderTexture, vTextureCoord + rgbEffect * -0.005);
-
-        // use green channel alpha as this one does not have any displacement
-        vec4 finalColor = vec4(red.r, green.g, blue.b, green.a);
-
-        gl_FragColor = finalColor;
-    }
-</script>
-
 
 <script src="../../build/curtains.js" type="text/javascript"></script>
 <script src="js/post.processing.rotation.setup.js" type="text/javascript"></script>

@@ -22,8 +22,87 @@ window.addEventListener("load", function() {
     // get our plane element
     var planeElements = document.getElementsByClassName("async-textures");
 
+    var vs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        // default mandatory variables
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+
+        // varyings
+        // note how our texture matrices variable name matches the samplers variable names
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+        varying vec2 vFirstTextureCoord;
+        varying vec2 vSecondTextureCoord;
+
+        // textures matrices
+        uniform mat4 firstTextureMatrix;
+        uniform mat4 secondTextureMatrix;
+
+        uniform float uTransitionTimer;
+
+        void main() {
+            vec3 vertexPosition = aVertexPosition;
+
+            // a float varying from -1.5 to 1.5
+            float waveCoords = ((uTransitionTimer / 60.0) * 3.5) - 1.75;
+
+            // distance from the waveCoords to the vertex coordinates
+            float distanceToWave = distance(vec2(vertexPosition.x, 0.0), vec2(waveCoords, 0.0));
+
+            // nice little wave animation from left to right or right to left depending on the timer
+            vertexPosition.z = cos(clamp(distanceToWave, 0.0, 0.75) * 3.141592) - cos(0.75 * 3.141592);
+
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+
+            // varyings
+            vTextureCoord = aTextureCoord;
+            vFirstTextureCoord = (firstTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+            vSecondTextureCoord = (secondTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+            vVertexPosition = vertexPosition;
+        }
+    `;
+
+    var fs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+        varying vec2 vFirstTextureCoord;
+        varying vec2 vSecondTextureCoord;
+
+        uniform float uTransitionTimer;
+
+        uniform sampler2D firstTexture;
+        uniform sampler2D secondTexture;
+
+        void main() {
+            // set our textures
+            vec4 firstTextureColor = texture2D(firstTexture, vFirstTextureCoord);
+            vec4 secondTextureColor = texture2D(secondTexture, vSecondTextureCoord);
+
+            // mix our textures based on our transition timer
+            vec4 finalColor = mix(firstTextureColor, secondTextureColor, clamp((2.0 - vTextureCoord.x) * (uTransitionTimer / 60.0), 0.0, 1.0));
+
+            // handling premultiplied alpha
+            finalColor = vec4(finalColor.rgb * finalColor.a, finalColor.a);
+
+            gl_FragColor = finalColor;
+        }
+    `;
+
     // really basic params
     var params = {
+        vertexShader: vs,
+        fragmentShader: fs,
         widthSegments: 20,
         heightSegments: 1,
         uniforms: {
@@ -41,8 +120,8 @@ window.addEventListener("load", function() {
 
     // if there has not been any error during init
     if(asyncTexturesPlane) {
-        // hide the plane while its empty, using the dirty _canDraw flag
-        asyncTexturesPlane._canDraw = false;
+        // hide the plane while its empty
+        asyncTexturesPlane.visible = false;
 
         asyncTexturesPlane.onReady(function() {
 
@@ -100,7 +179,7 @@ window.addEventListener("load", function() {
                     // if window has been resized between plane creation and image loading, we need to trigger a resize
                     asyncTexturesPlane.planeResize();
                     // show our plane now
-                    asyncTexturesPlane._canDraw = true;
+                    asyncTexturesPlane.visible = true;
                 }
             });
 

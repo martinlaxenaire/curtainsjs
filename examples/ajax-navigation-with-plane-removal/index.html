@@ -46,6 +46,8 @@
 
 			<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
 
+            <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/examples/ajax-navigation-with-plane-removal/js/ajax.nav.setup.js" title="Show source code" id="source-code-link" target="_blank">&lt;/ &gt;</a>
+
 			<div class="wrapper">
 				<nav id="navigation">
 					<a class="navigation-button active" href="index.html">
@@ -105,61 +107,6 @@
 
 			</div>
 		</div>
-
-		<script id="plane-vs" type="x-shader/x-vertex">
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-
-			// default mandatory variables
-			attribute vec3 aVertexPosition;
-			attribute vec2 aTextureCoord;
-
-			uniform mat4 uMVMatrix;
-			uniform mat4 uPMatrix;
-
-			// texture matrix
-			uniform mat4 uTextureMatrix0;
-
-			// custom variables
-			varying vec3 vVertexPosition;
-			varying vec2 vTextureMatrix;
-
-			uniform float uTime;
-
-			void main() {
-
-				vec3 vertexPosition = aVertexPosition;
-
-				float distanceFromCenter = distance(vec2(vertexPosition.x, vertexPosition.y), vec2(0.5, vertexPosition.x));
-				vertexPosition.z += 1.5 * cos(5.0 * (distanceFromCenter - (uTime / 100.0)));
-
-				// set positions
-				gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
-
-				// varyings
-				vTextureMatrix = (uTextureMatrix0 * vec4(aTextureCoord, 0.0, 1.0)).xy;
-				vVertexPosition = vertexPosition;
-			}
-        </script>
-        <script id="plane-fs" type="x-shader/x-fragment">
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-
-			varying vec3 vVertexPosition;
-			varying vec2 vTextureMatrix;
-
-			uniform sampler2D uSampler0;
-
-			void main( void ) {
-				// our texture
-				vec4 finalColor = texture2D(uSampler0, vTextureMatrix);
-
-				gl_FragColor = finalColor;
-			}
-        </script>
-
 
 		<script src="../../build/curtains.js" type="text/javascript"></script>
         <script src="js/ajax.nav.setup.js" type="text/javascript"></script>

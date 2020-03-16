@@ -68,6 +68,22 @@
         background: black;
     }
 
+    #source-code-link {
+        display: inline-block;
+        position: fixed;
+        bottom: 1em;
+        right: 1em;
+        padding: 0.25em 0.5em;
+        background: #ee6557;
+        color: white;
+        text-decoration: none;
+        z-index: 50;
+    }
+
+    #source-code-link:hover {
+        background: black;
+    }
+
     .video-started #canvas {
         opacity: 1;
     }

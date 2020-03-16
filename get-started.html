@@ -1547,6 +1547,7 @@
                             <p>
                                 You can also load images, videos or canvases into your shader pass, as you'd do with a regular plane.
                             </p>
+                            <p>Finally, if you want to apply your shader pass to just a set of planes instead of your whole scene, you'll have to pass a RenderTarget element as a parameter. See <a href="render-target-class.html#assigning-render-target-to-shader-pass">Assigning a RenderTarget to a ShaderPass</a>.</p>
 
                         </div>
 
@@ -1563,13 +1564,13 @@
                                     Disable and reenable the scene drawing each time you can. This can save a lot of performance and battery usage when your WebGL scene is idling.
                                 </li>
 								<li>
-									Plane's canvases textures are updated at each frame (videos are updated at 30FPS), which has a significant impact on performance. When those textures are not visible (if they are hidden by another texture, or if you have finished drawing on your canvas...), you should set those <a href="texture-class.html#should-update">textures shouldUpdate property</a> to false, and switch it back to true before displaying them again.
+									Plane's canvases textures are updated at each frame (videos are updated each time a new frame is available), which has a significant impact on performance. When those textures are not visible (if they are hidden by another texture, or if you have finished drawing on your canvas...), you should set those <a href="texture-class.html#should-update">textures shouldUpdate property</a> to false, and switch it back to true before displaying them again.
 								</li>
 								<li>
 									Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size. It goes the same for videos of course: try to keep them as light as possible.
 								</li>
                                 <li>
-                                    Shader passes are expensive, use them with caution.
+                                    Shader passes could be expensive, use them with caution.
                                 </li>
 								<li>
 							        Try to use as less javascript as possible in the onRender() methods as this get executed at each draw call.
@@ -1582,35 +1583,36 @@
 								Those examples might seem a little rough: they don't use any tweening or animation engine to keep the code centered around the library usage itself. You should definitely consider using easings in your own animations.<br />
                                 Do not hesitate to check their source code as they are all fully commented:
 							</p>
-							<h3>Images</h3>
-							<p>
-								<a href="examples/vertex-coords-helper/index.html" title="Vertex coordinates helper" target="_blank">Vertex coordinates helper</a><br />
-								<a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
-								<a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a><br />
-								<a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
-								<a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a><br />
-								<a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
-								<a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a><br />
-							</p>
-							<h3>Videos</h3>
-							<p>
-								<a href="examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a><br />
-								<a href="examples/multiple-video-textures/index.html" title="Multiple video textures" target="_blank">Multiple video textures with a displacement shader</a><br />
-							</p>
-							<h3>Canvas</h3>
-							<p>
-								<a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a><br />
-								<a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a>
-							</p>
+                            <h3>Images</h3>
+                            <p>
+                                <a href="examples/vertex-coords-helper/index.html" title="Vertex coordinates helper" target="_blank">Vertex coordinates helper</a><br />
+                                <a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
+                                <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a><br />
+                                <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
+                                <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a><br />
+                                <a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
+                                <a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a><br />
+                            </p>
+                            <h3>Videos</h3>
+                            <p>
+                                <a href="examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a><br />
+                                <a href="examples/multiple-video-textures/index.html" title="Multiple video textures" target="_blank">Multiple video textures with a displacement shader</a><br />
+                            </p>
+                            <h3>Canvas</h3>
+                            <p>
+                                <a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a><br />
+                                <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a>
+                            </p>
                             <h3>Post processing</h3>
                             <p>
                                 <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a><br />
                                 <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a><br />
                                 <a href="examples/post-processing-transform-origin/index.html" title="Post processing scrolling wheel with custom transform origin" target="_blank">Post processing scrolling wheel with custom transform origin</a>
                             </p>
-                            <h3>FBOs swapping / ping pong shading</h3>
+                            <h3>Advanced render targets usage</h3>
                             <p>
-                                <a href="examples/ping-pong-shading-flowmap/index.html" title="Ping pong shading flowmap example" target="_blank">Ping pong shading flowmap example</a><br />
+                                <a href="examples/ping-pong-shading-flowmap/index.html" title="Ping pong shading flowmap example" target="_blank">Ping pong shading / FBOs swapping flowmap example</a><br />
+                                <a href="examples/render-passes-using-render-targets/index.html" title="Selective shader passes using render targets" target="_blank">Selective shader passes using render targets</a>
                             </p>
                             <h3>Custom scroll</h3>
                             <p>

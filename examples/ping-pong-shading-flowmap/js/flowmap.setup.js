@@ -17,6 +17,156 @@
  ***/
 
 window.addEventListener("load", function() {
+
+    // flowmap shaders
+    var flowmapVs = `
+        #ifdef GL_ES
+        precision highp float;
+        #endif
+    
+        // default mandatory variables
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+    
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+    
+        // custom variables
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+    
+        void main() {
+    
+            vec3 vertexPosition = aVertexPosition;
+    
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+    
+            // varyings
+            vTextureCoord = aTextureCoord;
+            vVertexPosition = vertexPosition;
+        }
+    `;
+
+    var flowmapFs = `
+        #ifdef GL_ES
+        precision highp float;
+        #endif
+    
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+    
+        uniform sampler2D uFlowMap;
+    
+        uniform vec2 uMousePosition;
+        uniform float uFalloff;
+        uniform float uAlpha;
+        uniform float uDissipation;
+        uniform float uCursorGrow;
+    
+        uniform vec2 uVelocity;
+        uniform float uAspect;
+    
+        void main() {
+            // convert to -1 / 1
+            vec2 textCoords = vTextureCoord * 2.0 - 1.0;
+    
+            // make the cursor grow with time
+            textCoords /= uCursorGrow;
+            // adjust cursor position based on its growth
+            textCoords += uCursorGrow * uMousePosition / (1.0 / (uCursorGrow - 1.0) * pow(uCursorGrow, 2.0));
+    
+            // convert back to 0 / 1
+            textCoords = (textCoords + 1.0) / 2.0;
+    
+            vec4 color = texture2D(uFlowMap, textCoords) * uDissipation;
+    
+            vec2 mouseTexPos = (uMousePosition + 1.0) * 0.5;
+            vec2 cursor = vTextureCoord - mouseTexPos;
+            cursor.x *= uAspect;
+    
+            vec3 stamp = vec3(uVelocity * vec2(1.0, -1.0), 1.0 - pow(1.0 - min(1.0, length(uVelocity)), 3.0));
+            float falloff = smoothstep(uFalloff, 0.0, length(cursor)) * uAlpha;
+            color.rgb = mix(color.rgb, stamp, vec3(falloff));
+    
+            // handle premultiply alpha
+            color.rgb = color.rgb * color.a;
+    
+            gl_FragColor = color;
+        }
+    `;
+
+
+    // displacement shaders
+    var displacementVs = `
+        #ifdef GL_ES
+        precision highp float;
+        #endif
+    
+        // default mandatory variables
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+    
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+    
+        uniform mat4 planeTextureMatrix;
+    
+        // custom variables
+        varying vec3 vVertexPosition;
+        varying vec2 vPlaneTextureCoord;
+        varying vec2 vTextureCoord;
+    
+        void main() {
+    
+            vec3 vertexPosition = aVertexPosition;
+    
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+    
+            // varyings
+            vTextureCoord = aTextureCoord;
+            vPlaneTextureCoord = (planeTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+            vVertexPosition = vertexPosition;
+        }
+    `;
+
+    var displacementFs = `
+        #ifdef GL_ES
+        precision highp float;
+        #endif
+    
+        varying vec3 vVertexPosition;
+        varying vec2 vPlaneTextureCoord;
+        varying vec2 vTextureCoord;
+    
+        uniform sampler2D planeTexture;
+        uniform sampler2D uFlowTexture;
+    
+        void main() {
+            // our flowmap
+            vec4 flowTexture = texture2D(uFlowTexture, vTextureCoord);
+    
+            // distort our image texture based on the flowmap values
+            vec2 distortedCoords = vPlaneTextureCoord;
+            distortedCoords -= flowTexture.xy * 0.1;
+    
+            // get our final texture based on the displaced coords
+            vec4 texture = texture2D(planeTexture, distortedCoords);
+    
+            // get a B&W version of our image texture
+            vec4 textureBW = vec4(1.0);
+            textureBW.rgb = vec3(texture.r * 0.3 + texture.g * 0.59 + texture.b * 0.11);
+    
+            // mix the BW image and the colored one based on our flowmap color values
+            float mixValue = clamp((abs(flowTexture.r) + abs(flowTexture.g) + abs(flowTexture.b)) * 1.5, 0.0, 1.0);
+            texture = mix(texture, textureBW, mixValue);
+    
+            // switch between this 2 lines to see what we have drawn onto our flowmap
+            //gl_FragColor = flowTexture;
+            gl_FragColor = texture;
+        }
+    `;
+
+
     var ww = window.innerWidth;
     var wh = window.innerHeight;
 
@@ -91,8 +241,8 @@ window.addEventListener("load", function() {
     });
 
     var flowMapParams = {
-        vertexShaderID: "flowmap-vs",
-        fragmentShaderID: "flowmap-fs",
+        vertexShader: flowmapVs,
+        fragmentShader: flowmapFs,
         autoloadSources: false, // don't load the image for this plane, we'll just write the mouse position on it
         depthTest: false, // we need to disable the depth test in order for the ping pong shading to work
         uniforms: {
@@ -163,11 +313,19 @@ window.addEventListener("load", function() {
     // if our flowmap has been created
     if(flowMap) {
         // create a texture where we'll draw our circle
-        flowMapTex = flowMap.createTexture("uFlowMap");
+        flowMapTex = flowMap.createTexture({
+            sampler: "uFlowMap"
+        });
 
         // create 2 render targets
-        readPass = curtains.addRenderTarget({ depth: false });
-        writePass = curtains.addRenderTarget({ depth: false });
+        readPass = curtains.addRenderTarget({
+            depth: false,
+            clear: false,
+        });
+        writePass = curtains.addRenderTarget({
+            depth: false,
+            clear: false,
+        });
 
         flowMap.onRender(function() {
             // update the render target
@@ -187,8 +345,8 @@ window.addEventListener("load", function() {
 
         // next we will create the plane that will display our result
         var params = {
-            vertexShaderID: "flowmap-displacement-vs",
-            fragmentShaderID: "flowmap-displacement-fs",
+            vertexShader: displacementVs,
+            fragmentShader: displacementFs,
         };
 
         var plane = curtains.addPlane(planeElement, params);
@@ -196,10 +354,10 @@ window.addEventListener("load", function() {
         if(plane) {
             plane.onReady(function() {
                 // create a texture that will hold our flowmap
-                flowTexture = plane.createTexture("uFlowTexture");
-
-                // set it based on our flowmap plane's texture
-                flowTexture.setFromTexture(flowMap.textures[0]);
+                flowTexture = plane.createTexture({
+                    sampler: "uFlowTexture",
+                    fromTexture: flowMap.textures[0] // set it based on our flowmap plane's texture
+                });
 
             }).onRender(function() {
                 // update mouse position

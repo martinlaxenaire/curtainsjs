@@ -1207,13 +1207,24 @@
                                         <ul id="add-render-target-parameters" class="api-item-parameters-inner-list">
                                             <li>
 												<span class="api-item-parameter-label">
+													clear
+												</span>
+                                                <span class="api-item-parameter-type">
+													bool, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													Whether the content of your render target should be cleared before being drawn. Should be set to false to handle ping-pong shading. Default to true.
+												</span>
+                                            </li>
+                                            <li>
+												<span class="api-item-parameter-label">
 													depth
 												</span>
                                                 <span class="api-item-parameter-type">
 													bool, optionnal
 												</span>
                                                 <span class="api-item-parameter-desc">
-													whether to create a depth buffer (handle depth inside your render target). Default to true.
+													Whether to create a depth buffer (handle depth inside your render target). Default to false.
 												</span>
                                             </li>
                                         </ul>
@@ -1222,6 +1233,10 @@
                                 <p>
                                     <strong>returns:</strong> the newly created <a href="render-target-class.html">RenderTarget</a> if successful, false othterwise.
                                 </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/ping-pong-shading-flowmap/index.html" title="Ping pong shading flowmap example" target="_blank">Ping pong shading flowmap example</a> and <a href="examples/render-passes-using-render-targets/index.html" title="Selective shader passes using render targets" target="_blank">Selective shader passes using render targets</a> examples.
+                                </p>
+
                             </li>
                             <li id="add-shader-pass">
                                 <p>
@@ -1235,7 +1250,7 @@
                                     <em>params</em> (object, optionnal): an object containing the plane parameters:
                                 </p>
 
-                                <ul class="api-item-parameters">
+                                <ul id="add-shader-pass-parameters" class="api-item-parameters">
                                     <li>
                                         <span class="api-item-parameter-label">
                                             params
@@ -1244,10 +1259,10 @@
                                             object, optionnal
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            an object containing the plane parameters:
+                                            an object containing the shader pass parameters:
                                         </span>
 
-                                        <ul id="add-shader-pass-parameters" class="api-item-parameters-inner-list">
+                                        <ul class="api-item-parameters-inner-list">
                                             <li>
 												<span class="api-item-parameter-label">
 													vertexShader
@@ -1290,6 +1305,50 @@
 												</span>
                                                 <span class="api-item-parameter-desc">
 													the fragment shader ID. If ommited, will look for a data attribute data-fs-id on the plane HTML element. Will use a default fragment shader that draws the scene without modifications if nothing specified.
+												</span>
+                                            </li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													renderTarget
+												</span>
+                                                <span class="api-item-parameter-type">
+                                                    <a href="render-target-class.html">RenderTarget</a> object, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													If specified, will apply the ShaderPass only to the plane that are attached to that RenderTarget. Else the whole scene will be post-processed. Default to null.
+												</span>
+                                            </li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													clear
+												</span>
+                                                <span class="api-item-parameter-type">
+													bool, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													Whether the shader pass render target content should be cleared before being drawn (see <a href="curtains-class.html#add-render-target-parameters">addRenderTarget</a> parameters). Default to true.
+												</span>
+                                            </li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													depth
+												</span>
+                                                <span class="api-item-parameter-type">
+													bool, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													Whether the shader pass render target should use a depth buffer (see <a href="curtains-class.html#add-render-target-parameters">addRenderTarget</a> parameters). Default to false.
+												</span>
+                                            </li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													depthTest
+												</span>
+                                                <span class="api-item-parameter-type">
+													bool, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													if your shader pass should enable or disable the depth test. Default to true.
 												</span>
                                             </li>
                                             <li>
@@ -1361,7 +1420,7 @@
                                     See <a href="#add-plane-basic-params">addPlane</a> basic parameters example.
                                 </p>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
+                                    <strong>Examples:</strong> used in <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a>, <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a>, <a href="examples/post-processing-transform-origin/index.html" title="Post processing scrolling wheel with custom transform origin" target="_blank">Post processing scrolling wheel with custom transform origin</a> and <a href="examples/render-passes-using-render-targets/index.html" title="Selective shader passes using render targets" target="_blank">Selective shader passes using render targets</a> examples.
                                 </p>
                             </li>
 							<li id="disable-drawing">

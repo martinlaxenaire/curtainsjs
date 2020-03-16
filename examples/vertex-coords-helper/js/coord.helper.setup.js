@@ -5,19 +5,6 @@ window.addEventListener("load", function() {
         y: 0,
     };
 
-    // really basic params and uniforms
-    var params = {
-        vertexShaderID: "coord-helper-vs",
-        fragmentShaderID: "coord-helper-fs",
-        uniforms: {
-            mousePosition: { // our mouse position
-                name: "uMousePosition",
-                type: "2f",
-                value: [mousePosition.x, mousePosition.y],
-            },
-        }
-    };
-
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains({
         container: "canvas",
@@ -32,6 +19,66 @@ window.addEventListener("load", function() {
 
     // get our plane element
     var planeElements = document.getElementsByClassName("plane");
+
+    var vs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        // default mandatory variables
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+
+        // custom variables
+        varying vec3 vVertexPosition;
+
+        void main() {
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+
+            // varying
+            vVertexPosition = aVertexPosition;
+        }
+    `;
+
+    var fs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        varying vec3 vVertexPosition;
+
+        uniform vec2 uMousePosition;
+
+        void main() {
+
+            vec4 finalColor = vec4(0.0, 0.0, 0.0, 1.0);
+
+            float distance = distance(vec2(vVertexPosition.x, vVertexPosition.y), uMousePosition);
+
+            finalColor.r = distance / 1.15;
+            finalColor.g = abs(0.5 - distance) / 1.25;
+            finalColor.b = abs(0.75 - distance) / 2.5 + 0.3;
+
+            gl_FragColor = finalColor;
+        }
+    `;
+
+    // really basic parameters and uniforms
+    var params = {
+        vertexShader: vs,
+        fragmentShader: fs,
+        uniforms: {
+            mousePosition: { // our mouse position
+                name: "uMousePosition",
+                type: "2f",
+                value: [mousePosition.x, mousePosition.y],
+            },
+        }
+    };
+
     // add the plane
     var helperPlane = webGLCurtain.addPlane(planeElements[0], params);
 

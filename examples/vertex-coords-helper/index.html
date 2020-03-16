@@ -46,6 +46,8 @@
 
 			<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
 
+            <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/examples/vertex-coords-helper/js/coord.helper.setup.js" title="Show source code" id="source-code-link" target="_blank">&lt;/ &gt;</a>
+
 			<div class="plane"></div>
 
 			<div id="mouse-coords-helper-wrapper">
@@ -54,59 +56,6 @@
 				Y: <span id="mouse-coords-helper-y">0</span>
 			</div>
 		</div>
-
-        <script id="coord-helper-vs" type="x-shader/x-vertex">
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-
-			// default mandatory variables
-			attribute vec3 aVertexPosition;
-			attribute vec2 aTextureCoord;
-
-			uniform mat4 uMVMatrix;
-    		uniform mat4 uPMatrix;
-
-			// custom variables
-			varying vec3 vVertexPosition;
-			varying vec2 vTextureCoord;
-
-
-			void main() {
-
-				vec3 vertexPosition = aVertexPosition;
-
-			   	gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
-
-			   	// varyings
-			   	vTextureCoord = aTextureCoord;
-			   	vVertexPosition = vertexPosition;
-			}
-        </script>
-        <script id="coord-helper-fs" type="x-shader/x-fragment">
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-
-			varying vec3 vVertexPosition;
-			varying vec2 vTextureCoord;
-
-			uniform vec2 uMousePosition;
-
-			void main( void ) {
-
-				vec4 finalColor = vec4(0.0, 0.0, 0.0, 1.0);
-
-				float distance = distance(vec2(vVertexPosition.x, vVertexPosition.y), uMousePosition);
-
-				finalColor.r = distance / 1.15;
-				finalColor.g = abs(0.5 - distance) / 1.25;
-				finalColor.b = abs(0.75 - distance) / 2.5 + 0.3;
-
-				gl_FragColor = finalColor;
-			}
-        </script>
-
 
 		<script src="../../build/curtains.js" type="text/javascript"></script>
         <script src="js/coord.helper.setup.js" type="text/javascript"></script>

@@ -13,12 +13,67 @@ function archiveNavigation() {
     var planes = [];
     var planeElements = [];
 
+    var vs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        // default mandatory variables
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+
+        // texture matrix
+        uniform mat4 uTextureMatrix0;
+
+        // custom variables
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        uniform float uTime;
+
+        void main() {
+            vec3 vertexPosition = aVertexPosition;
+
+            float distanceFromCenter = distance(vec2(vertexPosition.x, vertexPosition.y), vec2(0.5, vertexPosition.x));
+            vertexPosition.z += 1.5 * cos(5.0 * (distanceFromCenter - (uTime / 100.0)));
+
+            // set positions
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+
+            // varyings
+            vTextureCoord = (uTextureMatrix0 * vec4(aTextureCoord, 0.0, 1.0)).xy;
+            vVertexPosition = vertexPosition;
+        }
+    `;
+
+    var fs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        uniform sampler2D uSampler0;
+
+        void main( void ) {
+            // our texture
+            vec4 finalColor = texture2D(uSampler0, vTextureCoord);
+
+            gl_FragColor = finalColor;
+        }
+    `;
+
     // all planes will have the same parameters
     var params = {
-        vertexShaderID: "plane-vs", // our vertex shader ID
-        fragmentShaderID: "plane-fs", // our framgent shader ID
-        widthSegments: 15,
-        heightSegments: 10,
+        vertexShader: vs, // our vertex shader
+        fragmentShader: fs, // our framgent shader
+        widthSegments: 30,
+        heightSegments: 20,
+        fov: 60, // exagerate perspective
         uniforms: {
             time: {
                 name: "uTime", // uniform name that will be passed to our shaders

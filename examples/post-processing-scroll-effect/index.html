@@ -45,6 +45,8 @@
 
 	<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
 
+    <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/examples/post-processing-scroll-effect/js/post.processing.parallax.setup.js" title="Show source code" id="source-code-link" target="_blank">&lt;/ &gt;</a>
+
 	<div id="content">
 
 		<h1>Awesome scrollable content v2</h1>
@@ -65,7 +67,7 @@
 			<div class="plane-wrapper">
 				<span class="plane-title">Title 1</span>
 				<div class="plane-inner">
-					<div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs">
+					<div class="plane">
 						<img src="../medias/plane-texture-1.jpg" data-sampler="planeTexture" />
 					</div>
 				</div>
@@ -74,7 +76,7 @@
 			<div class="plane-wrapper">
 				<span class="plane-title">Title 2</span>
 				<div class="plane-inner">
-					<div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs">
+					<div class="plane">
 						<img src="../medias/plane-texture-2.jpg" data-sampler="planeTexture" />
 					</div>
 				</div>
@@ -83,7 +85,7 @@
 			<div class="plane-wrapper">
 				<span class="plane-title">Title 3</span>
 				<div class="plane-inner">
-					<div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs">
+					<div class="plane">
 						<img src="../medias/plane-texture-3.jpg" data-sampler="planeTexture" />
 					</div>
 				</div>
@@ -92,7 +94,7 @@
 			<div class="plane-wrapper">
 				<span class="plane-title">Title 4</span>
 				<div class="plane-inner">
-					<div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs">
+					<div class="plane">
 						<img src="../medias/plane-texture-4.jpg" data-sampler="planeTexture" />
 					</div>
 				</div>
@@ -103,155 +105,6 @@
 
 	</div>
 </div>
-
-<script id="multiple-planes-vs" type="x-shader/x-vertex">
-    #ifdef GL_ES
-    precision mediump float;
-    #endif
-
-    // default mandatory variables
-    attribute vec3 aVertexPosition;
-    attribute vec2 aTextureCoord;
-
-    uniform mat4 uMVMatrix;
-    uniform mat4 uPMatrix;
-
-    uniform mat4 planeTextureMatrix;
-
-    // custom variables
-    varying vec3 vVertexPosition;
-    varying vec2 vTextureMatrixCoord;
-
-    uniform float uScrollEffect;
-
-    void main() {
-
-        vec3 vertexPosition = aVertexPosition;
-
-        gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
-
-        // varyings
-        vVertexPosition = vertexPosition;
-        vTextureMatrixCoord = (planeTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
-    }
-</script>
-<script id="multiple-planes-fs" type="x-shader/x-fragment">
-    #ifdef GL_ES
-    precision mediump float;
-    #endif
-
-    varying vec3 vVertexPosition;
-    varying vec2 vTextureCoord;
-    varying vec2 vTextureMatrixCoord;
-
-    uniform sampler2D planeTexture;
-
-    void main( void ) {
-        // slides transitions
-        vec4 finalColor = texture2D(planeTexture, vTextureMatrixCoord);
-
-        gl_FragColor = finalColor;
-    }
-</script>
-
-
-<script id="inverted-rect-vs" type="x-shader/x-vertex">
-    #ifdef GL_ES
-    precision mediump float;
-    #endif
-
-    // default mandatory variables
-    attribute vec3 aVertexPosition;
-    attribute vec2 aTextureCoord;
-
-    // custom variables
-    varying vec3 vVertexPosition;
-    varying vec2 vTextureCoord;
-
-    void main() {
-        gl_Position = vec4(aVertexPosition, 1.0);
-
-        // varyings
-        vVertexPosition = aVertexPosition;
-        vTextureCoord = aTextureCoord;
-    }
-</script>
-<script id="inverted-rect-fs" type="x-shader/x-fragment">
-    #ifdef GL_ES
-    precision mediump float;
-    #endif
-
-    varying vec3 vVertexPosition;
-    varying vec2 vTextureCoord;
-
-    uniform sampler2D renderTexture;
-
-    uniform float uScrollEffect;
-
-    void main( void ) {
-        // invert colors
-        vec4 scene = texture2D(renderTexture, vTextureCoord);
-        vec4 invertedColors = texture2D(renderTexture, vTextureCoord);
-
-        if(
-            vTextureCoord.x > 0.625 && vTextureCoord.x < 0.875 && vTextureCoord.y > 0.625 && vTextureCoord.y < 0.875
-            || vTextureCoord.x > 0.125 && vTextureCoord.x < 0.375 && vTextureCoord.y > 0.125 && vTextureCoord.y < 0.375
-        ) {
-            invertedColors.rgb = vec3(1.0 - invertedColors.rgb);
-        }
-
-        vec4 finalColor = mix(scene, invertedColors, abs(uScrollEffect) / 60.0);
-
-        gl_FragColor = finalColor;
-    }
-</script>
-
-
-<script id="distortion-vs" type="x-shader/x-vertex">
-    #ifdef GL_ES
-    precision mediump float;
-    #endif
-
-    // default mandatory variables
-    attribute vec3 aVertexPosition;
-    attribute vec2 aTextureCoord;
-
-    // custom variables
-    varying vec3 vVertexPosition;
-    varying vec2 vTextureCoord;
-
-    void main() {
-        gl_Position = vec4(aVertexPosition, 1.0);
-
-        // varyings
-        vVertexPosition = aVertexPosition;
-        vTextureCoord = aTextureCoord;
-    }
-</script>
-<script id="distortion-fs" type="x-shader/x-fragment">
-    #ifdef GL_ES
-    precision mediump float;
-    #endif
-
-    varying vec3 vVertexPosition;
-    varying vec2 vTextureCoord;
-
-    uniform sampler2D renderTexture;
-
-    uniform float uScrollEffect;
-
-    void main( void ) {
-        vec2 textureCoords = vTextureCoord;
-        vec2 texCenter = vec2(0.5, 0.5);
-
-        // distort around scene center
-        textureCoords += vec2(texCenter - textureCoords).xy * sin(distance(texCenter, textureCoords)) * uScrollEffect / 175.0;
-
-        vec4 finalColor = texture2D(renderTexture, textureCoords);
-        gl_FragColor = finalColor;
-    }
-</script>
-
 
 <script src="../../build/curtains.js" type="text/javascript"></script>
 <script src="js/post.processing.parallax.setup.js" type="text/javascript"></script>

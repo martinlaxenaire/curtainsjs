@@ -330,6 +330,9 @@
                                     <a href="plane-class.html#play-videos">playVideos</a>
                                 </li>
                                 <li>
+                                    <a href="plane-class.html#reset-plane">resetPlane</a>
+                                </li>
+                                <li>
                                     <a href="plane-class.html#set-perspective">setPerspective</a>
                                 </li>
                                 <li>
@@ -577,11 +580,116 @@
                         <h2 id="basic-usage">Basic usage</h2>
                         <h3>Creation</h3>
                         <p>
-                            The RenderTarget class is just a class that creates Frame Buffer Objects (FBO). You can render a plane to a render a target instead of your canvas and then grab that render target content (ie its <a href="texture-class.html">Texture</a>) and use it in another plane or shader pass.
+                            The RenderTarget class is just a class that creates Frame Buffer Objects (FBO). You can render a plane to a render a target instead of your canvas and then use that render target either by assigning it to a ShaderPass or by grabbing its content (ie its <a href="texture-class.html">Texture</a>) and use it in another plane.
                         </p>
                         <p>
                             To create a new render target, you should use the <a href="curtains-class.html#add-render-target">addRenderTarget</a> of our <a href="curtains-class.html">Curtains</a> class.<br />
                             To use it you'll have to apply it to a plane by using the <a href="plane-class.html#set-render-target">setRenderTarget</a> of our <a href="plane-class.html">Plane</a> class.
+                        </p>
+
+                        <h3>Using a RenderTarget texture in a plane</h3>
+
+                        <div class="code">
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // "canvas" is the ID of our HTML container element
+                                </div>
+                                <div>
+                                    <span class="code-var">var</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // create a render target
+                                </div>
+                                <span class="code-var">var</span> target = curtains.<span class="code-tag">addRenderTarget</span>()<span class="code-var">;</span>
+                            </div>
+
+                            <div class="code-block">
+                                <span class="code-var">var</span> planeElement = document.<span class="code-tag">getElementById</span>(<span class="code-string">"my-plane"</span>)<span class="code-var">;</span>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // create a plane
+                                </div>
+                                <span class="code-var">var</span> plane = curtains.<span class="code-tag">addPlane</span>(planeElement<span class="code-var">,</span> {
+                                <div class="code-indent">
+                                    <div><span class="code-property">vertexShaderID</span>: <span class="code-string">"plane-vs"</span><span class="code-var">,</span></div>
+                                    <div><span class="code-property">fragmentShaderID</span>: <span class="code-string">"plane-fs"</span><span class="code-var">,</span></div>
+                                </div>
+                                })<span class="code-var">;</span>
+                            </div>
+
+                            <div>
+                                <div class="code-comment">
+                                    // if our plane has been successfully created
+                                </div>
+                                <div>
+                                    <span class="code-var">if</span>(plane && target) {
+                                </div>
+                                <div class="code-indent">
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // add our plane to our frame buffer object
+                                        </div>
+                                        <div>
+                                            plane.<span class="code-tag">setRenderTarget</span>(target)<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // create a plane to display our render target result
+                                        </div>
+                                        <span class="code-var">var</span> renderElement = document.<span class="code-tag">getElementById</span>(<span class="code-string">"render-plane"</span>)<span class="code-var">;</span>
+                                    </div>
+                                    <div class="code-block">
+                                        <span class="code-var">var</span> renderPlane = curtains.<span class="code-tag">addPlane</span>(renderElement<span class="code-var">,</span> {
+                                        <div class="code-indent">
+                                            <div><span class="code-property">vertexShaderID</span>: <span class="code-string">"render-plane-vs"</span><span class="code-var">,</span></div>
+                                            <div><span class="code-property">fragmentShaderID</span>: <span class="code-string">"render-plane-fs"</span><span class="code-var">,</span></div>
+                                        </div>
+                                        })<span class="code-var">;</span>
+                                    </div>
+
+                                    <span class="code-var">if</span>(renderPlane) {
+                                    <div class="code-indent">
+
+                                        <div>
+                                            renderPlane.<span class="code-tag">onReady</span>(<span class="code-var">function</span>() {
+                                            <div class="code-indent">
+                                                <div class="code-comment">
+                                                    // create a new texture and copy the render target texture into it
+                                                </div>
+                                                <div class="code-comment">
+                                                    // you'll be able to use it as a regular texture in your plane shader
+                                                </div>
+                                                <span class="code-var">var</span> renderTexture = renderPlane.<span class="code-tag">createTexture</span>({
+                                                <div class="code-indent">
+                                                    <div><span class="code-property">sampler</span>: <span class="code-string">"uRenderTexture"</span><span class="code-var">,</span></div>
+                                                    <div><span class="code-property">fromTexture</span>: target.<span class="code-property">textures</span>[<span class="code-number">0</span>]<span class="code-var">,</span></div>
+                                                </div>
+                                                })<span class="code-var">;</span>
+                                            </div>
+                                            })<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        }
+                                    </div>
+                                </div>
+                                <div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 id="assigning-render-target-to-shader-pass">Assigning a RenderTarget to a ShaderPass</h3>
+                        <p>
+                            You can decide to add a <a href="shader-pass-class.html">ShaderPass</a> to a defined set of plane instead of your whole scene. By combining a shader pass with a render target, you'll be able to add an additional pass to all the planes that use that render target.
                         </p>
 
                         <div class="code">
@@ -596,43 +704,114 @@
                             </div>
 
                             <div class="code-block">
-                                <span class="code-var">var</span> planeElement = document.<span class="code-tag">getElementById</span>(<span class="code-string">"my-plane"</span>)<span class="code-var">;</span>
-                            </div>
-
-                            <div class="code-block">
-                                <div class="code-comment">
-                                    // create a plane
-                                </div>
-                                <span class="code-var">var</span> plane = curtains.<span class="code-tag">addPlane</span>(planeElement)<span class="code-var">;</span>
-                            </div>
-
-                            <div class="code-block">
                                 <div class="code-comment">
                                     // create a render target
                                 </div>
                                 <span class="code-var">var</span> target = curtains.<span class="code-tag">addRenderTarget</span>()<span class="code-var">;</span>
                             </div>
 
-                            <div>
+                            <div class="code-block">
+                                <span class="code-var">var</span> planeElements = document.<span class="code-tag">getElementsByClassName</span>(<span class="code-string">"my-planes"</span>)<span class="code-var">;</span>
+                            </div>
+
+                            <div class="code-block">
                                 <div class="code-comment">
-                                    // if our plane has been successfully created
+                                    // create a bunch of planes
                                 </div>
-                                <div>
-                                    <span class="code-var">if</span>(plane && target) {
-                                </div>
-                                <div class="code-indent">
-                                    <div class="code-comment">
-                                        // render our plane into our frame buffer object
-                                    </div>
+                                <div class="code-block">
                                     <div>
-                                        plane.<span class="code-tag">setRenderTarget</span>(target)<span class="code-var">;</span>
+                                        <span class="code-var">for</span>(<span class="code-var">var</span> i = <span class="code-number">0</span><span class="code-var">;</span> i < planeElements.<span class="code-property">length</span><span class="code-var">;</span> i++) {</span>
                                     </div>
-                                </div>
-                                <div>
+
+                                    <div class="code-indent">
+                                        <div class="code-block">
+                                            <span class="code-var">var</span> plane = curtains.<span class="code-tag">addPlane</span>(planeElements[i]<span class="code-var">,</span> {
+                                            <div class="code-indent">
+                                                <div><span class="code-property">vertexShaderID</span>: <span class="code-string">"plane-vs"</span><span class="code-var">,</span></div>
+                                                <div><span class="code-property">fragmentShaderID</span>: <span class="code-string">"plane-fs"</span><span class="code-var">,</span></div>
+                                            </div>
+                                            })<span class="code-var">;</span>
+                                        </div>
+
+                                        <div class="code-comment">
+                                            // if our plane has been successfully created
+                                        </div>
+                                        <div>
+                                            <span class="code-var">if</span>(plane && target) {
+                                        </div>
+                                        <div class="code-indent">
+                                            <div class="code-comment">
+                                                // add our plane to our frame buffer object
+                                            </div>
+                                            <div>
+                                                plane.<span class="code-tag">setRenderTarget</span>(target)<span class="code-var">;</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            }
+                                        </div>
+                                    </div>
                                     }
                                 </div>
                             </div>
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // now assign our render target to a shader pass
+                                </div>
+                                <div>
+                                    <span class="code-var">var</span> shaderPassParams = {
+                                </div>
+                                <div class="code-indent">
+                                    <div>
+                                        <span class="code-property">vertexShaderID</span>: <span class="code-string">"my-shader-pass-vs"</span><span class="code-var">,</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">fragmentShaderID</span>: <span class="code-string">"my-shader-pass-fs"</span><span class="code-var">,</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">renderTarget</span>: target<span class="code-var">,</span> <span class="code-comment">// this is how we assign the render target to our shader pass</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">uniforms</span>: {
+                                    </div>
+                                    <div class="code-indent">
+                                        <div>
+                                            <span class="code-property">time</span>: {
+                                        </div>
+                                        <div class="code-indent">
+                                            <div>
+                                                <span class="code-property">name</span>: <span class="code-string">"uTime"</span><span class="code-var">,</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">type</span>: <span class="code-string">"1f"</span><span class="code-var">,</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">value</span>: <span class="code-number">0</span><span class="code-var">,</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            }<span class="code-var">,</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        }<span class="code-var">,</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    }<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="code-var">var</span> shaderPass = curtains.<span class="code-tag">addShaderPass</span>(shaderPassParams)<span class="code-var">;</span>
+                            </div>
+
                         </div>
+
+                        <p>
+                            Check the <a href="examples/render-passes-using-render-targets/index.html" title="Selective shader passes using render targets" target="_blank">Selective shader passes using render targets</a> example to see how you can apply different shader passes to different bunch of planes.
+                        </p>
 
                         <h2 id="methods">Properties</h2>
                         <ul>

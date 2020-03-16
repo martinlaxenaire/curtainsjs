@@ -43,18 +43,93 @@ window.addEventListener("load", function() {
     // disable drawing for now
     webGLCurtain.disableDrawing();
 
-    // could be useful to get pixel ratio
-    var pixelRatio = window.devicePixelRatio ? window.devicePixelRatio : 1.0;
+    var vs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        // default mandatory variables
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+
+        // varyings : notice we've got 3 texture coords varyings
+        // one for the displacement texture
+        // one for our visible texture
+        // and one for the upcoming texture
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+        varying vec2 vActiveTextureCoord;
+        varying vec2 vNextTextureCoord;
+
+        // textures matrices
+        uniform mat4 activeTexMatrix;
+        uniform mat4 nextTexMatrix;
+
+        // custom uniforms
+        uniform float uTransitionTimer;
+
+
+        void main() {
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+
+            // varyings
+            vTextureCoord = aTextureCoord;
+            vActiveTextureCoord = (activeTexMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+            vNextTextureCoord = (nextTexMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+
+            vVertexPosition = aVertexPosition;
+        }
+    `;
+
+    var fs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+        varying vec2 vActiveTextureCoord;
+        varying vec2 vNextTextureCoord;
+
+        // custom uniforms
+        uniform float uTransitionTimer;
+
+        // our textures samplers
+        // notice how it matches the sampler attributes of the textures we created dynamically
+        uniform sampler2D activeTex;
+        uniform sampler2D nextTex;
+        uniform sampler2D displacement;
+
+        void main() {
+            // our displacement texture
+            vec4 displacementTexture = texture2D(displacement, vTextureCoord);
+
+            // slides transitions based on displacement and transition timer
+            vec2 firstDisplacementCoords = vActiveTextureCoord + displacementTexture.r * ((cos((uTransitionTimer + 90.0) / (90.0 / 3.141592)) + 1.0) / 1.25);
+            vec4 firstDistortedColor = texture2D(activeTex, vec2(vActiveTextureCoord.x, firstDisplacementCoords.y));
+
+            // same as above but we substract the effect
+            vec2 secondDisplacementCoords = vNextTextureCoord - displacementTexture.r * ((cos(uTransitionTimer / (90.0 / 3.141592)) + 1.0) / 1.25);
+            vec4 secondDistortedColor = texture2D(nextTex, vec2(vNextTextureCoord.x, secondDisplacementCoords.y));
+
+            // mix both texture
+            vec4 finalColor = mix(firstDistortedColor, secondDistortedColor, 1.0 - ((cos(uTransitionTimer / (90.0 / 3.141592)) + 1.0) / 2.0));
+
+            // handling premultiplied alpha
+            finalColor = vec4(finalColor.rgb * finalColor.a, finalColor.a);
+
+            gl_FragColor = finalColor;
+        }
+    `;
 
     // some basic parameters
-    // we don't need to specifiate vertexShaderID and fragmentShaderID because we already passed it via the data attributes of the plane HTML element
     var params = {
+        vertexShader: vs,
+        fragmentShader: fs,
         uniforms: {
-            resolution: {
-                name: "uResolution",
-                type: "2f",
-                value: [pixelRatio * planeElements[0].clientWidth, pixelRatio * planeElements[0].clientHeight],
-            },
             transitionTimer: {
                 name: "uTransitionTimer",
                 type: "1f",
@@ -71,8 +146,12 @@ window.addEventListener("load", function() {
         // the second one will contain our entering (next) image
         // that we will deal with only activeTex and nextTex samplers in the fragment shader
         // and the could work with more images in the slideshow...
-        var activeTex = multiTexturesPlane.createTexture("activeTex");
-        var nextTex = multiTexturesPlane.createTexture("nextTex");
+        var activeTex = multiTexturesPlane.createTexture({
+            sampler: "activeTex"
+        });
+        var nextTex = multiTexturesPlane.createTexture({
+            sampler: "nextTex"
+        });
 
         multiTexturesPlane.onReady(function() {
             // we need to render the first frame

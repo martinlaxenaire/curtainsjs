@@ -1,4 +1,9 @@
 window.addEventListener("load", function() {
+
+    function lerp (start, end, amt){
+        return (1 - amt) * start + amt * end;
+    }
+
     // keep track of the number of plane we're currently drawing
     var planeDrawn = 0;
     var debugElement = document.getElementById("debug-value");
@@ -11,12 +16,7 @@ window.addEventListener("load", function() {
     webGLCurtain.onRender(function() {
         // update our planes deformation
         // increase/decrease the effect
-        if(scrollEffect >= 0) {
-            scrollEffect = Math.max(0, scrollEffect - 2);
-        }
-        else {
-            scrollEffect = Math.min(0, scrollEffect + 2);
-        }
+        scrollEffect = lerp(scrollEffect, 0, 0.05);
 
         // update our number of planes drawn debug value
         debugElement.innerText = planeDrawn;
@@ -36,7 +36,7 @@ window.addEventListener("load", function() {
         }
 
         if(Math.abs(delta.y) > Math.abs(scrollEffect)) {
-            scrollEffect = delta.y;
+            scrollEffect = lerp(scrollEffect, delta.y, 0.5);
         }
 
         // update the plane positions during scroll
@@ -57,9 +57,55 @@ window.addEventListener("load", function() {
     // get our planes elements
     var planeElements = document.getElementsByClassName("plane");
 
+    var vs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+    
+        // default mandatory variables
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+    
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+    
+        uniform mat4 planeTextureMatrix;
+    
+        // custom variables
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+    
+        void main() { 
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+    
+            // varyings
+            vVertexPosition = aVertexPosition;
+            vTextureCoord = (planeTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+        }
+    `;
+
+    var fs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+    
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+    
+        uniform sampler2D planeTexture;
+    
+        void main() {
+            // just display our texture
+            gl_FragColor = texture2D(planeTexture, vTextureCoord);
+        }
+    `;
+
     // add our planes and handle them
     for(var i = 0; i < planeElements.length; i++) {
-        var plane = webGLCurtain.addPlane(planeElements[i]); // we don't need any params here
+        var plane = webGLCurtain.addPlane(planeElements[i], {
+            vertexShader: vs,
+            fragmentShader: fs,
+        }); // we don't need any params here
 
         if(plane) {
             planes.push(plane);
@@ -83,7 +129,7 @@ window.addEventListener("load", function() {
             applyPlanesParallax(index);
 
             // once everything is ready, display everything
-            if(index == planes.length - 1) {
+            if(index === planes.length - 1) {
                 document.body.classList.add("planes-loaded");
             }
         }).onAfterResize(function() {
@@ -120,9 +166,38 @@ window.addEventListener("load", function() {
 
 
     // post processing
+    var firstFs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+    
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+    
+        uniform sampler2D renderTexture;
+    
+        uniform float uScrollEffect;
+    
+        void main() {
+            // invert colors
+            vec4 scene = texture2D(renderTexture, vTextureCoord);
+            vec4 invertedColors = texture2D(renderTexture, vTextureCoord);
+    
+            if(
+                vTextureCoord.x > 0.625 && vTextureCoord.x < 0.875 && vTextureCoord.y > 0.625 && vTextureCoord.y < 0.875
+                || vTextureCoord.x > 0.125 && vTextureCoord.x < 0.375 && vTextureCoord.y > 0.125 && vTextureCoord.y < 0.375
+            ) {
+                invertedColors.rgb = vec3(1.0 - invertedColors.rgb);
+            }
+    
+            vec4 finalColor = mix(scene, invertedColors, abs(uScrollEffect) / 60.0);
+    
+            gl_FragColor = finalColor;
+        }
+    `;
+
     var firstShaderPassParams = {
-        vertexShaderID: "inverted-rect-vs",
-        fragmentShaderID: "inverted-rect-fs",
+        fragmentShader: firstFs, // we'll be using the lib default vertex shader
         uniforms: {
             scrollEffect: {
                 name: "uScrollEffect",
@@ -140,9 +215,32 @@ window.addEventListener("load", function() {
         });
     }
 
+
+    var secondFs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+    
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+    
+        uniform sampler2D renderTexture;
+    
+        uniform float uScrollEffect;
+    
+        void main() {
+            vec2 textureCoords = vTextureCoord;
+            vec2 texCenter = vec2(0.5, 0.5);
+    
+            // distort around scene center
+            textureCoords += vec2(texCenter - textureCoords).xy * sin(distance(texCenter, textureCoords)) * uScrollEffect / 175.0;
+    
+            gl_FragColor = texture2D(renderTexture, textureCoords);
+        }
+    `;
+
     var secondShaderPassParams = {
-        vertexShaderID: "distortion-vs",
-        fragmentShaderID: "distortion-fs",
+        fragmentShader: secondFs, // we'll be using the lib default vertex shader
         uniforms: {
             scrollEffect: {
                 name: "uScrollEffect",

@@ -1,4 +1,9 @@
 window.addEventListener("load", function() {
+
+    function lerp (start, end, amt){
+        return (1 - amt) * start + amt * end;
+    }
+
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains({
         container: "canvas"
@@ -7,12 +12,7 @@ window.addEventListener("load", function() {
     webGLCurtain.onRender(function() {
         // update our planes deformation
         // increase/decrease the effect
-        if(planesDeformations >= 0) {
-            planesDeformations = Math.max(0, planesDeformations - 1);
-        }
-        else {
-            planesDeformations = Math.min(0, planesDeformations + 1);
-        }
+        planesDeformations = lerp(planesDeformations, 0, 0.075);
     }).onScroll(function() {
         // get scroll deltas to apply the effect on scroll
         var delta = webGLCurtain.getScrollDeltas();
@@ -29,7 +29,7 @@ window.addEventListener("load", function() {
         }
 
         if(Math.abs(delta.y) > Math.abs(planesDeformations)) {
-            planesDeformations = delta.y;
+            planesDeformations = lerp(planesDeformations, delta.y, 0.5);
         }
     }).onError(function() {
         // we will add a class to the document body to display original images
@@ -43,9 +43,60 @@ window.addEventListener("load", function() {
     // get our planes elements
     var planeElements = document.getElementsByClassName("plane");
 
+    var vs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+    
+        // default mandatory variables
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+    
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+    
+        uniform mat4 planeTextureMatrix;
+    
+        // custom variables
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+    
+        uniform float uPlaneDeformation;
+    
+        void main() {
+            vec3 vertexPosition = aVertexPosition;
+    
+            // cool effect on scroll
+            vertexPosition.y += sin(((vertexPosition.x + 1.0) / 2.0) * 3.141592) * (sin(uPlaneDeformation / 90.0));
+    
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+    
+            // varyings
+            vVertexPosition = vertexPosition;
+            vTextureCoord = (planeTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+        }
+    `;
+
+    var fs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+    
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+    
+        uniform sampler2D planeTexture;
+    
+        void main() {
+            // just display our texture
+            gl_FragColor = texture2D(planeTexture, vTextureCoord);
+        }
+    `;
+
     // all planes will have the same parameters
-    // we don't need to specifiate vertexShaderID and fragmentShaderID because we already passed it via the data attributes of the plane HTML element
     var params = {
+        vertexShader: vs,
+        fragmentShader: fs,
         shareProgram: true, // share planes program to improve plane creation speed
         widthSegments: 10,
         heightSegments: 10,
@@ -80,7 +131,7 @@ window.addEventListener("load", function() {
             //console.log(plane.loadingManager.sourcesLoaded);
         }).onReady(function() {
             // once everything is ready, display everything
-            if(index == planes.length - 1) {
+            if(index === planes.length - 1) {
                 document.body.classList.add("planes-loaded");
             }
         }).onRender(function() {
@@ -92,7 +143,7 @@ window.addEventListener("load", function() {
     // this will simulate an ajax lazy load call
     // additionnalPlanes string could be the response of our AJAX call
     document.getElementById("add-more-planes").addEventListener("click", function() {
-        var additionnalPlanes = '<div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 1) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs"><img src="../medias/plane-small-texture-1.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 2) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs"><img src="../medias/plane-small-texture-2.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 3) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs"><img src="../medias/plane-small-texture-3.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 4) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane" data-vs-id="multiple-planes-vs" data-fs-id="multiple-planes-fs"><img src="../medias/plane-small-texture-4.jpg" data-sampler="planeTexture" /></div></div></div></div></div>';
+        var additionnalPlanes = '<div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 1) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane"><img src="../medias/plane-small-texture-1.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 2) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane"><img src="../medias/plane-small-texture-2.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 3) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane"><img src="../medias/plane-small-texture-3.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 4) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane"><img src="../medias/plane-small-texture-4.jpg" data-sampler="planeTexture" /></div></div></div></div></div>';
 
         // append the response
         document.getElementById("planes").insertAdjacentHTML("beforeend", additionnalPlanes);

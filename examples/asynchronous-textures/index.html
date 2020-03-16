@@ -45,9 +45,11 @@
 
 			<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
 
+            <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/examples/asynchronous-textures/js/async.textures.setup.js" title="Show source code" id="source-code-link" target="_blank">&lt;/ &gt;</a>
+
 			<div id="content">
 				<!-- notice this plane does not contain any image -->
-				<div class="flex-wrapper async-textures" data-vs-id="async-textures-vs" data-fs-id="async-textures-fs">
+				<div class="flex-wrapper async-textures">
 					<span>Click me !</span>
 				</div>
 			</div>
@@ -68,87 +70,7 @@
 				<span id="load-images">Click to load plane images and render it</span>
 			</div>
 
-
 		</div>
-
-        <script id="async-textures-vs" type="x-shader/x-vertex">
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-
-			// default mandatory variables
-			attribute vec3 aVertexPosition;
-			attribute vec2 aTextureCoord;
-
-			uniform mat4 uMVMatrix;
-    		uniform mat4 uPMatrix;
-
-			// varyings
-			// note how our texture matrices variable name matches the samplers variable names
-			varying vec3 vVertexPosition;
-			varying vec2 vTextureCoord;
-			varying vec2 vFirstTextureCoord;
-			varying vec2 vSecondTextureCoord;
-
-			// textures matrices
-			uniform mat4 firstTextureMatrix;
-			uniform mat4 secondTextureMatrix;
-
-			uniform float uTransitionTimer;
-
-
-			void main() {
-
-				vec3 vertexPosition = aVertexPosition;
-
-				// a float varying from -1.5 to 1.5
-				float waveCoords = ((uTransitionTimer / 60.0) * 3.5) - 1.75;
-
-				// distance from the waveCoords to the vertex coordinates
-				float distanceToWave = distance(vec2(vertexPosition.x, 0.0), vec2(waveCoords, 0.0));
-
-				// nice little wave animation from left to right or right to left depending on the timer
-				vertexPosition.z = cos(clamp(distanceToWave, 0.0, 0.75) * 3.141592) - cos(0.75 * 3.141592);
-
-			   	gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
-
-			   	// varyings
-			   	vTextureCoord = aTextureCoord;
-			   	vFirstTextureCoord = (firstTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
-			   	vSecondTextureCoord = (secondTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
-			   	vVertexPosition = vertexPosition;
-			}
-        </script>
-        <script id="async-textures-fs" type="x-shader/x-fragment">
-
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-
-			varying vec3 vVertexPosition;
-			varying vec2 vTextureCoord;
-			varying vec2 vFirstTextureCoord;
-			varying vec2 vSecondTextureCoord;
-
-			uniform float uTransitionTimer;
-
-			uniform sampler2D firstTexture;
-			uniform sampler2D secondTexture;
-
-			void main( void ) {
-				// set our textures
-				vec4 firstTextureColor = texture2D(firstTexture, vFirstTextureCoord);
-				vec4 secondTextureColor = texture2D(secondTexture, vSecondTextureCoord);
-
-				// mix our textures based on our transition timer
-				vec4 finalColor = mix(firstTextureColor, secondTextureColor, clamp((2.0 - vTextureCoord.x) * (uTransitionTimer / 60.0), 0.0, 1.0));
-
-				// handling premultiplied alpha
-				finalColor = vec4(finalColor.rgb * finalColor.a, finalColor.a);
-
-				gl_FragColor = finalColor;
-			}
-        </script>
 
 
 		<script src="../../build/curtains.js" type="text/javascript"></script>

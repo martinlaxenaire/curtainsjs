@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 5.0.1
+ Version: 5.1.0
  https://www.curtainsjs.com/
  ***/
 
@@ -33,6 +33,8 @@ function Curtains(params) {
             length: 0,
             programs: [],
         },
+        "renderPasses": [],
+        "scenePasses": [],
     };
 
     this._drawingEnabled = true;
@@ -136,6 +138,7 @@ Curtains.prototype._init = function() {
         return;
     }
 
+    // get webgl extensions
     this._getExtensions();
 
     // managing our webgl draw states
@@ -147,7 +150,10 @@ Curtains.prototype._init = function() {
         // last buffer sizes drawn (avoid redundant buffer bindings)
         currentBuffersID: 0,
         setDepth: null,
+        // current frame buffer ID
         frameBufferID: null,
+        // current scene pass ID
+        scenePassIndex: null,
     };
 
     // handling context
@@ -194,6 +200,7 @@ Curtains.prototype._getExtensions = function() {
         this._extensions['OES_texture_float_linear'] = this.gl.getExtension('OES_texture_float_linear');
         this._extensions['WEBGL_lose_context'] = this.gl.getExtension('WEBGL_lose_context');
     } else {
+        this._extensions['OES_vertex_array_object'] = this.gl.getExtension('OES_vertex_array_object');
         this._extensions['OES_texture_float'] = this.gl.getExtension('OES_texture_float');
         this._extensions['OES_texture_float_linear'] = this.gl.getExtension('OES_texture_float_linear');
         this._extensions['OES_texture_half_float'] = this.gl.getExtension('OES_texture_half_float');
@@ -451,6 +458,14 @@ Curtains.prototype._contextLost = function(event) {
     this._glState = {
         currentProgramID: null,
         programs: [],
+
+        // last buffer sizes drawn (avoid redundant buffer bindings)
+        currentBuffersID: 0,
+        setDepth: null,
+        // current frame buffer ID
+        frameBufferID: null,
+        // current scene pass ID
+        scenePassIndex: null,
     };
 
     // cancel requestAnimationFrame
@@ -507,6 +522,8 @@ Curtains.prototype._contextRestored = function() {
             length: 0,
             programs: [],
         },
+        "renderPasses": [],
+        "scenePasses": [],
     };
 
     // we need to reset everything : planes programs, shaders, buffers and textures !
@@ -549,9 +566,15 @@ Curtains.prototype.dispose = function() {
     while(this.planes.length > 0) {
         this.removePlane(this.planes[0]);
     }
+
     // we need to delete the shader passes also
     while(this.shaderPasses.length > 0) {
         this.removeShaderPass(this.shaderPasses[0]);
+    }
+
+    // finally we need to delete the render targets
+    while(this.renderTargets.length > 0) {
+        this.removeRenderTarget(this.renderTargets[0]);
     }
 
     // delete the shaders
@@ -571,12 +594,19 @@ Curtains.prototype.dispose = function() {
     this._glState = {
         currentProgramID: null,
         programs: [],
+        // last buffer sizes drawn (avoid redundant buffer bindings)
+        currentBuffersID: 0,
+        setDepth: null,
+        // current frame buffer ID
+        frameBufferID: null,
+        // current scene pass ID
+        scenePassIndex: null,
     };
 
     // wait for all planes to be deleted before stopping everything
     var self = this;
     var deleteInterval = setInterval(function() {
-        if(self.planes.length === 0 && self.shaderPasses.length === 0) {
+        if(self.planes.length === 0 && self.shaderPasses.length === 0 && self.renderTargets.length === 0) {
             // clear interval
             clearInterval(deleteInterval);
 
@@ -702,7 +732,7 @@ Curtains.prototype._setupProgram = function(vs, fs, plane) {
         else {
             // we need to create a new program but we don't have to re compile the shaders
             var shaders = this._useExistingShaders(existingProgram);
-            return this._createProgram(shaders, plane._type);
+            return this._createProgram(shaders, plane._type, plane);
         }
     }
     else {
@@ -712,7 +742,7 @@ Curtains.prototype._setupProgram = function(vs, fs, plane) {
             return false;
         }
         else {
-            return this._createProgram(shaders, plane._type);
+            return this._createProgram(shaders, plane._type, plane);
         }
     }
 };
@@ -791,7 +821,7 @@ Curtains.prototype._useNewShaders = function(vs, fs) {
  returns:
  @program (object): our program object, false if ceation failed
  ***/
-Curtains.prototype._createProgram = function(shadersObject, type) {
+Curtains.prototype._createProgram = function(shadersObject, type, plane) {
     var gl = this.gl;
     var isProgramValid = true;
 
@@ -859,32 +889,6 @@ Curtains.prototype._useProgram = function(program) {
 
 
 
-
-/***
- Create a new Plane element and ensure its program is valid to return the right value
-
- params:
- @planeHtmlElement (html element): the html element that we will use for our plane
- @params (obj): see addPlane method
-
- returns:
- @plane: our newly created Plane object
- ***/
-Curtains.prototype._createPlane = function(planeHtmlElement, params) {
-    var returnedPlane = new Curtains.Plane(this, planeHtmlElement, params);
-
-    if(!returnedPlane._usedProgram) {
-        returnedPlane = false;
-    }
-    else {
-        this.planes.push(returnedPlane);
-    }
-
-    return returnedPlane;
-};
-
-
-
 /***
  Create a Plane element and load its images
 
@@ -928,12 +932,18 @@ Curtains.prototype.addPlane = function(planeHtmlElement, params) {
         }
 
         // init the plane
-        var plane = this._createPlane(planeHtmlElement, params);
+        var plane = new Curtains.Plane(this, planeHtmlElement, params);
+
+        if(!plane._usedProgram) {
+            plane = false;
+        }
+        else {
+            this.planes.push(plane);
+        }
 
         return plane;
     }
 };
-
 
 
 /***
@@ -952,7 +962,7 @@ Curtains.prototype.removePlane = function(plane) {
     // remove from our planes array
     var planeIndex;
     for(var i = 0; i < this.planes.length; i++) {
-        if(plane.index === this.planes[i].index) {
+        if(plane._uuid === this.planes[i]._uuid) {
             planeIndex = i;
         }
     }
@@ -979,6 +989,9 @@ Curtains.prototype.removePlane = function(plane) {
 
     // clear the buffer to clean scene
     if(this.gl) this._clear();
+
+    // reset buffers to force binding them again
+    this._glState.currentBuffersID = 0;
 };
 
 
@@ -1003,20 +1016,6 @@ Curtains.prototype._stackPlane = function(plane) {
 
 /*** RENDER TARGETS ***/
 
-/***
- Create a new RenderTarget element and return it
-
- params:
- @params (obj): see addRenderTarget method
-
- returns:
- @renderTarget: our newly created RenderTarget object
- ***/
-Curtains.prototype._createRenderTarget = function(params) {
-    var renderTarget = new Curtains.RenderTarget(this, params);
-
-    return renderTarget;
-};
 
 /***
  Create a new RenderTarget element
@@ -1031,7 +1030,7 @@ Curtains.prototype._createRenderTarget = function(params) {
 Curtains.prototype.addRenderTarget = function(params) {
     // if the WebGL context couldn't be created, return null
     if(!this.gl) {
-        if(!this.productionMode) console.warn("Unable to create a plane. The WebGl context couldn't be created");
+        if(!this.productionMode) console.warn("Unable to create a render target. The WebGl context couldn't be created");
 
         if(this._onErrorCallback) {
             this._onErrorCallback()
@@ -1040,9 +1039,8 @@ Curtains.prototype.addRenderTarget = function(params) {
         return null;
     }
     else {
-
-        // init the plane
-        var renderTarget = this._createRenderTarget(params);
+        // init the render target
+        var renderTarget = new Curtains.RenderTarget(this, params);
 
         return renderTarget;
     }
@@ -1056,57 +1054,48 @@ Curtains.prototype.addRenderTarget = function(params) {
  @renderTarget (RenderTarget element): the render target element to remove
  ***/
 Curtains.prototype.removeRenderTarget = function(renderTarget) {
-    // now free the webgl part
-    renderTarget && renderTarget._dispose();
+    // check if it is attached to a shader pass
+    if(renderTarget._shaderPass) {
+        if(!this.productionMode) {
+            console.warn("You're trying to remove a render target attached to a shader pass. You should remove that shader pass instead:", renderTarget._shaderPass);
+        }
 
-    // remove plane attachment
-    if(renderTarget._plane) {
-        renderTarget._plane.target = null;
+        return;
     }
 
-    // remove from our array
+    // loop through all planes that might use that render target and reset it
+    for(var i = 0; i < this.planes.length; i++) {
+        if(this.planes[i].target && this.planes[i].target._uuid === renderTarget._uuid) {
+            this.planes[i].target = null;
+        }
+    }
+
+    // remove from our render targets array
     var fboIndex;
     for(var i = 0; i < this.renderTargets.length; i++) {
-        if(renderTarget.index === this.renderTargets[i].index) {
+        if(renderTarget._uuid === this.renderTargets[i]._uuid) {
             fboIndex = i;
         }
     }
 
     // finally erase the plane
-    renderTarget = null;
     this.renderTargets[fboIndex] = null;
     this.renderTargets.splice(fboIndex, 1);
 
+    // now free the webgl part
+    renderTarget && renderTarget._dispose();
+    renderTarget = null;
+
     // clear the buffer to clean scene
     if(this.gl) this._clear();
+
+    // reset buffers to force binding them again
+    this._glState.currentBuffersID = 0;
 };
 
 
 /*** SHADER PASSES ***/
 
-
-/***
- Create a new ShaderPass element and ensure its program is valid to return the right value
-
- params:
- @planeHtmlElement (html element): the html element that we will use for our plane
- @params (obj): see addShaderPass method
-
- returns:
- @plane: our newly created ShaderPass object
- ***/
-Curtains.prototype._createShaderPass = function(params) {
-    var returnedPlane = new Curtains.ShaderPass(this, params);
-
-    if(!returnedPlane._usedProgram) {
-        returnedPlane = false;
-    }
-    else {
-        this.shaderPasses.push(returnedPlane);
-    }
-
-    return returnedPlane;
-};
 
 /***
  Create a new ShaderPass element
@@ -1124,7 +1113,7 @@ Curtains.prototype._createShaderPass = function(params) {
 Curtains.prototype.addShaderPass = function(params) {
     // if the WebGL context couldn't be created, return null
     if(!this.gl) {
-        if(!this.productionMode) console.warn("Unable to create a plane. The WebGl context couldn't be created");
+        if(!this.productionMode) console.warn("Unable to create a shader pass. The WebGl context couldn't be created");
 
         if(this._onErrorCallback) {
             this._onErrorCallback()
@@ -1133,9 +1122,22 @@ Curtains.prototype.addShaderPass = function(params) {
         return null;
     }
     else {
+        // init the shader pass
+        var shaderPass = new Curtains.ShaderPass(this, params);
 
-        // init the plane
-        var shaderPass = this._createShaderPass(params);
+        if(!shaderPass._usedProgram) {
+            shaderPass = false;
+        }
+        else {
+            if(params.renderTarget) {
+                this._drawStacks.renderPasses.push(shaderPass.index);
+            }
+            else {
+                this._drawStacks.scenePasses.push(shaderPass.index);
+            }
+
+            this.shaderPasses.push(shaderPass);
+        }
 
         return shaderPass;
     }
@@ -1153,33 +1155,59 @@ Curtains.prototype.removeShaderPass = function(plane) {
     // first we want to stop drawing it
     plane._canDraw = false;
 
-    // now free the webgl part
-    plane && plane._dispose();
+    if(plane.target) {
+        plane.target._shaderPass = null;
+        this.removeRenderTarget(plane.target);
+        plane.target = null;
+    }
 
-    // remove from our array
+    // remove from shaderPasses our array
     var planeIndex;
     for(var i = 0; i < this.shaderPasses.length; i++) {
-        if(plane.index === this.shaderPasses[i].index) {
+        if(plane._uuid === this.shaderPasses[i]._uuid) {
             planeIndex = i;
         }
     }
 
     // finally erase the plane
-    plane = null;
-    this.shaderPasses[planeIndex] = null;
     this.shaderPasses.splice(planeIndex, 1);
+
+    // now rebuild the drawStacks
+    // start by clearing all drawstacks
+    this._drawStacks.scenePasses = [];
+    this._drawStacks.renderPasses = [];
+
+    // restack our planes with new indexes
+    for(var i = 0; i < this.shaderPasses.length; i++) {
+        this.shaderPasses[i].index = i;
+        if(this.shaderPasses[i]._isScenePass) {
+            this._drawStacks.scenePasses.push(this.shaderPasses[i].index);
+        }
+        else {
+            this._drawStacks.renderPasses.push(this.shaderPasses[i].index);
+        }
+    }
+
+    // reset the scenePassIndex if needed
+    if(this._drawStacks.scenePasses.length === 0) {
+        this._glState.scenePassIndex = null;
+    }
+
+    // now free the webgl part
+    plane && plane._dispose();
+    plane = null;
 
     // clear the buffer to clean scene
     if(this.gl) this._clear();
+
+    // reset buffers to force binding them again
+    this._glState.currentBuffersID = 0;
 };
 
 
 /*** CLEAR SCENE ***/
 
 Curtains.prototype._clear = function() {
-    //this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
-    //this.gl.clearDepth(1.0);
-
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 };
 
@@ -1191,16 +1219,25 @@ Curtains.prototype._clear = function() {
 
  params:
  @frameBuffer (frameBuffer): if frameBuffer is not null, bind it, unbind it otherwise
+ @cancelClear (bool / undefined): if we should cancel clearing the frame buffer (typically on init & resize)
  ***/
-Curtains.prototype._bindFrameBuffer = function(frameBuffer) {
+Curtains.prototype._bindFrameBuffer = function(frameBuffer, cancelClear) {
     var bufferId = null;
     if(frameBuffer) {
         bufferId = frameBuffer.index;
 
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, frameBuffer._frameBuffer);
-        this.gl.viewport(0, 0, frameBuffer._size.width, frameBuffer._size.height);
+        // new frame buffer, bind it
+        if(bufferId !== this._glState.frameBufferID) {
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, frameBuffer._frameBuffer);
+            this.gl.viewport(0, 0, frameBuffer._size.width, frameBuffer._size.height);
+
+            // if we should clear the buffer content
+            if(frameBuffer._shouldClear && !cancelClear) {
+                this._clear();
+            }
+        }
     }
-    else {
+    else if(this._glState.frameBufferID !== null) {
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
         this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
     }
@@ -1235,8 +1272,7 @@ Curtains.prototype._setDepth = function(setDepth) {
 /*** BLEND FUNC ***/
 
 /***
- Called to set whether the renderer will handle depth test or not
- Depth test is enabled by default
+ Called to set the blending function (transparency)
 
  params:
  @setDepth (boolean): if we should enable or disable the depth test
@@ -1251,6 +1287,19 @@ Curtains.prototype._setBlendFunc = function() {
     else {
         this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA);
     }
+};
+
+
+/*** UTILS ***/
+
+/***
+ Returns a universally unique identifier
+ ***/
+Curtains.prototype._generateUUID = function() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16).toUpperCase();
+    });
 };
 
 
@@ -1372,20 +1421,20 @@ Curtains.prototype._applyTransformationsMatrixFromOrigin = function(translation,
     // Quaternion math
     var x = quaternion[0], y = quaternion[1], z = quaternion[2], w = quaternion[3];
 
-    var x2 = x + x; // .
-    var y2 = y + y; // .
-    var z2 = z + z; // . 0 if no rotation
+    var x2 = x + x;
+    var y2 = y + y;
+    var z2 = z + z;
 
-    var xx = x * x2; // .
-    var xy = x * y2; // .
-    var xz = x * z2; // .
-    var yy = y * y2; // .
-    var yz = y * z2; // .
-    var zz = z * z2; // . 0 if no rotation
+    var xx = x * x2;
+    var xy = x * y2;
+    var xz = x * z2;
+    var yy = y * y2;
+    var yz = y * z2;
+    var zz = z * z2;
 
-    var wx = w * x2; // .
-    var wy = w * y2; // .
-    var wz = w * z2; // . 0 if no rotation
+    var wx = w * x2;
+    var wy = w * y2;
+    var wz = w * z2;
 
     var sx = scale[0];
     var sy = scale[1];
@@ -1395,15 +1444,15 @@ Curtains.prototype._applyTransformationsMatrixFromOrigin = function(translation,
     var oy = origin[1];
     var oz = origin[2];
 
-    var out0 = (1 - (yy + zz)) * sx; // sx if no rotation
-    var out1 = (xy + wz) * sx; // 0 if no rotation
-    var out2 = (xz - wy) * sx; // 0 if no rotation
-    var out4 = (xy - wz) * sy; // 0 if no rotation
-    var out5 = (1 - (xx + zz)) * sy; // sy if no rotation
-    var out6 = (yz + wx) * sy; // 0 if no rotation
-    var out8 = (xz + wy) * sz; // 0 if no rotation
-    var out9 = (yz - wx) * sz; // 0 if no rotation
-    var out10 = (1 - (xx + yy)) * sz; // sz if no rotation
+    var out0 = (1 - (yy + zz)) * sx;
+    var out1 = (xy + wz) * sx;
+    var out2 = (xz - wy) * sx;
+    var out4 = (xy - wz) * sy;
+    var out5 = (1 - (xx + zz)) * sy;
+    var out6 = (yz + wx) * sy;
+    var out8 = (xz + wy) * sz;
+    var out9 = (yz - wx) * sz;
+    var out10 = (1 - (xx + yy)) * sz;
 
     transformationMatrix[0] = out0;
     transformationMatrix[1] = out1;
@@ -1468,7 +1517,7 @@ Curtains.prototype._readyToDraw = function() {
     // enable depth by default
     this._setDepth(true);
 
-    console.log("curtains.js - v5.0");
+    console.log("curtains.js - v5.1");
 
     this._animationFrameID = null;
     if(this._autoRender) {
@@ -1523,12 +1572,14 @@ Curtains.prototype.render = function() {
         this._onRenderCallback();
     }
 
-    // enable first frame buffer for shader passes
-    if(this.shaderPasses.length > 0) {
-        this._bindFrameBuffer(this.shaderPasses[0].target);
-    }
-
+    // clear scene first
     this._clear();
+
+    // enable first frame buffer for shader passes
+    if(this._drawStacks.scenePasses.length > 0 && this._drawStacks.renderPasses.length === 0) {
+        this._glState.scenePassIndex = 0;
+        this._bindFrameBuffer(this.shaderPasses[this._drawStacks.scenePasses[0]].target);
+    }
 
     // loop on our stacked planes
     this._drawPlaneStack("opaque");
@@ -1542,12 +1593,24 @@ Curtains.prototype.render = function() {
         this._drawPlaneStack("transparent");
     }
 
-    // if we have shader passes, draw them
-    if(this.shaderPasses.length > 0) {
-        for (var i = 0; i < this.shaderPasses.length; i++) {
-            var shaderPass = this.shaderPasses[i];
+    // now render the shader passes
+    // if we got one or multiple scene passes after the render passes, bind the first scene pass here
+    if(this._drawStacks.scenePasses.length > 0 && this._drawStacks.renderPasses.length > 0) {
+        this._glState.scenePassIndex = 0;
+        this._bindFrameBuffer(this.shaderPasses[this._drawStacks.scenePasses[0]].target);
+    }
 
-            shaderPass._drawPlane();
+    // first the render passes
+    for(var i = 0; i < this._drawStacks.renderPasses.length; i++) {
+        var renderPass = this.shaderPasses[this._drawStacks.renderPasses[i]];
+        renderPass._drawPlane();
+    }
+
+    // then the scene passes
+    if(this._drawStacks.scenePasses.length > 0) {
+        for(var i = 0; i < this._drawStacks.scenePasses.length; i++) {
+            var scenePass = this.shaderPasses[this._drawStacks.scenePasses[i]];
+            scenePass._drawPlane();
         }
     }
 };
@@ -1686,6 +1749,8 @@ Curtains.BasePlane = function(curtainWrapper, plane, params) {
     this._curtains = curtainWrapper;
     this.htmlElement = plane;
 
+    this._uuid = this._curtains._generateUUID();
+
     this._initBasePlane(params);
 };
 
@@ -1727,10 +1792,11 @@ Curtains.BasePlane.prototype._initBasePlane = function(params) {
         this._depthTest = true;
     }
 
-    // our object that will handle all images loading process
+    // our object that will handle all medias loading process
     this._loadingManager = {
         sourcesLoaded: 0,
-        initSourcesToLoad: 0 // will change if there's any texture to load on init
+        initSourcesToLoad: 0, // will change if there's any texture to load on init
+        complete: false,
     };
 
     // first we prepare the shaders to be set up
@@ -1764,8 +1830,6 @@ Curtains.BasePlane.prototype._initBasePlane = function(params) {
                 name: uniform.name,
                 type: uniform.type,
                 value: uniform.value,
-
-                // TODO
                 lastValue: uniform.value,
             };
         }
@@ -2171,6 +2235,23 @@ Curtains.BasePlane.prototype._initializeBuffers = function() {
         numberOfItems: this._geometry.vertices.length / 3, // divided by item size
     };
 
+    this._material.bufferInfos = {
+        id: gl.createBuffer(),
+        itemSize: 3,
+        numberOfItems: this._material.uvs.length / 3, // divided by item size
+    };
+
+    // use vertex array objects if available
+    if(this._curtains._isWebGL2) {
+        this._vao = gl.createVertexArray();
+        gl.bindVertexArray(this._vao);
+    }
+    else if(this._curtains._extensions['OES_vertex_array_object']) {
+        this._vao = this._curtains._extensions['OES_vertex_array_object'].createVertexArrayOES();
+        this._curtains._extensions['OES_vertex_array_object'].bindVertexArrayOES(this._vao);
+    }
+
+    // bind both attributes buffers
     gl.enableVertexAttribArray(this._attributes.vertexPosition.location);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this._geometry.bufferInfos.id);
@@ -2179,19 +2260,15 @@ Curtains.BasePlane.prototype._initializeBuffers = function() {
     // Set where the vertexPosition attribute gets its data,
     gl.vertexAttribPointer(this._attributes.vertexPosition.location, this._geometry.bufferInfos.itemSize, gl.FLOAT, false, 0, 0);
 
-
-    this._material.bufferInfos = {
-        id: gl.createBuffer(),
-        itemSize: 3,
-        numberOfItems: this._material.uvs.length / 3, // divided by item size
-    };
-
     gl.enableVertexAttribArray(this._attributes.textureCoord.location);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this._material.bufferInfos.id);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this._material.uvs), gl.STATIC_DRAW);
 
     gl.vertexAttribPointer(this._attributes.textureCoord.location, this._material.bufferInfos.itemSize, gl.FLOAT, false, 0, 0);
+
+    // update current buffers ID
+    this._curtains._glState.currentBuffersID = this._definition.buffersID;
 };
 
 
@@ -2225,16 +2302,35 @@ Curtains.BasePlane.prototype._restoreContext = function() {
 
         // handle attached render targets
         if(this._type === "ShaderPass") {
-            this.target._frameBuffer = null;
-            this.target._depthBuffer = null;
-
-            // remove its render target
-            this._curtains.renderTargets.splice(this.target.index, 1);
-            // remove its render target texture as well
-            this.textures.splice(0, 1);
-
             // recreate the render target and its texture
-            this._createFrameBuffer();
+            if(this._isScenePass) {
+                this.target._frameBuffer = null;
+                this.target._depthBuffer = null;
+
+                // remove its render target
+                this._curtains.renderTargets.splice(this.target.index, 1);
+
+                // remove its render target texture as well
+                this.textures.splice(0, 1);
+
+                this._createFrameBuffer();
+
+                this._curtains._drawStacks.scenePasses.push(this.index);
+            }
+            else {
+                // set the render target
+                var target = this._curtains.renderTargets[this.target.index];
+                this.setRenderTarget(target);
+                this.target._shaderPass = target;
+
+                // copy the render target texture
+                var texture = target.textures[0];
+                texture._parent = this;
+                texture.setFromTexture(target.textures[0]);
+                this.textures[0] = texture;
+
+                this._curtains._drawStacks.renderPasses.push(this.index);
+            }
         }
         else if(this.target) {
             // reset its render target if needed
@@ -2242,12 +2338,11 @@ Curtains.BasePlane.prototype._restoreContext = function() {
         }
 
         // reset textures
-        var copyTextures = [];
         for(var i = 0; i < this.textures.length; i++) {
             var texture = this.textures[i];
 
-            // we have reinited our ShaderPass render target texture above, so skip it
-            if(!(this._type === "ShaderPass" && texture.type === "fboTexture")) {
+            // we have reinitiated our ShaderPass render target texture above, so skip it
+            if(!(this._type === "ShaderPass" && i === 0)) {
                 if(!texture._originalInfos) {
                     texture._init();
                 }
@@ -2333,7 +2428,7 @@ Curtains.BasePlane.prototype.getBoundingRect = function() {
         right: this._boundingRect.document.left + this._boundingRect.document.width,
         bottom: this._boundingRect.document.top + this._boundingRect.document.height,
     };
-}
+};
 
 
 /***
@@ -2428,7 +2523,6 @@ Curtains.BasePlane.prototype.planeResize = function() {
         this.textures[i].resize();
     }
 
-
     // handle our after resize event
     var self = this;
     setTimeout(function() {
@@ -2451,11 +2545,24 @@ Curtains.BasePlane.prototype.planeResize = function() {
  returns :
  @t: our newly created texture
  ***/
-Curtains.BasePlane.prototype.createTexture = function(sampler, isFBOTexture) {
+Curtains.BasePlane.prototype.createTexture = function(params) {
+    if(typeof params === "string") {
+        params = {
+            sampler: params,
+        };
+
+        if(!this._curtains.productionMode) {
+            console.warn("Since v5.1 you should use an object to pass your sampler name with the createTexture() method. Please refer to the docs: https://www.curtainsjs.com/documentation.html (texture concerned: ", params.sampler, ")");
+        }
+    }
+
+    if(!params) params = {};
+
     var texture = new Curtains.Texture(this, {
         index: this.textures.length,
-        sampler: sampler,
-        isFBOTexture: isFBOTexture,
+        sampler: params.sampler || null,
+        fromTexture: params.fromTexture || null,
+        isFBOTexture: params.isFBOTexture || false, // used internally
     });
 
     // add our texture to the textures array
@@ -2515,7 +2622,9 @@ Curtains.BasePlane.prototype.loadImage = function(source) {
     image.sampler = source.getAttribute("data-sampler") || null;
 
     // create a new texture that will use our image later
-    var texture = this.createTexture(image.sampler);
+    var texture = this.createTexture({
+        sampler: image.sampler
+    });
 
     // handle our loaded data event inside the texture and tell our plane when the video is ready to play
     texture._onSourceLoadedHandler = texture._onSourceLoaded.bind(texture, image);
@@ -2552,7 +2661,9 @@ Curtains.BasePlane.prototype.loadVideo = function(source) {
     video.crossOrigin = this.crossOrigin || "anonymous";
 
     // create a new texture that will use our video later
-    var texture = this.createTexture(video.sampler);
+    var texture = this.createTexture({
+        sampler: video.sampler
+    });
 
     // handle our loaded data event inside the texture and tell our plane when the video is ready to play
     texture._onSourceLoadedHandler = texture._onVideoLoadedData.bind(texture, video);
@@ -2583,7 +2694,9 @@ Curtains.BasePlane.prototype.loadCanvas = function(source) {
     var canvas = source;
     canvas.sampler = source.getAttribute("data-sampler") || null;
 
-    var texture = this.createTexture(canvas.sampler);
+    var texture = this.createTexture({
+        sampler: canvas.sampler
+    });
 
     this.canvases.push(canvas);
 
@@ -2710,35 +2823,33 @@ Curtains.BasePlane.prototype.mouseToPlaneCoords = function(xMousePosition, yMous
  Used inside our draw call to set the correct plane buffers before drawing it
  ***/
 Curtains.BasePlane.prototype._bindPlaneBuffers = function() {
-    var gl = this._curtains.gl;
+    var curtains = this._curtains;
+    var gl = curtains.gl;
 
-    // Set the vertices buffer
-    gl.enableVertexAttribArray(this._attributes.vertexPosition.location);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this._geometry.bufferInfos.id);
+    if(this._vao) {
+        if(curtains._isWebGL2) {
+            curtains.gl.bindVertexArray(this._vao);
+        }
+        else {
+            curtains._extensions['OES_vertex_array_object'].bindVertexArrayOES(this._vao);
+        }
+    }
+    else {
+        // Set the vertices buffer
+        gl.enableVertexAttribArray(this._attributes.vertexPosition.location);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._geometry.bufferInfos.id);
 
-    gl.vertexAttribPointer(this._attributes.vertexPosition.location, this._geometry.bufferInfos.itemSize, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(this._attributes.vertexPosition.location, this._geometry.bufferInfos.itemSize, gl.FLOAT, false, 0, 0);
 
+        // Set where the texture coord attribute gets its data,
+        gl.enableVertexAttribArray(this._attributes.textureCoord.location);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._material.bufferInfos.id);
 
-    // Set where the texture coord attribute gets its data,
-    gl.enableVertexAttribArray(this._attributes.textureCoord.location);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this._material.bufferInfos.id);
+        gl.vertexAttribPointer(this._attributes.textureCoord.location, this._material.bufferInfos.itemSize, gl.FLOAT, false, 0, 0);
+    }
 
-    gl.vertexAttribPointer(this._attributes.textureCoord.location, this._material.bufferInfos.itemSize, gl.FLOAT, false, 0, 0);
-};
-
-
-/***
- This function adds a render target to a plane
-
- params :
- @renderTarger (RenderTarget): the render target to add to that plane
- ***/
-Curtains.BasePlane.prototype.setRenderTarget = function(renderTarget) {
-    this.target = renderTarget;
-    renderTarget._plane = this;
-
-    // force render
-    this._curtains.needRender();
+    // update current buffers ID
+    curtains._glState.currentBuffersID = this._definition.buffersID;
 };
 
 
@@ -2758,6 +2869,25 @@ Curtains.BasePlane.prototype._bindPlaneTexture = function(texture) {
 };
 
 
+/***
+ This function adds a render target to a plane
+
+ params :
+ @renderTarger (RenderTarget): the render target to add to that plane
+ ***/
+Curtains.BasePlane.prototype.setRenderTarget = function(renderTarget) {
+    if(!renderTarget._type || renderTarget._type !== "RenderTarget") {
+        if(!this._curtains.productionMode) {
+            console.warn("Could not set the render target because the argument passed is not a RenderTarget class object", renderTarget);
+        }
+
+        return;
+    }
+
+    this.target = renderTarget;
+};
+
+
 /*** DRAW THE PLANE ***/
 
 /***
@@ -2765,38 +2895,55 @@ Curtains.BasePlane.prototype._bindPlaneTexture = function(texture) {
  If the plane type is a ShaderPass we also need to bind the right frame buffers
  ***/
 Curtains.BasePlane.prototype._drawPlane = function() {
-    var gl = this._curtains.gl;
+    var curtains = this._curtains;
+    var gl = curtains.gl;
 
     // check if our plane is ready to draw
     if(this._canDraw) {
-        // enable/disable depth test
-        this._curtains._setDepth(this._depthTest);
 
-        // ensure we're using the right program
-        this._curtains._useProgram(this._usedProgram);
+        // handle loading
+        if(!this._loadingManager.complete && this._loadingManager.sourcesLoaded >= this._loadingManager.initSourcesToLoad) {
+            this._loadingManager.complete = true;
+
+            // our plane/shader pass is ready, launch the callback if defined
+            if (this._onReadyCallback) {
+                this._onReadyCallback();
+            }
+        }
+
+        // enable/disable depth test
+        curtains._setDepth(this._depthTest);
 
         // even if our plane should not be drawn we still execute its onRender callback and update its uniforms
         if(this._onRenderCallback) {
             this._onRenderCallback();
         }
 
-        // if this is a frame buffer, check if theres one more coming next and eventually bind it
+
         if(this._type === "ShaderPass") {
-            if(this.index + 1 <= this._curtains.shaderPasses.length - 1) {
-                this._curtains._bindFrameBuffer(this._curtains.shaderPasses[this.index + 1].target);
-                this._curtains._clear();
+            if(this._isScenePass) {
+                // if this is a scene pass, check if theres one more coming next and eventually bind it
+                if(curtains._glState.scenePassIndex + 1 < curtains._drawStacks.scenePasses.length) {
+                    curtains._bindFrameBuffer(curtains.shaderPasses[curtains._drawStacks.scenePasses[curtains._glState.scenePassIndex + 1]].target);
+
+                    curtains._glState.scenePassIndex++;
+                }
+                else {
+                    curtains._bindFrameBuffer(null);
+                }
             }
-            else {
-                this._curtains._bindFrameBuffer(null);
+            else if(curtains._glState.scenePassIndex === null) {
+                // we are rendering a bunch of planes inside a render target, unbind it
+                curtains._bindFrameBuffer(null);
             }
         }
         else {
             // if we should render to a render target
             if(this.target) {
-                this._curtains._bindFrameBuffer(this.target);
+                curtains._bindFrameBuffer(this.target);
             }
-            else if(this._curtains._glState.frameBufferID !== null && this._curtains.shaderPasses.length === 0) {
-                this._curtains._bindFrameBuffer(null);
+            else if(curtains._glState.scenePassIndex === null) {
+                curtains._bindFrameBuffer(null);
             }
 
             // update our perspective matrix
@@ -2808,13 +2955,16 @@ Curtains.BasePlane.prototype._drawPlane = function() {
 
         // now check if we really need to draw it and its textures
         if(this._shouldDraw && this.visible) {
+            // ensure we're using the right program
+            curtains._useProgram(this._usedProgram);
+
             // update all uniforms set up by the user
             this._updateUniforms();
 
             // bind plane attributes buffers
-            if(this._curtains._glState.currentBuffersID !== this._definition.buffersID) {
+            // if we're rendering on a frame buffer object, force buffers bindings to avoid bugs
+            if(curtains._glState.currentBuffersID !== this._definition.buffersID || this.target) {
                 this._bindPlaneBuffers();
-                this._curtains._glState.currentBuffersID = this._definition.buffersID;
             }
 
             // draw all our plane textures
@@ -2844,6 +2994,15 @@ Curtains.BasePlane.prototype._dispose = function() {
     if(gl) {
         // delete buffers
         // each time we check for existing properties to avoid errors
+        if(this._vao) {
+            if(this._curtains._isWebGL2) {
+                gl.deleteVertexArray(this._vao);
+            }
+            else {
+                this._curtains._extensions['OES_vertex_array_object'].deleteVertexArrayOES(this._vao);
+            }
+        }
+
         if(this._geometry) {
             gl.bindBuffer(gl.ARRAY_BUFFER, this._geometry.bufferInfos.id);
             gl.bufferData(gl.ARRAY_BUFFER, 1, gl.STATIC_DRAW);
@@ -2858,7 +3017,7 @@ Curtains.BasePlane.prototype._dispose = function() {
             this._material = null;
         }
 
-        if(this.target) {
+        if(this.target && this._type === "ShaderPass") {
             this._curtains.removeRenderTarget(this.target);
             // remove the first texture since it has been deleted with the render target
             this.textures.shift();
@@ -3024,7 +3183,7 @@ Curtains.Plane.prototype.constructor = Curtains.Plane;
 
 
 /***
- Set plane's initial params like rotation, scale, translation, fov
+ Set plane's initial params
 
  params :
  @params (obj) : see addPlanes method of the Curtains class
@@ -3050,6 +3209,37 @@ Curtains.Plane.prototype._setInitParams = function(params) {
     }
     this.drawCheckMargins = drawCheckMargins;
 
+    this._initTransformValues();
+
+    // if we decide to load all sources on init or let the user do it manually
+    this.autoloadSources = params.autoloadSources;
+    if(this.autoloadSources === null || this.autoloadSources === undefined) {
+        this.autoloadSources = true;
+    }
+
+    // set default fov
+    this._fov = params.fov || 75;
+    this._nearPlane = 0.1;
+    this._farPlane = this._fov * 2;
+
+    // if we should watch scroll
+    if(params.watchScroll === null || params.watchScroll === undefined) {
+        this.watchScroll = this._curtains._watchScroll;
+    }
+    else {
+        this.watchScroll = params.watchScroll || false;
+    }
+    // start listening for scroll
+    if(this.watchScroll) {
+        this._curtains._scrollManager.shouldWatch = true;
+    }
+};
+
+
+/***
+ Set/reset plane's transformation values: rotation, scale, translation, transform origin
+ ***/
+Curtains.Plane.prototype._initTransformValues = function(params) {
     this.rotation = {
         x: 0,
         y: 0,
@@ -3078,29 +3268,6 @@ Curtains.Plane.prototype._setInitParams = function(params) {
         x: 0.5,
         y: 0.5,
     };
-
-    // if we decide to load all sources on init or let the user do it manually
-    this.autoloadSources = params.autoloadSources;
-    if(this.autoloadSources === null || this.autoloadSources === undefined) {
-        this.autoloadSources = true;
-    }
-
-    // set default fov
-    this._fov = params.fov || 75;
-    this._nearPlane = 0.1;
-    this._farPlane = this._fov * 2;
-
-    // if we should watch scroll
-    if(params.watchScroll === null || params.watchScroll === undefined) {
-        this.watchScroll = this._curtains._watchScroll;
-    }
-    else {
-        this.watchScroll = params.watchScroll || false;
-    }
-    // start listening for scroll
-    if(this.watchScroll) {
-        this._curtains._scrollManager.shouldWatch = true;
-    }
 };
 
 
@@ -3119,14 +3286,13 @@ Curtains.Plane.prototype._initPositions = function() {
 };
 
 
-
 /***
  Load our initial sources if needed and calls onReady callback
  ***/
 Curtains.Plane.prototype._initSources = function() {
     // finally load every sources already in our plane html element
     // load plane sources
-    if (this.autoloadSources) {
+    if(this.autoloadSources) {
         // load images
         var imagesArray = [];
         for (var i = 0; i < this.htmlElement.getElementsByTagName("img").length; i++) {
@@ -3161,23 +3327,6 @@ Curtains.Plane.prototype._initSources = function() {
         // if there's no images, no videos, no canvas, send a warning
         console.warn("This plane does not contain any image, video or canvas element. You may want to add some later with the loadSource() or loadSources() method.");
     }
-
-    // handling our plane onReady callback with an interval
-    // maybe i could improve this by using the raf loop and a flag
-    var loadedInterval;
-    var self = this;
-
-    // check if everything is ready depending on the number of sources we need to load on init
-    loadedInterval = setInterval(function () {
-        // everything is loaded
-        if (self._loadingManager.sourcesLoaded >= self._loadingManager.initSourcesToLoad) {
-            clearInterval(loadedInterval);
-
-            if (self._onReadyCallback) {
-                self._onReadyCallback();
-            }
-        }
-    }, 16);
 
     this._canDraw = true;
 
@@ -3221,6 +3370,26 @@ Curtains.Plane.prototype._initMatrices = function() {
             location: gl.getUniformLocation(this._usedProgram.program, "uPMatrix"),
         }
     };
+};
+
+
+/***
+ Reset our plane transformation values and HTML element if specified (and valid)
+
+ params :
+ @htmlElement (HTML element, optionnal) : if provided, new HTML element to use as a reference for sizes and position syncing.
+ ***/
+Curtains.Plane.prototype.resetPlane = function(htmlElement) {
+    this._initTransformValues();
+
+    if(htmlElement !== null && !!htmlElement) {
+        this.htmlElement = htmlElement;
+
+        this.updatePosition();
+    }
+    else if(!htmlElement && !this._curtains.productionMode) {
+        console.warn("You are trying to reset a plane with a HTML element that does not exist. The old HTML element will be kept instead.");
+    }
 };
 
 
@@ -3273,6 +3442,7 @@ Curtains.Plane.prototype._setPerspectiveMatrix = function() {
 
     // update our matrix uniform only if we share programs or if we actually have updated its values
     if(this.shareProgram || !this.shareProgram && this._updatePerspectiveMatrix) {
+        this._curtains._useProgram(this._usedProgram);
         this._curtains.gl.uniformMatrix4fv(this._matrices.pMatrix.location, false, this._matrices.pMatrix.matrix);
     }
 
@@ -3371,6 +3541,7 @@ Curtains.Plane.prototype._setMVMatrix = function() {
 
     // update our matrix uniform only if we share programs or if we actually have updated its values
     if(this.shareProgram || !this.shareProgram && this._updateMVMatrix) {
+        this._curtains._useProgram(this._usedProgram);
         this._curtains.gl.uniformMatrix4fv(this._matrices.mvMatrix.location, false, this._matrices.mvMatrix.matrix);
     }
 
@@ -3388,19 +3559,8 @@ Curtains.Plane.prototype._setMVMatrix = function() {
  @scaleY (float): scale to apply on Y axis
  ***/
 Curtains.Plane.prototype.setScale = function(scaleX, scaleY) {
-    if(scaleX === null || typeof scaleX !== "number") {
-        scaleX = 1;
-    }
-    else {
-        scaleX = Math.max(parseFloat(scaleX), 0.001); // ensure we won't have a 0 scale
-    }
-
-    if(scaleY === null || typeof scaleY !== "number") {
-        scaleY = 1;
-    }
-    else {
-        scaleY = Math.max(parseFloat(scaleY), 0.001); // ensure we won't have a 0 scale
-    }
+    scaleX = isNaN(scaleX) ? 1 : parseFloat(scaleX);
+    scaleY = isNaN(scaleY) ? 1 : parseFloat(scaleY);
 
     // only apply if values changed
     if(scaleX !== this.scale.x || scaleY !== this.scale.y) {
@@ -3430,9 +3590,9 @@ Curtains.Plane.prototype.setScale = function(scaleX, scaleY) {
  @angleZ (float): rotation to apply on Z axis (in radians)
  ***/
 Curtains.Plane.prototype.setRotation = function(angleX, angleY, angleZ) {
-    angleX = parseFloat(angleX) || 0;
-    angleY = parseFloat(angleY) || 0;
-    angleZ = parseFloat(angleZ) || 0;
+    angleX = isNaN(angleX) ? 0 : parseFloat(angleX);
+    angleY = isNaN(angleY) ? 0 : parseFloat(angleY);
+    angleZ = isNaN(angleZ) ? 0 : parseFloat(angleZ);
 
     // only apply if values changed
     if(angleX !== this.rotation.x || angleY !== this.rotation.y || angleZ !== this.rotation.z) {
@@ -3458,28 +3618,17 @@ Curtains.Plane.prototype.setRotation = function(angleX, angleY, angleZ) {
  @yOrigin (float): coordinate of transformation origin along height
  ***/
 Curtains.Plane.prototype.setTransformOrigin = function(xOrigin, yOrigin) {
-    if(xOrigin === null || typeof xOrigin !== "number") {
-        xOrigin = 0.5;
-    }
-    else {
-        xOrigin = parseFloat(xOrigin);
-    }
-
-    if(yOrigin === null || typeof yOrigin !== "number") {
-        yOrigin = 0.5;
-    }
-    else {
-        yOrigin = parseFloat(yOrigin);
-    }
+    xOrigin = isNaN(xOrigin) ? 0.5 : parseFloat(xOrigin);
+    yOrigin = isNaN(yOrigin) ? 0.5 : parseFloat(yOrigin);
 
     if(xOrigin !== this.transformOrigin.x || yOrigin !== this.transformOrigin.y) {
+        this.transformOrigin = {
+            x: xOrigin,
+            y: yOrigin,
+        };
+
         this._updateMVMatrix = true;
     }
-
-    this.transformOrigin = {
-        x: xOrigin,
-        y: yOrigin,
-    };
 };
 
 
@@ -3512,12 +3661,18 @@ Curtains.Plane.prototype._setTranslation = function() {
  @translationY (float): translation to apply on Y axis
  ***/
 Curtains.Plane.prototype.setRelativePosition = function(translationX, translationY) {
-    this.relativeTranslation = {
-        x: translationX,
-        y: translationY
-    };
+    translationX = isNaN(translationX) ? 0 : parseFloat(translationX);
+    translationY = isNaN(translationY) ? 0 : parseFloat(translationY);
 
-    this._setTranslation();
+    // only apply if values changed
+    if(translationX !== this.relativeTranslation.x || translationY !== this.relativeTranslation.y) {
+        this.relativeTranslation = {
+            x: translationX,
+            y: translationY
+        };
+
+        this._setTranslation();
+    }
 };
 
 
@@ -3726,14 +3881,25 @@ Curtains.RenderTarget = function(curtainWrapper, params) {
 
     this.index = this._curtains.renderTargets.length;
     this._type = "RenderTarget";
-    this._plane = params.plane || null;
 
-    this._depth = params.depth;
-    if(this._depth === null || this._depth === undefined) {
-        this._depth = true;
+    this._shaderPass = params.shaderPass || null;
+
+    // whether to create a render buffer
+    this._depth = params.depth || false;
+
+    this._shouldClear = params.clear;
+    if(this._shouldClear === null || this._shouldClear === undefined) {
+        this._shouldClear = true;
     }
 
+    this._minSize = {
+        width: params.minWidth || 1024 * this._curtains.pixelRatio,
+        height: params.minHeight || 1024 * this._curtains.pixelRatio,
+    };
+
     this.userData = {};
+
+    this._uuid = this._curtains._generateUUID();
 
     this._curtains.renderTargets.push(this);
 
@@ -3760,27 +3926,37 @@ Curtains.RenderTarget.prototype._initRenderTarget = function() {
  Sets our RenderTarget size based on its parent plane size
  ***/
 Curtains.RenderTarget.prototype._setSize = function() {
-    this._size = {
-        width: this._plane ? this._plane._boundingRect.document.width : this._curtains._boundingRect.width,
-        height: this._plane ? this._plane._boundingRect.document.height : this._curtains._boundingRect.height,
-    };
+    if(this._shaderPass && this._shaderPass._isScenePass) {
+        this._size = {
+            width: this._curtains._boundingRect.width,
+            height: this._curtains._boundingRect.height,
+        };
+    }
+    else {
+        this._size = {
+            width: Math.max(this._minSize.width, this._curtains._boundingRect.width),
+            height: Math.max(this._minSize.height, this._curtains._boundingRect.height),
+        };
+    }
 };
 
 /***
- Resizes our RenderTarget (basically only resize it if it's a ShaderPass FBO)
+ Resizes our RenderTarget (basically only resize it if it's a ShaderPass scene pass FBO)
  ***/
 Curtains.RenderTarget.prototype.resize = function() {
     // resize render target only if its a child of a shader pass
-    if(this._plane && this._plane._type === "ShaderPass") {
+    if(this._shaderPass && this._shaderPass._isScenePass) {
         this._setSize();
-    }
 
-    this._curtains._bindFrameBuffer(this);
-    if(this._depth) {
-        this._bindDepthBuffer();
-    }
+        // cancel clear on resize
+        this._curtains._bindFrameBuffer(this, true);
 
-    this._curtains._bindFrameBuffer(null);
+        if(this._depth) {
+            this._bindDepthBuffer();
+        }
+
+        this._curtains._bindFrameBuffer(null);
+    }
 };
 
 
@@ -3810,7 +3986,7 @@ Curtains.RenderTarget.prototype._createFBOTexture = function() {
     var gl = this._curtains.gl;
 
     // attach the texture to the parent ShaderPass if it exists, to the render target otherwise
-    var texture = new Curtains.Texture(this._plane ? this._plane : this, {
+    var texture = new Curtains.Texture(this._shaderPass ? this._shaderPass : this, {
         index: this.textures.length,
         sampler: "uRenderTexture",
         isFBOTexture: true,
@@ -3832,7 +4008,9 @@ Curtains.RenderTarget.prototype._createFrameBuffer = function() {
     var gl = this._curtains.gl;
 
     this._frameBuffer = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this._frameBuffer);
+
+    // cancel clear on init
+    this._curtains._bindFrameBuffer(this, true);
 
     this._createFBOTexture();
 
@@ -3842,7 +4020,7 @@ Curtains.RenderTarget.prototype._createFrameBuffer = function() {
         this._bindDepthBuffer();
     }
 
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    this._curtains._bindFrameBuffer(null);
 };
 
 
@@ -3852,13 +4030,12 @@ Curtains.RenderTarget.prototype._createFrameBuffer = function() {
  Those attached to shader passes are restored inside the _restoreContext method of the ShaderPass class
  ***/
 Curtains.RenderTarget.prototype._restoreContext = function() {
-    if(this._plane._type !== "ShaderPass") {
+    if(!this._shaderPass || !this._shaderPass._isScenePass) {
         // reset textures array
         this.textures = [];
 
-        // reset plane for texture creation
-        // if there's a plane attached it will be re-attached in the plane's restoreContext method anyway
-        this._plane = null;
+        // if there's a _shaderPass attached it will be re-attached in the _shaderPass's restoreContext method anyway
+        this._shaderPass = null;
 
         // recreate frame buffer
         this._createFrameBuffer();
@@ -3871,7 +4048,7 @@ Curtains.RenderTarget.prototype._restoreContext = function() {
  ***/
 Curtains.RenderTarget.prototype._dispose = function() {
     if(this._frameBuffer) {
-        this._curtains.gl.deleteFramebuffer(this.framebuffer);
+        this._curtains.gl.deleteFramebuffer(this._frameBuffer);
         this._frameBuffer = null;
     }
     if(this._depthBuffer) {
@@ -3908,10 +4085,28 @@ Curtains.ShaderPass = function(curtainWrapper, params) {
 
     this._type = "ShaderPass";
 
+    // default to scene pass
+    this._isScenePass = true;
+
     // inherit
     Curtains.BasePlane.call(this, curtainWrapper, curtainWrapper.container, params);
 
     this.index = this._curtains.shaderPasses.length;
+
+    this._depth = params.depth || false;
+
+    this._shouldClear = params.clear;
+    if(this._shouldClear === null || this._shouldClear === undefined) {
+        this._shouldClear = true;
+    }
+
+    this.target = params.renderTarget || null;
+    if(this.target) {
+        // if there's a target defined it's not a scene pass
+        this._isScenePass = false;
+        // inherit clear param
+        this._shouldClear = this.target._shouldClear;
+    }
 
     // if the program is valid, go on
     if(this._usedProgram) {
@@ -3928,15 +4123,22 @@ Curtains.ShaderPass.prototype.constructor = Curtains.ShaderPass;
  ***/
 Curtains.ShaderPass.prototype._initShaderPassPlane = function() {
     // create our frame buffer
-    this._createFrameBuffer();
+    if(!this.target) {
+        this._createFrameBuffer();
+    }
+    else {
+        // set the render target
+        this.setRenderTarget(this.target);
+        this.target._shaderPass = this;
 
-    // on ready callback
-    var self = this;
-    setTimeout(function() {
-        if(self._onReadyCallback) {
-            self._onReadyCallback();
-        }
-    }, 0);
+        // copy the render target texture
+        var texture = this.target.textures[0];
+
+        // attach the texture to the parent ShaderPass if it exists, to the render target otherwise
+        texture._parent = this;
+        texture.setFromTexture(this.target.textures[0]);
+        this.textures.push(texture);
+    }
 
     this._canDraw = true;
 
@@ -3969,7 +4171,9 @@ Curtains.ShaderPass.prototype._getDefaultFS = function(params) {
  ***/
 Curtains.ShaderPass.prototype._createFrameBuffer = function() {
     var target = new Curtains.RenderTarget(this._curtains, {
-        plane: this,
+        shaderPass: this,
+        clear: this._shouldClear,
+        depth: this._depth,
     });
     this.setRenderTarget(target);
 
@@ -4033,10 +4237,16 @@ Curtains.Texture = function(parent, params) {
     // custom user properties
     this.userData = {};
 
-    // init texture
+    // is it a frame buffer object texture?
     if(params.isFBOTexture) {
         // set a special type
         this.type = "fboTexture";
+    }
+
+    // is it set from an existing texture?
+    if(params.fromTexture) {
+        // set original infos
+        this._setFromTextureInfos(params.fromTexture);
     }
 
     // init our texture
@@ -4060,10 +4270,24 @@ Curtains.Texture.prototype._init = function() {
 
     // we don't use Y flip yet
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+
+    // we will always declare a texture matrix
+    var textureMatrix = this._sampler.name ? this._sampler.name + "Matrix" : "uTextureMatrix" + this.index;
+    this._textureMatrix = {
+        name: textureMatrix,
+        matrix: null,
+    };
 
     // if the parent has a program it means its not a render target texture
     if(this._parent._usedProgram) {
+        // set its size based on parent element size
+        this._size = {
+            width: this._parent._boundingRect.document.width,
+            height: this._parent._boundingRect.document.height,
+        };
+
         // use the program and get our sampler and texture matrices uniforms
         this._curtains._useProgram(this._parent._usedProgram);
 
@@ -4075,22 +4299,10 @@ Curtains.Texture.prototype._init = function() {
         // tell the shader we bound the texture to our indexed texture unit
         gl.uniform1i(this._sampler.location, this.index);
 
-        // we will always declare a texture matrix uniform
-        var textureMatrix = this._sampler.name ? this._sampler.name + "Matrix" : "uTextureMatrix" + this.index;
-        this._textureMatrix = {
-            name: textureMatrix,
-            matrix: null,
-            location: gl.getUniformLocation(this._parent._usedProgram.program, textureMatrix)
-        };
+        // texture matrix uniform
+        this._textureMatrix.location = gl.getUniformLocation(this._parent._usedProgram.program, this._textureMatrix.name);
 
         this._sampler.name = samplerUniformLocation;
-
-        // its a shader pass texture
-        // set its size to our parent plane, in this case our canvas
-        this._size = {
-            width: this._parent._boundingRect.document.width,
-            height: this._parent._boundingRect.document.height,
-        };
 
         // its a plane texture
         if(this.type !== "fboTexture") {
@@ -4119,8 +4331,8 @@ Curtains.Texture.prototype._init = function() {
     // if its a render target texture use nearest filters and half float whenever possible
     if(this.type === "fboTexture") {
         // set the filtering so we don't need mips
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
@@ -4137,10 +4349,34 @@ Curtains.Texture.prototype._init = function() {
         // define its size
         gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._size.width, this._size.height, 0, this._format, this._textureType, null);
     }
+
+    if(this._originalInfos) {
+        var self = this;
+        // wait for a tick before assigning it the texture
+        setTimeout(function() {
+            self.setFromTexture(self._originalInfos.texture);
+        }, 0);
+    }
 };
 
 
 /*** LOADING SOURCESS ***/
+
+
+/***
+ This sets a reference to the original texture used
+
+ params:
+ @texture (Texture): texture to set from
+ ***/
+Curtains.Texture.prototype._setFromTextureInfos = function(texture) {
+    this._originalInfos = {
+        texture: texture,
+        type: texture._parent._type,
+        parentIndex: texture._parent.index,
+        textureIndex: texture.index,
+    };
+};
 
 /***
  This applies an already existing Texture object to our texture
@@ -4159,11 +4395,7 @@ Curtains.Texture.prototype.setFromTexture = function(texture) {
         this._format = texture._format;
         this._textureType = texture._textureType;
 
-        this._originalInfos = {
-            type: texture._parent._type,
-            parentIndex: texture._parent.index,
-            textureIndex: texture.index,
-        };
+        this._setFromTextureInfos(texture);
 
         if(this._parent._usedProgram && !this._textureMatrix.matrix) {
             // we will always declare a texture matrix uniform
@@ -4477,6 +4709,7 @@ Curtains.Texture.prototype._onVideoLoadedData = function(video) {
  ***/
 Curtains.Texture.prototype._drawTexture = function() {
     // bind the texture
+    if(!this._parent._bindPlaneTexture) console.log(this._parent);
     this._parent._bindPlaneTexture(this);
 
     // check if the video is actually really playing
@@ -4529,7 +4762,8 @@ Curtains.Texture.prototype._dispose = function() {
 
     var gl = this._curtains.gl;
 
-    if(gl) {
+    // do not delete original texture if this texture is a copy
+    if(gl && !this._originalInfos) {
         gl.activeTexture(gl.TEXTURE0 + this.index);
         gl.bindTexture(gl.TEXTURE_2D, null);
         gl.deleteTexture(this._sampler.texture);

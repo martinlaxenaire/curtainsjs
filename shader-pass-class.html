@@ -329,6 +329,9 @@
                                     <a href="plane-class.html#play-videos">playVideos</a>
                                 </li>
                                 <li>
+                                    <a href="plane-class.html#reset-plane">resetPlane</a>
+                                </li>
+                                <li>
                                     <a href="plane-class.html#set-perspective">setPerspective</a>
                                 </li>
                                 <li>
@@ -575,7 +578,7 @@
                         <h1>ShaderPass class</h1>
                         <h2 id="basic-usage">Basic usage</h2>
                         <p>
-                            Shader passes offers the possibility to add <strong>post-processing</strong> to your scene. Think of it as an additional plane that would have the size of your WebGL canvas and that would pack your whole scene into a texture and draw it. You'd then be able to manipulate that texture in your fragment shader.
+                            Shader passes offers the possibility to add <strong>post-processing</strong> to either a bunch of planes or your whole scene. Think of it as an additional plane that would have the size of your WebGL canvas and that would render a set of planes into a texture and draw it. You'd then be able to manipulate that texture in your fragment shader.
                         </p>
                         <p>
                             Like the <a href="plane-class.html">Plane</a> class it inherits from the BasePlane class, which is a class that just sets up the WebGL (buffers and attributes) and sources loading parts of a plane.<br />
@@ -583,7 +586,7 @@
                         </p>
                         <h3>Creation</h3>
                         <p>
-                            To create a shader pass, you will have to use the <a href="curtains-class.html#add-shader-pass">addShaderPass</a> method of your <a href="curtains-class.html">Curtains</a> class object:
+                            To create a shader pass that will be applied to the whole scene, you will have to use the <a href="curtains-class.html#add-shader-pass">addShaderPass</a> method of your <a href="curtains-class.html">Curtains</a> class object:
                         </p>
 
                         <div class="code">
@@ -666,8 +669,11 @@
                             </div>
                         </div>
 
+                        <h3>Using with a render target</h3>
+                        <p>If you want to apply your shader pass to just a set of planes instead of your whole scene, you'll have to pass a RenderTarget element as a parameter. See <a href="render-target-class.html#assigning-render-target-to-shader-pass">Assigning a RenderTarget to a ShaderPass</a>.</p>
+
                         <p>
-                            See the list of all the addShaderPass <a href="curtains-class.html#add-shader-pass-parameters">possible parameters</a> to know more.
+                            You can also check the list of all the addShaderPass <a href="curtains-class.html#add-shader-pass-parameters">possible parameters</a> to know more.
                         </p>
 
                         <h3>Shaders</h3>
@@ -736,7 +742,7 @@
 
                         <h3>Fragment shader</h3>
                         <p>
-                            The ShaderPass object automatically creates a texture holding your WebGL scene upon creation. You will have to display that texture to display your scene. If you want to apply any post processing effect, this will be by manipulating this texture.<br />
+                            The ShaderPass object automatically creates a texture holding your shader pass FBO content upon creation. You will have to display that texture to display your shader pass content. If you want to apply any post processing effect, this will be by manipulating this texture.<br />
                             This texture sampler name is <strong>uRenderTexture</strong>.
                         </p>
 
@@ -770,7 +776,7 @@
                                 <div class="code-indent">
 
                                     <div class="code-comment">
-                                        // display our render texture, which contains out whole WebGL scene
+                                        // display our render texture, which contains our shader pass frame buffer object content
                                     </div>
                                     <div>
                                         gl_FragColor = <span class="code-tag">texture2D</span>(uRenderTexture<span class="code-var">,</span> vTextureCoord)<span class="code-var">;</span>
@@ -872,23 +878,48 @@
                         <ul>
                             <li id="create-texture">
                                 <p>
-                                    <strong>createTexture</strong>(samplerName): <span class="api-item-version">v3.0</span>
+                                    <strong>createTexture</strong>(params): <span class="api-item-version">v2.0</span><span class="api-item-version api-item-version-update">updated in v5.1</span>
                                 </p>
                                 <p>
-                                    This function will create a new <a href="texture-class.html">Texture</a> and add it to our ShaderPass.<br />
+                                    This function will create a new <a href="texture-class.html">Texture</a> and add it to our Plane.<br />
                                     The newly created texture will be returned.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
                                         <span class="api-item-parameter-label">
-                                            samplerName
+                                            params
                                         </span>
                                         <span class="api-item-parameter-type">
-                                            string, optionnal
+                                            object, optionnal
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            a string to set the name of your sampler uniform in your shader. Will also impact the texture matrix uniform name. If not specified, will name your sampler "uSampler" + index of this texture in your shader pass.
+                                            an object containing the texture parameters:
                                         </span>
+
+                                        <ul id="create-texture-parameters" class="api-item-parameters-inner-list">
+                                            <li>
+												<span class="api-item-parameter-label">
+													sampler
+												</span>
+                                                <span class="api-item-parameter-type">
+													string, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													a string to set the name of your sampler uniform in your shader. Will also impact the texture matrix uniform name. If not specified, will name your sampler "uSampler" + index of this texture in your plane.
+												</span>
+                                            </li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													fromTexture
+												</span>
+                                                <span class="api-item-parameter-type">
+                                                    <a href="texture-class.html">Texture</a> object, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													an already existing texture to copy into your new texture. Similar to the Texture class' <a href="texture-class.html#set-from-texture">setFromTexture()</a> method.
+												</span>
+                                            </li>
+                                        </ul>
                                     </li>
                                 </ul>
                                 <p>

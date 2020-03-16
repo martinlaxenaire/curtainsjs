@@ -15,10 +15,58 @@ window.addEventListener("load", function() {
     // get our planes elements
     var planeElements = document.getElementsByClassName("plane-title");
 
+    var vs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        // default mandatory variables
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+
+        uniform mat4 planeTextureMatrix;
+
+        // custom varyings
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        void main() {
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+
+            // varyings
+            vVertexPosition = aVertexPosition;
+            vTextureCoord = (planeTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+        }
+    `;
+
+    var fs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+        
+        uniform float uTime;
+
+        uniform sampler2D planeTexture;
+
+        void main() {
+            // just distort the text a bit
+            vec2 textureCoords = vTextureCoord;
+            textureCoords.x += sin(uTime / 30.0) / 100.0 * cos(textureCoords.y * 20.0);
+
+            gl_FragColor = texture2D(planeTexture, textureCoords);
+        }
+    `;
+
     // no need for shaders as they were already passed by data attributes
     var params = {
-        vertexShaderID: "text-vs",
-        fragmentShaderID: "text-fs",
+        vertexShader: vs,
+        fragmentShader: fs,
         uniforms: {
             time: {
                 name: "uTime",

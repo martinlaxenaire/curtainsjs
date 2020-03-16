@@ -329,6 +329,9 @@
                                             <a href="plane-class.html#play-videos">playVideos</a>
                                         </li>
                                         <li>
+                                            <a href="plane-class.html#reset-plane">resetPlane</a>
+                                        </li>
+                                        <li>
                                             <a href="plane-class.html#set-perspective">setPerspective</a>
                                         </li>
                                         <li>
@@ -577,7 +580,7 @@
                                 <h2>Basic concept</h2>
 
 								<p>
-                                    The library is built around <strong>3 main classes</strong> that will handle respectively the canvas and its WebGL context, the planes that will be displayed and their textures.
+                                    The library is built around <strong>4 main classes</strong> that will handle respectively the canvas and its WebGL context, the planes that will be displayed, frame buffer objects and finally textures.
 								</p>
 
                                 <ul id="basic-concept-list">
@@ -607,7 +610,7 @@
                                                 <h4>ShaderPass Class <span class="api-item-version">v3.0</span></h4>
                                                 <p>
                                                     The <a href="shader-pass-class.html">ShaderPass</a> class also <strong>extends</strong> the BasePlane class.<br />
-                                                    ShaderPass elements are used to add post-processing to your scene. Think of it as an additional plane that will be bound to your WebGL canvas container. This way you will be able to apply shaders to your whole WebGL scene.<br />
+                                                    ShaderPass elements are used to add post-processing effects. Think of it as an additional plane that will be bound to your WebGL canvas container. This way you will be able to apply shaders to a bunch of planes or to your whole WebGL scene.<br />
                                                     You can add multiple shader passes and they will be applied one after the other in their creation order.
                                                 </p>
                                             </li>
@@ -617,7 +620,7 @@
                                     <li>
                                         <h3>RenderTarget Class <span class="api-item-version">v5.0</span></h3>
                                         <p>
-                                            The <a href="render-target-class.html">RenderTarget</a> class is a Frame Buffer Object used internally to create ShaderPasses. It allows you to render a plane as a texture that you can use in another plane. Also useful for ping pong shading / frame buffer objects swapping.
+                                            The <a href="render-target-class.html">RenderTarget</a> class is a Frame Buffer Object used internally to create ShaderPasses. It allows you to render one or multiple planes as a texture that you can then use in another plane or shader pass. Also useful for ping pong shading / frame buffer objects swapping.
                                         </p>
                                     </li>
 

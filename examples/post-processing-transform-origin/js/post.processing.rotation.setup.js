@@ -62,9 +62,58 @@ window.addEventListener("load", function() {
     // get our planes elements
     var planeElements = document.getElementsByClassName("plane");
 
+    var vs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+    
+        // default mandatory variables
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+    
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+    
+        uniform mat4 planeTextureMatrix;
+    
+        // custom variables
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureMatrixCoord;
+    
+        void main() {
+    
+            vec3 vertexPosition = aVertexPosition;
+    
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+    
+            // varyings
+            vVertexPosition = vertexPosition;
+            vTextureMatrixCoord = (planeTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+        }
+    `;
+
+    var fs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+    
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureMatrixCoord;
+    
+        uniform sampler2D planeTexture;
+    
+        void main() {
+            // just display our texture
+            gl_FragColor = texture2D(planeTexture, vTextureMatrixCoord);
+        }
+    `;
+
     // add our planes and handle them
     for(var i = 0; i < planeElements.length; i++) {
-        var plane = curtains.addPlane(planeElements[i]); // we don't need any params here
+        var plane = curtains.addPlane(planeElements[i], {
+            vertexShader: vs,
+            fragmentShader: fs,
+        });
 
         if(plane) {
             planes.push(plane);
@@ -108,11 +157,37 @@ window.addEventListener("load", function() {
         }
     }
 
-
     // post processing
+    var rotationFs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+    
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+    
+        uniform sampler2D renderTexture;
+    
+        uniform float uRotationEffect;
+    
+        void main() {
+            vec2 textCoords = vTextureCoord;
+    
+            // calculate an effect that spreads from the left-center point
+            float rgbEffect = uRotationEffect * distance(textCoords, vec2(0.0, 0.5));
+    
+            // apply a simple rgb shift based on that effect
+            vec4 red = texture2D(renderTexture, textCoords + rgbEffect * 0.005);
+            vec4 green = texture2D(renderTexture, vTextureCoord);
+            vec4 blue = texture2D(renderTexture, vTextureCoord + rgbEffect * -0.005);
+    
+            // use green channel alpha as this one does not have any displacement
+            gl_FragColor = vec4(red.r, green.g, blue.b, green.a);
+        }
+    `;
+
     var shaderPassParams = {
-        vertexShaderID: "rotation-vs",
-        fragmentShaderID: "rotation-fs",
+        fragmentShader: rotationFs, // we'll be using the lib default vertex shader
         uniforms: {
             rotationEffect: {
                 name: "uRotationEffect",

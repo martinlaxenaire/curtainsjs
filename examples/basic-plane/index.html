@@ -75,6 +75,22 @@
 				background: black;
 			}
 
+            #source-code-link {
+                display: inline-block;
+                position: fixed;
+                bottom: 1em;
+                right: 1em;
+                padding: 0.25em 0.5em;
+                background: #ee6557;
+                color: white;
+                text-decoration: none;
+                z-index: 20;
+            }
+
+            #source-code-link:hover {
+                background: black;
+            }
+
 			.plane {
 				/* define the size of your plane */
 				width: 80%;
@@ -97,6 +113,8 @@
 		<div class="plane">
 			<img src="../medias/plane-texture-3.jpg" />
 		</div>
+
+        <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/examples/basic-plane/index.html" title="Show source code" id="source-code-link" target="_blank">&lt;/ &gt;</a>
 
         <script id="plane-vs" type="x-shader/x-vertex">
 			#ifdef GL_ES

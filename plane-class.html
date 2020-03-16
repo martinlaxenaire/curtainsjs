@@ -329,6 +329,9 @@
                                     <a href="plane-class.html#play-videos">playVideos</a>
                                 </li>
                                 <li>
+                                    <a href="plane-class.html#reset-plane">resetPlane</a>
+                                </li>
+                                <li>
                                     <a href="plane-class.html#set-perspective">setPerspective</a>
                                 </li>
                                 <li>
@@ -935,7 +938,7 @@
                         <ul>
                             <li id="create-texture">
                                 <p>
-                                    <strong>createTexture</strong>(samplerName): <span class="api-item-version">v2.0</span>
+                                    <strong>createTexture</strong>(params): <span class="api-item-version">v2.0</span><span class="api-item-version api-item-version-update">updated in v5.1</span>
                                 </p>
                                 <p>
                                     This function will create a new <a href="texture-class.html">Texture</a> and add it to our Plane.<br />
@@ -944,21 +947,46 @@
                                 <ul class="api-item-parameters">
                                     <li>
                                         <span class="api-item-parameter-label">
-                                            samplerName
+                                            params
                                         </span>
                                         <span class="api-item-parameter-type">
-                                            string, optionnal
+                                            object, optionnal
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            a string to set the name of your sampler uniform in your shader. Will also impact the texture matrix uniform name. If not specified, will name your sampler "uSampler" + index of this texture in your plane.
+                                            an object containing the texture parameters:
                                         </span>
+
+                                        <ul id="create-texture-parameters" class="api-item-parameters-inner-list">
+                                            <li>
+												<span class="api-item-parameter-label">
+													sampler
+												</span>
+                                                <span class="api-item-parameter-type">
+													string, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													a string to set the name of your sampler uniform in your shader. Will also impact the texture matrix uniform name. If not specified, will name your sampler "uSampler" + index of this texture in your plane.
+												</span>
+                                            </li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													fromTexture
+												</span>
+                                                <span class="api-item-parameter-type">
+                                                    <a href="texture-class.html">Texture</a> object, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													an already existing texture to copy into your new texture. Similar to the Texture class' <a href="texture-class.html#set-from-texture">setFromTexture()</a> method.
+												</span>
+                                            </li>
+                                        </ul>
                                     </li>
                                 </ul>
                                 <p>
                                     <strong>returns:</strong> the newly created <a href="texture-class.html">Texture</a> if successful.
                                 </p>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a> example.
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a> and <a href="examples/ping-pong-shading-flowmap/index.html" title="Ping pong shading flowmap" target="_blank">Ping pong shading flowmap</a> examples.
                                 </p>
                             </li>
 
@@ -1259,6 +1287,30 @@
                                 </p>
                             </li>
 
+                            <li id="reset-plane">
+                                <p>
+                                    <strong>resetPlane</strong>(htmlElement): <span class="api-item-version">v5.1</span>  <span class="api-item-warning">may trigger reflow</span>
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            htmlElement
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            HTML element, optionnal
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            a new HTML to use for your plane sizes and position syncing. Default to null (keep the current HTML element).
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p>
+                                    Reset your plane transformations values, including the transform origin.<br />
+                                    If a HTML element is specified, will update the plane's sizes and position according to that new element (<strong>triggers reflow</strong>). Useful if you want to keep a plane after an AJAX page transition and re-sync it with a newly appended element.
+                                </p>
+
+                            </li>
+
                             <li id="set-perspective">
                                 <p>
                                     <strong>setPerspective</strong>(fieldOfView, nearPlane, farPlane): <span class="api-item-version">v1.0</span>
@@ -1365,7 +1417,7 @@
                                     </li>
                                 </ul>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/ping-pong-shading-flowmap/index.html" title="Ping pong shading flowmap" target="_blank">Ping pong shading flowmap</a> example.
+                                    <strong>Examples:</strong> used in <a href="examples/ping-pong-shading-flowmap/index.html" title="Ping pong shading flowmap example" target="_blank">Ping pong shading flowmap example</a> and <a href="examples/render-passes-using-render-targets/index.html" title="Selective shader passes using render targets" target="_blank">Selective shader passes using render targets</a> examples.
                                 </p>
                             </li>
 

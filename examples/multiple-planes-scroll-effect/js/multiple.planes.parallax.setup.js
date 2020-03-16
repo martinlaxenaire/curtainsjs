@@ -1,5 +1,9 @@
 window.addEventListener("load", function() {
 
+    function lerp (start, end, amt){
+        return (1 - amt) * start + amt * end;
+    }
+
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains({
         container: "canvas"
@@ -8,12 +12,7 @@ window.addEventListener("load", function() {
     webGLCurtain.onRender(function() {
         // update our planes deformation
         // increase/decrease the effect
-        if(scrollEffect >= 0) {
-            scrollEffect = Math.max(0, scrollEffect - 2);
-        }
-        else {
-            scrollEffect = Math.min(0, scrollEffect + 2);
-        }
+        scrollEffect = lerp(scrollEffect, 0, 0.075);
 
         // update our number of planes drawn debug value
         debugElement.innerText = planeDrawn;
@@ -33,7 +32,7 @@ window.addEventListener("load", function() {
         }
 
         if(Math.abs(delta.y) > Math.abs(scrollEffect)) {
-            scrollEffect = delta.y;
+            scrollEffect = lerp(scrollEffect, delta.y, 0.5);
         }
 
         // update the plane positions during scroll
@@ -59,8 +58,59 @@ window.addEventListener("load", function() {
     // we need to fill the counter with all our planes
     var planeDrawn = planeElements.length;
 
-    // no need for shaders as they were already passed by data attributes
+    var vs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        // default mandatory variables
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+
+        uniform mat4 planeTextureMatrix;
+
+        // custom variables
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        uniform float uScrollEffect;
+
+        void main() {
+            vec3 vertexPosition = aVertexPosition;
+
+            // cool effect on scroll
+            vertexPosition.x += sin((vertexPosition.y / 1.5 + 1.0) * 3.141592) * (sin(uScrollEffect / 2000.0));
+
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+
+            // varyings
+            vVertexPosition = vertexPosition;
+            vTextureCoord = (planeTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+        }
+    `;
+
+    var fs = `
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        uniform sampler2D planeTexture;
+
+        void main( void ) {
+            // just display our texture
+            gl_FragColor = texture2D(planeTexture, vTextureCoord);
+        }
+    `;
+
     var params = {
+        vertexShader: vs,
+        fragmentShader: fs,
         widthSegments: 10,
         heightSegments: 10,
         uniforms: {
@@ -94,7 +144,7 @@ window.addEventListener("load", function() {
             applyPlanesParallax(index);
 
             // once everything is ready, display everything
-            if(index == planes.length - 1) {
+            if(index === planes.length - 1) {
                 document.body.classList.add("planes-loaded");
             }
         }).onAfterResize(function() {

@@ -5,23 +5,23 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 	<!-- Metas -->
-	<title>curtains.js | Multiple planes scroll effect example</title>
-	<meta name="description" content="WebGL scroll effect on multiple planes with curtains.js">
-	<link rel="canonical" href="https://www.curtainsjs.com/examples/multiple-planes-scroll-effect/index.html">
+	<title>curtains.js | Selective shader passes using render targets</title>
+	<meta name="description" content="Applying post-processing effects to specific parts of your scene with render targets and shader passes">
+	<link rel="canonical" href="https://www.curtainsjs.com/examples/render-passes-using-render-targets/index.html">
 
 	<!-- Facebook OG -->
-	<meta property="og:title" content="curtains.js | Multiple planes scroll effect example">
+	<meta property="og:title" content="curtains.js | Selective shader passes using render targets">
 	<meta property="og:type" content="website">
-	<meta property="og:description" content="WebGL scroll effect on multiple planes with curtains.js">
-	<meta property="og:url" content="https://www.curtainsjs.com/examples/multiple-planes-scroll-effect/index.html">
+	<meta property="og:description" content="Applying post-processing effects to specific parts of your scene with render targets and shader passes">
+	<meta property="og:url" content="https://www.curtainsjs.com/examples/render-passes-using-render-targets/index.html">
 	<meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
 
 	<!-- Twitter card -->
 	<meta name="twitter:card" content="summary_large_image">
 	<meta name="twitter:site" content="@webdesign_ml">
 	<meta name="twitter:creator" content="@webdesign_ml">
-	<meta name="twitter:title" content="curtains.js | Multiple planes scroll effect example">
-	<meta name="twitter:description" content="WebGL scroll effect on multiple planes with curtains.js">
+	<meta name="twitter:title" content="curtains.js | Selective shader passes using render targets">
+	<meta name="twitter:description" content="Applying post-processing effects to specific parts of your scene with render targets and shader passes">
 	<meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
 
 	<!-- Favicon -->
@@ -45,22 +45,18 @@
 
 	<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
 
-    <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/examples/multiple-planes-scroll-effect/js/multiple.planes.parallax.setup.js" title="Show source code" id="source-code-link" target="_blank">&lt;/ &gt;</a>
+    <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/examples/render-passes-using-render-targets/js/render.passes.render.targets.js" title="Show source code" id="source-code-link" target="_blank">&lt;/ &gt;</a>
 
 	<div id="content">
 
-		<h1>Awesome scrollable content</h1>
+		<h1>Awesome scrollable content v3</h1>
 
 		<p>
-			On scroll, we apply a small rotation to the plane along the Z axis. We also add a scale effect on Y axis on both the plane and its texture. Finally, we add a parallax effect.<br />
+			We are using two shader passes with 2 different render targets to post-process 2 sets of planes (deformation for the first set, rgb shift for the second set), and then one more shader pass to the whole scene to add vertical blur on scroll.
 		</p>
 		<p>
-			This illustrates the use of setRotation(), setScale() and setRelativePosition() methods.
+			This illustrates how shader passes can be applied to only a specific set of planes or the whole scene and how you can add them.
 		</p>
-
-		<div id="debug">
-			Planes actually drawn: <strong id="debug-value">0</strong>
-		</div>
 
 		<div id="planes">
 
@@ -70,6 +66,9 @@
 					<div class="plane">
 						<img src="../medias/plane-texture-1.jpg" data-sampler="planeTexture" />
 					</div>
+                    <div class="small-plane">
+                        <img src="../medias/plane-texture-1.jpg" data-sampler="planeTexture" />
+                    </div>
 				</div>
 			</div>
 
@@ -79,6 +78,9 @@
 					<div class="plane">
 						<img src="../medias/plane-texture-2.jpg" data-sampler="planeTexture" />
 					</div>
+                    <div class="small-plane">
+                        <img src="../medias/plane-texture-2.jpg" data-sampler="planeTexture" />
+                    </div>
 				</div>
 			</div>
 
@@ -88,6 +90,9 @@
 					<div class="plane">
 						<img src="../medias/plane-texture-3.jpg" data-sampler="planeTexture" />
 					</div>
+                    <div class="small-plane">
+                        <img src="../medias/plane-texture-3.jpg" data-sampler="planeTexture" />
+                    </div>
 				</div>
 			</div>
 
@@ -97,6 +102,9 @@
 					<div class="plane">
 						<img src="../medias/plane-texture-4.jpg" data-sampler="planeTexture" />
 					</div>
+                    <div class="small-plane">
+                        <img src="../medias/plane-texture-4.jpg" data-sampler="planeTexture" />
+                    </div>
 				</div>
 			</div>
 
@@ -108,7 +116,7 @@
 
 
 <script src="../../build/curtains.js" type="text/javascript"></script>
-<script src="js/multiple.planes.parallax.setup.js" type="text/javascript"></script>
+<script src="js/render.passes.render.targets.js" type="text/javascript"></script>
 
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>

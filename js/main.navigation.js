@@ -1,4 +1,9 @@
 function displayCurtains() {
+
+    function lerp (start, end, amt){
+        return (1 - amt) * start + amt * end;
+    }
+
     var mousePosition = {
         x: 0,
         y: 0,
@@ -7,8 +12,10 @@ function displayCurtains() {
         x: 0,
         y: 0,
     };
-    var mouseDelta = 0;
-
+    var deltas = {
+        max: 0,
+        applied: 0,
+    };
 
     function handleMovement(e, plane) {
 
@@ -18,15 +25,21 @@ function displayCurtains() {
             mouseLastPosition.y = mousePosition.y;
         }
 
+        var mouse = {};
+
         if(e.targetTouches) {
 
-            mousePosition.x = e.targetTouches[0].clientX;
-            mousePosition.y = e.targetTouches[0].clientY;
+            mouse.x = e.targetTouches[0].clientX;
+            mouse.y = e.targetTouches[0].clientY;
         }
         else {
-            mousePosition.x = e.clientX;
-            mousePosition.y = e.clientY;
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
         }
+
+        // lerp the mouse position a bit to smoothen the overall effect
+        mousePosition.x = lerp(mousePosition.x, mouse.x, 0.3);
+        mousePosition.y = lerp(mousePosition.y, mouse.y, 0.3);
 
         if(plane) {
             var mouseCoords = plane.mouseToPlaneCoords(mousePosition.x, mousePosition.y);
@@ -38,9 +51,8 @@ function displayCurtains() {
                 if(mouseLastPosition.x && mouseLastPosition.y) {
                     var delta = Math.sqrt(Math.pow(mousePosition.x - mouseLastPosition.x, 2) + Math.pow(mousePosition.y - mouseLastPosition.y, 2)) / 30;
                     delta = Math.min(4, delta);
-                    if(delta >= mouseDelta) {
-                        mouseDelta = delta;
-                        plane.uniforms.mouseTime.value = 0;
+                    if(delta >= deltas.max) {
+                        deltas.max = delta;
                     }
                 }
             }
@@ -172,14 +184,19 @@ function displayCurtains() {
                 if(curtainPlane.textures.length === 2) {
                     setTimeout(function() {
                         document.body.classList.add("curtain-ready");
-                        mouseDelta = 1;
+                        deltas.max = 4;
                     }, 200);
                 }
             }).onRender(function() {
                 curtainPlane.uniforms.mouseTime.value++;
 
-                curtainPlane.uniforms.mouseMoveStrength.value = mouseDelta;
-                mouseDelta = Math.max(0, mouseDelta * 0.995);
+                // decrease the mouse move strenght with damping : if the user doesn't move the mouse, effect will fade away
+                deltas.applied += (deltas.max - deltas.applied) * 0.02;
+                deltas.max += (0 - deltas.max) * 0.01;
+
+                // send the new mouse move strength value
+                curtainPlane.uniforms.mouseMoveStrength.value = deltas.applied;
+
             }).onReEnterView(function() {
                 // force title drawing if it was hidden on page load
                 curtainPlane.textures[1].needUpdate();

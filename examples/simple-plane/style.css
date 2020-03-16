@@ -44,6 +44,22 @@
         background: black;
     }
 
+    #source-code-link {
+        display: inline-block;
+        position: fixed;
+        bottom: 1em;
+        right: 1em;
+        padding: 0.25em 0.5em;
+        background: #ee6557;
+        color: white;
+        text-decoration: none;
+        z-index: 50;
+    }
+
+    #source-code-link:hover {
+        background: black;
+    }
+
     .curtain {
         position: absolute;
         top: 5%;
@@ -67,6 +83,8 @@
 
     .no-curtains .curtain img {
         display: block;
+        min-width: 100%;
+        min-height: 100%;
         object-fit: cover;
     }
 
