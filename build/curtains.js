@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 5.2.0
+ Version: 5.2.1
  https://www.curtainsjs.com/
  ***/
 
@@ -4884,23 +4884,24 @@ Curtains.Texture.prototype._dispose = function() {
         this.source.removeAttribute('src');
         this.source.load();
 
-        // clear the update interval
-        if(this.source.updateInterval) {
-            clearInterval(this.source.updateInterval);
-        }
+        // clear source
+        this.source = null;
     }
     else if(this.type === "canvas") {
         // clear all canvas states
         this.source.width = this.source.width;
+
+        // clear source
+        this.source = null;
     }
     else if(this.type === "image" && this._curtains._isDestroying) {
         // delete image only if we're destroying the context (keep in cache otherwise)
         this.source.removeEventListener('load', this._onSourceLoadedHandler, false);
         this.source.removeEventListener("error", this._parent._sourceLoadError, false);
-    }
 
-    // clear source
-    this.source = null;
+        // clear source
+        this.source = null;
+    }
 
     var gl = this._curtains.gl;
 
