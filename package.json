@@ -1,6 +1,6 @@
 {
   "name": "curtainsjs",
-  "version": "5.2.1",
+  "version": "5.2.2",
   "main": "build/curtains.js",
   "author": "martinlaxenaire",
   "homepage": "https://github.com/martinlaxenaire/curtainsjs",

@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 5.2.1
+ Version: 5.2.2
  https://www.curtainsjs.com/
  ***/
 
@@ -701,7 +701,18 @@ Curtains.prototype._createShader = function(shaderCode, shaderType) {
     // check shader compilation status only when not in production mode
     if(!this.productionMode) {
         if(!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-            console.warn("Errors occurred while compiling the shader:\n" + this.gl.getShaderInfoLog(shader));
+            // shader debugging log as seen in THREE.js WebGLProgram source code
+            var shaderTypeString = shaderType === this.gl.VERTEX_SHADER ? "vertex shader" : "fragment shader";
+            var shaderSource = this.gl.getShaderSource(shader);
+            var shaderLines = shaderSource.split('\n');
+
+            for(var i = 0; i < shaderLines.length; i ++) {
+                shaderLines[i] = (i + 1) + ': ' + shaderLines[i];
+            }
+            shaderLines = shaderLines.join("\n");
+
+            console.warn("Errors occurred while compiling the", shaderTypeString, ":\n", this.gl.getShaderInfoLog(shader));
+            console.error(shaderLines);
 
             return null;
         }
