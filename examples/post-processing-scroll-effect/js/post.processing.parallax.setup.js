@@ -48,6 +48,9 @@ window.addEventListener("load", function() {
     }).onError(function() {
         // we will add a class to the document body to display original images
         document.body.classList.add("no-curtains", "planes-loaded");
+    }).onContextLost(function() {
+        // on context lost, try to restore the context
+        webGLCurtain.restoreContext();
     });
 
     // we will keep track of all our planes in an array
@@ -58,9 +61,7 @@ window.addEventListener("load", function() {
     var planeElements = document.getElementsByClassName("plane");
 
     var vs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
     
         // default mandatory variables
         attribute vec3 aVertexPosition;
@@ -85,9 +86,7 @@ window.addEventListener("load", function() {
     `;
 
     var fs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
     
         varying vec3 vVertexPosition;
         varying vec2 vTextureCoord;
@@ -167,9 +166,7 @@ window.addEventListener("load", function() {
 
     // post processing
     var firstFs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
     
         varying vec3 vVertexPosition;
         varying vec2 vTextureCoord;

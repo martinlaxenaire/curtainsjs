@@ -78,7 +78,7 @@
 
 					<div class="text-section inner-section">
                         <p>
-                            <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v5.1">curtains.js v5.1 (150Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v5.1">curtains.min.js v5.1 (60Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+                            <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v5.2">curtains.js v5.2 (154Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v5.2">curtains.min.js v5.2 (63Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
                         </p>
 					</div>
 
@@ -194,9 +194,7 @@
 
 
 		<script id="about-vs" type="x-shader/x-vertex">
-			#ifdef GL_ES
 			precision mediump float;
-			#endif
 
 			// default mandatory variables
 			attribute vec3 aVertexPosition;
@@ -240,10 +238,7 @@
 			}
         </script>
 		<script id="about-fs" type="x-shader/x-fragment">
-
-			#ifdef GL_ES
 			precision mediump float;
-			#endif
 
 			uniform float uTime;
 
@@ -252,7 +247,7 @@
 
 			uniform sampler2D aboutSampler;
 
-			void main( void ) {
+			void main() {
 
 				// apply our texture
 				vec4 finalColor = texture2D(aboutSampler, vTextureCoord);

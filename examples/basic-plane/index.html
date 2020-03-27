@@ -117,9 +117,7 @@
         <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/examples/basic-plane/index.html" title="Show source code" id="source-code-link" target="_blank">&lt;/ &gt;</a>
 
         <script id="plane-vs" type="x-shader/x-vertex">
-			#ifdef GL_ES
 			precision mediump float;
-			#endif
 
 			// those are the mandatory attributes that the lib sets
 			attribute vec3 aVertexPosition;
@@ -148,9 +146,7 @@
 			}
         </script>
         <script id="plane-fs" type="x-shader/x-fragment">
-			#ifdef GL_ES
 			precision mediump float;
-			#endif
 
 			// get our varyings
 			varying vec3 vVertexPosition;

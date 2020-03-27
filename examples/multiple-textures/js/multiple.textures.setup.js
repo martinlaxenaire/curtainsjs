@@ -38,15 +38,16 @@ window.addEventListener("load", function() {
             slideshowState.activeTextureIndex = slideshowState.nextTextureIndex;
 
         });
+    }).onContextLost(function() {
+        // on context lost, try to restore the context
+        webGLCurtain.restoreContext();
     });
 
     // disable drawing for now
     webGLCurtain.disableDrawing();
 
     var vs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
 
         // default mandatory variables
         attribute vec3 aVertexPosition;
@@ -85,9 +86,7 @@ window.addEventListener("load", function() {
     `;
 
     var fs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
 
         varying vec3 vVertexPosition;
         varying vec2 vTextureCoord;
@@ -136,7 +135,7 @@ window.addEventListener("load", function() {
                 value: 0,
             },
         },
-    }
+    };
 
     var multiTexturesPlane = webGLCurtain.addPlane(planeElements[0], params);
 

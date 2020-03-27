@@ -16,15 +16,16 @@ window.addEventListener("load", function() {
 
         // display an error message
         document.getElementById("enter-site").innerHTML = "There has been an error while initiating the WebGL context.";
+    }).onContextLost(function() {
+        // on context lost, try to restore the context
+        webGLCurtain.restoreContext();
     });
 
     // get our plane element
     var planeElements = document.getElementsByClassName("multi-textures");
 
     var vs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
 
         // default mandatory variables
         attribute vec3 aVertexPosition;
@@ -61,9 +62,7 @@ window.addEventListener("load", function() {
     `;
 
     var fs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
 
         varying vec3 vVertexPosition;
         varying vec2 vTextureCoord;

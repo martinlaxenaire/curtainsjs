@@ -38,8 +38,10 @@ window.addEventListener("load", function() {
     }).onError(function() {
         // we will add a class to the document body to display original images
         document.body.classList.add("no-curtains");
+    }).onContextLost(function() {
+        // on context lost, try to restore the context
+        curtains.restoreContext();
     });
-
 
     // get our planes elements
     var planeElements = document.getElementsByClassName("plane");
@@ -51,9 +53,7 @@ window.addEventListener("load", function() {
 
 
     var vs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
     
         // default mandatory variables
         attribute vec3 aVertexPosition;
@@ -81,9 +81,7 @@ window.addEventListener("load", function() {
     `;
 
     var fs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
     
         varying vec3 vVertexPosition;
         varying vec2 vTextureMatrixCoord;
@@ -122,9 +120,7 @@ window.addEventListener("load", function() {
 
 
     var distortionFs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
     
         varying vec3 vVertexPosition;
         varying vec2 vTextureCoord;
@@ -165,9 +161,7 @@ window.addEventListener("load", function() {
 
 
     var rgbFs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
     
         varying vec3 vVertexPosition;
         varying vec2 vTextureCoord;
@@ -214,9 +208,7 @@ window.addEventListener("load", function() {
 
 
     var blurFs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
     
         varying vec3 vVertexPosition;
         varying vec2 vTextureCoord;

@@ -41,13 +41,14 @@ function initCurtains() {
 
             planeElements[0].getElementsByTagName("video")[0].play();
         }, false);
+    }).onContextLost(function() {
+        // on context lost, try to restore the context
+        webGLCurtain.restoreContext();
     });
 
 
     var vs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
 
         // default mandatory variables
         attribute vec3 aVertexPosition;
@@ -99,9 +100,7 @@ function initCurtains() {
     `;
 
     var fs = `
-        #ifdef GL_ES
         precision mediump float;
-        #endif
 
         varying vec3 vVertexPosition;
         varying vec2 vTextureCoord;

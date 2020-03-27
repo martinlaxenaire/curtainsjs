@@ -20,8 +20,10 @@ window.addEventListener("load", function() {
 
     // flowmap shaders
     var flowmapVs = `
-        #ifdef GL_ES
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
         precision highp float;
+        #else
+        precision mediump float;
         #endif
     
         // default mandatory variables
@@ -48,8 +50,10 @@ window.addEventListener("load", function() {
     `;
 
     var flowmapFs = `
-        #ifdef GL_ES
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
         precision highp float;
+        #else
+        precision mediump float;
         #endif
     
         varying vec3 vVertexPosition;
@@ -67,16 +71,24 @@ window.addEventListener("load", function() {
         uniform float uAspect;
     
         void main() {
-            // convert to -1 / 1
-            vec2 textCoords = vTextureCoord * 2.0 - 1.0;
-    
+            vec2 textCoords = vTextureCoord;
+            
+            
+            /*** comment this whole block for a regular mouse flow effect ***/
+            
+            // convert to -1 -> 1
+            textCoords = textCoords * 2.0 - 1.0;
+            
             // make the cursor grow with time
             textCoords /= uCursorGrow;
             // adjust cursor position based on its growth
             textCoords += uCursorGrow * uMousePosition / (1.0 / (uCursorGrow - 1.0) * pow(uCursorGrow, 2.0));
     
-            // convert back to 0 / 1
+            // convert back to 0 -> 1
             textCoords = (textCoords + 1.0) / 2.0;
+            
+            /*** end of whole block commenting for a regular mouse flow effect ***/
+    
     
             vec4 color = texture2D(uFlowMap, textCoords) * uDissipation;
     
@@ -98,8 +110,10 @@ window.addEventListener("load", function() {
 
     // displacement shaders
     var displacementVs = `
-        #ifdef GL_ES
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
         precision highp float;
+        #else
+        precision mediump float;
         #endif
     
         // default mandatory variables
@@ -130,8 +144,10 @@ window.addEventListener("load", function() {
     `;
 
     var displacementFs = `
-        #ifdef GL_ES
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
         precision highp float;
+        #else
+        precision mediump float;
         #endif
     
         varying vec3 vVertexPosition;
@@ -233,12 +249,8 @@ window.addEventListener("load", function() {
     }).onContextLost(function() {
         // on context lost, try to restore the context
         curtains.restoreContext();
-    }).onContextRestored(function() {
-        // in case we lose the webgl context and then get it back
-        // we need to reassign flowMapTex to flowTexture
-        // no need to reassign readPass.textures[0] to flowMapTex as it is already done in our render loop
-        flowTexture.setFromTexture(flowMapTex);
     });
+
 
     var flowMapParams = {
         vertexShader: flowmapVs,
@@ -314,7 +326,7 @@ window.addEventListener("load", function() {
     if(flowMap) {
         // create a texture where we'll draw our circle
         flowMapTex = flowMap.createTexture({
-            sampler: "uFlowMap"
+            sampler: "uFlowMap",
         });
 
         // create 2 render targets

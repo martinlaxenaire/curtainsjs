@@ -103,7 +103,7 @@
 						<div class="text-section">
 							<h2>Download</h2>
 							<p>
-                                <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v5.1">curtains.js v5.1 (150Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v5.1">curtains.min.js v5.1 (60Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+                                <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v5.2">curtains.js v5.2 (154Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v5.2">curtains.min.js v5.2 (63Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
 							</p>
 						</div>
 
@@ -292,9 +292,7 @@
 		</div>
 
         <script id="intro-vs" type="x-shader/x-vertex">
-			#ifdef GL_ES
 			precision mediump float;
-			#endif
 
 			// default mandatory variables
 			attribute vec3 aVertexPosition;
@@ -346,9 +344,7 @@
 			}
         </script>
         <script id="intro-fs" type="x-shader/x-fragment">
-			#ifdef GL_ES
 			precision mediump float;
-			#endif
 
 			varying vec3 vVertexPosition;
 			varying vec2 vTextureCoord;
@@ -357,7 +353,7 @@
 			uniform sampler2D titleSampler;
 
 
-			void main( void ) {
+			void main() {
 
 				vec2 textureCoords = vec2(vTextureCoord.x, vTextureCoord.y);
 
@@ -379,9 +375,7 @@
 
 
 		<script id="simple-shader-vs" type="x-shader/x-vertex">
-			#ifdef GL_ES
 			precision mediump float;
-			#endif
 
 			// default mandatory variables
 			attribute vec3 aVertexPosition;
@@ -418,10 +412,7 @@
 			}
         </script>
         <script id="simple-shader-fs" type="x-shader/x-fragment">
-
-			#ifdef GL_ES
 			precision mediump float;
-			#endif
 
 			uniform float uTime;
 
@@ -431,7 +422,7 @@
 			uniform sampler2D uExample;
 
 
-			void main( void ) {
+			void main() {
 
 				// get our texture coords
 				vec2 textureCoords = vec2(vTextureCoord.x, vTextureCoord.y);

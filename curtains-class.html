@@ -630,7 +630,7 @@
                         <p>
                             Here is a complete list of all the parameters:
                         </p>
-                        <ul class="api-item-parameters">
+                        <ul id="curtains-init-parameters" class="api-item-parameters">
                             <li>
                                 <span class="api-item-parameter-label">
                                     container
@@ -688,6 +688,18 @@
                                 </span>
                                 <span class="api-item-parameter-desc">
                                     Defines the pixel ratio value. Use it to limit it on init to increase performance. Default to window.devicePixelRatio.
+                                </span>
+                            </li>
+
+                            <li>
+                                <span class="api-item-parameter-label">
+                                    renderingScale
+                                </span>
+                                <span class="api-item-parameter-type">
+                                    float, optionnal (minimum: 0.25, maximum: 1)
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    Use it to downscale your rendering canvas. May improve performance but will decrease quality. Default to 1.
                                 </span>
                             </li>
 
@@ -1599,7 +1611,7 @@
 									This function will try to restore the WebGL context. Use it after having previously lost the context.
 								</p>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/ping-pong-shading-flowmap/index.html" title="Ping pong shading flowmap" target="_blank">Ping pong shading flowmap</a> example.
+                                    <strong>Examples:</strong> used in all <a href="index.html#examples" title="Useful examples">examples</a>.
                                 </p>
 							</li>
 
@@ -1700,7 +1712,7 @@
 									<strong>returns:</strong> your Curtains object, allowing it to be chainable.
 								</p>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/ping-pong-shading-flowmap/index.html" title="Ping pong shading flowmap" target="_blank">Ping pong shading flowmap</a> example.
+                                    <strong>Examples:</strong> used in all <a href="index.html#examples" title="Useful examples">examples</a>.
                                 </p>
 							</li>
 							<li id="on-context-restored">
@@ -1713,9 +1725,6 @@
 								<p>
 									<strong>returns:</strong> your Curtains object, allowing it to be chainable.
 								</p>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/ping-pong-shading-flowmap/index.html" title="Ping pong shading flowmap" target="_blank">Ping pong shading flowmap</a> example.
-                                </p>
 							</li>
 							<li id="on-error">
 								<p>
