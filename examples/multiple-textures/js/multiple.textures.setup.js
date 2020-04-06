@@ -140,27 +140,28 @@ window.addEventListener("load", function() {
     var multiTexturesPlane = webGLCurtain.addPlane(planeElements[0], params);
 
     if(multiTexturesPlane) {
-        // the idea here is to create two additionnal textures
-        // the first one will contain our visible image
-        // the second one will contain our entering (next) image
-        // that we will deal with only activeTex and nextTex samplers in the fragment shader
-        // and the could work with more images in the slideshow...
-        var activeTex = multiTexturesPlane.createTexture({
-            sampler: "activeTex"
-        });
-        var nextTex = multiTexturesPlane.createTexture({
-            sampler: "nextTex"
-        });
 
         multiTexturesPlane.onReady(function() {
-            // we need to render the first frame
-            webGLCurtain.needRender();
+            // the idea here is to create two additionnal textures
+            // the first one will contain our visible image
+            // the second one will contain our entering (next) image
+            // that way we will deal with only activeTex and nextTex samplers in the fragment shader
+            // and we could easily add more images in the slideshow...
 
-            // we set our very first image as the active texture
-            activeTex.setSource(multiTexturesPlane.images[slideshowState.activeTextureIndex]);
-            // we set the second image as next texture but this is not mandatory
+            // first we set our very first image as the active texture
+            var activeTex = multiTexturesPlane.createTexture({
+                sampler: "activeTex",
+                fromTexture: multiTexturesPlane.textures[slideshowState.activeTextureIndex]
+            });
+            // next we set the second image as next texture but this is not mandatory
             // as we will reset the next texture on slide change
-            nextTex.setSource(multiTexturesPlane.images[slideshowState.nextTextureIndex]);
+            var nextTex = multiTexturesPlane.createTexture({
+                sampler: "nextTex",
+                fromTexture: multiTexturesPlane.textures[slideshowState.nextTextureIndex]
+            });
+
+            // we need to render the first frame because we've added our 2 textures above
+            webGLCurtain.needRender();
 
             planeElements[0].addEventListener("click", function() {
                 if(!slideshowState.isChanging) {

@@ -23,7 +23,8 @@ function initCurtains() {
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains({
         container: "canvas",
-        watchScroll: false // no need to listen for the scroll in this example
+        watchScroll: false, // no need to listen for the scroll in this example
+        premultipliedAlpha: true, // sharpen the rendering of the canvas texture
     });
 
     // get our plane element
@@ -134,9 +135,6 @@ function initCurtains() {
             finalColor.rgb -= clamp(-vVertexPosition.z, 0.0, 1.0);
             // fake lights based on vertex position along Z axis
             finalColor.rgb += clamp(vVertexPosition.z, 0.0, 1.0);
-
-            // handling premultiplied alpha (useful if we were using a png with transparency)
-            finalColor = vec4(finalColor.rgb * finalColor.a, finalColor.a);
 
             gl_FragColor = finalColor;
         }

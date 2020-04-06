@@ -1,7 +1,8 @@
 window.addEventListener("load", function() {
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains({
-        container: "canvas"
+        container: "canvas",
+        premultipliedAlpha: true, // sharpen the rendering of the text canvas textures
     });
 
     webGLCurtain.onError(function() {

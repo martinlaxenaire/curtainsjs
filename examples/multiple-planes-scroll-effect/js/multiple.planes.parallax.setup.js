@@ -132,13 +132,13 @@ window.addEventListener("load", function() {
         }
     }
 
-
     // handle all the planes
     function handlePlanes(index) {
         var plane = planes[index];
 
         // check if our plane is defined and use it
         plane && plane.onReady(function() {
+
             // apply parallax on load
             applyPlanesParallax(index);
 
@@ -146,6 +146,7 @@ window.addEventListener("load", function() {
             if(index === planes.length - 1) {
                 document.body.classList.add("planes-loaded");
             }
+
         }).onAfterResize(function() {
             // apply new parallax values after resize
             applyPlanesParallax(index);
@@ -170,7 +171,6 @@ window.addEventListener("load", function() {
 
     function applyPlanesParallax(index) {
         // calculate the parallax effect
-
         // get our window size
         var sceneBoundingRect = webGLCurtain.getBoundingRect();
         // get our plane center coordinate

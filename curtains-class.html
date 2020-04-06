@@ -293,6 +293,9 @@
                                     <a href="plane-class.html#get-webgl-bounding-rect">getWebGLBoundingRect</a>
                                 </li>
                                 <li>
+                                    <a href="plane-class.html#is-drawn">isDrawn</a>
+                                </li>
+                                <li>
                                     <a href="plane-class.html#load-canvas">loadCanvas</a>
                                 </li>
                                 <li>
@@ -327,6 +330,9 @@
                                 </li>
                                 <li>
                                     <a href="plane-class.html#play-videos">playVideos</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#reset-plane">resetPlane</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#set-perspective">setPerspective</a>
@@ -744,7 +750,7 @@
 						<ul>
                             <li id="alpha">
                                 <p>
-                                    <strong>alpha</strong> (bool) <span class="api-item-version">v5.0</span>
+                                    <strong>alpha</strong> (bool) <span class="api-item-version">v5.0</span> <span class="api-item-warning">read only</span>
                                 </p>
                                 <p>
                                     Whether the WebGL context handles transparency or not.
@@ -776,10 +782,11 @@
 							</li>
 							<li id="pixel-ratio">
 								<p>
-									<strong>pixelRatio</strong> (float) <span class="api-item-version">v1.0</span>
+									<strong>pixelRatio</strong> (float) <span class="api-item-version">v1.0</span> <span class="api-item-warning">read only</span>
 								</p>
 								<p>
-									The current device pixel ratio.
+									The current device pixel ratio.<br />
+                                    Use the <a href="curtains-class.html#set-pixel-ratio">setPixelRatio()</a> method to change this value at runtime.
 								</p>
 							</li>
 							<li id="planes">
@@ -792,7 +799,7 @@
 							</li>
                             <li id="premultiplied-alpha">
                                 <p>
-                                    <strong>premultipliedAlpha</strong> (bool) <span class="api-item-version">v5.0</span>
+                                    <strong>premultipliedAlpha</strong> (bool) <span class="api-item-version">v5.0</span> <span class="api-item-warning">read only</span>
                                 </p>
                                 <p>
                                     Whether the WebGL context handles premultiplied alpha or not.

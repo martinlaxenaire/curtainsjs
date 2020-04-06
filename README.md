@@ -162,15 +162,13 @@ window.addEventListener("load", function() {
     varying vec3 vVertexPosition;
     varying vec2 vTextureCoord;
     
-    void main() {
-        vec3 vertexPosition = aVertexPosition;
-        
-        gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+    void main() {       
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
         
         // set the varyings
         // here we use our texture matrix to calculate the accurate texture coords
         vTextureCoord = (uTextureMatrix0 * vec4(aTextureCoord, 0.0, 1.0)).xy;
-        vVertexPosition = vertexPosition;
+        vVertexPosition = aVertexPosition;
     }
 </script> 
 ```

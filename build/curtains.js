@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 5.2.2
+ Version: 5.3.0
  https://www.curtainsjs.com/
  ***/
 
@@ -1314,19 +1314,17 @@ Curtains.prototype._setDepth = function(setDepth) {
 
 /***
  Called to set the blending function (transparency)
-
- params:
- @setDepth (boolean): if we should enable or disable the depth test
  ***/
 Curtains.prototype._setBlendFunc = function() {
     // allows transparency
-    // based on https://limnu.com/webgl-blending-youre-probably-wrong/
-    this.gl.enable(this.gl.BLEND);
+    // based on how three.js solves this
+    var gl = this.gl;
+    gl.enable(gl.BLEND);
     if(this.premultipliedAlpha) {
-        this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+        gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     }
     else {
-        this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA);
+        gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     }
 };
 
@@ -1558,7 +1556,7 @@ Curtains.prototype._readyToDraw = function() {
     // enable depth by default
     this._setDepth(true);
 
-    console.log("curtains.js - v5.2");
+    console.log("curtains.js - v5.3");
 
     this._animationFrameID = null;
     if(this._autoRender) {
@@ -2983,6 +2981,11 @@ Curtains.BasePlane.prototype._drawPlane = function() {
 
     // check if our plane is ready to draw
     if(this._canDraw) {
+        // if alwaysDraw property just switched from false to true
+        /*if( && !this._shouldDraw) {
+            this._shouldDraw = true;
+        }*/
+
         // enable/disable depth test
         curtains._setDepth(this._depthTest);
 
@@ -3028,7 +3031,7 @@ Curtains.BasePlane.prototype._drawPlane = function() {
         }
 
         // now check if we really need to draw it and its textures
-        if(this._shouldDraw && this.visible) {
+        if((this.alwaysDraw || this._shouldDraw) && this.visible) {
             // ensure we're using the right program
             curtains._useProgram(this._usedProgram);
 
@@ -3818,6 +3821,14 @@ Curtains.Plane.prototype._shouldDrawCheck = function() {
 
 
 /***
+ This function returns if the plane is actually drawn (ie fully initiated, visible property set to true and not culled)
+ ***/
+Curtains.Plane.prototype.isDrawn = function() {
+    return this._canDraw && this.visible && (this._shouldDraw || this.alwaysDraw);
+};
+
+
+/***
  This function takes the plane CSS positions and convert them to clip space coordinates, and then apply the corresponding translation
  ***/
 Curtains.Plane.prototype._applyCSSPositions = function() {
@@ -4378,9 +4389,8 @@ Curtains.Texture.prototype._init = function() {
 
     // we don't use Y flip yet
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
-
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
 
     // if the parent has a program it means its not a render target texture
     if(this._parent._usedProgram) {
@@ -4471,9 +4481,12 @@ Curtains.Texture.prototype._setTextureUniforms = function() {
  ***/
 Curtains.Texture.prototype.setFromTexture = function(texture) {
     if(texture) {
+        this.type = texture.type;
         this._sampler.texture = texture._sampler.texture;
+
         this.source = texture.source;
         this._size = texture._size;
+        this._sourceLoaded = texture._sourceLoaded;
 
         this._internalFormat = texture._internalFormat;
         this._format = texture._format;
@@ -4538,13 +4551,18 @@ Curtains.Texture.prototype.setSource = function(source) {
         height: this.source.naturalHeight || this.source.height || this.source.videoHeight,
     };
 
+    // our source is loaded now
+    this._sourceLoaded = true;
+
     var gl = this._curtains.gl;
 
     // Bind the texture the target (TEXTURE_2D) of the active texture unit.
     gl.bindTexture(gl.TEXTURE_2D, this._sampler.texture);
 
+    // maybe we should handle alpha premultiplying separately for each texture
+    // for now we just use our gl context premultipliedAlpha value
     if(this._curtains.premultipliedAlpha) {
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this._curtains.premultipliedAlpha);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
     }
 
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -4747,9 +4765,6 @@ Curtains.Texture.prototype._onSourceLoaded = function(source) {
     // increment our loading manager
     this._parent._loadingManager.sourcesLoaded++;
 
-    // set the media as our texture source
-    this.setSource(source);
-
     // fire callback during load (useful for a loader)
     var self = this;
     if(!this._sourceLoaded) {
@@ -4760,11 +4775,11 @@ Curtains.Texture.prototype._onSourceLoaded = function(source) {
         }, 0);
     }
 
+    // set the media as our texture source
+    this.setSource(source);
+
     // fire parent plane onReady callback if needed
     this._parent._isPlaneReady();
-
-    // our source is loaded now
-    this._sourceLoaded = true;
 
     // add to the cache if needed
     if(this.type === "image") {

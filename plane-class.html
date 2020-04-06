@@ -293,6 +293,9 @@
                                     <a href="plane-class.html#get-webgl-bounding-rect">getWebGLBoundingRect</a>
                                 </li>
                                 <li>
+                                    <a href="plane-class.html#is-drawn">isDrawn</a>
+                                </li>
+                                <li>
                                     <a href="plane-class.html#load-canvas">loadCanvas</a>
                                 </li>
                                 <li>
@@ -726,10 +729,10 @@
                             </li>
                             <li id="autoload-sources">
                                 <p>
-                                    <strong>autoloadSources</strong> (boolean): <span class="api-item-version">v2.0</span>
+                                    <strong>autoloadSources</strong> (boolean): <span class="api-item-version">v2.0</span> <span class="api-item-warning">read only</span>
                                 </p>
                                 <p>
-                                    Whether the sources (images, videos and canvases HTML children elements of your plane) should be loaded, and according textures created on init.
+                                    Whether the sources (images, videos and canvases HTML children elements of your plane) should be loaded and according textures created on plane initialization.
                                 </p>
                             </li>
                             <li id="canvases">
@@ -809,7 +812,8 @@
                                     <strong>htmlElement</strong> (HTML element): <span class="api-item-version">v1.0</span>
                                 </p>
                                 <p>
-                                    The HTML element used to create your plane. Useful if you want to add event listeners to it.
+                                    The HTML element used to create your plane. Useful if you want to add event listeners to it.<br />
+                                    You can change the HTML element used by the plane at runtime by using the <a href="plane-class.html#reset-plane">resetPlane()</a> method.
                                 </p>
                             </li>
                             <li id="images">
@@ -822,7 +826,7 @@
                             </li>
                             <li id="index">
                                 <p>
-                                    <strong>index</strong> (integer): <span class="api-item-version">v1.0</span>
+                                    <strong>index</strong> (integer): <span class="api-item-version">v1.0</span> <span class="api-item-warning">read only</span>
                                 </p>
                                 <p>
                                     The index of your plane in the <a href="curtains-class.html#planes">Curtains planes array</a>.
@@ -854,7 +858,7 @@
                             </li>
                             <li id="share-program">
                                 <p>
-                                    <strong>shareProgram</strong> (bool): <span class="api-item-version">v5.0</span>
+                                    <strong>shareProgram</strong> (bool): <span class="api-item-version">v5.0</span> <span class="api-item-warning">read only</span>
                                 </p>
                                 <p>
                                     Whether this plane should share its WebGL program with other planes that share the same shaders.
@@ -1036,6 +1040,18 @@
                                 </p>
                                 <p>
                                     <strong>returns:</strong> an object containing the plane WebGL element width, height, top, right, bottom and left positions in pixels.
+                                </p>
+                            </li>
+
+                            <li id="is-drawn">
+                                <p>
+                                    <strong>isDrawn</strong>(): <span class="api-item-version">v5.3</span>
+                                </p>
+                                <p>
+                                    Use this function to check if a plane is currently being drawn or not. A plane is not drawn either if it has not been fully initiated yet, its <a href="plane-class.html#visible">visible property</a> is set to false or it is being culled.
+                                </p>
+                                <p>
+                                    <strong>returns:</strong> a boolean indicating whether the plane is currently drawn or not.
                                 </p>
                             </li>
 

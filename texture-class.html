@@ -294,6 +294,9 @@
                                     <a href="plane-class.html#get-webgl-bounding-rect">getWebGLBoundingRect</a>
                                 </li>
                                 <li>
+                                    <a href="plane-class.html#is-drawn">isDrawn</a>
+                                </li>
+                                <li>
                                     <a href="plane-class.html#load-canvas">loadCanvas</a>
                                 </li>
                                 <li>
@@ -581,11 +584,58 @@
                         <h3>Creation</h3>
                         <p>
                             Textures are automatically created each time one of the plane <a href="plane-class.html#load-canvas">loading methods</a> is called.<br />
-                            If your plane <a href="plane-class.html#autoload-sources">autoloadSources</a> initial parameter is set to true, they will be created on initialization for each image, canvas or video children of your plane.
+                        </p>
+
+                        <h4>On initialization</h4>
+
+                        <p>
+                            If your plane <a href="plane-class.html#autoload-sources">autoloadSources</a> initial parameter is set to true (which is by default), they will be created on initialization for each image, canvas or video children of your plane.
+                        </p>
+
+                        <h5>Built-in uniform names</h5>
+
+                        <p>
+                            By default the textures sampler and matrix uniform names sent to your shaders will be set upon their media element order inside your plane element, following this rule:
                         </p>
                         <p>
-                            To create a new texture, you should use the <a href="plane-class.html#create-texture">createTexture</a> method of your <a href="plane-class.html">Plane</a> or <a href="shader-pass-class.html#textures">ShaderPass</a> class object.
+                            <strong>`uSampler{index}`</strong> for texture samplers<br />
+                            <strong>`uTextureMatrix{index}`</strong> for texture matrices
                         </p>
+
+                        <h6>HTML</h6>
+
+                        <div class="code">
+                            <div class="code-block">
+
+                                <div class="code-comment">
+                                    &lt;!-- div used to create our plane --&gt;
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;div</span> id=<span class="code-string">"my-plane"</span><span class="code-tag">&gt;</span>
+                                </div>
+
+                            </div>
+
+                            <div class="code-indent">
+
+                                <div class="code-comment">
+                                    &lt;!-- images that will be used as textures by our plane --&gt;
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-1.jpg"</span> <span class="code-tag">/&gt;</span>
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-2.jpg"</span> <span class="code-tag">/&gt;</span>
+                                </div>
+
+                            </div>
+
+                            <div class="code-tag">
+                                &lt;/div&gt;
+                            </div>
+                        </div>
+
+                        <h6>Javascript</h6>
 
                         <div class="code">
 
@@ -602,9 +652,122 @@
                                 <span class="code-var">var</span> planeElement = document.<span class="code-tag">getElementById</span>(<span class="code-string">"my-plane"</span>)<span class="code-var">;</span>
                             </div>
 
-                            <div class="code-block">
+                            <div>
                                 <span class="code-var">var</span> plane = curtains.<span class="code-tag">addPlane</span>(planeElement)<span class="code-var">;</span>
                             </div>
+
+                        </div>
+
+                        <h6>Shaders</h6>
+
+                        <div class="code">
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // use this in your vertex shader
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uTextureMatrix0<span class="code-var">;</span> <span class="code-comment">// texture matrix of my-image-1.jpg</span>
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uTextureMatrix1<span class="code-var">;</span> <span class="code-comment">// texture matrix of my-image-2.jpg</span>
+                                </div>
+                            </div>
+                            <div class="code-block">
+                                ...
+                            </div>
+                            <div>
+                                <div class="code-comment">
+                                    // use this in your fragment shader
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uSampler0<span class="code-var">;</span> <span class="code-comment">// bound to my-image-1.jpg</span>
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uSampler1<span class="code-var">;</span> <span class="code-comment">// bound to my-image-2.jpg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5>Using custom uniform names</h5>
+
+                        <p>
+                            You can define custom uniform names by specifying a <strong>data-sampler attribute</strong> of your media HTML element. The uniform names will then follow these rules:
+                        </p>
+                        <p>
+                            <strong>`{data-sampler}`</strong> for texture samplers<br />
+                            <strong>`{data-sampler}Matrix`</strong> for texture matrices
+                        </p>
+
+                        <h6>HTML</h6>
+
+                        <div class="code">
+                            <div class="code-block">
+
+                                <div class="code-comment">
+                                    &lt;!-- div used to create our plane --&gt;
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;div</span> id=<span class="code-string">"my-plane"</span><span class="code-tag">&gt;</span>
+                                </div>
+
+                            </div>
+
+                            <div class="code-indent">
+
+                                <div class="code-comment">
+                                    &lt;!-- images that will be used as textures by our plane --&gt;
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-1.jpg"</span> data-sampler=<span class="code-string">"firstTexture"</span> <span class="code-tag">/&gt;</span>
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-2.jpg"</span> data-sampler=<span class="code-string">"secondTex"</span> <span class="code-tag">/&gt;</span>
+                                </div>
+
+                            </div>
+
+                            <div class="code-tag">
+                                &lt;/div&gt;
+                            </div>
+                        </div>
+
+                        <h6>Shaders</h6>
+
+                        <div class="code">
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // use this in your vertex shader
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">mat4</span> firstTextureMatrix<span class="code-var">;</span> <span class="code-comment">// texture matrix of my-image-1.jpg</span>
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">mat4</span> secondTexMatrix<span class="code-var">;</span> <span class="code-comment">// texture matrix of my-image-2.jpg</span>
+                                </div>
+                            </div>
+                            <div class="code-block">
+                                ...
+                            </div>
+                            <div>
+                                <div class="code-comment">
+                                    // use this in your fragment shader
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> firstTexture<span class="code-var">;</span> <span class="code-comment">// bound to my-image-1.jpg</span>
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> secondTex<span class="code-var">;</span> <span class="code-comment">// bound to my-image-2.jpg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4>Once the plane has been created</h4>
+
+                        <p>
+                            To create a new texture, you should use the <a href="plane-class.html#create-texture">createTexture</a> method of your <a href="plane-class.html">Plane</a> or <a href="shader-pass-class.html#textures">ShaderPass</a> class object.
+                        </p>
+
+                        <div class="code">
 
                             <div>
                                 <div class="code-comment">
@@ -954,7 +1117,7 @@
                         <ul>
                             <li id="index">
                                 <p>
-                                    <strong>index</strong>(integer): <span class="api-item-version">v2.0</span>
+                                    <strong>index</strong>(integer): <span class="api-item-version">v2.0</span> <span class="api-item-warning">read only</span>
                                 </p>
                                 <p>
                                     The index of your texture in the <a href="plane-class.html#textures">Plane</a> or <a href="shader-pass-class.html#textures">ShaderPass</a> textures array</a>.<br />
@@ -992,10 +1155,10 @@
                             </li>
                             <li id="type">
                                 <p>
-                                    <strong>type</strong>(string): <span class="api-item-version">v2.0</span>
+                                    <strong>type</strong>(string): <span class="api-item-version">v2.0</span> <span class="api-item-warning">read only</span>
                                 </p>
                                 <p>
-                                    The type or your texture. Could be either "image", "canvas", "video" or "fboTexture".<br />
+                                    The type or your texture. Could be either "empty", "image", "canvas", "video" or "fboTexture".<br />
                                     A "fboTexture" is a <a href="render-target-class.html">RenderTarget</a> texture onto which your plane or scene is drawn.
                                 </p>
                             </li>
