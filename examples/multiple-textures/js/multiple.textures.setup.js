@@ -141,7 +141,9 @@ window.addEventListener("load", function() {
 
     if(multiTexturesPlane) {
 
-        multiTexturesPlane.onReady(function() {
+        multiTexturesPlane.onLoading(function() {
+            webGLCurtain.needRender();
+        }).onReady(function() {
             // the idea here is to create two additionnal textures
             // the first one will contain our visible image
             // the second one will contain our entering (next) image
@@ -159,9 +161,6 @@ window.addEventListener("load", function() {
                 sampler: "nextTex",
                 fromTexture: multiTexturesPlane.textures[slideshowState.nextTextureIndex]
             });
-
-            // we need to render the first frame because we've added our 2 textures above
-            webGLCurtain.needRender();
 
             planeElements[0].addEventListener("click", function() {
                 if(!slideshowState.isChanging) {

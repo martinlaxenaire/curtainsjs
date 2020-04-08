@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 5.3.0
+ Version: 5.3.1
  https://www.curtainsjs.com/
  ***/
 
@@ -554,25 +554,6 @@ Curtains.prototype._contextRestored = function() {
         this.shaderPasses[i]._restoreContext();
     }
 
-    /*var self = this;
-    setTimeout(function() {
-        // callback
-        if(self._onContextRestoredCallback) {
-            self._onContextRestoredCallback();
-        }
-
-        // start drawing again
-        // reset drawing flag to original value
-        self._drawingEnabled = isDrawingEnabled;
-
-        // requestAnimationFrame again if needed
-        if(self._autoRender) {
-            self._animate();
-        }
-    }, 50);*/
-
-
-
     // callback
     if(this._onContextRestoredCallback) {
         this._onContextRestoredCallback();
@@ -583,7 +564,7 @@ Curtains.prototype._contextRestored = function() {
     this._drawingEnabled = isDrawingEnabled;
 
     // force next frame render whatever our drawing flag value
-    //this.needRender();
+    this.needRender();
 
     // requestAnimationFrame again if needed
     if(this._autoRender) {
@@ -2647,13 +2628,26 @@ Curtains.BasePlane.prototype.loadSource = function(source) {
 };
 
 
-Curtains.BasePlane.prototype._sourceLoadError = function(source) {
+/***
+ Handles media loading errors
+
+ params :
+ @source (html element) : html image, video or canvas element
+ @error (object) : loading error
+ ***/
+Curtains.BasePlane.prototype._sourceLoadError = function(source, error) {
     if(!this._curtains.productionMode) {
-        console.warn("There has been an error loading this source:", source);
+        console.warn("There has been an error:", error, "while loading this source:", source);
     }
 };
 
 
+/***
+ Check if this source is already assigned to a cached texture
+
+ params :
+ @source (html element) : html image, video or canvas element (only images for now)
+ ***/
 Curtains.BasePlane.prototype._getTextureFromCache = function(source) {
     var cachedTexture = false;
     if(this._curtains._imageCache.length > 0) {
@@ -2710,6 +2704,14 @@ Curtains.BasePlane.prototype.loadImage = function(source) {
     // before we registered the event handler.
     if(image.complete) {
         texture._onSourceLoaded(image);
+    }
+    else if(image.decode) {
+        var self = this;
+        image.decode().then(texture._onSourceLoadedHandler).catch(function() {
+            // fallback to classic load & error events
+            image.addEventListener('load', texture._onSourceLoadedHandler, false);
+            image.addEventListener('error', self._sourceLoadError.bind(self, image), false);
+        });
     }
     else {
         image.addEventListener('load', texture._onSourceLoadedHandler, false);
@@ -4581,6 +4583,9 @@ Curtains.Texture.prototype.setSource = function(source) {
     if(this.type !== "video") {
         gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._format, this._textureType, source);
     }
+
+    // update scene
+    this._curtains.needRender();
 };
 
 
@@ -4907,7 +4912,7 @@ Curtains.Texture.prototype._dispose = function() {
 
         // empty source to properly delete video element and free the memory
         this.source.pause();
-        this.source.removeAttribute('src');
+        this.source.removeAttribute("src");
         this.source.load();
 
         // clear source
@@ -4922,7 +4927,7 @@ Curtains.Texture.prototype._dispose = function() {
     }
     else if(this.type === "image" && this._curtains._isDestroying) {
         // delete image only if we're destroying the context (keep in cache otherwise)
-        this.source.removeEventListener('load', this._onSourceLoadedHandler, false);
+        this.source.removeEventListener("load", this._onSourceLoadedHandler, false);
         this.source.removeEventListener("error", this._parent._sourceLoadError, false);
 
         // clear source
