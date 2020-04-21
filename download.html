@@ -78,7 +78,7 @@
 
 					<div class="text-section inner-section">
                         <p>
-                            <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v5.3">curtains.js v5.3 (155Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v5.3">curtains.min.js v5.3 (63Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+                            <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v6.0">curtains.js v6.0 (170Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v6.0">curtains.min.js v6.0 (69Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
                         </p>
 					</div>
 
@@ -92,6 +92,27 @@
 
 					<div class="text-section inner-section">
 						<h2>Changelog</h2>
+                        <h3>Version 6.0</h3>
+                        <p>
+                            Version 6.0 has a totally renewed way to handle perspective using a real perspective camera approach for each plane. Modifying the field of view will now have a much greater impact on the perceived perspective.
+                        </p>
+                        <ul>
+                            <li>
+                                New way to handle perspective.
+                            </li>
+                            <li>
+                                Improved planes rotation (using Euler angles with "XYZ" as axis order). Also, planes now have a transform origin Z property as well.
+                            </li>
+                            <li>
+                                Introducing <a href="plane-class.html#cull-face">face culling</a> for each plane.
+                            </li>
+                            <li>
+                                Planes, shader passes, render targets and textures now have a unique identifier (uuid) property.
+                            </li>
+                            <li>
+                                Fixed <a href="plane-class.html#move-to-front">moveToFront()</a> method and minor bugs.
+                            </li>
+                        </ul>
                         <h3>Version 5.0</h3>
                         <p>
                             Version 5.0 introduces <a href="render-target-class.html">RenderTarget</a> class. It allows you to render any plane as a texture by setting it a render target. The <a href="shader-pass-class.html">ShaderPass</a> class now also use that class internally.<br>

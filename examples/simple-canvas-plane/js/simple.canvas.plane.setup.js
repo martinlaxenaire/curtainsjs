@@ -186,8 +186,8 @@ function initCurtains() {
             // display the button
             document.body.classList.add("curtains-ready");
 
-            // set a fov of 35 to exagerate perspective
-            simplePlane.setPerspective(35);
+            // set a fov of 40 to reduce perspective
+            simplePlane.setPerspective(40);
 
             // apply a little effect once everything is ready
             deltas.max = 4;

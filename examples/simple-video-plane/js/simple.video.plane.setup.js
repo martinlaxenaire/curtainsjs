@@ -87,9 +87,9 @@ function initCurtains() {
             float distortionEffect = distanceStrength * waveSinusoid * uMouseMoveStrength;
 
             // apply it to our vertex position
-            vertexPosition.z +=  distortionEffect / 15.0;
-            vertexPosition.x +=  (distortionEffect / 15.0 * (uResolution.x / uResolution.y) * (uMousePosition.x - vertexPosition.x));
-            vertexPosition.y +=  distortionEffect / 15.0 * (uMousePosition.y - vertexPosition.y);
+            vertexPosition.z +=  distortionEffect / 30.0;
+            vertexPosition.x +=  (distortionEffect / 30.0 * (uResolution.x / uResolution.y) * (uMousePosition.x - vertexPosition.x));
+            vertexPosition.y +=  distortionEffect / 30.0 * (uMousePosition.y - vertexPosition.y);
 
             gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
 
@@ -160,7 +160,7 @@ function initCurtains() {
         // display the button
         document.body.classList.add("curtains-ready");
 
-        // set a fov of 35 to exagerate perspective
+        // set a fov of 35 to reduce perspective
         simplePlane.setPerspective(35);
 
         // now that our plane is ready we can listen to mouse move event

@@ -58,7 +58,7 @@ window.addEventListener("load", function() {
             float distanceToWave = distance(vec2(vertexPosition.x, 0.0), vec2(waveCoords, 0.0));
 
             // nice little wave animation from left to right or right to left depending on the timer
-            vertexPosition.z = cos(clamp(distanceToWave, 0.0, 0.75) * 3.141592) - cos(0.75 * 3.141592);
+            vertexPosition.z = (cos(clamp(distanceToWave, 0.0, 0.75) * 3.141592) - cos(0.75 * 3.141592)) * 0.05;
 
             gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
 

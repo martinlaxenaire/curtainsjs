@@ -228,6 +228,9 @@
                                     <a href="plane-class.html#cross-origin">crossOrigin</a>
                                 </li>
                                 <li>
+                                    <a href="plane-class.html#cull-face">cullFace</a>
+                                </li>
+                                <li>
                                     <a href="plane-class.html#draw-check-margins">drawCheckMargins</a>
                                 </li>
                                 <li>
@@ -238,6 +241,9 @@
                                 </li>
                                 <li>
                                     <a href="plane-class.html#index">index</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#quaternion">quaternion</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#relative-translation">relativeTranslation</a>
@@ -258,13 +264,16 @@
                                     <a href="plane-class.html#textures">textures</a>
                                 </li>
                                 <li>
-                                    <a href="plane-class.html#transform-origin">transform-origin</a>
+                                    <a href="plane-class.html#transform-origin">transformOrigin</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#uniforms">uniforms</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#user-data">userData</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#uuid">uuid</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#videos">videos</a>
@@ -428,6 +437,9 @@
                                     <a href="shader-pass-class.html#user-data">userData</a>
                                 </li>
                                 <li>
+                                    <a href="shader-pass-class.html#uuid">uuid</a>
+                                </li>
+                                <li>
                                     <a href="shader-pass-class.html#videos">videos</a>
                                 </li>
                             </ul>
@@ -515,6 +527,9 @@
                                 <li>
                                     <a href="render-target-class.html#user-data">userData</a>
                                 </li>
+                                <li>
+                                    <a href="render-target-class.html#uuid">uuid</a>
+                                </li>
                             </ul>
                         </div>
                     </li>
@@ -547,6 +562,9 @@
                                 </li>
                                 <li>
                                     <a href="texture-class.html#user-data">userData</a>
+                                </li>
+                                <li>
+                                    <a href="texture-class.html#uuid">uuid</a>
                                 </li>
                             </ul>
                             <div class="api-submenu-title">
@@ -957,6 +975,17 @@
 													if your plane should handle transparency and therefore be drawn after the planes that do not use transparency (false by default).
 												</span>
                                             </li>
+                                            <li>
+												<span class="api-item-parameter-label">
+													cullFace
+												</span>
+                                                <span class="api-item-parameter-type">
+													string, optionnal
+												</span>
+                                                <span class="api-item-parameter-desc">
+													which face of the plane should be culled. Could either be "back", "front" or "none". Default to "back".
+												</span>
+                                            </li>
 											<li>
 												<span class="api-item-parameter-label">
 													alwaysDraw
@@ -1091,7 +1120,7 @@
 													integer, optionnal
 												</span>
 												<span class="api-item-parameter-desc">
-													defines the perspective field of view (default to 75).
+													defines the perspective field of view (default to 50).
 												</span>
 											</li>
 											<li>

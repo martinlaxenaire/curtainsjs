@@ -229,6 +229,9 @@
                                     <a href="plane-class.html#cross-origin">crossOrigin</a>
                                 </li>
                                 <li>
+                                    <a href="plane-class.html#cull-face">cullFace</a>
+                                </li>
+                                <li>
                                     <a href="plane-class.html#draw-check-margins">drawCheckMargins</a>
                                 </li>
                                 <li>
@@ -239,6 +242,9 @@
                                 </li>
                                 <li>
                                     <a href="plane-class.html#index">index</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#quaternion">quaternion</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#relative-translation">relativeTranslation</a>
@@ -259,13 +265,16 @@
                                     <a href="plane-class.html#textures">textures</a>
                                 </li>
                                 <li>
-                                    <a href="plane-class.html#transform-origin">transform-origin</a>
+                                    <a href="plane-class.html#transform-origin">transformOrigin</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#uniforms">uniforms</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#user-data">userData</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#uuid">uuid</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#videos">videos</a>
@@ -429,6 +438,9 @@
                                     <a href="shader-pass-class.html#user-data">userData</a>
                                 </li>
                                 <li>
+                                    <a href="shader-pass-class.html#uuid">uuid</a>
+                                </li>
+                                <li>
                                     <a href="shader-pass-class.html#videos">videos</a>
                                 </li>
                             </ul>
@@ -516,6 +528,9 @@
                                 <li>
                                     <a href="render-target-class.html#user-data">userData</a>
                                 </li>
+                                <li>
+                                    <a href="render-target-class.html#uuid">uuid</a>
+                                </li>
                             </ul>
                         </div>
                     </li>
@@ -548,6 +563,9 @@
                                 </li>
                                 <li>
                                     <a href="texture-class.html#user-data">userData</a>
+                                </li>
+                                <li>
+                                    <a href="texture-class.html#uuid">uuid</a>
                                 </li>
                             </ul>
                             <div class="api-submenu-title">
@@ -1113,14 +1131,14 @@
                             If you did specify a sampler name, it will be named samplerName + "Matrix".
                         </p>
 
-                        <h2 id="methods">Properties</h2>
+                        <h2 id="properties">Properties</h2>
                         <ul>
                             <li id="index">
                                 <p>
                                     <strong>index</strong>(integer): <span class="api-item-version">v2.0</span> <span class="api-item-warning">read only</span>
                                 </p>
                                 <p>
-                                    The index of your texture in the <a href="plane-class.html#textures">Plane</a> or <a href="shader-pass-class.html#textures">ShaderPass</a> textures array</a>.<br />
+                                    The index of your texture in the <a href="plane-class.html#textures">Plane</a> or <a href="shader-pass-class.html#textures">ShaderPass</a> textures array.<br />
                                     Since ShaderPass silently creates a texture on init, if you add a texture to it later, this texture will have an index of 1.
                                 </p>
                             </li>
@@ -1168,6 +1186,14 @@
                                 </p>
                                 <p>
                                     An empty object to store any additional data or custom properties into your texture.
+                                </p>
+                            </li>
+                            <li id="uuid">
+                                <p>
+                                    <strong>uuid</strong> (string): <span class="api-item-version">v6.0</span>
+                                </p>
+                                <p>
+                                    The texture's unique identifier.
                                 </p>
                             </li>
                         </ul>

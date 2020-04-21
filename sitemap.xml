@@ -116,7 +116,13 @@
     </url>
 
     <url>
-        <loc>https://www.curtainsjs.com/examples/pinpg-pong-shading-flowmap/index.html</loc>
+        <loc>https://www.curtainsjs.com/examples/ping-pong-shading-flowmap/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/plane-properties-transforms-cheat-sheet/index.html</loc>
         <changefreq>yearly</changefreq>
         <priority>0.6</priority>
     </url>

@@ -117,7 +117,6 @@ function displayCurtains() {
         var curtainPlaneParams = {
             widthSegments: 50,
             heightSegments: 37,
-            fov: 10,
             drawCheckMargins: {
                 top: 0,
                 right: 0,
@@ -216,7 +215,7 @@ function displayCurtains() {
         var showcaseParams = {
             vertexShaderID: "simple-shader-vs",
             fragmentShaderID: "simple-shader-fs",
-            widthSegments: 10,
+            widthSegments: 20,
             heightSegments: 1,
             uniforms: {
                 time: {
@@ -256,10 +255,10 @@ function displayCurtains() {
             }).onRender(function() {
                 // use damping
                 if(plane.mouseOver) {
-                    plane.uniforms.time.value += (45 - plane.uniforms.time.value) * 0.075;
+                    plane.uniforms.time.value += (45 - plane.uniforms.time.value) * 0.0375;
                 }
                 else {
-                    plane.uniforms.time.value += (0 - plane.uniforms.time.value) * 0.075;
+                    plane.uniforms.time.value += (0 - plane.uniforms.time.value) * 0.0375;
                 }
 
                 plane.updatePosition();

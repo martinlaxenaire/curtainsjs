@@ -228,6 +228,9 @@
                                     <a href="plane-class.html#cross-origin">crossOrigin</a>
                                 </li>
                                 <li>
+                                    <a href="plane-class.html#cull-face">cullFace</a>
+                                </li>
+                                <li>
                                     <a href="plane-class.html#draw-check-margins">drawCheckMargins</a>
                                 </li>
                                 <li>
@@ -238,6 +241,9 @@
                                 </li>
                                 <li>
                                     <a href="plane-class.html#index">index</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#quaternion">quaternion</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#relative-translation">relativeTranslation</a>
@@ -258,13 +264,16 @@
                                     <a href="plane-class.html#textures">textures</a>
                                 </li>
                                 <li>
-                                    <a href="plane-class.html#transform-origin">transform-origin</a>
+                                    <a href="plane-class.html#transform-origin">transformOrigin</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#uniforms">uniforms</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#user-data">userData</a>
+                                </li>
+                                <li>
+                                    <a href="plane-class.html#uuid">uuid</a>
                                 </li>
                                 <li>
                                     <a href="plane-class.html#videos">videos</a>
@@ -428,6 +437,9 @@
                                     <a href="shader-pass-class.html#user-data">userData</a>
                                 </li>
                                 <li>
+                                    <a href="shader-pass-class.html#uuid">uuid</a>
+                                </li>
+                                <li>
                                     <a href="shader-pass-class.html#videos">videos</a>
                                 </li>
                             </ul>
@@ -515,6 +527,9 @@
                                 <li>
                                     <a href="render-target-class.html#user-data">userData</a>
                                 </li>
+                                <li>
+                                    <a href="render-target-class.html#uuid">uuid</a>
+                                </li>
                             </ul>
                         </div>
                     </li>
@@ -547,6 +562,9 @@
                                 </li>
                                 <li>
                                     <a href="texture-class.html#user-data">userData</a>
+                                </li>
+                                <li>
+                                    <a href="texture-class.html#uuid">uuid</a>
                                 </li>
                             </ul>
                             <div class="api-submenu-title">
@@ -726,6 +744,9 @@
                                 <p>
                                     Whether the WebGL renderer should always draw the plane or if it should draw it only when the plane is contained in the canvas viewport. Used for performance optimizations.
                                 </p>
+                                <p>
+                                    Check the <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a> example to see how it could be used.
+                                </p>
                             </li>
                             <li id="autoload-sources">
                                 <p>
@@ -749,6 +770,18 @@
                                 </p>
                                 <p>
                                     The cross origin process used to load the medias.
+                                </p>
+                            </li>
+                            <li id="cull-face">
+                                <p>
+                                    <strong>cullFace</strong> (string): <span class="api-item-version">v6.0</span>
+                                </p>
+                                <p>
+                                    Which face of the plane should be culled (ie not drawn). Could either be <strong>"back"</strong> (only the front side of the plane is drawn), <strong>"front"</strong> (only the back side of the plane is drawn) or <strong>"none"</strong> (all the side of the plane are drawn). Default to "back".<br />
+                                    You might want to change the default culling behavior if you apply a rotation along the X or Y axis for example (therefore showing the back side of the plane).
+                                </p>
+                                <p class="api-item-examples">
+                                    Check the <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a> example to see how it could be used.
                                 </p>
                             </li>
                             <li id="draw-check-margins">
@@ -806,6 +839,9 @@
                                         </span>
                                     </li>
                                 </ul>
+                                <p class="api-item-examples">
+                                    Check the <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a> example to see how it could be used.
+                                </p>
                             </li>
                             <li id="html-element">
                                 <p>
@@ -830,6 +866,14 @@
                                 </p>
                                 <p>
                                     The index of your plane in the <a href="curtains-class.html#planes">Curtains planes array</a>.
+                                </p>
+                            </li>
+                            <li id="quaternion">
+                                <p>
+                                    <strong>quaternion</strong> (array): <span class="api-item-version">v6.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    An array containing your actual plane rotation as a quaternion.
                                 </p>
                             </li>
                             <li id="relative-translation">
@@ -858,7 +902,7 @@
                             </li>
                             <li id="share-program">
                                 <p>
-                                    <strong>shareProgram</strong> (bool): <span class="api-item-version">v5.0</span> <span class="api-item-warning">read only</span>
+                                    <strong>shareProgram</strong> (bool): <span class="api-item-version">v5.0</span><span class="api-item-warning">read only</span>
                                 </p>
                                 <p>
                                     Whether this plane should share its WebGL program with other planes that share the same shaders.
@@ -889,10 +933,15 @@
                             </li>
                             <li id="transform-origin">
                                 <p>
-                                    <strong>transformOrigin</strong> (object): <span class="api-item-version">v5.0</span>
+                                    <strong>transformOrigin</strong> (object): <span class="api-item-version">v5.0</span><span class="api-item-warning">updated in v6.0</span>
                                 </p>
                                 <p>
-                                    An array containing your plane transform origin position on x and y axis. { x:0, y:0 } is the plane top left corner whereas { x:1, y:1 } is the plane bottom right corner. Values could be negative, or greater than 1. Default to { x:0.5, y:0.5 } (center of the plane).
+                                    An array containing your plane transform origin position along X, Y and Z axis. { x:0, y:0, z:0 } is the plane top left corner whereas { x:1, y:1, z:0 } is the plane bottom right corner.<br />
+                                    Use the value along the Z axis to set the transformation origin behind (negative value) or in front (positive value) the plane.<br />
+                                    Values could be negative, or greater than 1. Default to { x:0.5, y:0.5, z:0 } (center of the plane).
+                                </p>
+                                <p class="api-item-examples">
+                                    Check the <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a> example to see how it could be used.
                                 </p>
                             </li>
                             <li id="uniforms">
@@ -912,6 +961,14 @@
                                     An empty object to store any additional data or custom properties into your plane.
                                 </p>
                             </li>
+                            <li id="uuid">
+                                <p>
+                                    <strong>uuid</strong> (string): <span class="api-item-version">v6.0</span>
+                                </p>
+                                <p>
+                                    The plane's unique identifier.
+                                </p>
+                            </li>
                             <li id="videos">
                                 <p>
                                     <strong>videos</strong> (array): <span class="api-item-version">v1.2</span>
@@ -926,6 +983,9 @@
                                 </p>
                                 <p>
                                     Whether your plane should be drawn or not. Set this property to true or false to toggle the plane's visibility.
+                                </p>
+                                <p class="api-item-examples">
+                                    Check the <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a> example to see how it could be used.
                                 </p>
                             </li>
                             <li id="watch-scroll">
@@ -1041,6 +1101,9 @@
                                 <p>
                                     <strong>returns:</strong> an object containing the plane WebGL element width, height, top, right, bottom and left positions in pixels.
                                 </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a> example.
+                                </p>
                             </li>
 
                             <li id="is-drawn">
@@ -1052,6 +1115,9 @@
                                 </p>
                                 <p>
                                     <strong>returns:</strong> a boolean indicating whether the plane is currently drawn or not.
+                                </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a> example.
                                 </p>
                             </li>
 
@@ -1329,11 +1395,11 @@
 
                             <li id="set-perspective">
                                 <p>
-                                    <strong>setPerspective</strong>(fieldOfView, nearPlane, farPlane): <span class="api-item-version">v1.0</span>
+                                    <strong>setPerspective</strong>(fieldOfView, nearPlane, farPlane): <span class="api-item-version">v1.0</span><span class="api-item-warning">updated in v6.0</span>
                                 </p>
                                 <p>
-                                    Set the perspective. The smaller the field of view, the more perspective.<br />
-                                    All the internal maths are done assuming the camera Z position is always equal to (fieldOfView / 2) if you ever need it.
+                                    Set the perspective. Increasing the field of view will increase the perspective.<br />
+                                    Since v6.0, all the internal maths are done assuming the camera Z position is available via the dirty <strong>plane._cameraZPosition</strong> property, and the plane is always translated along the Z axis from <strong>(-1 / plane._cameraZPosition)</strong> under the hood.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -1344,7 +1410,7 @@
                                             integer
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            the perspective field of view. Should be greater than 0 and lower than 180. Default to 75.
+                                            the perspective field of view. Should be greater than 0 and lower than 180. Default to 50.
                                         </span>
                                     </li>
                                     <li>
@@ -1366,12 +1432,12 @@
                                             float, optionnal
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            farthest point where a mesh vertex is displayed. Default to 150 (two times the field of view).
+                                            farthest point where a mesh vertex is displayed. Default to 150.
                                         </span>
                                     </li>
                                 </ul>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a>, <a href="examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a>, <a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a> examples.
+                                    <strong>Examples:</strong> used in <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a>, <a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a>, <a href="examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a>, <a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a> examples.
                                 </p>
                             </li>
 
@@ -1408,7 +1474,7 @@
                                     </li>
                                 </ul>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
+                                    <strong>Examples:</strong> used in <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a>, <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
                                 </p>
                             </li>
 
@@ -1439,10 +1505,10 @@
 
                             <li id="set-rotation">
                                 <p>
-                                    <strong>setRotation</strong>(angleX, angleY, angleZ): <span class="api-item-version">v1.0</span>
+                                    <strong>setRotation</strong>(angleX, angleY, angleZ): <span class="api-item-version">v1.0</span><span class="api-item-warning">updated in v6.0</span>
                                 </p>
                                 <p>
-                                    Set the plane rotation.
+                                    Set the plane rotation using Euler angles and 'XYZ' as axis order.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -1480,7 +1546,7 @@
                                     </li>
                                 </ul>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> example.
+                                    <strong>Examples:</strong> used in <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a>, <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> example.
                                 </p>
                             </li>
 
@@ -1516,13 +1582,13 @@
                                     </li>
                                 </ul>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
+                                    <strong>Examples:</strong> used in <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a>, <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
                                 </p>
                             </li>
 
                             <li id="set-transform-origin">
                                 <p>
-                                    <strong>setTransformOrigin</strong>(xOrigin, yOrigin): <span class="api-item-version">v5.0</span>
+                                    <strong>setTransformOrigin</strong>(xOrigin, yOrigin, zOrigin): <span class="api-item-version">v5.0</span><span class="api-item-warning">updated in v6.0</span>
                                 </p>
                                 <p>
                                     Set the plane transform origin to use with your transformations (scale and rotation). See the <a href="plane-class.html#transform-origin">transformOrigin</a> property.
@@ -1550,9 +1616,20 @@
                                             the plane transform origin along the Y axis.
                                         </span>
                                     </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            zOrigin
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            the plane transform origin along the Z axis.
+                                        </span>
+                                    </li>
                                 </ul>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect/index.html" title="Post processing scrolling wheel with custom transform origin" target="_blank">Post processing scrolling wheel with custom transform origin</a> example.
+                                    <strong>Examples:</strong> used in <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a> and <a href="examples/multiple-planes-scroll-effect/index.html" title="Post processing scrolling wheel with custom transform origin" target="_blank">Post processing scrolling wheel with custom transform origin</a> example.
                                 </p>
                             </li>
 

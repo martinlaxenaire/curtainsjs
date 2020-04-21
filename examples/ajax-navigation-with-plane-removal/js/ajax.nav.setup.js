@@ -39,7 +39,7 @@ function archiveNavigation() {
             vec3 vertexPosition = aVertexPosition;
 
             float distanceFromCenter = distance(vec2(vertexPosition.x, vertexPosition.y), vec2(0.5, vertexPosition.x));
-            vertexPosition.z += 1.5 * cos(5.0 * (distanceFromCenter - (uTime / 100.0)));
+            vertexPosition.z += 0.05 * cos(5.0 * (distanceFromCenter - (uTime / 100.0)));
 
             // set positions
             gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
@@ -72,7 +72,6 @@ function archiveNavigation() {
         fragmentShader: fs, // our framgent shader
         widthSegments: 30,
         heightSegments: 20,
-        fov: 60, // exagerate perspective
         uniforms: {
             time: {
                 name: "uTime", // uniform name that will be passed to our shaders

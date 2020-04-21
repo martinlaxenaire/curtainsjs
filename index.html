@@ -103,7 +103,7 @@
 						<div class="text-section">
 							<h2>Download</h2>
                             <p>
-                                <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v5.3">curtains.js v5.3 (155Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v5.3">curtains.min.js v5.3 (63Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+                                <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v6.0">curtains.js v6.0 (170Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v6.0">curtains.min.js v6.0 (69Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
                             </p>
 						</div>
 
@@ -115,6 +115,7 @@
 							<h3>Images</h3>
 							<p>
 								<a href="examples/vertex-coords-helper/index.html" title="Vertex coordinates helper" target="_blank">Vertex coordinates helper</a><br />
+                                <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a><br />
 								<a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
 								<a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a><br />
 								<a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
@@ -333,8 +334,8 @@
 
 				float xDisplacement = abs(yCoordRatio) * sign(vertexPosition.x);
 
-				vertexPosition.z +=  curtainEffect / 15.0;
-				vertexPosition.x +=  curtainEffect * 1.5 * xDisplacement / 120.0;
+				vertexPosition.z +=  curtainEffect / 30.0;
+				vertexPosition.x +=  curtainEffect * 1.5 * xDisplacement / 240.0;
 
 			   	gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
 
@@ -399,10 +400,8 @@
 				// distance from the waveCoords to the vertex coordinates
 				float distanceToWave = distance(vec2(vertexPosition.x, 0.0), vec2(waveCoords, 0.0));
 
-				//vertexPosition.z = -2.0;
-
 				// nice little wave animation from left to right or right to left depending on the timer
-				vertexPosition.z -= cos(clamp(distanceToWave, 0.0, 0.75) * 3.141592) - cos(0.75 * 3.141592) + (2.0 * sin(3.141592 * uTime / 90.0));
+				vertexPosition.z -= (cos(clamp(distanceToWave, 0.0, 0.75) * 3.141592) - cos(0.75 * 3.141592) + (2.0 * sin(3.141592 * uTime / 90.0))) * 0.025;
 
 			   	gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
 

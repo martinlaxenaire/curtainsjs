@@ -79,9 +79,9 @@ window.addEventListener("load", function() {
             float distortionEffect = distanceStrength * waveSinusoid * uMouseMoveStrength;
 
             // apply it to our vertex position
-            vertexPosition.z +=  distortionEffect / 15.0;
-            vertexPosition.x +=  (distortionEffect / 15.0 * (uResolution.x / uResolution.y) * (uMousePosition.x - vertexPosition.x));
-            vertexPosition.y +=  distortionEffect / 15.0 * (uMousePosition.y - vertexPosition.y);
+            vertexPosition.z +=  distortionEffect / 30.0;
+            vertexPosition.x +=  (distortionEffect / 30.0 * (uResolution.x / uResolution.y) * (uMousePosition.x - vertexPosition.x));
+            vertexPosition.y +=  distortionEffect / 30.0 * (uMousePosition.y - vertexPosition.y);
 
             gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
 
@@ -150,7 +150,7 @@ window.addEventListener("load", function() {
 
     // if there has been an error during init, simplePlane will be null
     simplePlane && simplePlane.onReady(function() {
-        // set a fov of 35 to exagerate perspective
+        // set a fov of 35 to reduce perspective
         simplePlane.setPerspective(35);
 
         // apply a little effect once everything is ready
