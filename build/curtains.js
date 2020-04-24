@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 6.0.0
+ Version: 6.0.1
  https://www.curtainsjs.com/
  ***/
 
@@ -859,11 +859,12 @@ Curtains.prototype._useNewShaders = function(vs, fs) {
 
  params:
  @shadersObject (object): an object containing the shaders and their codes
+ @type (string): type of the plane that will use that program. Could be either "Plane" or "ShaderPass"
 
  returns:
  @program (object): our program object, false if ceation failed
  ***/
-Curtains.prototype._createProgram = function(shadersObject, type, plane) {
+Curtains.prototype._createProgram = function(shadersObject, type) {
     var gl = this.gl;
     var isProgramValid = true;
 
@@ -884,6 +885,10 @@ Curtains.prototype._createProgram = function(shadersObject, type, plane) {
                 isProgramValid = false;
             }
         }
+
+        // free the shaders handles
+        gl.deleteShader(shadersObject.vs.vertexShader);
+        gl.deleteShader(shadersObject.fs.fragmentShader);
     }
 
     // everything is ok we can go on
@@ -1065,15 +1070,22 @@ Curtains.prototype.removePlane = function(plane) {
  ***/
 Curtains.prototype._stackPlane = function(plane) {
     var stackType = plane._transparent ? "transparent" : "opaque";
+    var drawStack = this._drawStacks[stackType];
     if(stackType === "transparent") {
-        this._drawStacks[stackType]["programs"]["program-" + plane._usedProgram.id].unshift(plane.index);
-        this._drawStacks[stackType]["order"].unshift(plane._usedProgram.id);
+        drawStack["programs"]["program-" + plane._usedProgram.id].unshift(plane.index);
+        // push to the order array only if it's not already in there
+        if(!drawStack["order"].includes(plane._usedProgram.id)) {
+            drawStack["order"].unshift(plane._usedProgram.id);
+        }
     }
     else {
-        this._drawStacks[stackType]["programs"]["program-" + plane._usedProgram.id].push(plane.index);
-        this._drawStacks[stackType]["order"].push(plane._usedProgram.id);
+        drawStack["programs"]["program-" + plane._usedProgram.id].push(plane.index);
+        // push to the order array only if it's not already in there
+        if(!drawStack["order"].includes(plane._usedProgram.id)) {
+            drawStack["order"].push(plane._usedProgram.id);
+        }
     }
-    this._drawStacks[stackType].length++;
+    drawStack.length++;
 };
 
 
@@ -4731,7 +4743,7 @@ Curtains.Texture.prototype._init = function() {
     gl.bindTexture(gl.TEXTURE_2D, this._sampler.texture);
 
     // we don't use Y flip yet
-    if(this._curtains._glState.flipY !== this._flipY) {
+    if(this._curtains._glState.flipY) {
         this._curtains._glState.flipY = this._flipY;
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this._flipY);
     }
@@ -4777,11 +4789,10 @@ Curtains.Texture.prototype._init = function() {
     // if its a render target texture use nearest filters and half float whenever possible
     if(this.type === "fboTexture") {
         // set the filtering so we don't need mips
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
         // update texImage2D properties
         if(this._curtains._isWebGL2 && this._curtains._extensions['EXT_color_buffer_float']) {
@@ -4874,23 +4885,25 @@ Curtains.Texture.prototype.setSource = function(source) {
 
     this.source = source;
 
-    if(source.tagName.toUpperCase() === "IMG") {
-        this.type = "image";
-    }
-    else if(source.tagName.toUpperCase() === "VIDEO") {
-        this.type = "video";
-        // a video should be updated by default
-        // _willUpdate property will be set to true if the video has data to draw
-        this.shouldUpdate = true;
-    }
-    else if(source.tagName.toUpperCase() === "CANVAS") {
-        this.type = "canvas";
-        // a canvas could change each frame so we need to update it by default
-        this._willUpdate = true;
-        this.shouldUpdate = true;
-    }
-    else if(!this._curtains.productionMode) {
-        console.warn("this HTML tag could not be converted into a texture:", source.tagName);
+    if(this.type === "empty") {
+        if(source.tagName.toUpperCase() === "IMG") {
+            this.type = "image";
+        }
+        else if(source.tagName.toUpperCase() === "VIDEO") {
+            this.type = "video";
+            // a video should be updated by default
+            // _willUpdate property will be set to true if the video has data to draw
+            this.shouldUpdate = true;
+        }
+        else if(source.tagName.toUpperCase() === "CANVAS") {
+            this.type = "canvas";
+            // a canvas could change each frame so we need to update it by default
+            this._willUpdate = true;
+            this.shouldUpdate = true;
+        }
+        else if(!this._curtains.productionMode) {
+            console.warn("this HTML tag could not be converted into a texture:", source.tagName);
+        }
     }
 
     this._size = {
@@ -4914,7 +4927,7 @@ Curtains.Texture.prototype.setSource = function(source) {
     }
 
     this._flipY = true;
-    if(this._curtains._glState.flipY !== this._flipY) {
+    if(!this._curtains._glState.flipY) {
         this._curtains._glState.flipY = this._flipY;
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this._flipY);
     }
@@ -4927,10 +4940,10 @@ Curtains.Texture.prototype.setSource = function(source) {
 
     this.resize();
 
-    // set our webgl texture only if it is not a video
-    // if it is a video it won't be ready yet and throw a warning in chrome
-    // besides it will be updated anyway as soon as it will start playing
-    if(this.type !== "video") {
+    // set our webgl texture only if it is an image
+    // canvas and video textures will be updated anyway in the rendering loop
+    // thanks to the shouldUpdate and _willUpdate flags
+    if(this.type === "image") {
         gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._format, this._textureType, source);
     }
 
@@ -5223,6 +5236,10 @@ Curtains.Texture.prototype._restoreContext = function() {
             if(this.type === "image") {
                 this._curtains._imageCache.push(this);
             }
+            else if(this.type === "canvas") {
+                // force update
+                this.needUpdate();
+            }
 
             this.setSource(this.source);
         }
@@ -5297,3 +5314,6 @@ Curtains.Texture.prototype._dispose = function() {
     // decrease textures loaded
     this._parent._loadingManager && this._parent._loadingManager.sourcesLoaded--;
 };
+
+// export module
+module.exports = {Curtains};
