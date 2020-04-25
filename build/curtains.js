@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 6.0.1
+ Version: 6.0.2
  https://www.curtainsjs.com/
  ***/
 
@@ -381,12 +381,9 @@ Curtains.prototype._scroll = function() {
         this.needRender();
     }
 
-    var self = this;
-    setTimeout(function() {
-        if(self._onScrollCallback) {
-            self._onScrollCallback();
-        }
-    }, 0);
+    if(this._onScrollCallback) {
+        this._onScrollCallback();
+    }
 };
 
 
@@ -2450,7 +2447,7 @@ Curtains.BasePlane.prototype._restoreContext = function() {
             // set our initial perspective matrix
             this.setPerspective(this._fov, this._nearPlane, this._farPlane);
 
-            this._applyCSSPositions();
+            this._applyWorldPositions();
 
             // add the plane to our draw stack again as they have been emptied
             curtains._stackPlane(this);
@@ -2808,7 +2805,7 @@ Curtains.BasePlane.prototype.planeResize = function() {
         this.setPerspective(this._fov, this._nearPlane, this._farPlane);
 
         // apply new position
-        this._applyCSSPositions();
+        this._applyWorldPositions();
     }
 
     // resize all textures
@@ -3660,7 +3657,7 @@ Curtains.Plane.prototype._initPositions = function() {
     this.setPerspective(this._fov, this._nearPlane, this._farPlane);
 
     // apply our css positions
-    this._applyCSSPositions();
+    this._applyWorldPositions();
 };
 
 
@@ -3779,7 +3776,7 @@ Curtains.Plane.prototype.resetPlane = function(htmlElement) {
 /***
  Set our plane dimensions and positions relative to clip spaces
  ***/
-Curtains.Plane.prototype._setComputedSizes = function() {
+Curtains.Plane.prototype._setWorldSizes = function() {
     var curtains = this._curtains;
 
     // dimensions and positions of our plane in the document and clip spaces
@@ -3795,11 +3792,19 @@ Curtains.Plane.prototype._setComputedSizes = function() {
     };
 
     // our plane clip space informations
-    this._boundingRect.computed = {
+    this._boundingRect.world = {
         width: this._boundingRect.document.width / curtains._boundingRect.width,
         height: this._boundingRect.document.height / curtains._boundingRect.height,
         top: (curtainsCenter.y - planeCenter.y) / curtains._boundingRect.height,
         left: (planeCenter.x - curtainsCenter.x) / curtains._boundingRect.height,
+    };
+
+    // since our vertices values range from -1 to 1
+    // we need to scale them under the hood relatively to our canvas
+    // to display an accurately sized plane
+    this._boundingRect.world.scale = {
+        x: (this._curtains._boundingRect.width / this._curtains._boundingRect.height) * this._boundingRect.world.width / 2,
+        y: this._boundingRect.world.height / 2,
     };
 };
 
@@ -3900,11 +3905,6 @@ Curtains.Plane.prototype.setPerspective = function(fov, near, far) {
  ***/
 Curtains.Plane.prototype._setMVMatrix = function() {
     if(this._updateMVMatrix) {
-        var applyWorldScale = {
-            x: ((this._curtains._boundingRect.width / this._curtains._boundingRect.height) * this._boundingRect.computed.width / 2),
-            y: this._boundingRect.computed.height / 2,
-        };
-
         // translation (we're translating the planes under the hood from -(1 / cameraZPosition) along Z axis)
         var translation = {
             x: this._translation.x,
@@ -3918,15 +3918,15 @@ Curtains.Plane.prototype._setMVMatrix = function() {
         };
 
         var origin = {
-            x: adjustedOrigin.x * applyWorldScale.x,
-            y: adjustedOrigin.y * applyWorldScale.y,
+            x: adjustedOrigin.x * this._boundingRect.world.scale.x,
+            y: adjustedOrigin.y * this._boundingRect.world.scale.y,
             z: this.transformOrigin.z
         };
 
         var matrixFromOrigin = this._curtains._composeMatrixFromOrigin(translation, this.quaternion, this.scale, origin);
         var scaleMatrix = new Float32Array([
-            applyWorldScale.x, 0.0, 0.0, 0.0,
-            0.0, applyWorldScale.y, 0.0, 0.0,
+            this._boundingRect.world.scale.x, 0.0, 0.0, 0.0,
+            0.0, this._boundingRect.world.scale.y, 0.0, 0.0,
             0.0, 0.0, 1.0, 0.0,
             0.0, 0.0, 0.0, 1.0
         ]);
@@ -4077,8 +4077,8 @@ Curtains.Plane.prototype._setTranslation = function() {
         relativePosition = this._documentToPlaneSpace(this.relativeTranslation.x, this.relativeTranslation.y);
     }
 
-    this._translation.x = this._boundingRect.computed.left + relativePosition.x;
-    this._translation.y = this._boundingRect.computed.top + relativePosition.y;
+    this._translation.x = this._boundingRect.world.left + relativePosition.x;
+    this._translation.y = this._boundingRect.world.top + relativePosition.y;
 
     // we should update the plane mvMatrix
     this._updateMVMatrix = true;
@@ -4179,11 +4179,11 @@ Curtains.Plane.prototype.isDrawn = function() {
 
 
 /***
- This function takes the plane CSS positions and convert them to clip space coordinates, and then apply the corresponding translation
+ This function uses our plane HTML Element bounding rectangle values and convert them to the world clip space coordinates, and then apply the corresponding translation
  ***/
-Curtains.Plane.prototype._applyCSSPositions = function() {
-    // set our plane sizes and positions relative to the clipspace
-    this._setComputedSizes();
+Curtains.Plane.prototype._applyWorldPositions = function() {
+    // set our plane sizes and positions relative to the world clipspace
+    this._setWorldSizes();
 
     // set the translation values
     this._setTranslation();
@@ -4199,7 +4199,7 @@ Curtains.Plane.prototype.updatePosition = function() {
     this._setDocumentSizes();
 
     // apply them
-    this._applyCSSPositions();
+    this._applyWorldPositions();
 };
 
 
@@ -4214,7 +4214,7 @@ Curtains.Plane.prototype.updateScrollPosition = function() {
         this._boundingRect.document.left += this._curtains._scrollManager.lastXDelta * this._curtains.pixelRatio;
 
         // apply them
-        this._applyCSSPositions();
+        this._applyWorldPositions();
     }
 };
 
