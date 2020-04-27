@@ -243,6 +243,7 @@ window.addEventListener("load", function() {
 
     var curtains = new Curtains({
         container: "canvas",
+        antialias: false, // render targets will disable default antialiasing anyway
     }).onError(function() {
         // we will add a class to the document body to display original images
         document.body.classList.add("no-curtains");

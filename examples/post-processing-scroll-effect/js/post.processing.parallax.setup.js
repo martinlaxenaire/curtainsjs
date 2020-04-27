@@ -10,7 +10,8 @@ window.addEventListener("load", function() {
 
     // set up our WebGL context and append the canvas to our wrapper
     var webGLCurtain = new Curtains({
-        container: "canvas"
+        container: "canvas",
+        antialias: false, // render targets will disable default antialiasing anyway
     });
 
     webGLCurtain.onRender(function() {

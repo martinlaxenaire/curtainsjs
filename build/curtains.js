@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 6.0.2
+ Version: 6.0.3
  https://www.curtainsjs.com/
  ***/
 
@@ -2981,6 +2981,9 @@ Curtains.BasePlane.prototype.loadImage = function(source) {
         });
         this.images.push(cachedTexture.source);
 
+        // fire parent plane onReady callback if needed
+        this._isPlaneReady();
+
         return;
     }
 
@@ -5314,6 +5317,3 @@ Curtains.Texture.prototype._dispose = function() {
     // decrease textures loaded
     this._parent._loadingManager && this._parent._loadingManager.sourcesLoaded--;
 };
-
-// export module
-module.exports = {Curtains};
