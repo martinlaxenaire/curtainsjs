@@ -91,6 +91,9 @@
                                     <a href="curtains-class.html#alpha">alpha</a>
                                 </li>
                                 <li>
+                                    <a href="curtains-class.html#antialias">antialias</a>
+                                </li>
+                                <li>
                                     <a href="curtains-class.html#container">container</a>
                                 </li>
                                 <li>
@@ -681,6 +684,18 @@
 
                             <li>
                                 <span class="api-item-parameter-label">
+                                    antialias
+                                </span>
+                                <span class="api-item-parameter-type">
+                                    bool, optionnal
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    Whether the WebGL context should use the default antialiasing. When using render targets, WebGL disables antialiasing, so you can safely set this to false to improve the performance. Default to true.
+                                </span>
+                            </li>
+
+                            <li>
+                                <span class="api-item-parameter-label">
                                     premultipliedAlpha
                                 </span>
                                 <span class="api-item-parameter-type">
@@ -768,10 +783,18 @@
 						<ul>
                             <li id="alpha">
                                 <p>
-                                    <strong>alpha</strong> (bool) <span class="api-item-version">v5.0</span> <span class="api-item-warning">read only</span>
+                                    <strong>alpha</strong> (bool) <span class="api-item-version">v5.0</span><span class="api-item-warning">read only</span>
                                 </p>
                                 <p>
                                     Whether the WebGL context handles transparency or not.
+                                </p>
+                            </li>
+                            <li id="antialias">
+                                <p>
+                                    <strong>antialias</strong> (bool) <span class="api-item-version">v6.1</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    Whether the WebGL context should use antialiasing.
                                 </p>
                             </li>
 							<li id="container">

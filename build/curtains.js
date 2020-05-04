@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 6.0.3
+ Version: 6.1.0
  https://www.curtainsjs.com/
  ***/
 
@@ -87,16 +87,23 @@ function Curtains(params) {
         this._watchScroll = true;
     }
 
+    // pixel ratio and rendering scale
     this.pixelRatio = params.pixelRatio || window.devicePixelRatio || 1;
 
     params.renderingScale = isNaN(params.renderingScale) ? 1 : parseFloat(params.renderingScale);
     this._renderingScale = Math.max(0.25, Math.min(1, params.renderingScale));
 
+    // webgl context parameters
     this.premultipliedAlpha = params.premultipliedAlpha || false;
 
     this.alpha = params.alpha;
     if(this.alpha === null || this.alpha === undefined) {
         this.alpha = true;
+    }
+
+    this.antialias = params.antialias;
+    if(this.antialias === null || this.antialias === undefined) {
+        this.antialias = true;
     }
 
     this.productionMode = params.production || false;
@@ -125,7 +132,8 @@ Curtains.prototype._init = function() {
     // set our webgl context
     var glAttributes = {
         alpha: this.alpha,
-        premultipliedAlpha: this.premultipliedAlpha
+        premultipliedAlpha: this.premultipliedAlpha,
+        antialias: this.antialias,
     };
 
     this.gl = this.glCanvas.getContext("webgl2", glAttributes);
@@ -610,8 +618,6 @@ Curtains.prototype.dispose = function() {
     // delete all programs from manager
     for(var i = 0; i < this._glState.programs.length; i++) {
         var program = this._glState.programs[i];
-        this.gl.deleteShader(program.fragmentShader);
-        this.gl.deleteShader(program.vertexShader);
         this.gl.deleteProgram(program.program);
     }
 
@@ -771,7 +777,7 @@ Curtains.prototype._setupProgram = function(vs, fs, plane) {
         else {
             // we need to create a new program but we don't have to re compile the shaders
             var shaders = this._useExistingShaders(existingProgram);
-            return this._createProgram(shaders, plane._type, plane);
+            return this._createProgram(shaders, plane._type);
         }
     }
     else {
@@ -781,7 +787,7 @@ Curtains.prototype._setupProgram = function(vs, fs, plane) {
             return false;
         }
         else {
-            return this._createProgram(shaders, plane._type, plane);
+            return this._createProgram(shaders, plane._type);
         }
     }
 };
@@ -1603,7 +1609,7 @@ Curtains.prototype._readyToDraw = function() {
     // enable depth by default
     this._setDepth(true);
 
-    console.log("curtains.js - v6.0");
+    console.log("curtains.js - v6.1");
 
     this._animationFrameID = null;
     if(this._autoRender) {
@@ -1889,35 +1895,17 @@ Curtains.BasePlane.prototype._initBasePlane = function(params) {
         this.cullFace = "back";
     }
 
-    // our object that will handle all medias loading process
-    this._loadingManager = {
-        sourcesLoaded: 0,
-        initSourcesToLoad: 0, // will change if there's any texture to load on init
-        complete: false,
-    };
-
-    // first we prepare the shaders to be set up
-    var shaders = this._setupShaders(params);
-
-    // then we set up the program as compiling can be quite slow
-    this._usedProgram = this._curtains._setupProgram(shaders.vertexShaderCode, shaders.fragmentShaderCode, this);
-
-    this.images = [];
-    this.videos = [];
-    this.canvases = [];
-    this.textures = [];
-
-    this.crossOrigin = params.crossOrigin || "anonymous";
+    // we will store our active textures in an array
+    this._activeTextures = [];
 
     // set up init uniforms
-    // handle uniforms
     if(!params.uniforms) {
         params.uniforms = {};
     }
 
     this.uniforms = {};
 
-    // first we create our uniforms objects
+    // create our uniforms objects
     if(params.uniforms) {
         for(var key in params.uniforms) {
             var uniform = params.uniforms[key];
@@ -1931,6 +1919,26 @@ Curtains.BasePlane.prototype._initBasePlane = function(params) {
             };
         }
     }
+
+    // first we prepare the shaders to be set up
+    var shaders = this._setupShaders(params);
+
+    // then we set up the program as compiling can be quite slow
+    this._usedProgram = this._curtains._setupProgram(shaders.vertexShaderCode, shaders.fragmentShaderCode, this);
+
+    // our object that will handle all medias loading process
+    this._loadingManager = {
+        sourcesLoaded: 0,
+        initSourcesToLoad: 0, // will change if there's any texture to load on init
+        complete: false,
+    };
+
+    this.images = [];
+    this.videos = [];
+    this.canvases = [];
+    this.textures = [];
+
+    this.crossOrigin = params.crossOrigin || "anonymous";
 
     // allow the user to add custom data to the plane
     this.userData = {};
@@ -1949,7 +1957,7 @@ Curtains.BasePlane.prototype._initBasePlane = function(params) {
         this._setDocumentSizes();
 
         // set our uniforms
-        this._setUniforms(this.uniforms);
+        this._setUniforms();
 
         // set plane definitions, vertices, uvs and stuff
         this._initializeBuffers();
@@ -2111,21 +2119,28 @@ Curtains.BasePlane.prototype._handleUniformSetting = function(uniformType, unifo
 
 /***
  This sets our shaders uniforms
-
- params :
- @uniforms (obj): uniforms to apply
  ***/
-Curtains.BasePlane.prototype._setUniforms = function(uniforms) {
+Curtains.BasePlane.prototype._setUniforms = function() {
     var curtains = this._curtains;
     var gl = curtains.gl;
 
     // ensure we are using the right program
     curtains._useProgram(this._usedProgram);
 
+    // check for program active textures
+    var numUniforms = gl.getProgramParameter(this._usedProgram.program, gl.ACTIVE_UNIFORMS);
+    for(var i = 0; i < numUniforms; i++) {
+        var activeUniform = gl.getActiveUniform(this._usedProgram.program, i);
+        // if it's a texture add it to our activeTextures array
+        if(activeUniform.type === gl.SAMPLER_2D) {
+            this._activeTextures.push(activeUniform);
+        }
+    }
+
     // set our uniforms if we got some
-    if(uniforms) {
-        for(var key in uniforms) {
-            var uniform = uniforms[key];
+    if(this.uniforms) {
+        for(var key in this.uniforms) {
+            var uniform = this.uniforms[key];
 
             // set our uniform location
             uniform.location = gl.getUniformLocation(this._usedProgram.program, uniform.name);
@@ -2393,7 +2408,8 @@ Curtains.BasePlane.prototype._restoreContext = function() {
         this._setAttributes();
 
         // reset plane uniforms
-        this._setUniforms(this.uniforms);
+        this._activeTextures = [];
+        this._setUniforms();
 
         // reinitialize buffers
         this._initializeBuffers();
@@ -3594,7 +3610,6 @@ Curtains.Plane.prototype._setInitParams = function(params) {
     this._fov = params.fov || 50;
     this._nearPlane = 0.1;
     this._farPlane = 150;
-    this._cameraZPosition = Math.tan((Math.PI / 180) * 0.5 * this._fov) * 2.0;
 
     // if we should watch scroll
     if(params.watchScroll === null || params.watchScroll === undefined) {
@@ -3626,6 +3641,7 @@ Curtains.Plane.prototype._initTransformValues = function() {
     this.relativeTranslation = {
         x: 0,
         y: 0,
+        z: 0,
     };
 
     // will be our translation in webgl coordinates
@@ -3837,8 +3853,8 @@ Curtains.Plane.prototype._setPerspectiveMatrix = function() {
 
         var a = (right + left) / (right - left);
         var b = (top + bottom) / (top - bottom);
-        var c = - (this._farPlane + this._nearPlane) / (this._farPlane - this._nearPlane);
-        var d = - 2 * this._farPlane * this._nearPlane / (this._farPlane - this._nearPlane);
+        var c = -(this._farPlane + this._nearPlane) / (this._farPlane - this._nearPlane);
+        var d = -2 * this._farPlane * this._nearPlane / (this._farPlane - this._nearPlane);
 
         this._matrices.pMatrix.matrix = new Float32Array([
             x, 0, 0, 0,
@@ -3868,31 +3884,29 @@ Curtains.Plane.prototype._setPerspectiveMatrix = function() {
  @far (float): the farthest point where object are displayed
  ***/
 Curtains.Plane.prototype.setPerspective = function(fov, near, far) {
-    var fieldOfView;
-    if(fov === null || typeof fov !== "number") {
-        fieldOfView = 50;
-    }
-    else {
-        fieldOfView = parseFloat(fov)
-    }
+    var fieldOfView = isNaN(fov) ? this._fov : parseFloat(fov);
 
     // clamp between 1 and 179
     fieldOfView = Math.max(1, Math.min(fieldOfView, 179));
 
     if(fieldOfView !== this._fov) {
         this._fov = fieldOfView;
-        this._cameraZPosition = Math.tan((Math.PI / 180) * 0.5 * this._fov) * 2.0;
     }
 
-    var nearPlane = parseFloat(near) || 0.1;
-    if(nearPlane !== this._nearPlane) {
-        this._nearPlane = nearPlane;
-    }
+    // update the camera position anyway
+    this._cameraZPosition = Math.tan((Math.PI / 180) * 0.5 * this._fov) * 2.0;
 
-    var farPlane = parseFloat(far) || 150;
-    if(farPlane !== this._farPlane) {
-        this._farPlane = farPlane;
-    }
+    // corresponding CSS perspective property value depending on canvas size and fov values
+    // based on https://stackoverflow.com/questions/22421439/convert-field-of-view-value-to-css3d-perspective-value
+    this._CSSPerspective = Math.pow(Math.pow(this._curtains._boundingRect.width / (2 * this._curtains.pixelRatio), 2) + Math.pow(this._curtains._boundingRect.height / (2 * this._curtains.pixelRatio), 2), 0.5) / Math.tan((this._fov / 2) * Math.PI / 180);
+
+    // near plane
+    this._nearPlane = isNaN(near) ? this._nearPlane : parseFloat(near);
+    this._nearPlane = Math.max(this._nearPlane, 0.01);
+
+    // far plane
+    this._farPlane = isNaN(far) ? this._farPlane : parseFloat(far);
+    this._farPlane = Math.max(this._farPlane, 50);
 
     // update the plane perspective matrix
     this._updatePerspectiveMatrix = true;
@@ -3908,11 +3922,14 @@ Curtains.Plane.prototype.setPerspective = function(fov, near, far) {
  ***/
 Curtains.Plane.prototype._setMVMatrix = function() {
     if(this._updateMVMatrix) {
-        // translation (we're translating the planes under the hood from -(1 / cameraZPosition) along Z axis)
+        // translation
+        // along the Z axis it's based on the relativeTranslation.z, CSSPerspective and cameraZPosition values
+        // we're computing it here because it will change when our fov changes
+        this._translation.z = this.relativeTranslation.z / this._CSSPerspective;
         var translation = {
             x: this._translation.x,
             y: this._translation.y,
-            z: this._translation.z - (1 / this._cameraZPosition),
+            z: -((1 - this._translation.z) / this._cameraZPosition),
         };
 
         var adjustedOrigin = {
@@ -3965,8 +3982,11 @@ Curtains.Plane.prototype._setMVMatrix = function() {
  @scaleY (float): scale to apply on Y axis
  ***/
 Curtains.Plane.prototype.setScale = function(scaleX, scaleY) {
-    scaleX = isNaN(scaleX) ? 1 : parseFloat(scaleX);
-    scaleY = isNaN(scaleY) ? 1 : parseFloat(scaleY);
+    scaleX = isNaN(scaleX) ? this.scale.x : parseFloat(scaleX);
+    scaleY = isNaN(scaleY) ? this.scale.y : parseFloat(scaleY);
+
+    scaleX = Math.max(scaleX, 0.001);
+    scaleY = Math.max(scaleY, 0.001);
 
     // only apply if values changed
     if(scaleX !== this.scale.x || scaleY !== this.scale.y) {
@@ -3996,9 +4016,9 @@ Curtains.Plane.prototype.setScale = function(scaleX, scaleY) {
  @angleZ (float): rotation to apply on Z axis (in radians)
  ***/
 Curtains.Plane.prototype.setRotation = function(angleX, angleY, angleZ) {
-    angleX = isNaN(angleX) ? 0 : parseFloat(angleX);
-    angleY = isNaN(angleY) ? 0 : parseFloat(angleY);
-    angleZ = isNaN(angleZ) ? 0 : parseFloat(angleZ);
+    angleX = isNaN(angleX) ? this.rotation.x : parseFloat(angleX);
+    angleY = isNaN(angleY) ? this.rotation.y : parseFloat(angleY);
+    angleZ = isNaN(angleZ) ? this.rotation.z : parseFloat(angleZ);
 
     // only apply if values changed
     if(angleX !== this.rotation.x || angleY !== this.rotation.y || angleZ !== this.rotation.z) {
@@ -4051,9 +4071,9 @@ Curtains.Plane.prototype._setQuaternion = function() {
  @zOrigin (float): coordinate of transformation origin along depth
  ***/
 Curtains.Plane.prototype.setTransformOrigin = function(xOrigin, yOrigin, zOrigin) {
-    xOrigin = isNaN(xOrigin) ? 0.5 : parseFloat(xOrigin);
-    yOrigin = isNaN(yOrigin) ? 0.5 : parseFloat(yOrigin);
-    zOrigin = isNaN(zOrigin) ? 0 : parseFloat(zOrigin);
+    xOrigin = isNaN(xOrigin) ? this.transformOrigin.x : parseFloat(xOrigin);
+    yOrigin = isNaN(yOrigin) ? this.transformOrigin.y : parseFloat(yOrigin);
+    zOrigin = isNaN(zOrigin) ? this.transformOrigin.z : parseFloat(zOrigin);
 
     if(xOrigin !== this.transformOrigin.x || yOrigin !== this.transformOrigin.y || zOrigin !== this.transformOrigin.z) {
         this.transformOrigin = {
@@ -4075,9 +4095,10 @@ Curtains.Plane.prototype._setTranslation = function() {
     var relativePosition = {
         x: 0,
         y: 0,
+        z: 0,
     };
-    if(this.relativeTranslation.x !== 0 || this.relativeTranslation.y !== 0) {
-        relativePosition = this._documentToPlaneSpace(this.relativeTranslation.x, this.relativeTranslation.y);
+    if(this.relativeTranslation.x !== 0 || this.relativeTranslation.y !== 0 || this.relativeTranslation.z !== 0) {
+        relativePosition = this._documentToLocalSpace(this.relativeTranslation.x, this.relativeTranslation.y);
     }
 
     this._translation.x = this._boundingRect.world.left + relativePosition.x;
@@ -4095,15 +4116,17 @@ Curtains.Plane.prototype._setTranslation = function() {
  @translationX (float): translation to apply on X axis
  @translationY (float): translation to apply on Y axis
  ***/
-Curtains.Plane.prototype.setRelativePosition = function(translationX, translationY) {
-    translationX = isNaN(translationX) ? 0 : parseFloat(translationX);
-    translationY = isNaN(translationY) ? 0 : parseFloat(translationY);
+Curtains.Plane.prototype.setRelativePosition = function(translationX, translationY, translationZ) {
+    translationX = isNaN(translationX) ? this.relativeTranslation.x : parseFloat(translationX);
+    translationY = isNaN(translationY) ? this.relativeTranslation.y : parseFloat(translationY);
+    translationZ = isNaN(translationZ) ? this.relativeTranslation.z : parseFloat(translationZ);
 
     // only apply if values changed
-    if(translationX !== this.relativeTranslation.x || translationY !== this.relativeTranslation.y) {
+    if(translationX !== this.relativeTranslation.x || translationY !== this.relativeTranslation.y || translationZ !== this.relativeTranslation.z) {
         this.relativeTranslation = {
             x: translationX,
-            y: translationY
+            y: translationY,
+            z: translationZ,
         };
 
         this._setTranslation();
@@ -4121,7 +4144,7 @@ Curtains.Plane.prototype.setRelativePosition = function(translationX, translatio
  returns :
  @relativePosition: plane's position in WebGL space
  ***/
-Curtains.Plane.prototype._documentToPlaneSpace = function(xPosition, yPosition) {
+Curtains.Plane.prototype._documentToLocalSpace = function(xPosition, yPosition) {
     var relativePosition = {
         x: xPosition / (this._curtains._boundingRect.width / this._curtains.pixelRatio) * (this._curtains._boundingRect.width / this._curtains._boundingRect.height),
         y: -yPosition / (this._curtains._boundingRect.height / this._curtains.pixelRatio),
@@ -4669,6 +4692,7 @@ Curtains.Texture = function(parent, params) {
 
     // prepare texture sampler
     this._sampler = {
+        isActive: false,
         name: params.sampler || "uSampler" + this.index
     };
 
@@ -4816,18 +4840,30 @@ Curtains.Texture.prototype._init = function() {
 
 /*** SEND DATA TO THE GPU ***/
 
-
+/***
+ Check if our textures is effectively used in our shaders
+ If so, set it to active, get its uniform locations and bind it to our texture unit
+ ***/
 Curtains.Texture.prototype._setTextureUniforms = function() {
-    // set our texture sampler uniform
-    this._sampler.location = this._curtains.gl.getUniformLocation(this._parent._usedProgram.program, this._sampler.name);
-    // texture matrix uniform
-    this._textureMatrix.location = this._curtains.gl.getUniformLocation(this._parent._usedProgram.program, this._textureMatrix.name);
+    // check if our texture is used in our program shaders
+    // if so, get its uniform locations and bind it to our program
+    for(var i = 0; i < this._parent._activeTextures.length; i++) {
+        if(this._parent._activeTextures[i].name === this._sampler.name) {
+            // this texture is active
+            this._sampler.isActive = true;
 
-    // use the program and get our sampler and texture matrices uniforms
-    this._curtains._useProgram(this._parent._usedProgram);
+            // set our texture sampler uniform
+            this._sampler.location = this._curtains.gl.getUniformLocation(this._parent._usedProgram.program, this._sampler.name);
+            // texture matrix uniform
+            this._textureMatrix.location = this._curtains.gl.getUniformLocation(this._parent._usedProgram.program, this._textureMatrix.name);
 
-    // tell the shader we bound the texture to our indexed texture unit
-    this._curtains.gl.uniform1i(this._sampler.location, this.index);
+            // use the program and get our sampler and texture matrices uniforms
+            this._curtains._useProgram(this._parent._usedProgram);
+
+            // tell the shader we bound the texture to our indexed texture unit
+            this._curtains.gl.uniform1i(this._sampler.location, this.index);
+        }
+    }
 };
 
 
@@ -4964,7 +5000,7 @@ Curtains.Texture.prototype.needUpdate = function() {
 
 
 /***
- This update our texture
+ This updates our texture
  Called inside our drawing loop if shouldUpdate property is set to true
  Typically used by videos or canvas
  ***/
@@ -5032,19 +5068,22 @@ Curtains.Texture.prototype._getSizes = function() {
  @scaleY (float): scale to apply on Y axis
  ***/
 Curtains.Texture.prototype.setScale = function(scaleX, scaleY) {
-    scaleX = parseFloat(scaleX) || 1;
-    scaleX = Math.max(scaleX, 0.001);
+    scaleX = isNaN(scaleX) ? this.scale.x : parseFloat(scaleX);
+    scaleY = isNaN(scaleY) ? this.scale.y : parseFloat(scaleY);
 
-    scaleY = parseFloat(scaleY) || 1;
+    scaleX = Math.max(scaleX, 0.001);
     scaleY = Math.max(scaleY, 0.001);
 
-    this.scale = {
-        x: scaleX,
-        y: scaleY,
-    };
+    if(scaleX !== this.scale.x || scaleY !== this.scale.y) {
+        this.scale = {
+            x: scaleX,
+            y: scaleY,
+        };
 
-    this.resize();
+        this.resize();
+    }
 };
+
 
 /***
  This is used to crop/center a texture
@@ -5177,30 +5216,33 @@ Curtains.Texture.prototype._onVideoLoadedData = function(video) {
  This is called to draw the texture
  ***/
 Curtains.Texture.prototype._drawTexture = function() {
-    // bind the texture
-    this._parent._bindPlaneTexture(this);
+    // only draw if the texture is active (used in the shader)
+    if(this._sampler.isActive) {
+        // bind the texture
+        this._parent._bindPlaneTexture(this);
 
-    // force flip y for textures that needs it
-    if(this._flipY && !this._curtains._glState.flipY) {
-        this._curtains._glState.flipY = this._flipY;
-        this._curtains.gl.pixelStorei(this._curtains.gl.UNPACK_FLIP_Y_WEBGL, this._flipY);
+        // force flip y for textures that needs it
+        if(this._flipY && !this._curtains._glState.flipY) {
+            this._curtains._glState.flipY = this._flipY;
+            this._curtains.gl.pixelStorei(this._curtains.gl.UNPACK_FLIP_Y_WEBGL, this._flipY);
+        }
+
+        // check if the video is actually really playing
+        if(this.type === "video" && this.source && this.source.readyState >= this.source.HAVE_CURRENT_DATA) {
+            this._willUpdate = true;
+        }
+
+        if(this._forceUpdate || (this._willUpdate && this.shouldUpdate)) {
+            this._update();
+        }
+
+        // reset the video willUpdate flag
+        if(this.type === "video") {
+            this._willUpdate = false;
+        }
+
+        this._forceUpdate = false;
     }
-
-    // check if the video is actually really playing
-    if(this.type === "video" && this.source && this.source.readyState >= this.source.HAVE_CURRENT_DATA) {
-        this._willUpdate = true;
-    }
-
-    if(this._forceUpdate || (this._willUpdate && this.shouldUpdate)) {
-        this._update();
-    }
-
-    // reset the video willUpdate flag
-    if(this.type === "video") {
-        this._willUpdate = false;
-    }
-
-    this._forceUpdate = false;
 };
 
 
@@ -5229,6 +5271,7 @@ Curtains.Texture.prototype._restoreFromTexture = function() {
 Curtains.Texture.prototype._restoreContext = function() {
     // avoid binding that texture before reseting it
     this._canDraw = false;
+    this._sampler.isActive = false;
 
     // this is an original texture, reset it right away
     if(!this._originalTexture) {

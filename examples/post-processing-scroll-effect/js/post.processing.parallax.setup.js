@@ -172,14 +172,14 @@ window.addEventListener("load", function() {
         varying vec3 vVertexPosition;
         varying vec2 vTextureCoord;
     
-        uniform sampler2D renderTexture;
+        uniform sampler2D uRenderTexture;
     
         uniform float uScrollEffect;
     
         void main() {
             // invert colors
-            vec4 scene = texture2D(renderTexture, vTextureCoord);
-            vec4 invertedColors = texture2D(renderTexture, vTextureCoord);
+            vec4 scene = texture2D(uRenderTexture, vTextureCoord);
+            vec4 invertedColors = texture2D(uRenderTexture, vTextureCoord);
     
             if(
                 vTextureCoord.x > 0.625 && vTextureCoord.x < 0.875 && vTextureCoord.y > 0.625 && vTextureCoord.y < 0.875

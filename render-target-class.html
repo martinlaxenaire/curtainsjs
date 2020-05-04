@@ -92,6 +92,9 @@
                                     <a href="curtains-class.html#alpha">alpha</a>
                                 </li>
                                 <li>
+                                    <a href="curtains-class.html#antialias">antialias</a>
+                                </li>
+                                <li>
                                     <a href="curtains-class.html#container">container</a>
                                 </li>
                                 <li>
@@ -599,15 +602,18 @@
                     <div class="inner-section">
                         <h1>RenderTarget class</h1>
                         <h2 id="basic-usage">Basic usage</h2>
-                        <h3>Creation</h3>
                         <p>
                             The RenderTarget class is just a class that creates Frame Buffer Objects (FBO). You can render a plane to a render a target instead of your canvas and then use that render target either by assigning it to a ShaderPass or by grabbing its content (ie its <a href="texture-class.html">Texture</a>) and use it in another plane.
                         </p>
+                        <p class="api-item-examples">
+                            Please note that render targets (and therefore shader passes) disable the WebGL context default antialiasing. If you use them, you should set the <a href="curtains-class.html#curtains-init-parameters">antialias Curtains property</a> to false when initiating your context.<br />
+                            You might then want to add an extra antialiasing pass, like FXAA or MSAA. See the <a href="examples/post-processing-transform-origin/index.html" title="Post processing scrolling wheel with custom transform origin" target="_blank">Post processing scrolling wheel with custom transform origin</a> for an example of how to add a FXAA pass.
+                        </p>
+                        <h3>Creation</h3>
                         <p>
                             To create a new render target, you should use the <a href="curtains-class.html#add-render-target">addRenderTarget</a> of our <a href="curtains-class.html">Curtains</a> class.<br />
                             To use it you'll have to apply it to a plane by using the <a href="plane-class.html#set-render-target">setRenderTarget</a> of our <a href="plane-class.html">Plane</a> class.
                         </p>
-
                         <h3>Using a RenderTarget texture in a plane</h3>
 
                         <div class="code">

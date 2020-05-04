@@ -3,7 +3,7 @@ window.addEventListener("load", function() {
     // set up our WebGL context and append the canvas to our wrapper
     var curtains = new Curtains({
         container: "canvas",
-        watchScroll: false // no need to listen for the scroll in this example
+        watchScroll: false, // no need to listen for the scroll in this example
     });
 
     // handling errors
@@ -73,7 +73,6 @@ window.addEventListener("load", function() {
 
     // if there has been an error during init, simplePlane will be null
     plane && plane.onReady(function() {
-
         // add the GUI
         addGUI();
 
@@ -87,8 +86,6 @@ window.addEventListener("load", function() {
         planeBBoxEl.style.left = (planeBBox.left / curtains.pixelRatio) - plane.drawCheckMargins.left + "px";
 
         isPlaneDrawn.innerText = plane.isDrawn();
-
-    }).onAfterResize(function() {
 
     });
 
@@ -105,6 +102,7 @@ window.addEventListener("load", function() {
                 "Translation": {
                     "X": plane.relativeTranslation.x,
                     "Y": plane.relativeTranslation.y,
+                    "Z": plane.relativeTranslation.z,
                 },
 
                 "Rotation": {
@@ -175,7 +173,7 @@ window.addEventListener("load", function() {
                         max: curtains.getBoundingRect().width,
                         step: 20,
                         onChange: function(value) {
-                            plane.setRelativePosition(value, plane.relativeTranslation.y);
+                            plane.setRelativePosition(value, plane.relativeTranslation.y, plane.relativeTranslation.z);
                         }
                     },
                     "Y": {
@@ -183,7 +181,15 @@ window.addEventListener("load", function() {
                         max: curtains.getBoundingRect().height,
                         step: 20,
                         onChange: function(value) {
-                            plane.setRelativePosition(plane.relativeTranslation.x, value);
+                            plane.setRelativePosition(plane.relativeTranslation.x, value, plane.relativeTranslation.z);
+                        }
+                    },
+                    "Z": {
+                        min: -1000,
+                        max: 1000,
+                        step: 20,
+                        onChange: function(value) {
+                            plane.setRelativePosition(plane.relativeTranslation.x, plane.relativeTranslation.y, value);
                         }
                     },
                 },
@@ -252,8 +258,8 @@ window.addEventListener("load", function() {
                         }
                     },
                     "far": {
-                        min: 100,
-                        max: 400,
+                        min: 50,
+                        max: 300,
                         step: 10,
                         onChange: function (value) {
                             plane.setPerspective(plane._fov, plane._nearPlane, value);

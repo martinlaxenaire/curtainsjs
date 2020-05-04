@@ -159,6 +159,9 @@ window.addEventListener("load", function() {
         // now that our plane is ready we can listen to mouse move event
         var wrapper = document.getElementById("page-wrap");
 
+        //simplePlane.textures[0].setScale(0.25, 0.25);
+        //simplePlane.textures[0].setOffset(-0.5, 0);
+
         wrapper.addEventListener("mousemove", function(e) {
             handleMovement(e, simplePlane);
         });

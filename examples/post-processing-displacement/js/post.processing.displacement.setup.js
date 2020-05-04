@@ -181,7 +181,7 @@ window.addEventListener("load", function() {
         varying vec3 vVertexPosition;
         varying vec2 vTextureCoord;
     
-        uniform sampler2D renderTexture;
+        uniform sampler2D uRenderTexture;
         uniform sampler2D displacementTexture;
     
         uniform float uDisplacement;
@@ -193,7 +193,7 @@ window.addEventListener("load", function() {
             // displace along Y axis
             textureCoords.y += (sin(displacement.r) / 5.0) * uDisplacement;
     
-            gl_FragColor = texture2D(renderTexture, textureCoords);
+            gl_FragColor = texture2D(uRenderTexture, textureCoords);
         }
     `;
 

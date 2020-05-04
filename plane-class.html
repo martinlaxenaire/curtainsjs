@@ -878,10 +878,10 @@
                             </li>
                             <li id="relative-translation">
                                 <p>
-                                    <strong>relativeTranslation</strong> (object): <span class="api-item-version">v1.0</span>
+                                    <strong>relativeTranslation</strong> (object): <span class="api-item-version">v1.0</span><span class="api-item-warning">updated in v6.1</span>
                                 </p>
                                 <p>
-                                    An object containing the additional translation applied to your plane on x and y axis.
+                                    An object containing the additional translation applied to your plane along X, Y and Z axis.
                                 </p>
                             </li>
                             <li id="rotation">
@@ -1443,11 +1443,11 @@
 
                             <li id="set-relative-position">
                                 <p>
-                                    <strong>setRelativePosition</strong>(translationX, translationY): <span class="api-item-version">v1.0</span>
+                                    <strong>setRelativePosition</strong>(translationX, translationY, translationZ): <span class="api-item-version">v1.0</span><span class="api-item-warning">updated in v6.1</span>
                                 </p>
                                 <p>
                                     Set the plane translation based on pixel units. Please note that this will not be applied to your plane HTML element, so it's more like an additional translation.<br />
-                                    Note that if you are using a virtual scroll library, you can also use it to update your plane position without causing a reflow and improve performance.
+                                    The translation along the Z axis is being treated like the <strong>CSS translateZ</strong> function, using the current field of view to compute the corresponding <strong>CSS perspective</strong> property (a small field of view means a big perspective value and vice versa).
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -1470,6 +1470,17 @@
                                         </span>
                                         <span class="api-item-parameter-desc">
                                             the translation value to apply on the Y axis in pixel.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            translationZ
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            the translation value to apply on the Z axis in pixel.
                                         </span>
                                     </li>
                                 </ul>
