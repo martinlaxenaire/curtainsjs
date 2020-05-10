@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 6.1.0
+ Version: 6.1.1
  https://www.curtainsjs.com/
  ***/
 
@@ -293,8 +293,8 @@ Curtains.prototype._setSize = function() {
     this.glCanvas.style.width  = Math.floor(this._boundingRect.width / this.pixelRatio) + "px";
     this.glCanvas.style.height = Math.floor(this._boundingRect.height / this.pixelRatio) + "px";
 
-    this.glCanvas.width = Math.floor(this._boundingRect.width * this._renderingScale / this.pixelRatio);
-    this.glCanvas.height = Math.floor(this._boundingRect.height * this._renderingScale / this.pixelRatio);
+    this.glCanvas.width = Math.floor(this._boundingRect.width * this._renderingScale);
+    this.glCanvas.height = Math.floor(this._boundingRect.height * this._renderingScale);
 
     this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 
@@ -4764,6 +4764,9 @@ Curtains.Texture.prototype._init = function() {
     this._format = gl.RGBA;
     this._textureType = gl.UNSIGNED_BYTE;
 
+    // set texture parameters once
+    this._texParameters = false;
+
     this._flipY = false;
 
     // bind the texture the target (TEXTURE_2D) of the active texture unit.
@@ -4815,12 +4818,6 @@ Curtains.Texture.prototype._init = function() {
 
     // if its a render target texture use nearest filters and half float whenever possible
     if(this.type === "fboTexture") {
-        // set the filtering so we don't need mips
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
         // update texImage2D properties
         if(this._curtains._isWebGL2 && this._curtains._extensions['EXT_color_buffer_float']) {
             this._internalFormat = gl.RGBA16F;
@@ -4832,6 +4829,9 @@ Curtains.Texture.prototype._init = function() {
 
         // define its size
         gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._size.width, this._size.height, 0, this._format, this._textureType, null);
+
+        // set texture parameters
+        this._setMipmaps();
     }
 
     this._canDraw = true;
@@ -4888,6 +4888,8 @@ Curtains.Texture.prototype.setFromTexture = function(texture) {
         this._internalFormat = texture._internalFormat;
         this._format = texture._format;
         this._textureType = texture._textureType;
+
+        this._texParameters = texture._texParameters;
 
         this._originalTexture = texture;
 
@@ -4971,12 +4973,6 @@ Curtains.Texture.prototype.setSource = function(source) {
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this._flipY);
     }
 
-    // Set the parameters so we can render any size image.
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
     this.resize();
 
     // set our webgl texture only if it is an image
@@ -4984,10 +4980,37 @@ Curtains.Texture.prototype.setSource = function(source) {
     // thanks to the shouldUpdate and _willUpdate flags
     if(this.type === "image") {
         gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._format, this._textureType, source);
+        // set texture parameters
+        this._setMipmaps();
     }
 
     // update scene
     this._curtains.needRender();
+};
+
+
+/***
+ Sets the texture parameters
+ Always clamp to edge
+ Generates mipmapping for images in WebGL2 context
+ ***/
+Curtains.Texture.prototype._setMipmaps = function() {
+    var gl = this._curtains.gl;
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    // generate mip map only for images
+    if(this._curtains._isWebGL2 && this.type === "image") {
+        gl.generateMipmap(gl.TEXTURE_2D);
+        // improve quality of scaled down images
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    }
+    else {
+        // Set the parameters so we can render any size image.
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    }
+
+    this._texParameters = true;
 };
 
 
@@ -5009,6 +5032,10 @@ Curtains.Texture.prototype._update = function() {
 
     if(this.source) {
         gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._format, this._textureType, this.source);
+
+        if(!this._texParameters) {
+            this._setMipmaps();
+        }
     }
     else {
         gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._size.width, this._size.height, 0, this._format, this._textureType, this.source);
@@ -5282,12 +5309,10 @@ Curtains.Texture.prototype._restoreContext = function() {
             if(this.type === "image") {
                 this._curtains._imageCache.push(this);
             }
-            else if(this.type === "canvas") {
-                // force update
-                this.needUpdate();
-            }
 
             this.setSource(this.source);
+            // force update
+            this.needUpdate();
         }
     }
     else {
