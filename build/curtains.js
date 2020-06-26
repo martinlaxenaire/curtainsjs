@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 6.2.0
+ Version: 6.2.1
  https://www.curtainsjs.com/
  ***/
 
@@ -1887,7 +1887,7 @@ Curtains.BasePlane.prototype._initBasePlane = function(params) {
 
     // unique plane buffers dimensions based on width and height
     // used to avoid unnecessary buffer bindings during draw loop
-    this._definition.buffersID = this._definition.width * this._definition.height + this._definition.width;
+    this._definition.buffersID = this._type === "ShaderPass" ? 1 : this._definition.width * this._definition.height + this._definition.width;
 
     // depth test
     this._depthTest = params.depthTest;
@@ -3360,7 +3360,7 @@ Curtains.BasePlane.prototype._drawPlane = function() {
 
             // bind plane attributes buffers
             // if we're rendering on a frame buffer object, force buffers bindings to avoid bugs
-            if(curtains._glState.currentBuffersID !== this._definition.buffersID || this.target) {
+            if(curtains._glState.currentBuffersID !== this._definition.buffersID) {
                 this._bindPlaneBuffers();
             }
 
