@@ -61,7 +61,8 @@ function displayCurtains() {
 
 
     var webGLCurtain = new Curtains({
-        container: "canvas"
+        container: "canvas",
+        premultipliedAlpha: true,
     });
 
     // handling errors

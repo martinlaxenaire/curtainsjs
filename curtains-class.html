@@ -174,6 +174,9 @@
                                     <a href="curtains-class.html#restore-context">restoreContext</a>
                                 </li>
                                 <li>
+                                    <a href="curtains-class.html#set-container">setContainer</a>
+                                </li>
+                                <li>
                                     <a href="curtains-class.html#set-pixel-ratio">setPixelRatio</a>
                                 </li>
                                 <li>
@@ -663,10 +666,10 @@
                                     container
                                 </span>
                                 <span class="api-item-parameter-type">
-                                    HTML Element or string
+                                    HTML Element or string, optionnal
                                 </span>
                                 <span class="api-item-parameter-desc">
-                                    the HTML Element or ID of the HTML Element that will wrap the canvas. If not specified, will append a div with a "curtains-canvas" ID just before the body closing tag.
+                                    the HTML Element or ID of the HTML Element that will wrap the canvas. If not specified, the WebGL context will not be set until you call <a href="curtains-class.html#set-container">setContainer()</a> with a valid HTML element or ID.
                                 </span>
                             </li>
 
@@ -1673,6 +1676,29 @@
                                     <strong>Examples:</strong> used in all <a href="index.html#examples" title="Useful examples">examples</a>.
                                 </p>
 							</li>
+
+                            <li id="set-container">
+                                <p>
+                                    <strong>setContainer</strong>(container):  <span class="api-item-version">v6.2</span>
+                                </p>
+                                <p>
+                                    Set the Curtains <a href="curtains-class.html#container">container</a> to which we will append the canvas and then start instancing the Curtains class and the WebGL context.<br />
+                                    Called internally if a container is specified in the <a href="curtains-class.html#curtains-init-params">initial parameters</a> object but could be called later on if no container is provided in the initial parameters.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            container
+                                        </span>
+                                        <span class="api-item-parameter-type">
+											HTML Element or string
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            HTML element or ID to which append the canvas
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
 
 							<li id="set-pixel-ratio">
 								<p>

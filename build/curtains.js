@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 6.1.1
+ Version: 6.2.0
  https://www.curtainsjs.com/
  ***/
 
@@ -14,7 +14,7 @@
  Basically sets up all necessary intern variables based on params and runs the init method
 
  params:
- @containerID (string): the container ID that will hold our canvas
+ @container (HTML element or string): the container HTML element ID that will hold our canvas
 
  returns:
  @this: our Curtains element
@@ -43,31 +43,6 @@ function Curtains(params) {
 
     this._drawingEnabled = true;
     this._forceRender = false;
-
-    // handle old version init param
-    if(typeof params === "string") {
-        console.warn("Since v4.0 you should use an object to pass your container and other parameters. Please refer to the docs: https://www.curtainsjs.com/documentation.html");
-        var container = params;
-        params = {
-            container: container
-        };
-    }
-
-    // set container
-    if(!params.container) {
-        var container = document.createElement("div");
-        container.setAttribute("id", "curtains-canvas");
-        document.body.appendChild(container);
-        this.container = container;
-    }
-    else {
-        if(typeof params.container === "string") {
-            this.container = document.getElementById(params.container);
-        }
-        else if(params.container instanceof Element) {
-            this.container = params.container;
-        }
-    }
 
     // if we should use auto resize (default to true)
     this._autoResize = params.autoResize;
@@ -108,19 +83,54 @@ function Curtains(params) {
 
     this.productionMode = params.production || false;
 
-    if(!this.container) {
-        if(!this.productionMode) console.warn("You must specify a valid container ID");
+    // set our container
+    // handle old version init param
+    if(typeof params === "string") {
+        console.warn("Since v4.0 you should use an object to pass your container and other parameters. Please refer to the docs: https://www.curtainsjs.com/documentation.html");
+        var container = params;
+        params = {
+            container: container
+        };
+    }
 
-        // call the error callback if provided
-        if(this._onErrorCallback) {
-            this._onErrorCallback()
-        }
+    if(params.container) {
+        this.setContainer(params.container);
+    }
+    else if(!this.productionMode) {
+        console.warn("No container HTML element or ID provided. Use setContainer() method to set a container and initialize the WebGL context");
+    }
+}
 
+
+/***
+ Set up our Curtains container and start initializing everything
+ Called on Curtains instancing if a params container has been provided, could be call afterwards else
+ Useful with JS frameworks to init our Curtains class globally and then set the container in a canvas component afterwards to fully instanciate everything
+
+ params:
+ @container (HTML element or string): the container HTML element ID that will hold our canvas
+ ***/
+Curtains.prototype.setContainer = function(container) {
+    if(!container) {
+        if(!this.productionMode) console.warn("No container HTML element or ID provided. WebGL context couldn't be created");
         return;
     }
 
+    if(typeof container === "string") {
+        this.container = document.getElementById(container);
+
+        if(!this.container) {
+            if(!this.productionMode) console.warn("No container HTML element or ID provided. WebGL context couldn't be created");
+            return;
+        }
+    }
+    else if(container instanceof Element) {
+        this.container = container;
+    }
+
     this._init();
-}
+};
+
 
 /***
  Init by creating a canvas and webgl context, set the size and handle events
@@ -653,11 +663,11 @@ Curtains.prototype.dispose = function() {
             }
 
             // remove event listeners
-            if(this._resizeHandler) {
+            if(self._resizeHandler) {
                 window.removeEventListener("resize", self._resizeHandler, false);
             }
-            if(this._watchScroll) {
-                window.removeEventListener("scroll", this._scrollManager.handler, {passive: true});
+            if(self._watchScroll) {
+                window.removeEventListener("scroll", self._scrollManager.handler, {passive: true});
             }
 
             self.glCanvas.removeEventListener("webgllost", self._contextLostHandler, false);
@@ -1609,7 +1619,7 @@ Curtains.prototype._readyToDraw = function() {
     // enable depth by default
     this._setDepth(true);
 
-    console.log("curtains.js - v6.1");
+    console.log("curtains.js - v6.2");
 
     this._animationFrameID = null;
     if(this._autoRender) {
@@ -3202,13 +3212,11 @@ Curtains.BasePlane.prototype.mouseToPlaneCoords = function(xMousePosition, yMous
         left: (this._boundingRect.document.left + scaleAdjustment.x) / this._curtains.pixelRatio,
     };
 
-    // mouse position conversion from document to plane space
-    var mousePosition = {
+    // return mouse position conversion from document to plane space
+    return {
         x: (((xMousePosition - planeBoundingRect.left) / planeBoundingRect.width) * 2) - 1,
         y: 1 - (((yMousePosition - planeBoundingRect.top) / planeBoundingRect.height) * 2)
     };
-
-    return mousePosition;
 };
 
 
