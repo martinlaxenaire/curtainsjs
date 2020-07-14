@@ -1,7 +1,7 @@
 /***
  Little WebGL helper to apply images, videos or canvases as textures of planes
  Author: Martin Laxenaire https://www.martin-laxenaire.fr/
- Version: 6.2.1
+ Version: 6.2.2
  https://www.curtainsjs.com/
  ***/
 
@@ -2223,7 +2223,7 @@ Curtains.BasePlane.prototype._updateUniforms = function() {
                     this._handleUniformSetting(uniform.type, uniform.location, uniform.value);
                 }
 
-                uniform.lastValue = uniform.value;
+                uniform.lastValue = uniform.value.length ? Array.from(uniform.value) : uniform.value;
             }
             else {
                 // update our uniforms
@@ -3058,6 +3058,7 @@ Curtains.BasePlane.prototype.loadVideo = function(source) {
     video.preload = true;
     video.muted = true;
     video.loop = true;
+    video.playsinline = true;
 
     video.sampler = source.getAttribute("data-sampler") || null;
     video.crossOrigin = this.crossOrigin || "anonymous";
