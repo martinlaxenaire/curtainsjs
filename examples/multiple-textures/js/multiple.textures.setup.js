@@ -1,15 +1,18 @@
-window.addEventListener("load", function() {
+import {Curtains, Plane} from '../../../src/index.mjs';
+
+window.addEventListener("load", () => {
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains({
+    const curtains = new Curtains({
         container: "canvas",
-        watchScroll: false // no need to listen for the scroll in this example
+        watchScroll: false, // no need to listen for the scroll in this example
+        pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
     });
 
     // get our plane element
-    var planeElements = document.getElementsByClassName("multi-textures");
+    const planeElements = document.getElementsByClassName("multi-textures");
 
     // here we will handle which texture is visible and the timer to transition between images
-    var slideshowState = {
+    const slideshowState = {
         activeTextureIndex: 1,
         nextTextureIndex: 2, // does not care for now
         maxTextures: planeElements[0].querySelectorAll("img").length - 1, // -1 because displacement image does not count
@@ -19,12 +22,12 @@ window.addEventListener("load", function() {
     };
 
     // handling errors
-    webGLCurtain.onError(function() {
+    curtains.onError(() => {
         // we will add a class to the document body to display original images
         document.body.classList.add("no-curtains", "image-1");
 
         // handle simple slides management here
-        planeElements[0].addEventListener("click", function() {
+        planeElements[0].addEventListener("click", () => {
             if(slideshowState.activeTextureIndex < slideshowState.maxTextures) {
                 slideshowState.nextTextureIndex = slideshowState.activeTextureIndex + 1;
             }
@@ -38,15 +41,15 @@ window.addEventListener("load", function() {
             slideshowState.activeTextureIndex = slideshowState.nextTextureIndex;
 
         });
-    }).onContextLost(function() {
+    }).onContextLost(() => {
         // on context lost, try to restore the context
-        webGLCurtain.restoreContext();
+        curtains.restoreContext();
     });
 
     // disable drawing for now
-    webGLCurtain.disableDrawing();
+    curtains.disableDrawing();
 
-    var vs = `
+    const vs = `
         precision mediump float;
 
         // default mandatory variables
@@ -85,7 +88,7 @@ window.addEventListener("load", function() {
         }
     `;
 
-    var fs = `
+    const fs = `
         precision mediump float;
 
         varying vec3 vVertexPosition;
@@ -125,7 +128,7 @@ window.addEventListener("load", function() {
     `;
 
     // some basic parameters
-    var params = {
+    const params = {
         vertexShader: vs,
         fragmentShader: fs,
         uniforms: {
@@ -137,78 +140,73 @@ window.addEventListener("load", function() {
         },
     };
 
-    var multiTexturesPlane = webGLCurtain.addPlane(planeElements[0], params);
+    const multiTexturesPlane = new Plane(curtains, planeElements[0], params);
 
-    if(multiTexturesPlane) {
+    multiTexturesPlane.onReady(() => {
+        // the idea here is to create two additionnal textures
+        // the first one will contain our visible image
+        // the second one will contain our entering (next) image
+        // that way we will deal with only activeTex and nextTex samplers in the fragment shader
+        // and we could easily add more images in the slideshow...
 
-        multiTexturesPlane.onLoading(function() {
-            webGLCurtain.needRender();
-        }).onReady(function() {
-            // the idea here is to create two additionnal textures
-            // the first one will contain our visible image
-            // the second one will contain our entering (next) image
-            // that way we will deal with only activeTex and nextTex samplers in the fragment shader
-            // and we could easily add more images in the slideshow...
+        // first we set our very first image as the active texture
+        const activeTex = multiTexturesPlane.createTexture({
+            sampler: "activeTex",
+            fromTexture: multiTexturesPlane.textures[slideshowState.activeTextureIndex]
+        });
+        // next we set the second image as next texture but this is not mandatory
+        // as we will reset the next texture on slide change
+        const nextTex = multiTexturesPlane.createTexture({
+            sampler: "nextTex",
+            fromTexture: multiTexturesPlane.textures[slideshowState.nextTextureIndex]
+        });
 
-            // first we set our very first image as the active texture
-            var activeTex = multiTexturesPlane.createTexture({
-                sampler: "activeTex",
-                fromTexture: multiTexturesPlane.textures[slideshowState.activeTextureIndex]
-            });
-            // next we set the second image as next texture but this is not mandatory
-            // as we will reset the next texture on slide change
-            var nextTex = multiTexturesPlane.createTexture({
-                sampler: "nextTex",
-                fromTexture: multiTexturesPlane.textures[slideshowState.nextTextureIndex]
-            });
+        planeElements[0].addEventListener("click", () => {
+            if(!slideshowState.isChanging) {
+                // enable drawing for now
+                curtains.enableDrawing();
 
-            planeElements[0].addEventListener("click", function() {
-                if(!slideshowState.isChanging) {
-                    // enable drawing for now
-                    webGLCurtain.enableDrawing();
+                slideshowState.isChanging = true;
 
-                    slideshowState.isChanging = true;
-
-                    // check what will be next image
-                    if(slideshowState.activeTextureIndex < slideshowState.maxTextures) {
-                        slideshowState.nextTextureIndex = slideshowState.activeTextureIndex + 1;
-                    }
-                    else {
-                        slideshowState.nextTextureIndex = 1;
-                    }
-                    // apply it to our next texture
-                    nextTex.setSource(multiTexturesPlane.images[slideshowState.nextTextureIndex]);
-
-                    setTimeout(function() {
-                        // disable drawing now that the transition is over
-                        webGLCurtain.disableDrawing();
-
-                        slideshowState.isChanging = false;
-                        slideshowState.activeTextureIndex = slideshowState.nextTextureIndex;
-                        // our next texture becomes our active texture
-                        activeTex.setSource(multiTexturesPlane.images[slideshowState.activeTextureIndex]);
-                        // reset timer
-                        slideshowState.transitionTimer = 0;
-
-                    }, 1700); // add a bit of margin to the timer
+                // check what will be next image
+                if(slideshowState.activeTextureIndex < slideshowState.maxTextures) {
+                    slideshowState.nextTextureIndex = slideshowState.activeTextureIndex + 1;
                 }
-
-            });
-
-        }).onRender(function() {
-            // increase or decrease our timer based on the active texture value
-            if(slideshowState.isChanging) {
-                // use damping to smoothen transition
-                slideshowState.transitionTimer += (90 - slideshowState.transitionTimer) * 0.04;
-
-                // force end of animation as damping is slower the closer we get from the end value
-                if(slideshowState.transitionTimer >= 88.5 && slideshowState.transitionTimer !== 90) {
-                    slideshowState.transitionTimer = 90;
+                else {
+                    slideshowState.nextTextureIndex = 1;
                 }
+                // apply it to our next texture
+                nextTex.setSource(multiTexturesPlane.images[slideshowState.nextTextureIndex]);
+
+                setTimeout(() => {
+                    // disable drawing now that the transition is over
+                    curtains.disableDrawing();
+
+                    slideshowState.isChanging = false;
+                    slideshowState.activeTextureIndex = slideshowState.nextTextureIndex;
+                    // our next texture becomes our active texture
+                    activeTex.setSource(multiTexturesPlane.images[slideshowState.activeTextureIndex]);
+                    // reset timer
+                    slideshowState.transitionTimer = 0;
+
+                }, 1700); // add a bit of margin to the timer
             }
 
-            // update our transition timer uniform
-            multiTexturesPlane.uniforms.transitionTimer.value = slideshowState.transitionTimer;
         });
-    }
+
+    }).onRender(() => {
+        // increase or decrease our timer based on the active texture value
+        if(slideshowState.isChanging) {
+            // use damping to smoothen transition
+            slideshowState.transitionTimer += (90 - slideshowState.transitionTimer) * 0.04;
+
+            // force end of animation as damping is slower the closer we get from the end value
+            if(slideshowState.transitionTimer >= 88.5 && slideshowState.transitionTimer !== 90) {
+                slideshowState.transitionTimer = 90;
+            }
+        }
+
+        // update our transition timer uniform
+        multiTexturesPlane.uniforms.transitionTimer.value = slideshowState.transitionTimer;
+    });
 });

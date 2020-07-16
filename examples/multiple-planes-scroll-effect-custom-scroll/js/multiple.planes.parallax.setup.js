@@ -1,53 +1,39 @@
-window.addEventListener("load", function() {
+import {Curtains, Plane} from '../../../src/index.mjs';
 
-    function lerp (start, end, amt){
-        return (1 - amt) * start + amt * end;
-    }
-
+window.addEventListener("load", () => {
     // we will keep track of all our planes in an array
-    var planes = [];
-    var scrollEffect = 0;
+    const planes = [];
+    let scrollEffect = 0;
 
     // get our planes elements
-    var planeElements = document.getElementsByClassName("plane");
-
-    // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains({
-        container: "canvas",
-        watchScroll: false // we'll handle it by ourself
-    });
+    const planeElements = document.getElementsByClassName("plane");
 
     // handle smooth scroll and update planes positions
-    var smoothScroll = new LocomotiveScroll({
+    const smoothScroll = new LocomotiveScroll({
         el: document.getElementById('page-content'),
         smooth: true,
         inertia: 0.5,
         passive: true,
     });
 
-    webGLCurtain.onRender(function() {
-        if(smoothScroll.isMobile) {
-            // update our planes deformation
-            // increase/decrease the effect
-            scrollEffect = lerp(scrollEffect, 0, 0.05);
-        }
+    const useNativeScroll = smoothScroll.isMobile;
 
-        // update our number of planes drawn debug value
-        debugElement.innerText = planeDrawn;
-    }).onError(function() {
-        // we will add a class to the document body to display original images
-        document.body.classList.add("no-curtains", "planes-loaded");
-    }).onContextLost(function() {
-        // on context lost, try to restore the context
-        webGLCurtain.restoreContext();
+    // set up our WebGL context and append the canvas to our wrapper
+    const curtains = new Curtains({
+        container: "canvas",
+        watchScroll: useNativeScroll, // watch scroll on mobile not on desktop since we're using locomotive scroll
+        pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
     });
 
-    function updateScroll(xOffset, yOffset) {
-        // update our scroll manager values
-        webGLCurtain.updateScrollValues(xOffset, yOffset);
-
+    curtains.onRender(() => {
+        if(useNativeScroll) {
+            // update our planes deformation
+            // increase/decrease the effect
+            scrollEffect = curtains.lerp(scrollEffect, 0, 0.05);
+        }
+    }).onScroll(() => {
         // get scroll deltas to apply the effect on scroll
-        var delta = webGLCurtain.getScrollDeltas();
+        const delta = curtains.getScrollDeltas();
 
         // invert value for the effect
         delta.y = -delta.y;
@@ -60,48 +46,52 @@ window.addEventListener("load", function() {
             delta.y = -60;
         }
 
-        if(smoothScroll.isMobile && Math.abs(delta.y) > Math.abs(scrollEffect)) {
-            scrollEffect = lerp(scrollEffect, delta.y, 0.5);
+        if(useNativeScroll && Math.abs(delta.y) > Math.abs(scrollEffect)) {
+            scrollEffect = curtains.lerp(scrollEffect, delta.y, 0.5);
         }
         else {
-            scrollEffect = lerp(scrollEffect, delta.y * 1.5, 0.5);
+            scrollEffect = curtains.lerp(scrollEffect, delta.y * 1.5, 0.5);
         }
 
         // manually update planes positions
-        for(var i = 0; i < planes.length; i++) {
-            planes[i].updateScrollPosition();
-
+        for(let i = 0; i < planes.length; i++) {
             // apply additional translation, scale and rotation
             applyPlanesParallax(i);
 
             // update the plane deformation uniform as well
             planes[i].uniforms.scrollEffect.value = scrollEffect;
         }
+    }).onError(() => {
+        // we will add a class to the document body to display original images
+        document.body.classList.add("no-curtains", "planes-loaded");
+    }).onContextLost(() => {
+        // on context lost, try to restore the context
+        curtains.restoreContext();
+    });
+
+    function updateScroll(xOffset, yOffset) {
+        // update our scroll manager values
+        curtains.updateScrollValues(xOffset, yOffset);
     }
 
     // custom scroll event
-    if(!smoothScroll.isMobile) {
+    if(!useNativeScroll) {
         // we'll render only while lerping the scroll
-        webGLCurtain.disableDrawing();
-        smoothScroll.on('scroll', function(obj) {
+        curtains.disableDrawing();
+        smoothScroll.on('scroll', (obj) => {
             updateScroll(obj.scroll.x, obj.scroll.y);
 
             // render scene
-            webGLCurtain.needRender();
+            curtains.needRender();
         });
-    }
-    else {
-        window.addEventListener("scroll", function() {
-            updateScroll(window.pageXOffset, window.pageYOffset);
-        }, {passive: true});
     }
 
     // keep track of the number of plane we're currently drawing
-    var debugElement = document.getElementById("debug-value");
+    const debugElement = document.getElementById("debug-value");
     // we need to fill the counter with all our planes
-    var planeDrawn = planeElements.length;
+    let planeDrawn = planeElements.length;
 
-    var vs = `
+    const vs = `
         precision mediump float;
 
         // default mandatory variables
@@ -133,7 +123,7 @@ window.addEventListener("load", function() {
         }
     `;
 
-    var fs = `
+    const fs = `
         precision mediump float;
 
         varying vec3 vVertexPosition;
@@ -147,7 +137,7 @@ window.addEventListener("load", function() {
         }
     `;
 
-    var params = {
+    const params = {
         vertexShader: vs,
         fragmentShader: fs,
         shareProgram: true, // share planes program to improve plane creation speed
@@ -163,23 +153,21 @@ window.addEventListener("load", function() {
     };
 
     // add our planes and handle them
-    for(var i = 0; i < planeElements.length; i++) {
-        var plane = webGLCurtain.addPlane(planeElements[i], params);
+    for(let i = 0; i < planeElements.length; i++) {
+        const plane = new Plane(curtains, planeElements[i], params);
 
-        if(plane) {
-            planes.push(plane);
+        planes.push(plane);
 
-            handlePlanes(i);
-        }
+        handlePlanes(i);
     }
 
 
     // handle all the planes
     function handlePlanes(index) {
-        var plane = planes[index];
+        const plane = planes[index];
 
         // check if our plane is defined and use it
-        plane && plane.onReady(function() {
+        plane.onReady(() => {
             // apply parallax on load
             applyPlanesParallax(index);
 
@@ -187,22 +175,26 @@ window.addEventListener("load", function() {
             if(index === planes.length - 1) {
                 document.body.classList.add("planes-loaded");
             }
-        }).onAfterResize(function() {
+        }).onAfterResize(() => {
             // apply new parallax values after resize
             applyPlanesParallax(index);
-        }).onRender(function() {
+        }).onRender(() => {
             // apply the rotation
             plane.setRotation(0, 0, scrollEffect / 750);
 
             // scale plane and its texture
             plane.setScale(1, 1 + Math.abs(scrollEffect) / 300);
             plane.textures[0].setScale(1, 1 + Math.abs(scrollEffect) / 150);
-        }).onReEnterView(function() {
+        }).onReEnterView(() => {
             // plane is drawn again
             planeDrawn++;
-        }).onLeaveView(function() {
+            // update our number of planes drawn debug value
+            debugElement.innerText = planeDrawn;
+        }).onLeaveView(() => {
             // plane is not drawn anymore
             planeDrawn--;
+            // update our number of planes drawn debug value
+            debugElement.innerText = planeDrawn;
         });
     }
 
@@ -210,12 +202,12 @@ window.addEventListener("load", function() {
         // calculate the parallax effect
 
         // get our window size
-        var sceneBoundingRect = webGLCurtain.getBoundingRect();
+        const sceneBoundingRect = curtains.getBoundingRect();
         // get our plane center coordinate
-        var planeBoundingRect = planes[index].getBoundingRect();
-        var planeOffsetTop = planeBoundingRect.top + planeBoundingRect.height / 2;
+        const planeBoundingRect = planes[index].getBoundingRect();
+        const planeOffsetTop = planeBoundingRect.top + planeBoundingRect.height / 2;
         // get a float value based on window height (0 means the plane is centered)
-        var parallaxEffect = (planeOffsetTop - sceneBoundingRect.height / 2) / sceneBoundingRect.height;
+        const parallaxEffect = (planeOffsetTop - sceneBoundingRect.height / 2) / sceneBoundingRect.height;
 
         // apply the parallax effect
         planes[index].setRelativePosition(0, parallaxEffect * (sceneBoundingRect.height / 4));

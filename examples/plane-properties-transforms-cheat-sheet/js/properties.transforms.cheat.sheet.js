@@ -1,25 +1,28 @@
-window.addEventListener("load", function() {
+import {Curtains, Plane} from '../../../src/index.mjs';
+
+window.addEventListener("load", () => {
 
     // set up our WebGL context and append the canvas to our wrapper
-    var curtains = new Curtains({
+    const curtains = new Curtains({
         container: "canvas",
         watchScroll: false, // no need to listen for the scroll in this example
+        pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
     });
 
     // handling errors
-    curtains.onError(function() {
+    curtains.onError(() => {
         // we will add a class to the document body to display original images
         document.body.classList.add("no-curtains");
-    }).onContextLost(function() {
+    }).onContextLost(() => {
         // on context lost, try to restore the context
         curtains.restoreContext();
     });
 
     // get our plane element
-    var planeElement = document.getElementsByClassName("plane");
+    const planeElement = document.getElementsByClassName("plane");
 
 
-    var vs = `
+    const vs = `
         precision mediump float;
 
         // default mandatory variables
@@ -45,7 +48,7 @@ window.addEventListener("load", function() {
         }
     `;
 
-    var fs = `
+    const fs = `
         precision mediump float;
 
         varying vec3 vVertexPosition;
@@ -59,36 +62,53 @@ window.addEventListener("load", function() {
         }
     `;
 
-    // some basic parameters
-    var params = {
+    // plane parameters
+    const params = {
         vertexShader: vs,
         fragmentShader: fs,
+        texturesOptions: {
+            anisotropy: 16, // set anisotropy to a max so the texture isn't blurred when the plane's rotated
+        }
     };
 
     // create our plane
-    var plane = curtains.addPlane(planeElement[0], params);
+    const plane = new Plane(curtains, planeElement[0], params);
 
-    var planeBBoxEl = document.getElementById("plane-bounding-rect");
-    var isPlaneDrawn = document.getElementById("is-plane-drawn");
+    const planeBBoxEl = document.getElementById("plane-bounding-rect");
+    const isPlaneDrawn = document.getElementById("is-plane-drawn");
 
-    // if there has been an error during init, simplePlane will be null
-    plane && plane.onReady(function() {
+
+    function updatePlaneBBoxViewer() {
+        // wait for next render to update the bounding rect sizes
+        curtains.nextRender(() => {
+            // update of bounding box size and position
+            // if alwaysDraw property is set to true, frustum culling check is bypassed
+            // and the plane WebGL bounding rectangle is not automatically updated
+            // so we need to force the update of our bounding rect calculation in this case
+            const planeBBox = plane.getWebGLBoundingRect(plane.alwaysDraw);
+
+            planeBBoxEl.style.width = (planeBBox.width / curtains.pixelRatio) + (plane.drawCheckMargins.right + plane.drawCheckMargins.left) + "px";
+            planeBBoxEl.style.height = (planeBBox.height / curtains.pixelRatio) + (plane.drawCheckMargins.top + plane.drawCheckMargins.bottom) + "px";
+            planeBBoxEl.style.top = (planeBBox.top / curtains.pixelRatio) - plane.drawCheckMargins.top + "px";
+            planeBBoxEl.style.left = (planeBBox.left / curtains.pixelRatio) - plane.drawCheckMargins.left + "px";
+
+            isPlaneDrawn.innerText = plane.isDrawn();
+        });
+    }
+
+    // when our plane is ready, add the GUI and update its BBox viewer
+    plane.onReady(() => {
         // add the GUI
         addGUI();
 
-    }).onRender(function() {
-        // update bounding box size and position
-        var planeBBox = plane.getWebGLBoundingRect();
-
-        planeBBoxEl.style.width = (planeBBox.width / curtains.pixelRatio) + (plane.drawCheckMargins.right + plane.drawCheckMargins.left) + "px";
-        planeBBoxEl.style.height = (planeBBox.height / curtains.pixelRatio) + (plane.drawCheckMargins.top + plane.drawCheckMargins.bottom) + "px";
-        planeBBoxEl.style.top = (planeBBox.top / curtains.pixelRatio) - plane.drawCheckMargins.top + "px";
-        planeBBoxEl.style.left = (planeBBox.left / curtains.pixelRatio) - plane.drawCheckMargins.left + "px";
-
-        isPlaneDrawn.innerText = plane.isDrawn();
-
+        updatePlaneBBoxViewer();
     });
 
+    // once everything is ready, stop drawing the scene
+    curtains.nextRender(() => {
+        updatePlaneBBoxViewer();
+        curtains.disableDrawing();
+    });
 
     function initGUIParams() {
         return {
@@ -117,9 +137,9 @@ window.addEventListener("load", function() {
                 },
 
                 "Perspective": {
-                    "fov": plane._fov,
-                    "near": plane._nearPlane,
-                    "far": plane._farPlane,
+                    "fov": plane.camera.fov,
+                    "near": plane.camera.near,
+                    "far": plane.camera.far,
                 },
 
                 "Highlight area used for culling": {
@@ -145,24 +165,30 @@ window.addEventListener("load", function() {
                         min: -1,
                         max: 2,
                         step: 0.05,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.setTransformOrigin(value, plane.transformOrigin.y, plane.transformOrigin.z);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         },
                     },
                     "Y": {
                         min: -1,
                         max: 2,
                         step: 0.05,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.setTransformOrigin(plane.transformOrigin.x, value, plane.transformOrigin.z);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
                     "Z": {
                         min: -1,
                         max: 2,
                         step: 0.05,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.setTransformOrigin(plane.transformOrigin.x, plane.transformOrigin.y, value);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
                 },
@@ -172,24 +198,30 @@ window.addEventListener("load", function() {
                         min: -1 * curtains.getBoundingRect().width,
                         max: curtains.getBoundingRect().width,
                         step: 20,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.setRelativePosition(value, plane.relativeTranslation.y, plane.relativeTranslation.z);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
                     "Y": {
                         min: -1 * curtains.getBoundingRect().height,
                         max: curtains.getBoundingRect().height,
                         step: 20,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.setRelativePosition(plane.relativeTranslation.x, value, plane.relativeTranslation.z);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
                     "Z": {
                         min: -1000,
                         max: 1000,
                         step: 20,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.setRelativePosition(plane.relativeTranslation.x, plane.relativeTranslation.y, value);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
                 },
@@ -199,24 +231,30 @@ window.addEventListener("load", function() {
                         min: -Math.PI,
                         max: Math.PI,
                         step: 0.05,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.setRotation(value, plane.rotation.y, plane.rotation.z);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
                     "Y": {
                         min: -Math.PI,
                         max: Math.PI,
                         step: 0.05,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.setRotation(plane.rotation.x, value, plane.rotation.z);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
                     "Z": {
                         min: -Math.PI,
                         max: Math.PI,
                         step: 0.05,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.setRotation(plane.rotation.x, plane.rotation.y, value);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
                 },
@@ -226,16 +264,20 @@ window.addEventListener("load", function() {
                         min: 0.25,
                         max: 2,
                         step: 0.05,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.setScale(value, plane.scale.y);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
                     "Y": {
                         min: 0.25,
                         max: 2,
                         step: 0.05,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.setScale(plane.scale.x, value);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
                 },
@@ -245,31 +287,37 @@ window.addEventListener("load", function() {
                         min: 1,
                         max: 179,
                         step: 1,
-                        onChange: function (value) {
-                            plane.setPerspective(value, plane._nearPlane, plane._farPlane);
+                        onChange: (value) => {
+                            plane.setPerspective(value, plane.camera.near, plane.camera.far);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
                     "near": {
                         min: 0.01,
                         max: 0.1,
                         step: 0.001,
-                        onChange: function (value) {
-                            plane.setPerspective(plane._fov, value, plane._farPlane);
+                        onChange: (value) => {
+                            plane.setPerspective(plane.camera.fov, value, plane.camera.far);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
                     "far": {
                         min: 50,
                         max: 300,
                         step: 10,
-                        onChange: function (value) {
-                            plane.setPerspective(plane._fov, plane._nearPlane, value);
+                        onChange: (value) => {
+                            plane.setPerspective(plane.camera.fov, plane.camera.near, value);
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
                 },
 
                 "Highlight area used for culling": {
                     "show": {
-                        onChange: function (value) {
+                        onChange: (value) => {
                             planeBBoxEl.style.display = value ? "block" : "none";
                         }
                     }
@@ -279,20 +327,24 @@ window.addEventListener("load", function() {
 
                     cullFace: {
                         options: ["back", "front", "none"],
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.cullFace = value;
+                            curtains.needRender();
                         }
                     },
 
                     alwaysDraw: {
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.alwaysDraw = value;
+                            curtains.needRender();
+                            updatePlaneBBoxViewer();
                         }
                     },
 
                     visible: {
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.visible = value;
+                            curtains.needRender();
                         }
                     },
                 },
@@ -302,32 +354,36 @@ window.addEventListener("load", function() {
                         min: 0,
                         max: 200,
                         step: 10,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.drawCheckMargins.top = value;
+                            updatePlaneBBoxViewer();
                         }
                     },
                     "right": {
                         min: 0,
                         max: 200,
                         step: 10,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.drawCheckMargins.right = value;
+                            updatePlaneBBoxViewer();
                         }
                     },
                     "bottom": {
                         min: 0,
                         max: 200,
                         step: 10,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.drawCheckMargins.bottom = value;
+                            updatePlaneBBoxViewer();
                         }
                     },
                     "left": {
                         min: 0,
                         max: 200,
                         step: 10,
-                        onChange: function(value) {
+                        onChange: (value) => {
                             plane.drawCheckMargins.left = value;
+                            updatePlaneBBoxViewer();
                         }
                     },
                 },
@@ -335,20 +391,20 @@ window.addEventListener("load", function() {
         };
     }
 
-    var gui;
-    var guiEvents = [];
+    let gui;
+    const guiEvents = [];
     function addGUI() {
-        var guiParams = initGUIParams();
+        const guiParams = initGUIParams();
 
         gui = new dat.GUI();
         gui.open();
 
         // iterate through our values
-        for(var key in guiParams["values"]) {
+        for(const key in guiParams["values"]) {
             gui.addFolder(key);
 
             // iterate through our params and pass them to the GUI
-            for(var paramKey in guiParams["values"][key]) {
+            for(const paramKey in guiParams["values"][key]) {
                 // use corresponding values and params objects keys
                 if(guiParams["params"][key][paramKey].step) {
                     // add min, max and step

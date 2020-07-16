@@ -366,25 +366,6 @@
         position: relative;
     }
 
-    @keyframes pulse {
-        0% {
-            transform: scale3d(1, 1, 1);
-        }
-        33% {
-            transform: scale3d(0.75, 0.5, 1);
-        }
-        66% {
-            transform: scale3d(0.5, 0.75, 1);
-        }
-        100% {
-            transform: scale3d(1, 1, 1);
-        }
-    }
-
-    #about .about-curtain {
-        animation: pulse 3s infinite;
-    }
-
 
     /*** handling errors ***/
 

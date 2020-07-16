@@ -1,25 +1,28 @@
-window.addEventListener("load", function() {
+import {Curtains, Plane} from '../../../src/index.mjs';
+
+window.addEventListener("load", () => {
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains({
+    const curtains = new Curtains({
         container: "canvas",
         premultipliedAlpha: true, // sharpen the rendering of the text canvas textures
+        pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
     });
 
-    webGLCurtain.onError(function() {
+    curtains.onError(() => {
         // we will add a class to the document body to display original images
         document.body.classList.add("no-curtains");
-    }).onContextLost(function() {
+    }).onContextLost(() => {
         // on context lost, try to restore the context
-        webGLCurtain.restoreContext();
+        curtains.restoreContext();
     });
 
     // we will keep track of all our planes in an array
-    var planes = [];
+    const planes = [];
 
     // get our planes elements
-    var planeElements = document.getElementsByClassName("plane-title");
+    const planeElements = document.getElementsByClassName("plane-title");
 
-    var vs = `
+    const vs = `
         precision mediump float;
 
         // default mandatory variables
@@ -44,7 +47,7 @@ window.addEventListener("load", function() {
         }
     `;
 
-    var fs = `
+    const fs = `
         precision mediump float;
 
         varying vec3 vVertexPosition;
@@ -64,7 +67,7 @@ window.addEventListener("load", function() {
     `;
 
     // no need for shaders as they were already passed by data attributes
-    var params = {
+    const params = {
         vertexShader: vs,
         fragmentShader: fs,
         uniforms: {
@@ -78,18 +81,18 @@ window.addEventListener("load", function() {
 
     // here we will write our title inside our canvas
     function writeText(plane, canvas) {
-        var htmlPlane = plane.htmlElement;
-        var htmlPlaneStyle = window.getComputedStyle(htmlPlane);
+        const htmlPlane = plane.htmlElement;
+        const htmlPlaneStyle = window.getComputedStyle(htmlPlane);
 
-        var planeBoundingRect = plane.getBoundingRect();
+        const planeBoundingRect = plane.getBoundingRect();
 
-        var htmlPlaneWidth = planeBoundingRect.width / webGLCurtain.pixelRatio;
-        var htmlPlaneHeight = planeBoundingRect.height / webGLCurtain.pixelRatio;
+        const htmlPlaneWidth = planeBoundingRect.width / curtains.pixelRatio;
+        const htmlPlaneHeight = planeBoundingRect.height / curtains.pixelRatio;
 
         // set sizes
         canvas.width = htmlPlaneWidth;
         canvas.height = htmlPlaneHeight;
-        var context = canvas.getContext("2d");
+        const context = canvas.getContext("2d");
 
         context.width = htmlPlaneWidth;
         context.height = htmlPlaneHeight;
@@ -114,39 +117,37 @@ window.addEventListener("load", function() {
     }
 
     // add our planes and handle them
-    for(var i = 0; i < planeElements.length; i++) {
-        var plane = webGLCurtain.addPlane(planeElements[i], params);
+    for(let i = 0; i < planeElements.length; i++) {
+        const plane = new Plane(curtains, planeElements[i], params);
 
-        if(plane) {
-            // create our text texture as soon as our plane has been created
-            // first we need a canvas
-            var canvas = document.createElement("canvas");
-            // then we add a data sampler attribute to our canvas
-            canvas.setAttribute("data-sampler", "planeTexture");
-            // and load it into our plane
-            plane.loadCanvas(canvas);
+        // create our text texture as soon as our plane has been created
+        // first we need a canvas
+        const canvas = document.createElement("canvas");
+        // then we add a data sampler attribute to our canvas
+        canvas.setAttribute("data-sampler", "planeTexture");
+        // and load it into our plane
+        plane.loadCanvas(canvas);
 
-            planes.push(plane);
+        planes.push(plane);
 
-            handlePlanes(i);
-        }
+        handlePlanes(i);
     }
 
 
     // handle all the planes
     function handlePlanes(index) {
-        var plane = planes[index];
+        const plane = planes[index];
 
-        plane.onLoading(function(texture) {
+        plane.onLoading((texture) => {
             // our canvas texture is ready
             texture.shouldUpdate = false;
 
             // we write our title in our canvas
             writeText(plane, texture.source);
-        }).onRender(function() {
+        }).onRender(() => {
             // update the time uniform
             plane.uniforms.time.value++;
-        }).onAfterResize(function() {
+        }).onAfterResize(() => {
             // update our canvas sizes and rewrite our title
             writeText(plane, plane.textures[0].source);
         });

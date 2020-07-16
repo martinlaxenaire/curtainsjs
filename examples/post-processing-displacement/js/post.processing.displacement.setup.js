@@ -1,22 +1,20 @@
-window.addEventListener("load", function() {
+import {Curtains, Plane, ShaderPass} from '../../../src/index.mjs';
 
-    function lerp (start, end, amt){
-        return (1 - amt) * start + amt * end;
-    }
-
+window.addEventListener("load", () => {
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains({
+    const curtains = new Curtains({
         container: "canvas",
         antialias: false, // render targets will disable default antialiasing anyway
+        pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
     });
 
-    webGLCurtain.onRender(function() {
+    curtains.onRender(() => {
         // update our planes deformation
         // increase/decrease the effect
-        planesDeformations = lerp(planesDeformations, 0, 0.1);
-    }).onScroll(function() {
+        planesDeformations = curtains.lerp(planesDeformations, 0, 0.1);
+    }).onScroll(() => {
         // get scroll deltas to apply the effect on scroll
-        var delta = webGLCurtain.getScrollDeltas();
+        const delta = curtains.getScrollDeltas();
 
         // invert value for the effect
         delta.y = -delta.y;
@@ -30,25 +28,25 @@ window.addEventListener("load", function() {
         }
 
         if(Math.abs(delta.y) > Math.abs(planesDeformations)) {
-            planesDeformations = lerp(planesDeformations, delta.y, 0.5);
+            planesDeformations = curtains.lerp(planesDeformations, delta.y, 0.5);
         }
-    }).onError(function() {
+    }).onError(() => {
         // we will add a class to the document body to display original images
         document.body.classList.add("no-curtains", "planes-loaded");
-    }).onContextLost(function() {
+    }).onContextLost(() => {
         // on context lost, try to restore the context
-        webGLCurtain.restoreContext();
+        curtains.restoreContext();
     });
 
     // we will keep track of all our planes in an array
-    var planes = [];
-    var planesDeformations = 0;
+    const planes = [];
+    let planesDeformations = 0;
 
     // get our planes elements
-    var planeElements = document.getElementsByClassName("plane");
+    let planeElements = document.getElementsByClassName("plane");
 
 
-    var vs = `
+    const vs = `
         precision mediump float;
     
         // default mandatory variables
@@ -81,7 +79,7 @@ window.addEventListener("load", function() {
         }
     `;
 
-    var fs = `
+    const fs = `
         precision mediump float;
     
         varying vec3 vVertexPosition;
@@ -96,10 +94,10 @@ window.addEventListener("load", function() {
     `;
 
     // all planes will have the same parameters
-    var params = {
+    const params = {
         vertexShader: vs,
         fragmentShader: fs,
-        shareProgram: true, // share planes program to improve plane creation speed
+        //shareProgram: true, // share planes program to improve plane creation speed
         widthSegments: 10,
         heightSegments: 10,
         drawCheckMargins: {
@@ -118,8 +116,9 @@ window.addEventListener("load", function() {
     };
 
     // add our planes and handle them
-    for(var i = 0; i < planeElements.length; i++) {
-        planes.push(webGLCurtain.addPlane(planeElements[i], params));
+    for(let i = 0; i < planeElements.length; i++) {
+        //planes.push(curtains.addPlane(planeElements[i], params));
+        planes.push(new Plane(curtains, planeElements[i], params));
 
         handlePlanes(i);
     }
@@ -127,17 +126,17 @@ window.addEventListener("load", function() {
 
     // handle all the planes
     function handlePlanes(index) {
-        var plane = planes[index];
+        const plane = planes[index];
 
         // check if our plane is defined and use it
-        plane && plane.onLoading(function() {
-            //console.log(plane.loadingManager.sourcesLoaded);
-        }).onReady(function() {
+        plane.onError(() => {
+            console.log("plane error", plane);
+        }).onReady(() => {
             // once everything is ready, display everything
             if(index === planes.length - 1) {
                 document.body.classList.add("planes-loaded");
             }
-        }).onRender(function() {
+        }).onRender(() => {
             // update the uniform
             plane.uniforms.planeDeformation.value = planesDeformations;
         });
@@ -146,7 +145,7 @@ window.addEventListener("load", function() {
     // this will simulate an ajax lazy load call
     // additionnalPlanes string could be the response of our AJAX call
     document.getElementById("add-more-planes").addEventListener("click", function() {
-        var additionnalPlanes = '<div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 1) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane"><img src="../medias/plane-small-texture-1.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 2) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane"><img src="../medias/plane-small-texture-2.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 3) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane"><img src="../medias/plane-small-texture-3.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 4) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane"><img src="../medias/plane-small-texture-4.jpg" data-sampler="planeTexture" /></div></div></div></div></div>';
+        const additionnalPlanes = '<div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 1) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane"><img src="../medias/plane-small-texture-1.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 2) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane"><img src="../medias/plane-small-texture-2.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 3) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane"><img src="../medias/plane-small-texture-3.jpg" data-sampler="planeTexture" /></div></div></div></div></div><div class="plane-wrapper"><span class="plane-title">Title ' + (planes.length + 4) + '</span><div class="plane-inner"><div class="landscape-wrapper"><div class="landscape-inner"><div class="plane"><img src="../medias/plane-small-texture-4.jpg" data-sampler="planeTexture" /></div></div></div></div></div>';
 
         // append the response
         document.getElementById("planes").insertAdjacentHTML("beforeend", additionnalPlanes);
@@ -155,12 +154,12 @@ window.addEventListener("load", function() {
         planeElements = document.getElementsByClassName("plane");
 
         // we need a timeout because insertAdjacentHTML could take some time to append the content
-        setTimeout(function() {
+        setTimeout(() => {
             // we will create the planes that don't already exist
             // basically the same thing as above
-            for(var i = planes.length; i < planeElements.length; i++) {
+            for(let i = planes.length; i < planeElements.length; i++) {
 
-                planes.push(webGLCurtain.addPlane(planeElements[i], params));
+                planes.push(new Plane(curtains, planeElements[i], params));
 
                 handlePlanes(i);
 
@@ -175,7 +174,7 @@ window.addEventListener("load", function() {
 
 
     // post processing
-    var shaderPassFs = `
+    const shaderPassFs = `
         precision mediump float;
     
         varying vec3 vVertexPosition;
@@ -192,13 +191,13 @@ window.addEventListener("load", function() {
     
             // displace along Y axis
             textureCoords.y += (sin(displacement.r) / 5.0) * uDisplacement;
-    
+            
             gl_FragColor = texture2D(uRenderTexture, textureCoords);
         }
     `;
 
 
-    var shaderPassParams = {
+    const shaderPassParams = {
         fragmentShader: shaderPassFs, // we'll be using the lib default vertex shader
         uniforms: {
             timer: {
@@ -212,11 +211,16 @@ window.addEventListener("load", function() {
                 value: 0,
             },
         },
+
+        texturesOptions: {
+            anisotropy: 10,
+        }
     };
 
-    var shaderPass = webGLCurtain.addShaderPass(shaderPassParams);
+    const shaderPass = new ShaderPass(curtains, shaderPassParams);
+
     // we will need to load a new image
-    var image = new Image();
+    const image = new Image();
     image.src = "../medias/displacement.jpg";
     // set its data-sampler attribute to use in fragment shader
     image.setAttribute("data-sampler", "displacementTexture");
@@ -224,15 +228,17 @@ window.addEventListener("load", function() {
     // if our shader pass has been successfully created
     if(shaderPass) {
         // load our displacement image
-        shaderPass.loadImage(image);
-        shaderPass.onLoading(function(texture) {
+        shaderPass.loader.loadImage(image);
+        shaderPass.onLoading((texture) => {
             console.log("shader pass image has been loaded and texture has been created:", texture);
-        }).onReady(function() {
+        }).onReady(() => {
             console.log("shader pass is ready");
-        }).onRender(function() {
+        }).onRender(() => {
             // update the uniforms
             shaderPass.uniforms.timer.value++;
             shaderPass.uniforms.displacement.value = planesDeformations / 60;
+        }).onError(() => {
+            console.log('shader pass error');
         });
     }
 });

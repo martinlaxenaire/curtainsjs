@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<!-- Metas -->
+		<title>curtains.js | Context lost example</title>
+		<meta name="description" content="Handling WebGL context lost/restoration events with curtains.js">
+		<link rel="canonical" href="https://www.curtainsjs.com/examples/simple-plane/index.html">
+
+		<!-- Facebook OG -->
+		<meta property="og:title" content="curtains.js | Context lost example">
+		<meta property="og:type" content="website">
+		<meta property="og:description" content="Handling WebGL context lost/restoration events with curtains.js">
+		<meta property="og:url" content="https://www.curtainsjs.com/examples/simple-plane/index.html">
+		<meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+		<!-- Twitter card -->
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:site" content="@webdesign_ml">
+		<meta name="twitter:creator" content="@webdesign_ml">
+		<meta name="twitter:title" content="curtains.js | Context lost example">
+		<meta name="twitter:description" content="Handling WebGL context lost/restoration events with curtains.js">
+		<meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+		<!-- Favicon -->
+		<link rel="apple-touch-icon" sizes="180x180" href="../../../images/favicons/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicons/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicons/favicon-16x16.png">
+		<link rel="manifest" href="../../../images/favicons/site.webmanifest">
+		<link rel="mask-icon" href="../../../images/favicons/safari-pinned-tab.svg" color="#202340">
+		<link rel="shortcut icon" href="../../../images/favicons/favicon.ico">
+		<meta name="msapplication-TileColor" content="#202340">
+		<meta name="msapplication-config" content="../../../images/favicons/browserconfig.xml">
+		<meta name="theme-color" content="#202340">
+
+		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400" rel="stylesheet">
+		<link rel="stylesheet" href="style.css" type="text/css">
+	</head>
+	<body>
+        <div id="page-wrap">
+
+
+			<div id="canvas"></div>
+
+			<div class="curtain" data-vs-id="simple-plane-vs" data-fs-id="simple-plane-fs">
+				<img src="../../medias/plane-texture-1.jpg" data-sampler="simplePlaneTexture" />
+			</div>
+
+			<span id="switch-context">Lose/restore context</span>
+		</div>
+
+		<script id="simple-plane-vs" type="x-shader/x-vertex">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+
+			// default mandatory variables
+			attribute vec3 aVertexPosition;
+			attribute vec2 aTextureCoord;
+
+			uniform mat4 uMVMatrix;
+    		uniform mat4 uPMatrix;
+
+    		// our texture matrix uniform
+    		uniform mat4 simplePlaneTextureMatrix;
+
+			// custom variables
+			varying vec3 vVertexPosition;
+			varying vec2 vTextureCoord;
+
+			uniform float uTime;
+			uniform vec2 uResolution;
+			uniform vec2 uMousePosition;
+			uniform float uMouseMoveStrength;
+
+
+			void main() {
+
+				vec3 vertexPosition = aVertexPosition;
+
+				// get the distance between our vertex and the mouse position
+				float distanceFromMouse = distance(uMousePosition, vec2(vertexPosition.x, vertexPosition.y));
+
+				// calculate our wave effect
+				float waveSinusoid = cos(5.0 * (distanceFromMouse - (uTime / 75.0)));
+
+				// attenuate the effect based on mouse distance
+				float distanceStrength = (0.4 / (distanceFromMouse + 0.4));
+
+				// calculate our distortion effect
+				float distortionEffect = distanceStrength * waveSinusoid * uMouseMoveStrength;
+
+				// apply it to our vertex position
+				vertexPosition.z +=  distortionEffect / 15.0;
+				vertexPosition.x +=  (distortionEffect / 15.0 * (uResolution.x / uResolution.y) * (uMousePosition.x - vertexPosition.x));
+				vertexPosition.y +=  distortionEffect / 15.0 * (uMousePosition.y - vertexPosition.y);
+
+			   	gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+
+			   	// varyings
+			   	// here we use our texture matrix to calculate correct texture coords values
+			   	vTextureCoord = (simplePlaneTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+			   	vVertexPosition = vertexPosition;
+			}
+        </script>
+		<script id="simple-plane-fs" type="x-shader/x-fragment">
+
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+
+			uniform float uTime;
+			uniform vec2 uResolution;
+			uniform vec2 uMousePosition;
+
+			varying vec3 vVertexPosition;
+			varying vec2 vTextureCoord;
+
+			uniform sampler2D simplePlaneTexture;
+
+
+			void main( void ) {
+
+				// get our texture coords
+				vec2 textureCoords = vec2(vTextureCoord.x, vTextureCoord.y);
+
+				// apply our texture
+				vec4 finalColor = texture2D(simplePlaneTexture, textureCoords);
+
+				// fake shadows based on vertex position along Z axis
+				finalColor.rgb -= clamp(-vVertexPosition.z, 0.0, 1.0);
+				// fake lights based on vertex position along Z axis
+				finalColor.rgb += clamp(vVertexPosition.z, 0.0, 1.0);
+
+				// handling premultiplied alpha (useful if we were using a png with transparency)
+				finalColor = vec4(finalColor.rgb * finalColor.a, finalColor.a);
+
+				gl_FragColor = finalColor;
+			}
+        </script>
+
+        <script id="inverted-rect-vs" type="x-shader/x-vertex">
+            #ifdef GL_ES
+            precision mediump float;
+            #endif
+
+            // default mandatory variables
+            attribute vec3 aVertexPosition;
+            attribute vec2 aTextureCoord;
+
+            // custom variables
+            varying vec3 vVertexPosition;
+            varying vec2 vTextureCoord;
+
+            void main() {
+                gl_Position = vec4(aVertexPosition, 1.0);
+
+                // varyings
+                vVertexPosition = aVertexPosition;
+                vTextureCoord = aTextureCoord;
+            }
+        </script>
+                <script id="inverted-rect-fs" type="x-shader/x-fragment">
+            #ifdef GL_ES
+            precision mediump float;
+            #endif
+
+            varying vec3 vVertexPosition;
+            varying vec2 vTextureCoord;
+
+            uniform sampler2D uRenderTexture;
+
+            void main( void ) {
+                // invert colors
+                vec4 scene = texture2D(uRenderTexture, vTextureCoord);
+                vec4 invertedColors = texture2D(uRenderTexture, vTextureCoord);
+                invertedColors.rgb = vec3(1.0 - invertedColors.rgb);
+
+                vec4 finalColor = mix(scene, invertedColors, vTextureCoord.x);
+
+                gl_FragColor = finalColor;
+            }
+        </script>
+
+
+        <script src="js/simple.plane.setup.js" type="module"></script>
+
+	</body>
+</html>

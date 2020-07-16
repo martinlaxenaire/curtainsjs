@@ -1,55 +1,43 @@
-function displayCurtains() {
+import {Curtains, Plane, Vec2} from '../src/index.mjs';
 
-    function lerp (start, end, amt){
-        return (1 - amt) * start + amt * end;
-    }
-
-    var mousePosition = {
-        x: 0,
-        y: 0,
-    };
-    var mouseLastPosition = {
-        x: 0,
-        y: 0,
-    };
-    var deltas = {
+window.addEventListener("load", () => {
+    const mousePosition = new Vec2();
+    const mouseLastPosition = new Vec2();
+    const deltas = {
         max: 0,
         applied: 0,
     };
 
     function handleMovement(e, plane) {
+        // update mouse last pos
+        mouseLastPosition.copy(mousePosition);
 
-        if(mousePosition.x != -100000 && mousePosition.y != -100000) {
+        const mouse = new Vec2();
 
-            mouseLastPosition.x = mousePosition.x;
-            mouseLastPosition.y = mousePosition.y;
-        }
-
-        var mouse = {};
-
+        // touch event
         if(e.targetTouches) {
-
-            mouse.x = e.targetTouches[0].clientX;
-            mouse.y = e.targetTouches[0].clientY;
+            mouse.set(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
         }
+        // mouse event
         else {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
+            mouse.set(e.clientX, e.clientY);
         }
 
         // lerp the mouse position a bit to smoothen the overall effect
-        mousePosition.x = lerp(mousePosition.x, mouse.x, 0.3);
-        mousePosition.y = lerp(mousePosition.y, mouse.y, 0.3);
+        mousePosition.set(
+            curtains.lerp(mousePosition.x, mouse.x, 0.3),
+            curtains.lerp(mousePosition.y, mouse.y, 0.3)
+        );
 
         if(plane) {
-            var mouseCoords = plane.mouseToPlaneCoords(mousePosition.x, mousePosition.y);
+            const mouseCoords = plane.mouseToPlaneCoords(mousePosition.x, mousePosition.y);
 
             // mouse must be not too much below the curtains to update the uniforms
             if(mouseCoords.y > -1.25) {
-                plane.uniforms.mousePosition.value = [mouseCoords.x, mouseCoords.y];
+                plane.uniforms.mousePosition.value = mouseCoords;
 
                 if(mouseLastPosition.x && mouseLastPosition.y) {
-                    var delta = Math.sqrt(Math.pow(mousePosition.x - mouseLastPosition.x, 2) + Math.pow(mousePosition.y - mouseLastPosition.y, 2)) / 30;
+                    let delta = Math.sqrt(Math.pow(mousePosition.x - mouseLastPosition.x, 2) + Math.pow(mousePosition.y - mouseLastPosition.y, 2)) / 30;
                     delta = Math.min(4, delta);
                     if(delta >= deltas.max) {
                         deltas.max = delta;
@@ -59,63 +47,26 @@ function displayCurtains() {
         }
     }
 
-
-    var webGLCurtain = new Curtains({
+    const curtains = new Curtains({
         container: "canvas",
         premultipliedAlpha: true,
+        pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
     });
 
     // handling errors
-    webGLCurtain.onError(function() {
+    curtains.onError(function() {
         // we will add a class to the document body to display original images
         document.body.classList.add("no-curtains");
+    }).onContextLost(() => {
+        curtains.restoreContext();
     });
 
-    // home curtain
-    // here we will write our title inside our canvas
-    function writeTitle(plane, canvas) {
-        var title = document.getElementById("site-title");
-        var titleStyle = window.getComputedStyle(title);
 
-        var titleTopPosition = title.offsetTop * webGLCurtain.pixelRatio - plane.htmlElement.offsetTop * webGLCurtain.pixelRatio;
-        // adjust small offset due to font interpretation?
-        titleTopPosition += title.clientHeight * webGLCurtain.pixelRatio * 0.1;
-
-        var planeBoundinRect = plane.getBoundingRect();
-
-        var htmlPlaneWidth = planeBoundinRect.width;
-        var htmlPlaneHeight = planeBoundinRect.height;
-
-        // set sizes
-        canvas.width = htmlPlaneWidth;
-        canvas.height = htmlPlaneHeight;
-        var context = canvas.getContext("2d");
-
-        context.width = htmlPlaneWidth;
-        context.height = htmlPlaneHeight;
-
-        // draw our title with the original style
-        context.fillStyle = titleStyle.color;
-        context.font = parseFloat(titleStyle.fontSize) * webGLCurtain.pixelRatio + "px " + titleStyle.fontFamily;
-        context.fontStyle = titleStyle.fontStyle;
-        context.textAlign = "center";
-
-        // vertical alignment
-        context.textBaseline = "top";
-        context.fillText(title.innerText, htmlPlaneWidth / 2, titleTopPosition);
-
-        if(curtainPlane.textures && curtainPlane.textures.length > 1) {
-            curtainPlane.textures[1].resize();
-            curtainPlane.textures[1].needUpdate();
-        }
-    }
-
-
-    var planeElements = document.getElementsByClassName("curtain");
+    const planeElements = document.getElementsByClassName("curtain");
 
     if(planeElements.length > 0) {
 
-        var curtainPlaneParams = {
+        const curtainPlaneParams = {
             widthSegments: 50,
             heightSegments: 37,
             drawCheckMargins: {
@@ -133,7 +84,7 @@ function displayCurtains() {
                 mousePosition: {
                     name: "uMousePosition",
                     type: "2f",
-                    value: [mousePosition.x, mousePosition.y],
+                    value: mousePosition,
                 },
                 mouseMoveStrength: {
                     name: "uMouseMoveStrength",
@@ -143,77 +94,114 @@ function displayCurtains() {
             },
         };
 
-        var curtainPlane = webGLCurtain.addPlane(planeElements[0], curtainPlaneParams);
+        const curtainPlane = new Plane(curtains, planeElements[0], curtainPlaneParams);
 
-        // if there has been an error during init, curtainPlane will be null
-        if(curtainPlane) {
-            var canvas = document.createElement("canvas");
+        // home curtain
+        // here we will write our title inside our canvas
+        function writeTitle(plane, canvas) {
+            const title = document.getElementById("site-title");
+            const titleStyle = window.getComputedStyle(title);
 
-            canvas.setAttribute("data-sampler", "titleSampler");
-            canvas.style.display = "none";
+            let titleTopPosition = title.offsetTop * curtains.pixelRatio - plane.htmlElement.offsetTop * curtains.pixelRatio;
+            // adjust small offset due to font interpretation?
+            titleTopPosition += title.clientHeight * curtains.pixelRatio * 0.1;
 
-            curtainPlane.loadCanvas(canvas);
+            const planeBoundinRect = plane.getBoundingRect();
 
-            curtainPlane.onReady(function() {
-                var wrapper = document.getElementById("page-wrap");
+            const htmlPlaneWidth = planeBoundinRect.width;
+            const htmlPlaneHeight = planeBoundinRect.height;
 
-                wrapper.addEventListener("mousemove", function(e) {
-                    handleMovement(e, curtainPlane);
-                });
+            // set sizes
+            canvas.width = htmlPlaneWidth;
+            canvas.height = htmlPlaneHeight;
+            const context = canvas.getContext("2d");
 
-                wrapper.addEventListener("touchmove", function(e) {
-                    handleMovement(e, curtainPlane);
-                }, {passive: true});
+            context.width = htmlPlaneWidth;
+            context.height = htmlPlaneHeight;
 
-            }).onLoading(function(texture) {
-                texture.shouldUpdate = false;
-                if(curtainPlane.canvases && curtainPlane.canvases.length > 0) {
-                    // title
-                    if(document.fonts) {
-                        document.fonts.ready.then(function () {
-                            writeTitle(curtainPlane, canvas);
-                        });
-                    }
-                    else {
-                        setTimeout(function() {
-                            writeTitle(curtainPlane, canvas);
-                        }, 750);
-                    }
-                }
+            // draw our title with the original style
+            context.fillStyle = titleStyle.color;
+            context.font = parseFloat(titleStyle.fontSize) * curtains.pixelRatio + "px " + titleStyle.fontFamily;
+            context.fontStyle = titleStyle.fontStyle;
+            context.textAlign = "center";
 
-                if(curtainPlane.textures.length === 2) {
-                    setTimeout(function() {
-                        document.body.classList.add("curtain-ready");
-                        deltas.max = 4;
-                    }, 200);
-                }
-            }).onRender(function() {
-                curtainPlane.uniforms.mouseTime.value++;
+            // vertical alignment
+            context.textBaseline = "top";
+            context.fillText(title.innerText, htmlPlaneWidth / 2, titleTopPosition);
 
-                // decrease the mouse move strenght with damping : if the user doesn't move the mouse, effect will fade away
-                deltas.applied += (deltas.max - deltas.applied) * 0.02;
-                deltas.max += (0 - deltas.max) * 0.01;
-
-                // send the new mouse move strength value
-                curtainPlane.uniforms.mouseMoveStrength.value = deltas.applied;
-
-            }).onReEnterView(function() {
-                // force title drawing if it was hidden on page load
+            if(curtainPlane.textures && curtainPlane.textures.length > 1) {
+                curtainPlane.textures[1].resize();
                 curtainPlane.textures[1].needUpdate();
-            }).onAfterResize(function() {
-                writeTitle(curtainPlane, canvas);
-            });
+            }
         }
 
+
+        const canvas = document.createElement("canvas");
+
+        canvas.setAttribute("data-sampler", "titleSampler");
+        canvas.style.display = "none";
+
+        curtainPlane.loadCanvas(canvas);
+
+        curtainPlane.onReady(() => {
+            const wrapper = document.getElementById("page-wrap");
+
+            wrapper.addEventListener("mousemove", function(e) {
+                handleMovement(e, curtainPlane);
+            });
+
+            wrapper.addEventListener("touchmove", function(e) {
+                handleMovement(e, curtainPlane);
+            }, {passive: true});
+
+        }).onLoading((texture) => {
+            texture.shouldUpdate = false;
+
+            if(curtainPlane.canvases && curtainPlane.canvases.length > 0) {
+                // title
+                if(document.fonts) {
+                    document.fonts.ready.then(() => {
+                        writeTitle(curtainPlane, canvas);
+                    });
+                }
+                else {
+                    setTimeout(() => {
+                        writeTitle(curtainPlane, canvas);
+                    }, 750);
+                }
+            }
+
+            if(curtainPlane.textures.length === 2) {
+                setTimeout(() => {
+                    document.body.classList.add("curtain-ready");
+                    deltas.max = 4;
+                }, 200);
+            }
+        }).onRender(() => {
+            curtainPlane.uniforms.mouseTime.value++;
+
+            // decrease the mouse move strenght with damping : if the user doesn't move the mouse, effect will fade away
+            deltas.applied += (deltas.max - deltas.applied) * 0.02;
+            deltas.max += (0 - deltas.max) * 0.01;
+
+            // send the new mouse move strength value
+            curtainPlane.uniforms.mouseMoveStrength.value = deltas.applied;
+
+        }).onReEnterView(() => {
+            // force title drawing if it was hidden on page load
+            curtainPlane.textures[1].needUpdate();
+        }).onAfterResize(() => {
+            writeTitle(curtainPlane, canvas);
+        });
     }
 
 
     // examples
-    var showcaseElements = document.getElementsByClassName("showcase-curtain");
-    var showcasePlanes = [];
+    const showcaseElements = document.getElementsByClassName("showcase-curtain");
+    const showcasePlanes = [];
 
-    for(var i = 0; i < showcaseElements.length; i++) {
-        var showcaseParams = {
+    for(let i = 0; i < showcaseElements.length; i++) {
+        const showcaseParams = {
             vertexShaderID: "simple-shader-vs",
             fragmentShaderID: "simple-shader-fs",
             widthSegments: 20,
@@ -227,58 +215,47 @@ function displayCurtains() {
             },
         };
 
-        var plane = webGLCurtain.addPlane(showcaseElements[i], showcaseParams);
+        const plane = new Plane(curtains, showcaseElements[i], showcaseParams);
 
-        if(plane) {
-            showcasePlanes.push(plane);
+        showcasePlanes.push(plane);
 
-            handleExamples(i);
-        }
+        handleExamples(i);
     }
 
     function handleExamples(index) {
-        var plane = showcasePlanes[index];
+        const plane = showcasePlanes[index];
 
-        // if there has been an error during init, plane will be null
-        if(plane) {
-            plane.onReady(function() {
+        plane.onReady(function() {
 
-                plane.mouseOver = false;
+            plane.userData.mouseOver = false;
 
-                showcaseElements[index].addEventListener("mouseenter", function(e) {
-                    plane.mouseOver = true;
-                });
-
-                showcaseElements[index].addEventListener("mouseleave", function(e) {
-                    plane.mouseOver = false;
-                });
-
-            }).onRender(function() {
-                // use damping
-                if(plane.mouseOver) {
-                    plane.uniforms.time.value += (45 - plane.uniforms.time.value) * 0.0375;
-                }
-                else {
-                    plane.uniforms.time.value += (0 - plane.uniforms.time.value) * 0.0375;
-                }
-
-                plane.updatePosition();
-            }).onLeaveView(function() {
-                //console.log("leaving view", plane.index);
-            }).onReEnterView(function() {
-                //console.log("entering view", plane.index);
+            showcaseElements[index].addEventListener("mouseenter", function(e) {
+                plane.userData.mouseOver = true;
             });
-        }
+
+            showcaseElements[index].addEventListener("mouseleave", function(e) {
+                plane.userData.mouseOver = false;
+            });
+
+        }).onRender(() => {
+            // use damping
+            if(plane.userData.mouseOver) {
+                plane.uniforms.time.value += (45 - plane.uniforms.time.value) * 0.0375;
+            }
+            else {
+                plane.uniforms.time.value += (0 - plane.uniforms.time.value) * 0.0375;
+            }
+        });
 
     }
 
 
     // basic example
-    var basicElement = document.getElementById("basic-example");
+    const basicElement = document.getElementById("basic-example");
 
     if(basicElement) {
 
-        var basicPlaneParams = {
+        const basicPlaneParams = {
             vertexShaderID: "basic-plane-vs", // our vertex shader ID
             fragmentShaderID: "basic-plane-fs", // our framgent shader ID
             uniforms: {
@@ -290,23 +267,20 @@ function displayCurtains() {
             },
         };
 
-        var basicPlane = webGLCurtain.addPlane(basicElement, basicPlaneParams);
+        const basicPlane = new Plane(curtains, basicElement, basicPlaneParams);
 
-        // if there has been an error during init, curtainPlane will be null
-        if(basicPlane) {
-            basicPlane.onRender(function() {
-                basicPlane.uniforms.time.value++;
-            });
-        }
+        basicPlane.onRender(() => {
+            basicPlane.uniforms.time.value++;
+        });
     }
 
 
     // about
-    var aboutElements = document.getElementsByClassName("about-curtain");
+    const aboutElements = document.getElementsByClassName("about-curtain");
 
     if(aboutElements.length > 0) {
 
-        var aboutPlaneParams = {
+        const aboutPlaneParams = {
             widthSegments: 10,
             heightSegments: 10,
             fov: 35,
@@ -319,19 +293,12 @@ function displayCurtains() {
             },
         };
 
-        var aboutPlane = webGLCurtain.addPlane(aboutElements[0], aboutPlaneParams);
+        const aboutPlane = curtains.addPlane(aboutElements[0], aboutPlaneParams);
 
-        // if there has been an error during init, curtainPlane will be null
-        if(aboutPlane) {
-            aboutPlane.onRender(function() {
-                aboutPlane.uniforms.time.value++;
-            });
-        }
+        aboutPlane.onRender(() => {
+            aboutPlane.uniforms.time.value++;
+        });
 
     }
 
-}
-
-window.addEventListener("load", function() {
-    displayCurtains();
 });

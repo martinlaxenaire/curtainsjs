@@ -139,7 +139,8 @@
         position: relative;
         overflow: hidden;
         height: 0;
-        padding-bottom: 66.6%;
+        /*padding-bottom: 66.6%;*/
+        padding-bottom: 100%;
     }
 
     .plane {
@@ -156,7 +157,7 @@
 
     /*** handling errors ***/
 
-    .no-curtains .plane img {
+    .no-curtains .plane img, .no-plane.plane img {
         display: block;
         width: 100%;
         height: auto;

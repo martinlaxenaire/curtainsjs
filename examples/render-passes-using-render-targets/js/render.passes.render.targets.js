@@ -1,25 +1,23 @@
-window.addEventListener("load", function() {
+import {Curtains, RenderTarget, Plane, ShaderPass} from '../../../src/index.mjs';
 
-    function lerp (start, end, amt){
-        return (1 - amt) * start + amt * end;
-    }
-
+window.addEventListener("load", () => {
     // we will keep track of all our planes in an array
-    var scrollEffect = 0;
+    let scrollEffect = 0;
 
     // set up our WebGL context and append the canvas to our wrapper
-    var curtains = new Curtains({
+    const curtains = new Curtains({
         container: "canvas",
         antialias: false, // render targets will disable default antialiasing anyway
+        pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
     });
 
-    curtains.onRender(function() {
+    curtains.onRender(() => {
         // update our planes deformation
         // increase/decrease the effect
-        scrollEffect = lerp(scrollEffect, 0, 0.05);
-    }).onScroll(function() {
+        scrollEffect = curtains.lerp(scrollEffect, 0, 0.05);
+    }).onScroll(() => {
         // get scroll deltas to apply the effect on scroll
-        var delta = curtains.getScrollDeltas();
+        const delta = curtains.getScrollDeltas();
 
         // invert value for the effect
         delta.y = -delta.y;
@@ -33,27 +31,28 @@ window.addEventListener("load", function() {
         }
 
         if(Math.abs(delta.y) > Math.abs(scrollEffect)) {
-            scrollEffect = lerp(scrollEffect, delta.y, 0.5);
+            scrollEffect = curtains.lerp(scrollEffect, delta.y, 0.5);
         }
 
-    }).onError(function() {
+    }).onError(() => {
         // we will add a class to the document body to display original images
         document.body.classList.add("no-curtains");
-    }).onContextLost(function() {
+    }).onContextLost(() => {
         // on context lost, try to restore the context
         curtains.restoreContext();
     });
 
+
     // get our planes elements
-    var planeElements = document.getElementsByClassName("plane");
-    var smallPlaneElements = document.getElementsByClassName("small-plane");
+    const planeElements = document.getElementsByClassName("plane");
+    const smallPlaneElements = document.getElementsByClassName("small-plane");
 
 
-    var distortionTarget = curtains.addRenderTarget();
-    var rgbTarget = curtains.addRenderTarget();
+    const distortionTarget = new RenderTarget(curtains);
+    const rgbTarget = new RenderTarget(curtains);
 
 
-    var vs = `
+    const vs = `
         precision mediump float;
     
         // default mandatory variables
@@ -81,7 +80,7 @@ window.addEventListener("load", function() {
         }
     `;
 
-    var fs = `
+    const fs = `
         precision mediump float;
     
         varying vec3 vVertexPosition;
@@ -96,31 +95,27 @@ window.addEventListener("load", function() {
     `;
 
     // add our planes and handle them
-    for(var i = 0; i < planeElements.length; i++) {
-        var plane = curtains.addPlane(planeElements[i], {
+    for(let i = 0; i < planeElements.length; i++) {
+        const plane = new Plane(curtains, planeElements[i], {
             vertexShader: vs,
             fragmentShader: fs,
         });
 
-        if(plane) {
-            plane.setRenderTarget(distortionTarget);
-        }
+        plane.setRenderTarget(distortionTarget);
     }
 
     // add the small planes as well
-    for(var i = 0; i < smallPlaneElements.length; i++) {
-        var plane = curtains.addPlane(smallPlaneElements[i], {
+    for(let i = 0; i < smallPlaneElements.length; i++) {
+        const plane = new Plane(curtains, smallPlaneElements[i], {
             vertexShader: vs,
             fragmentShader: fs,
         });
 
-        if(plane) {
-            plane.setRenderTarget(rgbTarget);
-        }
+        plane.setRenderTarget(rgbTarget);
     }
 
 
-    var distortionFs = `
+    const distortionFs = `
         precision mediump float;
     
         varying vec3 vVertexPosition;
@@ -141,7 +136,7 @@ window.addEventListener("load", function() {
         }
     `;
 
-    var distortionPass = curtains.addShaderPass({
+    const distortionPass = new ShaderPass(curtains, {
         fragmentShader: distortionFs,
         renderTarget: distortionTarget,
         uniforms: {
@@ -153,15 +148,13 @@ window.addEventListener("load", function() {
         },
     });
 
-    if(distortionPass) {
-        distortionPass.onRender(function() {
-            // update the uniform
-            distortionPass.uniforms.scrollEffect.value = scrollEffect;
-        });
-    }
+    distortionPass.onRender(() => {
+        // update the uniform
+        distortionPass.uniforms.scrollEffect.value = scrollEffect;
+    });
 
 
-    var rgbFs = `
+    const rgbFs = `
         precision mediump float;
     
         varying vec3 vVertexPosition;
@@ -187,7 +180,7 @@ window.addEventListener("load", function() {
         }
     `;
 
-    var rgbPass = curtains.addShaderPass({
+    const rgbPass = new ShaderPass(curtains, {
         fragmentShader: rgbFs,
         renderTarget: rgbTarget,
         depthTest: false, // we need to disable the depth test to display that shader pass on top of the first one
@@ -200,15 +193,13 @@ window.addEventListener("load", function() {
         },
     });
 
-    if(rgbPass) {
-        rgbPass.onRender(function() {
-            // update the uniform
-            rgbPass.uniforms.scrollEffect.value = scrollEffect;
-        });
-    }
+    rgbPass.onRender(() => {
+        // update the uniform
+        rgbPass.uniforms.scrollEffect.value = scrollEffect;
+    });
 
 
-    var blurFs = `
+    const blurFs = `
         precision mediump float;
     
         varying vec3 vVertexPosition;
@@ -238,9 +229,9 @@ window.addEventListener("load", function() {
         }
     `;
 
-    var curtainsBBox = curtains.getBoundingRect();
+    let curtainsBBox = curtains.getBoundingRect();
 
-    var blurPass = curtains.addShaderPass({
+    const blurPass = new ShaderPass(curtains, {
         fragmentShader: blurFs,
         uniforms: {
             scrollEffect: {
@@ -256,13 +247,11 @@ window.addEventListener("load", function() {
         },
     });
 
-    if(blurPass) {
-        blurPass.onRender(function() {
-            // update the uniform
-            blurPass.uniforms.scrollEffect.value = scrollEffect;
-        }).onAfterResize(function() {
-            curtainsBBox = curtains.getBoundingRect();
-            blurPass.uniforms.resolution.value = [curtainsBBox.width, curtainsBBox.height];
-        });
-    }
+    blurPass.onRender(() => {
+        // update the uniform
+        blurPass.uniforms.scrollEffect.value = scrollEffect;
+    }).onAfterResize(() => {
+        curtainsBBox = curtains.getBoundingRect();
+        blurPass.uniforms.resolution.value = [curtainsBBox.width, curtainsBBox.height];
+    });
 });
