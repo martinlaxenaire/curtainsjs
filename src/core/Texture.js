@@ -666,7 +666,6 @@ export class Texture {
                 this.parameters.generateMipmap = false;
             }
             else {
-                console.log("generate mip map", this.uuid);
                 this.gl.generateMipmap(this.gl.TEXTURE_2D);
             }
 

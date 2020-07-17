@@ -1,4 +1,4 @@
-// TODO rollup local + babel
+import babel from '@rollup/plugin-babel';
 import {terser} from 'rollup-plugin-terser';
 
 export default [{
@@ -7,18 +7,37 @@ export default [{
         {
             file: 'dist/curtainsjs.umd.js',
             format: 'umd',
-            name: 'Curtains'
+            name: 'Curtains',
+            plugins: [
+                babel({
+                    allowAllFormats: true,
+                    babelrc: false,
+                    presets: [
+                        '@babel/preset-env',
+                        {
+                            modules: 'umd'
+                        }
+                    ]
+                })
+            ]
         },
         {
             file: 'dist/curtainsjs.umd.min.js',
-            format: 'umd',
+            format: 'esm',
             name: 'Curtains',
-            plugins: [terser()]
-        },
-        {
-            file: 'dist/curtainsjs.esm.min.js',
-            format: 'es',
-            plugins: [terser()]
+            plugins: [
+                babel({
+                    allowAllFormats: true,
+                    babelrc: false,
+                    presets: [
+                        '@babel/preset-env',
+                        {
+                            modules: 'umd'
+                        }
+                    ]
+                }),
+                terser()
+            ]
         },
     ],
 }];

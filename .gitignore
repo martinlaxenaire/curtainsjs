@@ -1,4 +1,5 @@
 /sitemap.xml
 /.htaccess
 /node_modules
+/build
 /.idea

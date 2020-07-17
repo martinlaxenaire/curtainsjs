@@ -900,7 +900,7 @@ export class Plane extends DOMMesh {
      @lastXDelta (float): last scroll value along X axis
      @lastYDelta (float): last scroll value along Y axis
      ***/
-    updateScrollPosition = function(lastXDelta, lastYDelta) {
+    updateScrollPosition(lastXDelta, lastYDelta) {
         // actually update the plane position only if last X delta or last Y delta is not equal to 0
         if(lastXDelta || lastYDelta) {
             // set new positions based on our delta without triggering reflow

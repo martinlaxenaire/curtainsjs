@@ -423,7 +423,8 @@
          @source (HTML element) : html image, video or canvas element (only images for now)
          ***/
         getTextureFromSource(source) {
-            return this.textures.find(element => element.source && element.source.src === source.src);
+            // return the texture if the source is the same and if it's not the same texture
+            return this.textures.find(element => element.source && element.source.src === source.src && element.uuid !== element.uuid);
         }
 
         /***
@@ -940,35 +941,6 @@
 
             this.uuid = generateUUID();
 
-            // is it a frame buffer object texture?
-            // if it's not, type will change when the source will be loaded
-            this.sourceType = isFBOTexture ? "fbo" : "empty";
-
-            this._samplerName = sampler;
-
-            // prepare texture sampler
-            this._sampler = {
-                isActive: false
-            };
-
-            // we will always declare a texture matrix
-            this._textureMatrix = {
-                matrix: new Mat4()
-            };
-
-            // _willUpdate and shouldUpdate property are set to false by default
-            // we will handle that in the setSource() method for videos and canvases
-            this._willUpdate = false;
-            this.shouldUpdate = false;
-
-            // if we need to force a texture update
-            this._forceUpdate = false;
-
-            // source loading and GPU uploading flags
-            this._loader = loader;
-            this._sourceLoaded = false;
-            this._uploaded = false;
-
             // texture parameters
             this._globalParameters = {
                 // global gl context parameters
@@ -1000,7 +972,36 @@
             // per texture state
             this._initState();
 
+            // is it a frame buffer object texture?
+            // if it's not, type will change when the source will be loaded
+            this.sourceType = isFBOTexture ? "fbo" : "empty";
+
+            this._samplerName = sampler;
+
+            // prepare texture sampler
+            this._sampler = {
+                isActive: false
+            };
+
+            // we will always declare a texture matrix
+            this._textureMatrix = {
+                matrix: new Mat4()
+            };
+
             this.scale = new Vec2(1, 1);
+
+            // source loading and GPU uploading flags
+            this._loader = loader;
+            this._sourceLoaded = false;
+            this._uploaded = false;
+
+            // _willUpdate and shouldUpdate property are set to false by default
+            // we will handle that in the setSource() method for videos and canvases
+            this._willUpdate = false;
+            this.shouldUpdate = false;
+
+            // if we need to force a texture update
+            this._forceUpdate = false;
 
             // custom user properties
             this.userData = {};
@@ -1098,9 +1099,12 @@
             // avoid binding that texture before reseting it
             this._canDraw = false;
             this._sampler.isActive = false;
-            this.parameters._shouldUpdate = true;
 
             this._initState();
+
+            // force mip map regeneration if needed
+            this._state.generateMipmap = false;
+            this.parameters._shouldUpdate = true;
 
             // this is an original texture, reset it right away
             if(!this._copiedFrom) {
@@ -2200,6 +2204,7 @@
 
             // if textures array is not empty it means we're restoring the context
             if(this.textures.length) {
+                this.textures[0]._parent = this;
                 this.textures[0]._restoreContext();
             }
             else {
@@ -4666,6 +4671,7 @@ void main() {
 
             // restore the textures
             for(let i = 0; i < this.textures.length; i++) {
+                this.textures[i]._parent = this;
                 this.textures[i]._restoreContext();
             }
 
@@ -5397,6 +5403,7 @@ void main() {
 
             // reset textures
             for(let i = 0; i < this.textures.length; i++) {
+                this.textures[i]._parent = this;
                 this.textures[i]._restoreContext();
             }
 
@@ -6149,7 +6156,7 @@ void main() {
          @lastXDelta (float): last scroll value along X axis
          @lastYDelta (float): last scroll value along Y axis
          ***/
-        updateScrollPosition = function(lastXDelta, lastYDelta) {
+        updateScrollPosition(lastXDelta, lastYDelta) {
             // actually update the plane position only if last X delta or last Y delta is not equal to 0
             if(lastXDelta || lastYDelta) {
                 // set new positions based on our delta without triggering reflow
