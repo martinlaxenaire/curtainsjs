@@ -1,4 +1,4 @@
-import babel from '@rollup/plugin-babel';
+import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import {terser} from 'rollup-plugin-terser';
 
 export default [{
@@ -9,31 +9,25 @@ export default [{
             format: 'umd',
             name: 'Curtains',
             plugins: [
-                babel({
+                getBabelOutputPlugin({
                     allowAllFormats: true,
                     babelrc: false,
                     presets: [
                         '@babel/preset-env',
-                        {
-                            modules: 'umd'
-                        }
                     ]
                 })
             ]
         },
         {
             file: 'dist/curtainsjs.umd.min.js',
-            format: 'esm',
+            format: 'umd',
             name: 'Curtains',
             plugins: [
-                babel({
+                getBabelOutputPlugin({
                     allowAllFormats: true,
                     babelrc: false,
                     presets: [
                         '@babel/preset-env',
-                        {
-                            modules: 'umd'
-                        }
                     ]
                 }),
                 terser()
