@@ -1,4 +1,6 @@
 /examples
-/build
-
-# TODO remove website, docs etc?
+/images
+/js
+*.html
+*.css
+*.xml

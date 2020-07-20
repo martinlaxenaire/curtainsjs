@@ -29,10 +29,10 @@ curtains.onError(() => {
 function preloadTextures() {
     let percentLoaded = 0;
     let images = [
-        "../medias/plane-small-texture-1.jpg",
-        "../medias/plane-small-texture-2.jpg",
-        "../medias/plane-small-texture-3.jpg",
-        "../medias/plane-small-texture-4.jpg",
+        "../../medias/plane-small-texture-1.jpg",
+        "../../medias/plane-small-texture-2.jpg",
+        "../../medias/plane-small-texture-3.jpg",
+        "../../medias/plane-small-texture-4.jpg",
     ];
 
     const loader = new TextureLoader(curtains);
@@ -40,16 +40,39 @@ function preloadTextures() {
         const image = new Image();
         image.src = images[i];
 
-        loader.loadImage(image, {}, (texture) => {
+        loader.loadImage(image, {
+            wrapS: curtains.gl.REPEAT,
+            wrapT: curtains.gl.REPEAT,
+            anisotropy: 16,
+        }, (texture) => {
 
             textures.push(texture);
 
-            texture.onSourceLoaded(() => {
 
+            texture.onSourceLoaded(() => {
+                //console.log("source loaded!")
             }).onSourceUploaded(() => {
+                //console.log("texture uploaded here");
+
                 percentLoaded++;
                 console.log("percent loaded", percentLoaded / images.length);
             });
+
+            /*if(texture.uuid.indexOf("A") !== -1) {
+                console.log("set anisotropy");
+                texture.setAnisotropy(16);
+            }*/
+
+            //texture.setWrapS(curtains.gl.REPEAT);
+            //texture.setWrapT(curtains.gl.REPEAT);
+
+            //console.log(texture.uuid, texture);
+
+            /*texture.onSourceUploaded(() => {
+                console.log("texture uploaded");
+                //texture.setWrapS(curtains.gl.REPEAT);
+                //texture.setWrapT(curtains.gl.REPEAT);
+            })*/
         }, (image, error) => {
             console.warn("there has been an error", error, " while loading this image", image);
         });
@@ -64,6 +87,12 @@ window.addEventListener("load", () => {
 
     // resize our curtainsjs container because we instanced it before any dom load event
     curtains.resize();
+
+
+    setTimeout(() => {
+        curtains.renderer.extensions["WEBGL_lose_context"].loseContext();
+    }, 3000);
+
 
     // we will keep track of all our planes in an array
     let planes = [];
@@ -98,8 +127,27 @@ window.addEventListener("load", () => {
             gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
 
             // varyings
-            vTextureCoord = (uTextureMatrix0 * vec4(aTextureCoord, 0.0, 1.0)).xy;
+            //vTextureCoord = (uTextureMatrix0 * vec4(aTextureCoord, 0.0, 1.0)).xy;
+            vTextureCoord = aTextureCoord;
             vVertexPosition = vertexPosition;
+        }
+    `;
+
+    const failFs = `
+        precision mediump float;
+
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        uniform sampler2D uSampler0;
+        uniform vec2 uScale;
+
+        void main( void ) {
+            vec2 texCoords = vTextureCoord * uScale;
+            // our texture
+            vec4 finalColor = texture2D(uSampler0, texCoords)
+
+            gl_FragColor = finalColor;
         }
     `;
 
@@ -110,10 +158,14 @@ window.addEventListener("load", () => {
         varying vec2 vTextureCoord;
 
         uniform sampler2D uSampler0;
+        uniform vec2 uScale;
 
         void main( void ) {
+            vec2 texCoords = vTextureCoord * uScale;
             // our texture
-            gl_FragColor = texture2D(uSampler0, vTextureCoord);
+            vec4 finalColor = texture2D(uSampler0, texCoords);
+
+            gl_FragColor = finalColor;
         }
     `;
 
@@ -124,7 +176,7 @@ window.addEventListener("load", () => {
         widthSegments: 30,
         heightSegments: 20,
 
-        autoloadSources: false,
+        autoloadSources: false, // TODO test
 
         fov: 35,
         uniforms: {
@@ -133,6 +185,12 @@ window.addEventListener("load", () => {
                 type: "1f", // this means our uniform is a float
                 value: 0,
             },
+
+            scale: {
+                name: "uScale", // uniform name that will be passed to our shaders
+                type: "2f", // this means our uniform is a float
+                value: [2, 2],
+            }
         }
     };
 
@@ -149,7 +207,13 @@ window.addEventListener("load", () => {
             plane.addTexture(planeTexture);
         }
 
-        plane.onRender(() => {
+        plane.onReady(() => {
+
+            if(index === planeElements.length - 1) {
+                console.log("all planes are ready");
+            }
+
+        }).onRender(() => {
             // increment our time uniform
             plane.uniforms.time.value++;
         }).onError(() => {
@@ -166,6 +230,17 @@ window.addEventListener("load", () => {
         if(planeElements.length > 0) {
 
             for(let i = 0; i < planeElements.length; i++) {
+                /*if(i === 3) {
+                    params.fragmentShader = failFs;
+                    //params.widthSegments = 20;
+                    //params.alwaysDraw = true;
+                }
+                else {
+                    params.fragmentShader = fs;
+                    //params.widthSegments = 30;
+                    //params.alwaysDraw = false;
+                }*/
+
                 // add the plane to our array
                 //var plane = curtains.addPlane(planeElements[i], params);
                 const plane = new Plane(curtains, planeElements[i], params);

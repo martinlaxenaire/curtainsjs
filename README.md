@@ -16,17 +16,16 @@
 <p>
     If you've never heard about shaders, you may want to learn a bit more about them on <a href="https://thebookofshaders.com/" title="The Book of Shaders" >The Book of Shaders</a> for example. You will have to understand what are the vertex and fragment shaders, the use of uniforms as well as the GLSL syntax basics.
 </p>
-<h2>Installation</h2>
+<h2>Installation and usage</h2>
 <div>
-    In a browser:
+    You can directly download the files and start using the ES6 modules:
     
-```html
-<script src="curtains.min.js"></script>
+```javascript
+import {Curtains, Plane} from 'path/to/src/index.mjs';
 ```
-
 </div>
 <div>
-    Using npm:
+    Or you can use npm:
 
 ```
 npm i curtainsjs
@@ -34,17 +33,110 @@ npm i curtainsjs
 
 </div>
 <div>
-    Load ES module:
+    Load ES6 modules:
 
 ```javascript
-import {Curtains} from 'curtainsjs';
+import {Curtains, Plane} from 'curtainsjs';
 ```
 
 </div>
+<div>
+    If you got any trouble importing the ES6 modules, you can use the UMD files located in the `dist` directory:
+    
+```html
+<script src="dist/curtains.min.js"></script>
+```
+
+```javascript
+import {Curtains, Plane} from 'curtainsjs/dist/curtains.umd.min.js';
+```
+
+</div>
+<div>
+    In a browser, you can also use the UMD files in located in the `dist` directory. Note that the classes will use the `Curtains` namespace:
+    
+```html
+<script src="dist/curtains.umd.min.js"></script>
+```
+
+```javascript
+const curtains = new Curtains.Curtains({
+    container: "canvas"
+});
+
+const plane = new Curtains.Plane(curtains, document.querySelector("#plane"));
+
+// etc
+```
+
+</div>
+
 <h2>Documentation</h2>
-<a href="https://www.martin-laxenaire.fr/libs/curtainsjs/get-started.html" title="Getting started" target="_blank">Getting started</a><br />
-<a href="https://www.martin-laxenaire.fr/libs/curtainsjs/documentation.html" title="API docs" target="_blank">API docs</a><br />
+
 <p>
+    The library is split into classes modules. Most of them are used internally by but there are however a few classes meant to be used directly, exported in the `src/index.mjs` file.
+</p>
+
+<h3>Core</h3>
+
+<ul>
+    <li>
+        Curtains: appends a canvas to your container and instanciates the WebGL context. Also handles a few helpers like scroll and resize events, request animation frame loop, etc.
+    </li>
+    <li>
+        Plane: creates a new Plane object bound to a HTML element.
+    </li>
+    <li>
+        Textures: creates a new Texture object.
+    </li>
+</ul>
+
+<h3>Frame Buffer Objects</h3>
+
+<ul>
+    <li>
+        RenderTarget: creates a frame buffer object.
+    </li>
+    <li>
+        ShaderPass: creates a post processing pass using a frame buffer object.
+    </li>
+</ul>
+
+<h3>Loader</h3>
+
+<ul>
+    <li>
+        TextureLoader: loads HTML media elements such as images, videos or canvases and creates Texture objects using those sources.
+    </li>
+</ul>
+
+<h3>Math</h3>
+
+<ul>
+    <li>
+        Vec2: creates a new Vector 2.
+    </li>
+    <li>
+        Vec3: creates a new Vector 3.
+    </li>
+    <li>
+        Mat4: creates a new Matrix 4.
+    </li>
+</ul>
+
+<h3>Extras</h3>
+
+<ul>
+    <li>
+        FXAAPass: creates an antialiasing FXAA pass using a ShaderPass object.
+    </li>
+</ul>
+
+<h3>Full documentation</h3>
+
+<p>
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/get-started.html" title="Getting started" target="_blank">Getting started</a><br />
+    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/documentation.html" title="API docs" target="_blank">API docs</a><br />
     <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/index.html#examples">Examples</a>
 </p>
 
@@ -78,6 +170,7 @@ body {
     margin: 0;
     overflow: hidden;
 }
+
 #canvas {
     /* make the canvas wrapper fits the document */
     position: absolute;
@@ -86,12 +179,14 @@ body {
     bottom: 0;
     left: 0;
 }
+
 .plane {
     /* define the size of your plane */
     width: 80%;
     height: 80vh;
     margin: 10vh auto;
 }
+
 .plane img {
     /* hide the img element */
     display: none;
@@ -101,17 +196,17 @@ body {
 <h3>Javascript</h3>
 
 ```javascript
-window.addEventListener("load", function() {
+window.addEventListener("load", () => {
     // set up our WebGL context and append the canvas to our wrapper
-    var curtains = new Curtains({
+    const curtains = new Curtains({
         container: "canvas"
     });
     
     // get our plane element
-    var planeElement = document.getElementsByClassName("plane")[0];
+    const planeElement = document.getElementsByClassName("plane")[0];
     
     // set our initial parameters (basic uniforms)
-    var params = {
+    const params = {
         vertexShaderID: "plane-vs", // our vertex shader ID
         fragmentShaderID: "plane-fs", // our fragment shader ID
         uniforms: {
@@ -123,16 +218,13 @@ window.addEventListener("load", function() {
         },
     };
     
-    // create our plane
-    var plane = curtains.addPlane(planeElement, params);
+    // create our plane using our curtains object, the bound HTML element and the parameters
+    const plane = new Plane(curtains, planeElement, params);
     
-    // if our plane has been successfully created
-    if(plane) {
-        plane.onRender(function() {
-            // use the onRender method of our plane fired at each requestAnimationFrame call
-            plane.uniforms.time.value++; // update our time uniform value
-        });
-    }
+    plane.onRender(() => {
+        // use the onRender method of our plane fired at each requestAnimationFrame call
+        plane.uniforms.time.value++; // update our time uniform value
+    });
     
 });
 ```

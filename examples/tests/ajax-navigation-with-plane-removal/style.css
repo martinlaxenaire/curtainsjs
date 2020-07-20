@@ -139,7 +139,8 @@
         position: relative;
         overflow: hidden;
         height: 0;
-        padding-bottom: 66.6%;
+        /*padding-bottom: 66.6%;*/
+        padding-bottom: 100%;
     }
 
     .plane {

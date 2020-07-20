@@ -5,7 +5,7 @@ export default [{
     input: 'src/index.mjs',
     output: [
         {
-            file: 'dist/curtainsjs.umd.js',
+            file: 'dist/curtains.umd.js',
             format: 'umd',
             name: 'Curtains',
             plugins: [
@@ -19,7 +19,7 @@ export default [{
             ]
         },
         {
-            file: 'dist/curtainsjs.umd.min.js',
+            file: 'dist/curtains.umd.min.js',
             format: 'umd',
             name: 'Curtains',
             plugins: [

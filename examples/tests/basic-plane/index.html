@@ -82,7 +82,7 @@
 				display: none;
 			}
 		</style>
-	</head>
+    </head>
 	<body>
 
 		<div id="canvas"></div>
@@ -168,15 +168,12 @@
 			}
         </script>
 
-        <script src="../../../dist/curtainsjs.umd.min.js" type="text/javascript"></script>
-		<script type="text/javascript">
-            //import {Curtains, Plane} from '../../../src/index.mjs';
+		<script type="module">
+            import {Curtains, Plane} from '../../../src/index.mjs';
 
             window.addEventListener("load", () => {
-
-
 				// set up our WebGL context and append the canvas to our wrapper
-				const curtains = new Curtains.Curtains({
+				const curtains = new Curtains({
                     container: "canvas",
                     //alpha: false,
                 }).onRender(() => {
@@ -218,7 +215,7 @@
 				for(let i = 0; i < planeElements.length; i++) {
                     // create our plane mesh
                     //let plane = curtains.addPlane(planeElements[i], params);
-                    let plane = new Curtains.Plane(curtains.renderer, planeElements[i], params);
+                    let plane = new Plane(curtains.renderer, planeElements[i], params);
                     console.log(plane);
 
                     plane.setRotation(-1.25, 0, 0);
