@@ -1109,8 +1109,11 @@ export class Texture {
     /***
      This is used to destroy a texture and free the memory space
      Usually used on a plane/shader pass/render target removal
+
+     params:
+     @force (bool, optional): force the texture to be deleted even if cached
      ***/
-    _dispose() {
+    _dispose(force = false) {
         if(this.sourceType === "video" || this.sourceType === "image" && !this.renderer.state.isActive) {
             // remove event listeners
             if(this._loader) {
@@ -1132,8 +1135,12 @@ export class Texture {
         this._parent = null;
 
         // do not delete original texture if this texture is a copy, or image texture if we're not destroying the context
-        const shouldDelete = this.gl && !this._copiedFrom && (this.sourceType !== "image" || !this.renderer.state.isActive);
+        const shouldDelete = this.gl && !this._copiedFrom && (force || this.sourceType !== "image" || !this.renderer.state.isActive);
+
         if(shouldDelete) {
+            // if the texture is in our textures cache array, remove it
+            this.renderer.cache.removeTexture(this);
+
             this.gl.activeTexture(this.gl.TEXTURE0 + this.index);
             this.gl.bindTexture(this.gl.TEXTURE_2D, null);
             this.gl.deleteTexture(this._sampler.texture);

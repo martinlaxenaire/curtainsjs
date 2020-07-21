@@ -124,4 +124,15 @@ export class CacheManager {
             this.textures.push(texture);
         }
     }
+
+    /***
+     Removes a texture from the cache array
+
+     params :
+     @texture (Texture class object) : texture to remove from our cache
+     ***/
+    removeTexture(texture) {
+        // remove from our textures array
+        this.textures = this.textures.filter(element => element.uuid !== texture.uuid);
+    }
 }
