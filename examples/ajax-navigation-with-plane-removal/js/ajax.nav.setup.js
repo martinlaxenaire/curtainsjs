@@ -48,7 +48,8 @@ function preloadTextures() {
 
             }).onSourceUploaded(() => {
                 percentLoaded++;
-                console.log("percent loaded", percentLoaded / images.length);
+                // TODO handle a proper loader
+                console.log("percent loaded: " + (percentLoaded / images.length) * 100 + "%");
             });
         }, (image, error) => {
             console.warn("there has been an error", error, " while loading this image", image);
@@ -60,8 +61,6 @@ preloadTextures();
 
 
 window.addEventListener("load", () => {
-    console.log("load event");
-
     // resize our curtainsjs container because we instanced it before any dom load event
     curtains.resize();
 

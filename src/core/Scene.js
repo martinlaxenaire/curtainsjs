@@ -120,6 +120,9 @@ export class Scene {
      - draw opaque then transparent planes
      - for each of those two stacks, iterate through the existing programs (following the "order" array) and draw their respective planes
      This is done to improve speed, notably when using shared programs, and reduce GL calls
+
+     params:
+     @plane (Plane object): plane to add to our scene
      ***/
     addPlane(plane) {
         if(!this.stacks["opaque"]["programs"]["program-" + plane._program.id]) {
@@ -143,6 +146,17 @@ export class Scene {
             }
         }
         stack.length++;
+    }
+
+    /***
+     This function will remove a plane from our scene. This just reset the plane stacks for now.
+     Useful if we'd want to change the way our draw stacks work and keep the logic separated from our renderer
+
+     params:
+     @plane (Plane object): plane to remove from our scene
+     ***/
+    removePlane(plane) {
+        this.resetPlaneStacks();
     }
 
     /***
@@ -171,6 +185,9 @@ export class Scene {
 
     /***
      Add a shader pass to the stack
+
+     params:
+     @shaderPass (ShaderPass object): shaderPass to add to our scene
      ***/
     addShaderPass(shaderPass) {
         if(!shaderPass._isScenePass) {
@@ -179,6 +196,17 @@ export class Scene {
         else {
             this.stacks.scenePasses.push(shaderPass.index);
         }
+    }
+
+    /***
+     This function will remove a shader pass from our scene. This just reset the shaderPass stacks for now.
+     Useful if we'd want to change the way our draw stacks work and keep the logic separated from our renderer
+
+     params:
+     @shaderPass (ShaderPass object): shader pass to remove from our scene
+     ***/
+    removeShaderPass(shaderPass) {
+        this.resetShaderPassStacks();
     }
 
     /*** DRAWING SCENE ***/

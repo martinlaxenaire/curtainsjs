@@ -633,10 +633,10 @@ export class Renderer {
 
 
     /***
-     Completly remove a Plane element (delete from draw stack, delete buffers and textures, empties object, remove)
+     Removes a Plane element (that has already been disposed) from the scene and the planes array
 
      params:
-     @plane (plane element): the plane element to remove
+     @plane (Plane object): the plane to remove
      ***/
     removePlane(plane) {
         if(!this.gl) return;
@@ -644,11 +644,10 @@ export class Renderer {
         // remove from our planes array
         this.planes = this.planes.filter(element => element.uuid !== plane.uuid);
 
-        // now free the webgl part
-        plane = null;
+        // remove from scene stacks
+        this.scene.removePlane(plane);
 
-        // reset scene stacks
-        this.scene.resetPlaneStacks();
+        plane = null;
 
         // clear the buffer to clean scene
         if(this.gl) this.clear();
@@ -695,7 +694,7 @@ export class Renderer {
      Completely remove a RenderTarget element
 
      params:
-     @renderTarget (RenderTarget element): the render target element to remove
+     @renderTarget (RenderTarget object): the render target to remove
      ***/
     removeRenderTarget(renderTarget) {
         if(!this.gl) return;
@@ -759,11 +758,10 @@ export class Renderer {
 
 
     /***
-     Completly remove a ShaderPass element
-     does almost the same thing as the removePlane method but handles only shaderPasses array, not drawStack
+     Removes a ShaderPass element (that has already been disposed) from the scene and the shaderPasses array
 
      params:
-     @plane (plane element): the plane element to remove
+     @shaderPass (ShaderPass object): the shader pass to remove
      ***/
     removeShaderPass(shaderPass) {
         if(!this.gl) return;
@@ -771,10 +769,10 @@ export class Renderer {
         // remove from shaderPasses our array
         this.shaderPasses = this.shaderPasses.filter(element => element.uuid !== shaderPass.uuid);
 
-        shaderPass = null;
+        // remove from scene stacks
+        this.scene.removeShaderPass(shaderPass);
 
-        // reset scene stacks
-        this.scene.resetShaderPassStacks();
+        shaderPass = null;
 
         // clear the buffer to clean scene
         if(this.gl) this.clear();
