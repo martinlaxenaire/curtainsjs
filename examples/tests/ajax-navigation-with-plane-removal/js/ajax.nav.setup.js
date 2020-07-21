@@ -1,4 +1,4 @@
-import {Curtains, Plane, TextureLoader} from '../../../src/index.mjs';
+import {Curtains, Plane, TextureLoader} from '../../../../src/index.mjs';
 
 // set up our WebGL context and append the canvas to our wrapper
 const curtains = new Curtains({

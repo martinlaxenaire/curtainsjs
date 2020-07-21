@@ -198,6 +198,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        - draw opaque then transparent planes
        - for each of those two stacks, iterate through the existing programs (following the "order" array) and draw their respective planes
        This is done to improve speed, notably when using shared programs, and reduce GL calls
+         params:
+       @plane (Plane object): plane to add to our scene
        ***/
 
     }, {
@@ -229,6 +231,18 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         stack.length++;
       }
       /***
+       This function will remove a plane from our scene. This just reset the plane stacks for now.
+       Useful if we'd want to change the way our draw stacks work and keep the logic separated from our renderer
+         params:
+       @plane (Plane object): plane to remove from our scene
+       ***/
+
+    }, {
+      key: "removePlane",
+      value: function removePlane(plane) {
+        this.resetPlaneStacks();
+      }
+      /***
        Changing the position of a plane inside the correct plane stack to render it on top of the others
        ***/
 
@@ -258,6 +272,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Add a shader pass to the stack
+         params:
+       @shaderPass (ShaderPass object): shaderPass to add to our scene
        ***/
 
     }, {
@@ -268,6 +284,18 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } else {
           this.stacks.scenePasses.push(shaderPass.index);
         }
+      }
+      /***
+       This function will remove a shader pass from our scene. This just reset the shaderPass stacks for now.
+       Useful if we'd want to change the way our draw stacks work and keep the logic separated from our renderer
+         params:
+       @shaderPass (ShaderPass object): shader pass to remove from our scene
+       ***/
+
+    }, {
+      key: "removeShaderPass",
+      value: function removeShaderPass(shaderPass) {
+        this.resetShaderPassStacks();
       }
       /*** DRAWING SCENE ***/
 
@@ -492,6 +520,20 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (!cachedTexture) {
           this.textures.push(texture);
         }
+      }
+      /***
+       Removes a texture from the cache array
+         params :
+       @texture (Texture class object) : texture to remove from our cache
+       ***/
+
+    }, {
+      key: "removeTexture",
+      value: function removeTexture(texture) {
+        // remove from our textures array
+        this.textures = this.textures.filter(function (element) {
+          return element.uuid !== texture.uuid;
+        });
       }
     }]);
 
@@ -1980,11 +2022,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This is used to destroy a texture and free the memory space
        Usually used on a plane/shader pass/render target removal
+         params:
+       @force (bool, optional): force the texture to be deleted even if cached
        ***/
 
     }, {
       key: "_dispose",
       value: function _dispose() {
+        var force = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
         if (this.sourceType === "video" || this.sourceType === "image" && !this.renderer.state.isActive) {
           // remove event listeners
           if (this._loader) {
@@ -2003,9 +2049,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this._parent = null; // do not delete original texture if this texture is a copy, or image texture if we're not destroying the context
 
-        var shouldDelete = this.gl && !this._copiedFrom && (this.sourceType !== "image" || !this.renderer.state.isActive);
+        var shouldDelete = this.gl && !this._copiedFrom && (force || this.sourceType !== "image" || !this.renderer.state.isActive);
 
         if (shouldDelete) {
+          // if the texture is in our textures cache array, remove it
+          this.renderer.cache.removeTexture(this);
           this.gl.activeTexture(this.gl.TEXTURE0 + this.index);
           this.gl.bindTexture(this.gl.TEXTURE_2D, null);
           this.gl.deleteTexture(this._sampler.texture);
@@ -4485,15 +4533,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        This function takes the mouse position relative to the document and returns it relative to our plane
        It ranges from -1 to 1 on both axis
          params :
-       @xPosition (float): position to convert on X axis
-       @yPosition (float): position to convert on Y axis
+       @mouseCoordinates (Vec2 object): coordinates of the mouse
          returns :
-       @mousePosition: the mouse position relative to our plane in WebGL space coordinates
+       @mousePosition (Vec2 object): the mouse position relative to our plane in WebGL space coordinates
        ***/
 
     }, {
       key: "mouseToPlaneCoords",
-      value: function mouseToPlaneCoords(xMousePosition, yMousePosition) {
+      value: function mouseToPlaneCoords(mouseCoordinates) {
         // remember our ShaderPass objects don't have a scale property
         var scale = this.scale ? this.scale : new Vec2(1, 1); // we need to adjust our plane document bounding rect to it's webgl scale
 
@@ -4506,7 +4553,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           left: (this._boundingRect.document.left + scaleAdjustment.x) / this.renderer.pixelRatio
         }; // mouse position conversion from document to plane space
 
-        return new Vec2((xMousePosition - planeBoundingRect.left) / planeBoundingRect.width * 2 - 1, 1 - (yMousePosition - planeBoundingRect.top) / planeBoundingRect.height * 2);
+        return new Vec2((mouseCoordinates.x - planeBoundingRect.left) / planeBoundingRect.width * 2 - 1, 1 - (mouseCoordinates.y - planeBoundingRect.top) / planeBoundingRect.height * 2);
       }
       /*** EVENTS ***/
 
@@ -6914,9 +6961,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Completly remove a Plane element (delete from draw stack, delete buffers and textures, empties object, remove)
+       Removes a Plane element (that has already been disposed) from the scene and the planes array
          params:
-       @plane (plane element): the plane element to remove
+       @plane (Plane object): the plane to remove
        ***/
 
     }, {
@@ -6926,11 +6973,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.planes = this.planes.filter(function (element) {
           return element.uuid !== plane.uuid;
-        }); // now free the webgl part
+        }); // remove from scene stacks
 
-        plane = null; // reset scene stacks
-
-        this.scene.resetPlaneStacks(); // clear the buffer to clean scene
+        this.scene.removePlane(plane);
+        plane = null; // clear the buffer to clean scene
 
         if (this.gl) this.clear(); // reset buffers to force binding them again
 
@@ -6966,7 +7012,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        Completely remove a RenderTarget element
          params:
-       @renderTarget (RenderTarget element): the render target element to remove
+       @renderTarget (RenderTarget object): the render target to remove
        ***/
 
     }, {
@@ -7024,10 +7070,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Completly remove a ShaderPass element
-       does almost the same thing as the removePlane method but handles only shaderPasses array, not drawStack
+       Removes a ShaderPass element (that has already been disposed) from the scene and the shaderPasses array
          params:
-       @plane (plane element): the plane element to remove
+       @shaderPass (ShaderPass object): the shader pass to remove
        ***/
 
     }, {
@@ -7037,10 +7082,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.shaderPasses = this.shaderPasses.filter(function (element) {
           return element.uuid !== shaderPass.uuid;
-        });
-        shaderPass = null; // reset scene stacks
+        }); // remove from scene stacks
 
-        this.scene.resetShaderPassStacks(); // clear the buffer to clean scene
+        this.scene.removeShaderPass(shaderPass);
+        shaderPass = null; // clear the buffer to clean scene
 
         if (this.gl) this.clear(); // reset buffers to force binding them again
 

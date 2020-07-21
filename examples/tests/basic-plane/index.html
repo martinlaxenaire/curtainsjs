@@ -168,38 +168,28 @@
 			}
         </script>
 
-		<script type="module">
-            import {Curtains, Plane} from '../../../src/index.mjs';
+        <script type="text/javascript" src="../../../dist/curtains.umd.js"></script>
+		<script type="text/javascript">
+            //import {Curtains, Plane} from '../../../src/index.mjs';
 
             window.addEventListener("load", () => {
 				// set up our WebGL context and append the canvas to our wrapper
-				const curtains = new Curtains({
+				const curtains = new Curtains.Curtains({
                     container: "canvas",
                     //alpha: false,
-                }).onRender(() => {
-                    //console.log("render");
                 }).onError(() => {
                     console.log("error");
                 }).onContextLost(() => {
-                    console.log("context lost");
                     curtains.restoreContext();
-                }).onContextRestored(() => {
-                    console.log("context restored", curtains);
                 });
-
-				setTimeout(() => {
-                    //curtains.renderer.extensions['WEBGL_lose_context'].loseContext();
-                    //curtains.dispose();
-                    console.log(curtains.renderer);
-                }, 2000);
 
 
 
 				// get our plane element
-				var planeElements = document.getElementsByClassName("plane");
+				const planeElements = document.getElementsByClassName("plane");
 
 				// set our initial parameters (basic uniforms)
-				var params = {
+                const params = {
 					vertexShaderID: "plane-vs", // our vertex shader ID
 					fragmentShaderID: "plane-fs", // our framgent shader ID
                     //shareProgram: true,
@@ -214,9 +204,7 @@
 
 				for(let i = 0; i < planeElements.length; i++) {
                     // create our plane mesh
-                    //let plane = curtains.addPlane(planeElements[i], params);
-                    let plane = new Plane(curtains.renderer, planeElements[i], params);
-                    console.log(plane);
+                    const plane = new Curtains.Plane(curtains, planeElements[i], params);
 
                     plane.setRotation(-1.25, 0, 0);
 
