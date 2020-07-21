@@ -61,9 +61,7 @@ const plane = new Curtains.Plane(curtains, document.querySelector("#plane"));
 
 <h2>Documentation</h2>
 
-<p>
-    The library is split into classes modules. Most of them are used internally by the library but there are however a few classes meant to be used directly, exported in the [src/index.mjs](src/index.mjs) file.
-</p>
+The library is split into classes modules. Most of them are used internally by the library but there are however a few classes meant to be used directly, exported in the [src/index.mjs](src/index.mjs) file.
 
 <h3>Core</h3>
 
