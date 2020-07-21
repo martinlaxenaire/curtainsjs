@@ -41,19 +41,7 @@ import {Curtains, Plane} from 'curtainsjs';
 
 </div>
 <div>
-    If you got any trouble importing the ES6 modules, you can use the UMD files located in the `dist` directory:
-    
-```html
-<script src="dist/curtains.min.js"></script>
-```
-
-```javascript
-import {Curtains, Plane} from 'curtainsjs/dist/curtains.umd.min.js';
-```
-
-</div>
-<div>
-    In a browser, you can also use the UMD files in located in the `dist` directory. Note that the classes will use the `Curtains` namespace:
+    In a browser, you can use the UMD files located in the `dist` directory. Note that all the classes will use the `Curtains` namespace:
     
 ```html
 <script src="dist/curtains.umd.min.js"></script>

@@ -231,11 +231,13 @@ window.addEventListener("load", () => {
         }
 
         // lerp the mouse position a bit to smoothen the overall effect
-        mousePosition.x = curtains.lerp(mousePosition.x, mouse.x, 0.3);
-        mousePosition.y = curtains.lerp(mousePosition.y, mouse.y, 0.3);
+        mousePosition.set(
+            curtains.lerp(mousePosition.x, mouse.x, 0.3),
+            curtains.lerp(mousePosition.y, mouse.y, 0.3)
+        );
 
         // convert our mouse/touch position to coordinates relative to the vertices of the plane and update our uniform
-        plane.uniforms.mousePosition.value = plane.mouseToPlaneCoords(mousePosition.x, mousePosition.y);
+        plane.uniforms.mousePosition.value = plane.mouseToPlaneCoords(mousePosition);
 
         // calculate the mouse move strength
         if(mouseLastPosition.x && mouseLastPosition.y) {

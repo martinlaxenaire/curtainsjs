@@ -356,7 +356,7 @@ window.addEventListener("load", () => {
 
     plane.onRender(() => {
         // update mouse position
-        flowMap.uniforms.mousePosition.value = flowMap.mouseToPlaneCoords(mouse.x, mouse.y);
+        flowMap.uniforms.mousePosition.value = flowMap.mouseToPlaneCoords(mouse);
 
         // update velocity
         if(!updateVelocity) {

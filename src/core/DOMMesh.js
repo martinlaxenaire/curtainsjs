@@ -158,13 +158,12 @@ export class DOMMesh extends Mesh {
      It ranges from -1 to 1 on both axis
 
      params :
-     @xPosition (float): position to convert on X axis
-     @yPosition (float): position to convert on Y axis
+     @mouseCoordinates (Vec2 object): coordinates of the mouse
 
      returns :
-     @mousePosition: the mouse position relative to our plane in WebGL space coordinates
+     @mousePosition (Vec2 object): the mouse position relative to our plane in WebGL space coordinates
      ***/
-    mouseToPlaneCoords(xMousePosition, yMousePosition) {
+    mouseToPlaneCoords(mouseCoordinates) {
         // remember our ShaderPass objects don't have a scale property
         const scale = this.scale ? this.scale : new Vec2(1, 1);
 
@@ -184,8 +183,8 @@ export class DOMMesh extends Mesh {
 
         // mouse position conversion from document to plane space
         return new Vec2(
-            (((xMousePosition - planeBoundingRect.left) / planeBoundingRect.width) * 2) - 1,
-            1 - (((yMousePosition - planeBoundingRect.top) / planeBoundingRect.height) * 2)
+            (((mouseCoordinates.x - planeBoundingRect.left) / planeBoundingRect.width) * 2) - 1,
+            1 - (((mouseCoordinates.y - planeBoundingRect.top) / planeBoundingRect.height) * 2)
         );
     }
 

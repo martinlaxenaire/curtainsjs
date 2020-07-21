@@ -30,7 +30,7 @@ window.addEventListener("load", () => {
         );
 
         if(plane) {
-            const mouseCoords = plane.mouseToPlaneCoords(mousePosition.x, mousePosition.y);
+            const mouseCoords = plane.mouseToPlaneCoords(mousePosition);
 
             // mouse must be not too much below the curtains to update the uniforms
             if(mouseCoords.y > -1.25) {

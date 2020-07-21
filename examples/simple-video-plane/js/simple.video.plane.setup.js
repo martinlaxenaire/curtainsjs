@@ -228,7 +228,7 @@ window.addEventListener("load", () => {
         );
 
         // convert our mouse/touch position to coordinates relative to the vertices of the plane and update our uniform
-        plane.uniforms.mousePosition.value = plane.mouseToPlaneCoords(mousePosition.x, mousePosition.y);
+        plane.uniforms.mousePosition.value = plane.mouseToPlaneCoords(mousePosition);
 
         // calculate the mouse move strength
         if(mouseLastPosition.x && mouseLastPosition.y) {

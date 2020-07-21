@@ -106,7 +106,7 @@ window.addEventListener("load", () => {
         }
 
         // convert our mouse/touch position to coordinates relative to the vertices of the plane
-        const mouseCoords = plane.mouseToPlaneCoords(mousePosition.x, mousePosition.y);
+        const mouseCoords = plane.mouseToPlaneCoords(mousePosition);
 
         // update our mouse position uniform
         plane.uniforms.mousePosition.value = mouseCoords;
