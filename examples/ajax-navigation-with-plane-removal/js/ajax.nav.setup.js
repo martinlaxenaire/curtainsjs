@@ -144,7 +144,9 @@ window.addEventListener("load", () => {
         const planeImage = plane.htmlElement.querySelector("img");
         const planeTexture = textures.find((element) => element.source && element.source.src === planeImage.src);
 
+        // we got a texture that matches the plane img element, add it
         if(planeTexture) {
+            // exactly the same as planeTexture.addParent(plane)
             plane.addTexture(planeTexture);
         }
 
