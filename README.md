@@ -113,6 +113,9 @@ The library is split into classes modules. Most of them are used internally by t
 <h3>Extras</h3>
 
 <ul>
+<li>
+        PingPongPlane: creates a plane that uses FBOs ping pong to read/write a texture.
+    </li>
     <li>
         FXAAPass: creates an antialiasing FXAA pass using a ShaderPass object.
     </li>
