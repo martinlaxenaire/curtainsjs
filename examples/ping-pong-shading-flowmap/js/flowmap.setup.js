@@ -5,20 +5,67 @@
  It is highly based on Nathan Gordon's OGL library flowmap example: https://oframe.github.io/ogl/examples/?src=mouse-flowmap.html
 
  It works with two planes and two render targets.
- Our first plane will use FBOs swapping to draw a mouse trail:
-    - create a plane and a texture onto which we'll draw a circle following the mouse position
-    - create two render targets (read and write)
-    - before drawing our plane (onRender callback), apply the write pass as our plane render target
-    - after drawing our plane (onAfterRender callback), swap the read and write pass and copy the read pass texture onto our plane
+ Our first plane is a PingPongPlane that uses FBO swapping to read and write a texture
 
  Our second plane will grab our first plane final texture and will use it as a base to displace a regular texture:
-    - create a second plane and a texture and apply our first plane texture to that texture
-    - update the mouse position and velocity in the render callback of that plane
+ - create a second plane and a texture and apply our first plane texture to that texture
+ - update the mouse position and velocity in the render callback of that plane
  ***/
 
-import {Curtains, Plane, RenderTarget, Vec2} from '../../../src/index.mjs';
+import {Curtains, Plane, Vec2, PingPongPlane} from '../../../src/index.mjs';
 
 window.addEventListener("load", () => {
+    const curtains = new Curtains({
+        container: "canvas",
+        antialias: false, // render targets will disable default antialiasing anyway
+        pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
+    }).onError(() => {
+        // we will add a class to the document body to display original images
+        document.body.classList.add("no-curtains");
+    }).onContextLost(() => {
+        // on context lost, try to restore the context
+        curtains.restoreContext();
+    });
+
+
+    // mouse/touch move
+    const ww = window.innerWidth;
+    const wh = window.innerHeight;
+
+    const mouse = new Vec2(ww / 2, wh / 2);
+    const lastMouse = mouse.clone();
+    const velocity = new Vec2();
+
+    function onMouseMove(e) {
+        // velocity is our mouse position minus our mouse last position
+        lastMouse.copy(mouse);
+
+        // touch event
+        if(e.targetTouches) {
+            mouse.set(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
+        }
+        // mouse event
+        else {
+            mouse.set(e.clientX, e.clientY);
+        }
+
+        // divided by a frame duration (roughly)
+        velocity.set((mouse.x - lastMouse.x) / 16, (mouse.y - lastMouse.y) / 16);
+
+        // we should update the velocity
+        updateVelocity = true;
+    }
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("touchmove", onMouseMove);
+
+    // if we should update the velocity or not
+    let updateVelocity = false;
+
+    // we'll be using this html element to create 2 planes
+    const planeElement = document.getElementById("flowmap");
+
+    // creating our PingPongPlane flowmap plane
     // flowmap shaders
     const flowmapVs = `
         #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -109,7 +156,83 @@ window.addEventListener("load", () => {
         }
     `;
 
+    // note the use of half float texture and the custom sampler name used in our fragment shader
+    const flowMapParams = {
+        sampler: "uFlowMap",
+        vertexShader: flowmapVs,
+        fragmentShader: flowmapFs,
+        texturesOptions: {
+            floatingPoint: "half-float" // use half float texture when possible
+        },
+        uniforms: {
+            mousePosition: {
+                name: "uMousePosition",
+                type: "2f",
+                value: mouse,
+            },
+            // size of the cursor
+            fallOff: {
+                name: "uFalloff",
+                type: "1f",
+                value: ww > wh ? ww / 30000 : wh / 20000,
+            },
+            // how much the cursor should grow with time
+            cursorGrow: {
+                name: "uCursorGrow",
+                type: "1f",
+                value: 1.15,
+            },
+            // alpha of the cursor
+            alpha: {
+                name: "uAlpha",
+                type: "1f",
+                value: 1,
+            },
+            // how much the cursor must dissipate over time (ie trail length)
+            // closer to 1 = no dissipation
+            dissipation: {
+                name: "uDissipation",
+                type: "1f",
+                value: 0.925,
+            },
+            // our velocity
+            velocity: {
+                name: "uVelocity",
+                type: "2f",
+                value: velocity,
+            },
+            // window aspect ratio to draw a circle
+            aspect: {
+                name: "uAspect",
+                type: "1f",
+                value: ww / wh,
+            },
+        },
+    };
 
+    // our ping pong plane
+    const flowMap = new PingPongPlane(curtains, planeElement, flowMapParams);
+
+    flowMap.onRender(() => {
+        // update mouse position
+        flowMap.uniforms.mousePosition.value = flowMap.mouseToPlaneCoords(mouse);
+
+        // update velocity
+        if(!updateVelocity) {
+            velocity.set(curtains.lerp(velocity.x, 0, 0.5), curtains.lerp(velocity.y, 0, 0.5));
+        }
+        updateVelocity = false;
+
+        flowMap.uniforms.velocity.value = new Vec2(curtains.lerp(velocity.x, 0, 0.1), curtains.lerp(velocity.y, 0, 0.1));
+    }).onAfterResize(() => {
+        // update our window aspect ratio uniform
+        const boundingRect = flowMap.getBoundingRect();
+        flowMap.uniforms.aspect.value = boundingRect.width / boundingRect.height;
+        flowMap.uniforms.fallOff.value = boundingRect.width > boundingRect.height ? boundingRect.width / 30000 : boundingRect.height / 20000;
+    });
+
+
+    // now use the texture of our ping pong plane in the plane that will actually be displayed
     // displacement shaders
     const displacementVs = `
         #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -184,161 +307,6 @@ window.addEventListener("load", () => {
         }
     `;
 
-
-    const ww = window.innerWidth;
-    const wh = window.innerHeight;
-
-    const mouse = new Vec2(ww / 2, wh / 2);
-    const lastMouse = mouse.clone();
-    const velocity = new Vec2();
-
-    function onMouseMove(e) {
-        // velocity is our mouse position minus our mouse last position
-        lastMouse.copy(mouse);
-
-        // touch event
-        if(e.targetTouches) {
-            mouse.set(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
-        }
-        // mouse event
-        else {
-            mouse.set(e.clientX, e.clientY);
-        }
-
-        // divided by a frame duration (roughly)
-        velocity.set((mouse.x - lastMouse.x) / 16, (mouse.y - lastMouse.y) / 16);
-
-        // we should update the velocity
-        updateVelocity = true;
-    }
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("touchmove", onMouseMove);
-
-    // if we should update the velocity or not
-    let updateVelocity = false;
-
-    const curtains = new Curtains({
-        container: "canvas",
-        antialias: false, // render targets will disable default antialiasing anyway
-        pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
-    }).onError(() => {
-        // we will add a class to the document body to display original images
-        document.body.classList.add("no-curtains");
-    }).onContextLost(() => {
-        // on context lost, try to restore the context
-        curtains.restoreContext();
-    });
-
-
-    const flowMapParams = {
-        vertexShader: flowmapVs,
-        fragmentShader: flowmapFs,
-        autoloadSources: false, // don't load the image for this plane, we'll just write the mouse position on it
-        depthTest: false, // we need to disable the depth test in order for the ping pong shading to work
-        uniforms: {
-            mousePosition: {
-                name: "uMousePosition",
-                type: "2f",
-                value: mouse,
-            },
-            // size of the cursor
-            fallOff: {
-                name: "uFalloff",
-                type: "1f",
-                value: ww > wh ? ww / 30000 : wh / 20000,
-            },
-            // how much the cursor should grow with time
-            cursorGrow: {
-                name: "uCursorGrow",
-                type: "1f",
-                value: 1.15,
-            },
-            // alpha of the cursor
-            alpha: {
-                name: "uAlpha",
-                type: "1f",
-                value: 1,
-            },
-            // how much the cursor must dissipate over time (ie trail length)
-            // closer to 1 = no dissipation
-            dissipation: {
-                name: "uDissipation",
-                type: "1f",
-                value: 0.925,
-            },
-            // our velocity
-            velocity: {
-                name: "uVelocity",
-                type: "2f",
-                value: velocity,
-            },
-            // window aspect ratio to draw a circle
-            aspect: {
-                name: "uAspect",
-                type: "1f",
-                value: ww / wh,
-            },
-        },
-    };
-
-    // we'll be using this html element to create 2 planes
-    const planeElement = document.getElementById("flowmap");
-
-
-    // create our first plane
-    // we'll draw a circle based on our mouse position on a black background
-    // then use render targets to get the ping pong shading
-    const flowMap = new Plane(curtains, planeElement, flowMapParams);
-
-    function swapPasses() {
-        // swap read and write passes
-        const tempFBO = readPass;
-        readPass = writePass;
-        writePass = tempFBO;
-
-        // apply new texture
-        flowMapTex.copy(readPass.textures[0]);
-    }
-
-    // create 2 render targets
-    let readPass = new RenderTarget(curtains, {
-        depth: false,
-        clear: false,
-        texturesOptions: {
-            floatingPoint: "half-float" // use half float texture when possible
-        },
-    });
-    let writePass = new RenderTarget(curtains, {
-        depth: false,
-        clear: false,
-        texturesOptions: {
-            floatingPoint: "half-float" // use half float texture when possible
-        },
-    });
-
-    // create a texture where we'll draw our circle
-    const flowMapTex = flowMap.createTexture({
-        sampler: "uFlowMap",
-        fromTexture: readPass.textures[0]
-    });
-
-
-    flowMap.onRender(() => {
-        // update the render target
-        writePass && flowMap.setRenderTarget(writePass);
-    }).onAfterRender(() => {
-        // swap FBOs and update texture
-        if(readPass && writePass && flowMapTex) {
-            swapPasses();
-        }
-    }).onAfterResize(() => {
-        // update our window aspect ratio uniform
-        const boundingRect = flowMap.getBoundingRect();
-        flowMap.uniforms.aspect.value = boundingRect.width / boundingRect.height;
-        flowMap.uniforms.fallOff.value = boundingRect.width > boundingRect.height ? boundingRect.width / 30000 : boundingRect.height / 20000;
-    });
-
     // next we will create the plane that will actually display our end result
     // which means the image texture that will be displaced using the ping pong FBO texture
     const params = {
@@ -351,19 +319,6 @@ window.addEventListener("load", () => {
     // create a texture that will hold our flowmap
     const flowTexture = plane.createTexture({
         sampler: "uFlowTexture",
-        fromTexture: readPass.textures[0] // set it based on our flowmap plane's texture
-    });
-
-    plane.onRender(() => {
-        // update mouse position
-        flowMap.uniforms.mousePosition.value = flowMap.mouseToPlaneCoords(mouse);
-
-        // update velocity
-        if(!updateVelocity) {
-            velocity.set(curtains.lerp(velocity.x, 0, 0.5), curtains.lerp(velocity.y, 0, 0.5));
-        }
-        updateVelocity = false;
-
-        flowMap.uniforms.velocity.value = new Vec2(curtains.lerp(velocity.x, 0, 0.1), curtains.lerp(velocity.y, 0, 0.1));
+        fromTexture: flowMap.getTexture() // set it based on our PingPongPlane flowmap plane's texture
     });
 });

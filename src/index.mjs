@@ -16,6 +16,6 @@ export {Vec3} from './math/Vec3.js';
 export {Mat4} from './math/Mat4.js';
 
 // extras
-// TODO add a PingPongFBO class?
 // TODO TextTexture class?
+export {PingPongPlane} from './extras/PingPongPlane.js';
 export {FXAAPass} from './extras/FXAAPass.js';

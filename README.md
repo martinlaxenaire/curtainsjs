@@ -41,7 +41,7 @@ import {Curtains, Plane} from 'curtainsjs';
 
 </div>
 <div>
-    In a browser, you can use the UMD files located in the `dist` directory. Note that all the classes will use the `Curtains` namespace:
+In a browser, you can use the UMD files located in the `dist` directory. Note that all the classes will use the `Curtains` namespace:
     
 ```html
 <script src="dist/curtains.umd.min.js"></script>
