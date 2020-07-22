@@ -8028,6 +8028,180 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     return Curtains;
   }();
+  /*** FBO PING PONG PLANE CLASS ***/
+
+  /***
+   A little helper to create a plane that will perform FBO ping pong
+   This plane will use FBOs swapping, using these following steps:
+   - create two render targets (read and write)
+   - create a texture onto which we'll draw
+   - before drawing our plane (onRender callback), apply the write pass as our plane render target
+   - after drawing our plane (onAfterRender callback), swap the read and write pass and copy the read pass texture again
+     params:
+   @sampler (string): sampler name used to create our texture and that will be used inside your shader
+   @planeParams: see Plane class object
+     returns :
+   @this: our PingPongPlane element
+   ***/
+
+
+  var PingPongPlane = /*#__PURE__*/function (_Plane) {
+    _inherits(PingPongPlane, _Plane);
+
+    var _super5 = _createSuper(PingPongPlane);
+
+    function PingPongPlane(curtains, htmlElement) {
+      var _this30;
+
+      var _ref14 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+          _ref14$sampler = _ref14.sampler,
+          sampler = _ref14$sampler === void 0 ? "uPingPongTexture" : _ref14$sampler,
+          shareProgram = _ref14.shareProgram,
+          widthSegments = _ref14.widthSegments,
+          heightSegments = _ref14.heightSegments,
+          depthTest = _ref14.depthTest,
+          cullFace = _ref14.cullFace,
+          uniforms = _ref14.uniforms,
+          vertexShaderID = _ref14.vertexShaderID,
+          fragmentShaderID = _ref14.fragmentShaderID,
+          vertexShader = _ref14.vertexShader,
+          fragmentShader = _ref14.fragmentShader,
+          texturesOptions = _ref14.texturesOptions,
+          crossOrigin = _ref14.crossOrigin,
+          alwaysDraw = _ref14.alwaysDraw,
+          visible = _ref14.visible,
+          transparent = _ref14.transparent,
+          drawCheckMargins = _ref14.drawCheckMargins,
+          autoloadSources = _ref14.autoloadSources,
+          watchScroll = _ref14.watchScroll,
+          fov = _ref14.fov;
+
+      _classCallCheck(this, PingPongPlane);
+
+      // force depthTest and autoloadSources to false
+      depthTest = false;
+      autoloadSources = false; // create our plane
+
+      _this30 = _super5.call(this, curtains, htmlElement, {
+        shareProgram: shareProgram,
+        widthSegments: widthSegments,
+        heightSegments: heightSegments,
+        depthTest: depthTest,
+        cullFace: cullFace,
+        uniforms: uniforms,
+        vertexShaderID: vertexShaderID,
+        fragmentShaderID: fragmentShaderID,
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader,
+        texturesOptions: texturesOptions,
+        crossOrigin: crossOrigin,
+        alwaysDraw: alwaysDraw,
+        visible: visible,
+        transparent: transparent,
+        drawCheckMargins: drawCheckMargins,
+        autoloadSources: autoloadSources,
+        watchScroll: watchScroll,
+        fov: fov
+      }); // create 2 render targets
+
+      _this30.readPass = new RenderTarget(curtains, {
+        depth: false,
+        clear: false,
+        texturesOptions: texturesOptions
+      });
+      _this30.writePass = new RenderTarget(curtains, {
+        depth: false,
+        clear: false,
+        texturesOptions: texturesOptions
+      }); // create a texture where we'll draw
+
+      _this30.createTexture({
+        sampler: sampler,
+        fromTexture: _this30.readPass.textures[0]
+      }); // override onRender and onAfterRender callbacks
+
+
+      _this30._onRenderCallback = function () {
+        // update the render target
+        _this30.writePass && _this30.setRenderTarget(_this30.writePass);
+        _this30._onPingPongRenderCallback && _this30._onPingPongRenderCallback();
+      };
+
+      _this30._onAfterRenderCallback = function () {
+        // swap FBOs and update texture
+        if (_this30.readPass && _this30.writePass && _this30.textures[0]) {
+          _this30.swapPasses();
+        }
+
+        _this30._onPingPongAfterRenderCallback && _this30._onPingPongAfterRenderCallback();
+      };
+
+      return _this30;
+    }
+    /***
+     After each draw call, we'll swap the 2 render targets and copy the read pass texture again
+     ***/
+
+
+    _createClass(PingPongPlane, [{
+      key: "swapPasses",
+      value: function swapPasses() {
+        // swap read and write passes
+        var tempFBO = this.readPass;
+        this.readPass = this.writePass;
+        this.writePass = tempFBO; // apply new texture
+
+        this.textures[0].copy(this.readPass.textures[0]);
+      }
+      /***
+       Returns the created texture where we're writing
+       ***/
+
+    }, {
+      key: "getTexture",
+      value: function getTexture() {
+        return this.textures[0];
+      }
+      /*** OVERRIDE USED EVENTS ***/
+
+      /***
+       This is called at each requestAnimationFrame call
+         params :
+       @callback (function) : a function to execute
+         returns :
+       @this: our plane to handle chaining
+       ***/
+
+    }, {
+      key: "onRender",
+      value: function onRender(callback) {
+        if (callback) {
+          this._onPingPongRenderCallback = callback;
+        }
+
+        return this;
+      }
+      /***
+       This is called at each requestAnimationFrame call
+         params :
+       @callback (function) : a function to execute
+         returns :
+       @this: our plane to handle chaining
+       ***/
+
+    }, {
+      key: "onAfterRender",
+      value: function onAfterRender(callback) {
+        if (callback) {
+          this._onPingPongAfterRenderCallback = callback;
+        }
+
+        return this;
+      }
+    }]);
+
+    return PingPongPlane;
+  }(Plane);
   /*** FXAAPASS CLASS ***/
 
   /***
@@ -8040,18 +8214,18 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
   var FXAAPass = function FXAAPass(curtains) {
-    var _this30 = this;
+    var _this31 = this;
 
-    var _ref14 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        shareProgram = _ref14.shareProgram,
-        widthSegments = _ref14.widthSegments,
-        heightSegments = _ref14.heightSegments,
-        depthTest = _ref14.depthTest,
-        cullFace = _ref14.cullFace,
-        crossOrigin = _ref14.crossOrigin,
-        depth = _ref14.depth,
-        clear = _ref14.clear,
-        renderTarget = _ref14.renderTarget;
+    var _ref15 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        shareProgram = _ref15.shareProgram,
+        widthSegments = _ref15.widthSegments,
+        heightSegments = _ref15.heightSegments,
+        depthTest = _ref15.depthTest,
+        cullFace = _ref15.cullFace,
+        crossOrigin = _ref15.crossOrigin,
+        depth = _ref15.depth,
+        clear = _ref15.clear,
+        renderTarget = _ref15.renderTarget;
 
     _classCallCheck(this, FXAAPass);
 
@@ -8077,13 +8251,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       renderTarget: renderTarget
     });
     this.pass.onAfterResize(function () {
-      _this30.pass.uniforms.resolution.value = [_this30.pass.renderer._boundingRect.width, _this30.pass.renderer._boundingRect.height];
+      _this31.pass.uniforms.resolution.value = [_this31.pass.renderer._boundingRect.width, _this31.pass.renderer._boundingRect.height];
     });
   };
 
   exports.Curtains = Curtains;
   exports.FXAAPass = FXAAPass;
   exports.Mat4 = Mat4;
+  exports.PingPongPlane = PingPongPlane;
   exports.Plane = Plane;
   exports.RenderTarget = RenderTarget;
   exports.ShaderPass = ShaderPass;
