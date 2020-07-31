@@ -91,7 +91,9 @@ window.addEventListener("load", () => {
         const wrapper = document.getElementById("page-wrap");
 
         wrapper.addEventListener("mousemove", (e) => handleMovement(e, helperPlane));
-        wrapper.addEventListener("touchmove", (e) => handleMovement(e, helperPlane));
+        wrapper.addEventListener("touchmove", (e) => handleMovement(e, helperPlane), {
+            passive: true
+        });
 
     });
 

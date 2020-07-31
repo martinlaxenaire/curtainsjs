@@ -298,6 +298,13 @@ export class TextureLoader {
 
         // if there's a parent (PlaneTextureLoader) add texture and source to it
         this._addToParent && this._addToParent(texture, source, "video");
+
+        // if requestVideoFrameCallback exist, use it to update our video texture
+        if('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+            el.videoFrameCallback = texture._videoFrameCallback.bind(texture);
+            source.hasVideoFrameCallback = true;
+            source.requestVideoFrameCallback(el.videoFrameCallback);
+        }
     }
 
 
@@ -363,6 +370,11 @@ export class TextureLoader {
                 el.source.removeEventListener("load", el.load, false);
             }
             else if(texture.sourceType === "video") {
+                // cancel video frame callback
+                if(el.videoFrameCallback) {
+                    el.source.cancelVideoFrameCallback(el.videoFrameCallback);
+                }
+
                 el.source.removeEventListener("canplaythrough", el.load, false);
                 // empty source to properly delete video element and free the memory
                 el.source.pause();

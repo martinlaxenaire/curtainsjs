@@ -19,7 +19,6 @@ export class Geometry {
         program = null,
         width = 1,
         height = 1,
-        id = 2, // default to 1 * 1 + 1
     } = {}) {
         this.type = "Geometry";
         if(!renderer || renderer.type !== "Renderer") {
@@ -32,9 +31,9 @@ export class Geometry {
         this.gl = this.renderer.gl;
 
         // unique plane buffers id based on width and height
-        // used to avoid unnecessary buffer bindings during draw loop
+        // used to get a geometry from cache
         this.definition = {
-            id: id,
+            id: width * height + width,
             width: width,
             height: height,
         };
@@ -226,9 +225,6 @@ export class Geometry {
             // set where the attribute gets its data
             this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
         }
-
-        // update current buffers ID
-        this.renderer.state.currentBuffersID = this.definition.id;
     }
 
 
@@ -252,9 +248,6 @@ export class Geometry {
                 this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
             }
         }
-
-        // update current buffers ID
-        this.renderer.state.currentBuffersID = this.definition.id;
     }
 
 
@@ -281,18 +274,12 @@ export class Geometry {
             }
         }
 
-        if(this.vertices) {
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertices.bufferInfos.id);
+        for(const key in this.attributes) {
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
             this.gl.bufferData(this.gl.ARRAY_BUFFER, 1, this.gl.STATIC_DRAW);
-            this.gl.deleteBuffer(this.vertices.bufferInfos.id);
-            this.vertices = null;
+            this.gl.deleteBuffer(this.attributes[key].buffer);
         }
 
-        if(this.uvs) {
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.uvs.bufferInfos.id);
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, 1, this.gl.STATIC_DRAW);
-            this.gl.deleteBuffer(this.uvs.bufferInfos.id);
-            this.uvs = null;
-        }
+        this.attributes = null;
     }
 }

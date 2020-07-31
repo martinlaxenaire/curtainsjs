@@ -132,8 +132,7 @@ export class Renderer {
             // current program ID
             currentProgramID: null,
 
-            // last buffer sizes drawn (avoid redundant buffer bindings)
-            currentBuffersID: 0,
+            // if we're using depth test or not
             setDepth: null,
             // face culling
             cullFace: null,
@@ -652,9 +651,6 @@ export class Renderer {
         // clear the buffer to clean scene
         if(this.gl) this.clear();
 
-        // reset buffers to force binding them again
-        this.state.currentBuffersID = 0;
-
         // we've removed an object, keep Curtains class in sync with our renderer
         this.onSceneChange();
     }
@@ -712,9 +708,6 @@ export class Renderer {
 
         // clear the buffer to clean scene
         if(this.gl) this.clear();
-
-        // reset buffers to force binding them again
-        this.state.currentBuffersID = 0;
 
         // we've removed an object, keep Curtains class in sync with our renderer
         this.onSceneChange();
@@ -776,9 +769,6 @@ export class Renderer {
 
         // clear the buffer to clean scene
         if(this.gl) this.clear();
-
-        // reset buffers to force binding them again
-        this.state.currentBuffersID = 0;
 
         // we've removed an object, keep Curtains class in sync with our renderer
         this.onSceneChange();

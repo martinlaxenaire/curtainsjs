@@ -57,7 +57,9 @@ window.addEventListener("load", () => {
     }
 
     window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("touchmove", onMouseMove);
+    window.addEventListener("touchmove", onMouseMove, {
+        passive: true
+    });
 
     // if we should update the velocity or not
     let updateVelocity = false;

@@ -813,6 +813,15 @@ export class Texture {
 
 
     /***
+     This uses the requestVideoFrameCallback API to update the texture each time a new frame is displayed
+     ***/
+    _videoFrameCallback() {
+        this._willUpdate = true;
+        this.source.requestVideoFrameCallback(() => this._videoFrameCallback());
+    }
+
+
+    /***
      This updloads our texture to the GPU
      Called on init or inside our drawing loop if shouldUpdate property is set to true
      Typically used by videos or canvas
@@ -1039,8 +1048,8 @@ export class Texture {
             // bind the texture
             this._bindTexture(this);
 
-            // check if the video is actually really playing
-            if(this.sourceType === "video" && this.source && this.source.readyState >= this.source.HAVE_CURRENT_DATA && !this.source.paused) {
+            // if no videoFrameCallback check if the video is actually really playing
+            if(this.sourceType === "video" && this.source && !this.source.hasVideoFrameCallback && this.source.readyState >= this.source.HAVE_CURRENT_DATA && !this.source.paused) {
                 this._willUpdate = true;
             }
 

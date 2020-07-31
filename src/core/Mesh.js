@@ -157,7 +157,7 @@ export class Mesh {
             width: widthSegments,
             height: heightSegments,
             // using a special ID for shader passes to avoid weird buffer binding bugs on mac devices
-            id: this.type === "ShaderPass" ? 1 : widthSegments * heightSegments + widthSegments
+            //id: this.type === "ShaderPass" ? 1 : widthSegments * heightSegments + widthSegments
         });
 
         this._program = new Program(this.renderer, {
@@ -487,10 +487,7 @@ export class Mesh {
         this._program.updateUniforms();
 
         // bind plane attributes buffers
-        // if we're rendering on a frame buffer object, force buffers bindings to avoid bugs
-        if(this.renderer.state.currentBuffersID !== this._geometry.definition.id || this.target) {
-            this._geometry.bindBuffers();
-        }
+        this._geometry.bindBuffers();
 
         // draw all our plane textures
         for(let i = 0; i < this.textures.length; i++) {
@@ -609,6 +606,11 @@ export class Mesh {
     remove() {
         // first we want to stop drawing it
         this._canDraw = false;
+
+        // force unbinding frame buffer
+        if(this.target) {
+            this.renderer.bindFrameBuffer(null);
+        }
 
         // delete all the webgl bindings
         this._dispose();

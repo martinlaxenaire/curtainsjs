@@ -157,6 +157,8 @@ window.addEventListener("load", () => {
 
         wrapper.addEventListener("touchmove", (e) => {
             handleMovement(e, simplePlane);
+        }, {
+            passive: true
         });
 
     }).onRender(() => {

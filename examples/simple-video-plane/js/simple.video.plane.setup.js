@@ -164,6 +164,8 @@ window.addEventListener("load", () => {
 
         wrapper.addEventListener("touchmove", (e) => {
             handleMovement(e, simplePlane);
+        }, {
+            passive: true
         });
 
         // click to play the videos
