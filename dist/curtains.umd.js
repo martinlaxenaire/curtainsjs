@@ -1968,7 +1968,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this._bindTexture(this); // if no videoFrameCallback check if the video is actually really playing
 
 
-          if (this.sourceType === "video" && this.source && !this.source.hasVideoFrameCallback && this.source.readyState >= this.source.HAVE_CURRENT_DATA && !this.source.paused) {
+          if (this.sourceType === "video" && this.source && !this._videoFrameCallbackID && this.source.readyState >= this.source.HAVE_CURRENT_DATA && !this.source.paused) {
             this._willUpdate = true;
           }
 
@@ -3464,8 +3464,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
           el.videoFrameCallback = texture._videoFrameCallback.bind(texture);
-          source.hasVideoFrameCallback = true;
-          source.requestVideoFrameCallback(el.videoFrameCallback);
+          texture._videoFrameCallbackID = source.requestVideoFrameCallback(el.videoFrameCallback);
         }
       }
       /***
@@ -3530,8 +3529,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             el.source.removeEventListener("load", el.load, false);
           } else if (texture.sourceType === "video") {
             // cancel video frame callback
-            if (el.videoFrameCallback) {
-              el.source.cancelVideoFrameCallback(el.videoFrameCallback);
+            if (el.videoFrameCallback && texture._videoFrameCallbackID) {
+              el.source.cancelVideoFrameCallback(texture._videoFrameCallbackID);
             }
 
             el.source.removeEventListener("canplaythrough", el.load, false); // empty source to properly delete video element and free the memory

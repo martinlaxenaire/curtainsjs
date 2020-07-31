@@ -1049,7 +1049,7 @@ export class Texture {
             this._bindTexture(this);
 
             // if no videoFrameCallback check if the video is actually really playing
-            if(this.sourceType === "video" && this.source && !this.source.hasVideoFrameCallback && this.source.readyState >= this.source.HAVE_CURRENT_DATA && !this.source.paused) {
+            if(this.sourceType === "video" && this.source && !this._videoFrameCallbackID && this.source.readyState >= this.source.HAVE_CURRENT_DATA && !this.source.paused) {
                 this._willUpdate = true;
             }
 

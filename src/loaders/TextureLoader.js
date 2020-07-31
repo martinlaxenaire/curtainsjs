@@ -302,8 +302,7 @@ export class TextureLoader {
         // if requestVideoFrameCallback exist, use it to update our video texture
         if('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
             el.videoFrameCallback = texture._videoFrameCallback.bind(texture);
-            source.hasVideoFrameCallback = true;
-            source.requestVideoFrameCallback(el.videoFrameCallback);
+            texture._videoFrameCallbackID = source.requestVideoFrameCallback(el.videoFrameCallback);
         }
     }
 
@@ -371,8 +370,8 @@ export class TextureLoader {
             }
             else if(texture.sourceType === "video") {
                 // cancel video frame callback
-                if(el.videoFrameCallback) {
-                    el.source.cancelVideoFrameCallback(el.videoFrameCallback);
+                if(el.videoFrameCallback && texture._videoFrameCallbackID) {
+                    el.source.cancelVideoFrameCallback(texture._videoFrameCallbackID);
                 }
 
                 el.source.removeEventListener("canplaythrough", el.load, false);
