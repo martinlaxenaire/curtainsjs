@@ -9,7 +9,6 @@ import {throwError} from "../utils/utils.js";
 
  params:
  @renderer (Curtains or Renderer class object): our curtains object OR our curtains renderer object
- @type (string): Loader type (used internally)
  @crossOrigin (string, optional): crossorigin policy to use
 
  returns :
@@ -23,10 +22,9 @@ import {throwError} from "../utils/utils.js";
 export class TextureLoader {
     constructor(
         renderer,
-        type = "TextureLoader",
         crossOrigin = "anonymous",
     ) {
-        this.type = type;
+        this.type = "TextureLoader";
 
         // we could pass our curtains object OR our curtains renderer object
         renderer = renderer.renderer || renderer;
@@ -47,7 +45,7 @@ export class TextureLoader {
         this.crossOrigin = crossOrigin;
 
         // keep a track of all sources loaded via this loader
-        this.els = [];
+        this.elements = [];
     }
 
 
@@ -61,7 +59,7 @@ export class TextureLoader {
      @successCallback (function): reference to our success callback
      @errorCallback (function): reference to our error callback
      ***/
-    addElement(source, texture, successCallback, errorCallback) {
+    _addElement(source, texture, successCallback, errorCallback) {
         const el = {
             source,
             texture,
@@ -69,7 +67,7 @@ export class TextureLoader {
             error: this._sourceLoadError.bind(this, source, errorCallback),
         };
 
-        this.els.push(el);
+        this.elements.push(el);
 
         return el;
     }
@@ -213,7 +211,7 @@ export class TextureLoader {
         });
 
         // add a new entry in our elements array
-        const el = this.addElement(source, texture, sucessCallback, errorCallback);
+        const el = this._addElement(source, texture, sucessCallback, errorCallback);
 
         // If the image is in the cache of the browser,
         // the 'load' event might have been triggered
@@ -280,7 +278,7 @@ export class TextureLoader {
         });
 
         // add a new entry in our elements array
-        const el = this.addElement(source, texture, sucessCallback, errorCallback);
+        const el = this._addElement(source, texture, sucessCallback, errorCallback);
 
         // handle our loaded data event inside the texture and tell our plane when the video is ready to play
         source.addEventListener('canplaythrough', el.load, false);
@@ -341,7 +339,7 @@ export class TextureLoader {
         });
 
         // add a new entry in our elements array
-        this.addElement(source, texture, sucessCallback, null);
+        this._addElement(source, texture, sucessCallback, null);
 
         // canvas are directly loaded
         this._sourceLoaded(source, texture, sucessCallback);
@@ -359,9 +357,9 @@ export class TextureLoader {
      params:
      @texture (Texture class object): The texture that contains our source
      ***/
-    removeSource(texture) {
+    _removeSource(texture) {
         // find our reference el in our els array
-        const el = this.els.find((element) => element.texture.uuid === texture.uuid);
+        const el = this.elements.find((element) => element.texture.uuid === texture.uuid);
 
         // if we have an element, remove its associated event listeners
         if(el) {

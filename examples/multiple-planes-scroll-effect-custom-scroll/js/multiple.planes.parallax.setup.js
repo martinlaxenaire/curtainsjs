@@ -1,4 +1,4 @@
-import {Curtains, Plane} from '../../../src/index.mjs';
+import {Curtains, Plane, Vec2, Vec3} from '../../../src/index.mjs';
 
 window.addEventListener("load", () => {
     // we will keep track of all our planes in an array
@@ -180,11 +180,11 @@ window.addEventListener("load", () => {
             applyPlanesParallax(index);
         }).onRender(() => {
             // apply the rotation
-            plane.setRotation(0, 0, scrollEffect / 750);
+            plane.setRotation(new Vec3(0, 0, scrollEffect / 750));
 
             // scale plane and its texture
-            plane.setScale(1, 1 + Math.abs(scrollEffect) / 300);
-            plane.textures[0].setScale(1, 1 + Math.abs(scrollEffect) / 150);
+            plane.setScale(new Vec2(1, 1 + Math.abs(scrollEffect) / 300));
+            plane.textures[0].setScale(new Vec2(1, 1 + Math.abs(scrollEffect) / 150));
         }).onReEnterView(() => {
             // plane is drawn again
             planeDrawn++;
@@ -210,6 +210,6 @@ window.addEventListener("load", () => {
         const parallaxEffect = (planeOffsetTop - sceneBoundingRect.height / 2) / sceneBoundingRect.height;
 
         // apply the parallax effect
-        planes[index].setRelativePosition(0, parallaxEffect * (sceneBoundingRect.height / 4));
+        planes[index].setRelativeTranslation(new Vec3(0, parallaxEffect * (sceneBoundingRect.height / 4)));
     }
 });

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
+    <!-- Metas -->
+    <title>curtains.js | Documentation | Mat4 class</title>
+    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <link rel="canonical" href="https://www.curtainsjs.com/render-target-class.html">
+
+    <!-- Facebook OG -->
+    <meta property="og:title" content="curtains.js | Documentation | Mat4 class">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <meta property="og:url" content="https://www.curtainsjs.com/render-target-class.html">
+    <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@webdesign_ml">
+    <meta name="twitter:creator" content="@webdesign_ml">
+    <meta name="twitter:title" content="curtains.js | Documentation | Mat4 class">
+    <meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="images/favicons/site.webmanifest">
+    <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#202340">
+    <link rel="shortcut icon" href="images/favicons/favicon.ico">
+    <meta name="msapplication-TileColor" content="#202340">
+    <meta name="msapplication-config" content="images/favicons/browserconfig.xml">
+    <meta name="theme-color" content="#202340">
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+<div id="page-wrap">
+
+    <div id="canvas"></div>
+
+    <div id="content">
+
+        <header id="header">
+            <div class="wrapper">
+                <div id="header-wrapper" class="flex-wrapper">
+                    <div id="header-title">
+                        <a href="/" title="Home">curtains.js</a>
+                    </div>
+                    <nav id="main-menu">
+                        <ul class="flex-wrapper">
+                            <li>
+                                <a href="get-started.html">Get started</a>
+                            </li>
+                            <li>
+                                <a href="documentation.html" class="active">Docs</a>
+                            </li>
+                            <li>
+                                <a href="download.html">Download</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <section class="content-section api-section">
+
+            <nav id="api-menu-nav">
+                <ul id="api-menu">
+                    <li>
+                        <div class="api-top-menu-item">Core</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="curtains-class.html">Curtains</a>
+                            </li>
+                            <li>
+                                <a href="plane-class.html">Plane</a>
+                            </li>
+                            <li>
+                                <a href="texture-class.html">Texture</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Frame Buffer Objects</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="render-target-class.html">RenderTarget</a>
+                            </li>
+                            <li>
+                                <a href="shader-pass-class.html">ShaderPass</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Loaders</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="texture-loader-class.html">TextureLoader</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="active">
+                        <div class="api-top-menu-item">Math</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="vec-2-class.html">Vec2</a>
+                            </li>
+                            <li>
+                                <a href="vec-3-class.html">Vec3</a>
+                            </li>
+                            <li class="active">
+                                <a href="mat-4-class.html">Mat4</a>
+
+                                <div class="api-submenu-content">
+                                    <div class="api-submenu-title">
+                                        <a href="mat-4-class.html#basic-usage">Basic usage</a>
+                                    </div>
+                                    <div class="api-submenu-title">
+                                        <a href="mat-4-class.html#parameters">Parameters</a>
+                                    </div>
+                                    <div class="api-submenu-title">
+                                        <a href="mat-4-class.html#properties">Properties</a>
+                                    </div>
+                                    <ul class="api-submenu">
+                                        <li>
+                                            <a href="mat-4-class.html#elements-array">elements</a>
+                                        </li>
+                                    </ul>
+                                    <div class="api-submenu-title">
+                                        <a href="mat-4-class.html#methods">Methods</a>
+                                    </div>
+                                    <ul class="api-submenu">
+                                        <li>
+                                            <a href="mat-4-class.html#compose-from-origin">composeFromOrigin</a>
+                                        </li>
+                                        <li>
+                                            <a href="mat-4-class.html#copy">copy</a>
+                                        </li>
+                                        <li>
+                                            <a href="mat-4-class.html#multiply">multiply</a>
+                                        </li>
+                                        <li>
+                                            <a href="mat-4-class.html#scale">scale</a>
+                                        </li>
+                                        <li>
+                                            <a href="mat-4-class.html#set-from-array">setFromArray</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li>
+                                <a href="quat-class.html">Quat</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Extras</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="ping-pong-plane-class.html">PingPongPlane</a>
+                            </li>
+                            <li>
+                                <a href="fxaa-pass-class.html">FXAAPass</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+
+            <div id="api-content">
+
+                <div class="api-content-inner">
+                    <div class="inner-section">
+                        <h1>Mat4 class</h1>
+                        <h2 id="basic-usage">Basic usage</h2>
+                        <p>
+                            Mat4 is the class used for all 4 dimensions matrices manipulations.
+                        </p>
+                        <h3>Creation</h3>
+                        <p>
+                            To create a new Mat4, just use its constructor.<br />
+                            If used without parameters, it will create a 4 dimensions identity matrix.
+                        </p>
+
+                        <div class="code">
+
+                            <div class="code-comment">
+                                // create a new Mat4 identity matrix
+                            </div>
+
+                            <div>
+                                <span class="code-var">const</span> matrix = <span class="code-var">new</span> <span class="code-tag">Mat4</span>()<span class="code-var">;</span>
+                            </div>
+
+                        </div>
+
+                        <h3>Use chaining</h3>
+                        <p>
+                            Since most of the Mat4 methods return the matrix itself, you can use chaining:
+                        </p>
+
+                        <div class="code">
+
+                            <div class="code-comment">
+                                // create a new Mat4 matrix and chain methods
+                            </div>
+
+                            <div>
+                                <span class="code-var">const</span> matrix = <span class="code-var">new</span> <span class="code-tag">Mat4</span>().<span class="code-tag">multiply</span>(<span class="code-var">new</span> <span class="code-tag">Mat4</span>()).<span class="code-tag">scale</span>(<span class="code-var">new</span> <span class="code-tag">Vec3</span>(<span class="code-number">2</span><span class="code-var">,</span> <span class="code-number">2</span><span class="code-var">,</span> <span class="code-number">2</span>))<span class="code-var">;</span>
+                            </div>
+
+                        </div>
+
+                        <h2 id="parameters">Parameters</h2>
+
+                        <ul class="api-item-parameters">
+                            <li>
+                                <span class="api-item-parameter-label">
+                                    elements
+                                </span>
+                                <span class="api-item-parameter-type">
+                                    array of length 16, optional
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    values to use for that matrix. Default to 4 dimensions identity matrix.
+                                </span>
+                            </li>
+                        </ul>
+
+                        <h2 id="properties">Properties</h2>
+                        <ul>
+                            <li id="elements-array">
+                                <p>
+                                    <strong>elements</strong> (Float32Array): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    A Float32Array of length 16 representing that matrix.
+                                </p>
+                            </li>
+                        </ul>
+
+                        <h2 id="methods">Methods</h2>
+                        <ul>
+                            <li id="compose-from-origin">
+                                <p>
+                                    <strong>composeFromOrigin</strong>(translation, quaternion, scale, origin): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Creates a matrix from a quaternion rotation, vector translation and vector scale, rotating and scaling around the given origin.<br />
+                                    Equivalent for applying translation, rotation and scale matrices but much faster.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            translation
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            <a href="vec-3-class.html">Vec3</a> class object
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            translation vector
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            quaternion
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            <a href="quat-class.html">Quat</a> class object
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            rotation quaternion
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            scale
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            <a href="vec-3-class.html">Vec3</a> class object
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            scale vector
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            origin
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            <a href="vec-3-class.html">Vec3</a> class object
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            origin vector around which to scale and rotate
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>returns:</strong> this matrix after transformations.
+                                </p>
+                            </li>
+
+                            <li id="copy">
+                                <p>
+                                    <strong>copy</strong>(matrix): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Copy a matrix into this matrix.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            matrix
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            Mat4 class object
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            matrix to copy
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>returns:</strong> this matrix after copy.
+                                </p>
+                            </li>
+
+                            <li id="multiply">
+                                <p>
+                                    <strong>multiply</strong>(matrix): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Multiply this matrix by the matrix passed as parameter.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            matrix
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            Mat4 class object
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            matrix to multiply with.
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>returns:</strong> this matrix after multiplication.
+                                </p>
+                            </li>
+
+                            <li id="scale">
+                                <p>
+                                    <strong>scale</strong>(vector): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Scale this matrix by the vector passed as parameter.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            vector
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            <a href="vec-3-class.html">Vec3</a> class object
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            vector to use for scaling
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>returns:</strong> this matrix after scaling.
+                                </p>
+                            </li>
+
+                            <li id="set-from-array">
+                                <p>
+                                    <strong>setFromArray</strong>(array): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Sets the matrix values from an array.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            array
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            array
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            an array of at least 16 elements
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>returns:</strong> this matrix after being set.
+                                </p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+    </div>
+</div>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-141413267-1');
+</script>
+
+</body>
+</html>

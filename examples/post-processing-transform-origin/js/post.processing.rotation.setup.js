@@ -1,4 +1,4 @@
-import {Curtains, Plane, ShaderPass, FXAAPass} from '../../../src/index.mjs';
+import {Curtains, Plane, ShaderPass, FXAAPass, Vec3} from '../../../src/index.mjs';
 
 window.addEventListener("load", () => {
     let rotationEffect = 0;
@@ -133,11 +133,11 @@ window.addEventListener("load", () => {
         // (0, 0) means plane's top left corner
         // (1, 1) means plane's bottom right corner
         if(curtainsBoundingRect.width >= curtainsBoundingRect.height) {
-            plane.setTransformOrigin(-0.4, 0.5);
+            plane.setTransformOrigin(new Vec3(-0.4, 0.5, 0));
         }
         else {
             // for portrait mode we deliberately set the transform origin outside the viewport to give space to the planes
-            plane.setTransformOrigin(-0.5, 0.5);
+            plane.setTransformOrigin(new Vec3(-0.5, 0.5, 0));
         }
     }
 
@@ -148,13 +148,13 @@ window.addEventListener("load", () => {
         // check if our plane is defined and use it
         setPlaneTransformOrigin(plane);
 
-        plane.setRotation(0, 0, (index / planeElements.length) * Math.PI * 2);
+        plane.setRotation(new Vec3(0, 0, (index / planeElements.length) * Math.PI * 2));
 
         plane.onReady(() => {
 
         }).onRender(() => {
             // update rotation based on rotation effect
-            plane.setRotation(0, 0, plane.rotation.z + rotationEffect / 100);
+            plane.setRotation(new Vec3(0, 0, plane.rotation.z + rotationEffect / 100));
         }).onAfterResize(() => {
             setPlaneTransformOrigin(plane);
         });

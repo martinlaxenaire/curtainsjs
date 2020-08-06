@@ -109,6 +109,10 @@ window.addEventListener("load", () => {
         const plane = new Plane(curtains, smallPlaneElements[i], {
             vertexShader: vs,
             fragmentShader: fs,
+            texturesOptions: {
+                // textures images will be reduced, use LINEAR_MIPMAP_NEAREST
+                minFilter: curtains.gl.LINEAR_MIPMAP_NEAREST
+            },
         });
 
         plane.setRenderTarget(rgbTarget);

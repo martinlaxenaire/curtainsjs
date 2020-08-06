@@ -1,4 +1,4 @@
-import {Curtains, Plane, ShaderPass} from '../../../src/index.mjs';
+import {Curtains, Plane, ShaderPass, Vec2, Vec3} from '../../../src/index.mjs';
 
 window.addEventListener("load", () => {
     // keep track of the number of plane we're currently drawing
@@ -133,8 +133,8 @@ window.addEventListener("load", () => {
         }).onRender(() => {
 
             // scale plane and its texture
-            plane.setScale(1, 1 + Math.abs(scrollEffect) / 300);
-            plane.textures[0].setScale(1, 1 + Math.abs(scrollEffect) / 150);
+            plane.setScale(new Vec2(1, 1 + Math.abs(scrollEffect) / 300));
+            plane.textures[0].setScale(new Vec2(1, 1 + Math.abs(scrollEffect) / 150));
         }).onReEnterView(() => {
             // plane is drawn again
             planeDrawn++;
@@ -156,7 +156,7 @@ window.addEventListener("load", () => {
         const parallaxEffect = (planeOffsetTop - windowHeight / 2) / windowHeight;
 
         // apply the parallax effect
-        planes[index].setRelativePosition(0, parallaxEffect * (windowHeight / 4));
+        planes[index].setRelativeTranslation(new Vec3(0, parallaxEffect * (windowHeight / 4)));
     }
 
 

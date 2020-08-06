@@ -31,11 +31,16 @@ export class Vec3 {
      @x (float): X component of our vector
      @y (float): Y component of our vector
      @z (float): Z component of our vector
+
+     returns:
+     @this (Vec2): this vector after being set
      ***/
     set(x, y, z) {
         this.x = x;
         this.y = y;
         this.z = z;
+
+        return this;
     }
 
 
@@ -137,6 +142,60 @@ export class Vec3 {
      ***/
     clone() {
         return new Vec3(this.x, this.y, this.z);
+    }
+
+
+    /***
+     Merges this vector with a vector when values are NaN. Mostly used internally.
+
+     params:
+     @vector (Vec3): vector to use for sanitization
+
+     returns:
+     @vector (Vec3): sanitized vector
+     ***/
+    sanitizeNaNValuesWith(vector) {
+        this.x = isNaN(this.x) ? vector.x : parseFloat(this.x);
+        this.y = isNaN(this.y) ? vector.y : parseFloat(this.y);
+        this.z = isNaN(this.z) ? vector.z : parseFloat(this.z);
+
+        return this;
+    }
+
+
+    /***
+     Apply max values to this vector
+
+     params:
+     @vector (Vec3): vector representing max values
+
+     returns:
+     @vector (Vec3): vector with max values applied
+     ***/
+    max(vector) {
+        this.x = Math.max(this.x, vector.x);
+        this.y = Math.max(this.y, vector.y);
+        this.z = Math.max(this.z, vector.z);
+
+        return this;
+    }
+
+
+    /***
+     Apply min values to this vector
+
+     params:
+     @vector (Vec3): vector representing min values
+
+     returns:
+     @vector (Vec3): vector with min values applied
+     ***/
+    min(vector) {
+        this.x = Math.min(this.x, vector.x);
+        this.y = Math.min(this.y, vector.y);
+        this.z = Math.min(this.z, vector.z);
+
+        return this;
     }
 
 

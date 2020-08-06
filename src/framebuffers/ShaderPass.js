@@ -89,9 +89,13 @@ export class ShaderPass extends DOMMesh {
         if(this._program.compiled) {
             this._initShaderPass();
 
-            // add shader pass to our scene and renderer shaderPasses array
-            this.renderer.scene.addShaderPass(this);
+            // add shader pass to our renderer shaderPasses array
             this.renderer.shaderPasses.push(this);
+
+            // wait one tick before adding our shader pass to the scene to avoid flickering black screen for one frame
+            this.renderer.nextRender.add(() => {
+                this.renderer.scene.addShaderPass(this);
+            })
         }
     }
 
@@ -139,7 +143,7 @@ export class ShaderPass extends DOMMesh {
         const texture = new Texture(this.renderer, {
             sampler: "uRenderTexture",
             isFBOTexture: true,
-            fromTexture: this.target.textures[0],
+            fromTexture: this.target.getTexture(),
         });
 
         texture.addParent(this);
@@ -163,6 +167,7 @@ export class ShaderPass extends DOMMesh {
             shaderPass: this,
             clear: this._shouldClear,
             depth: this._depth,
+            texturesOptions: this._texturesOptions,
         });
         this.setRenderTarget(target);
     }

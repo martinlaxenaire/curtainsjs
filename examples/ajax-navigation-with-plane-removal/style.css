@@ -27,6 +27,31 @@
         min-height: 100vh;
     }
 
+    /*** loader ***/
+
+    #loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: white;
+        transition: opacity 1s ease-in-out;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        z-index: 11;
+    }
+
+    .site-loaded #loader {
+        opacity: 0;
+    }
+
+    #loader-inner {
+        font-size: 3em;
+    }
+
     /*** canvas ***/
 
     #canvas {

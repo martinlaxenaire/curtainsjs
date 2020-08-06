@@ -14,11 +14,8 @@ import {ShaderPass} from "../framebuffers/ShaderPass.js";
 export class FXAAPass {
     constructor(curtains, {
         // Mesh params
-        shareProgram,
-        widthSegments,
-        heightSegments,
         depthTest,
-        cullFace,
+        texturesOptions,
         crossOrigin,
 
         // ShaderPass specific params
@@ -102,6 +99,7 @@ export class FXAAPass {
             depthTest,
             fragmentShader,
             uniforms,
+            texturesOptions,
             crossOrigin,
 
             // ShaderPass specific params

@@ -84,7 +84,7 @@
 						<div class="text-section">
 							<h2>What is it ?</h2>
 							<p>
-								Shaders are the next front-end web developpment big thing, with the ability to create very powerful 3D interactions and animations. A lot of very good javascript libraries already handle WebGL but with most of them it's kind of a headache to position your meshes relative to the DOM elements of your web page.
+								Shaders are the new front-end web developpment big thing, with the ability to create very powerful 3D interactions and animations. A lot of very good javascript libraries already handle WebGL but with most of them it's kind of a headache to position your meshes relative to the DOM elements of your web page.
 							</p>
 							<p>
 								curtains.js was created with just that issue in mind. It is a small vanilla WebGL javascript library that converts HTML elements containing images, videos and canvases into 3D WebGL textured planes, allowing you to animate them via shaders.
@@ -103,7 +103,7 @@
 						<div class="text-section">
 							<h2>Download</h2>
                             <p>
-                                <a href="build/curtains.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v6.1">curtains.js v6.1 (173Ko)</a> - <a href="build/curtains.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.min.js v6.1">curtains.min.js v6.1 (70Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+                                <a href="dist/curtains.umd.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v7.0">curtains.umd.js v7.0 (308Ko)</a> - <a href="dist/curtains.umd.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.umd.min.js v7.0">curtains.umd.min.js v7.0 (110Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
                             </p>
 						</div>
 
@@ -162,29 +162,55 @@
 
 						<div class="text-section">
 							<h2>Installation</h2>
-							<div>
-								In a browser:
-
-                                <div class="code">
-                                    <span class="code-tag">&lt;script</span> src=<span class="code-string">"curtains.min.js"</span><span class="code-tag">&gt;&lt;/script&gt;</span>
-
-                                </div>
-
-							</div>
-							<div>
-								Using npm:
+                            <div>
+                                <p>
+                                    Using npm:
+                                </p>
 
                                 <div class="code">
                                     npm i curtainsjs
                                 </div>
 
-							</div>
-							<div>
-								Load ES module:
+                            </div>
+                            <div>
+                                <p>
+                                    Load ES modules:
+                                </p>
 
                                 <div class="code">
-                                    <span class="code-var">import</span> {<span class="code-tag">Curtains</span>} <span class="code-var">from</span> <span class="code-string">'curtainsjs'</span><span class="code-var">;</span>
+                                    <span class="code-var">import</span> {<span class="code-tag">Curtains</span><span class="code-var">,</span> <span class="code-tag">Plane</span>} <span class="code-var">from</span> <span class="code-string">'curtainsjs'</span><span class="code-var">;</span>
                                 </div>
+
+                                <p>
+                                    See the <a href="documentation.html">documentation</a> for a complete list of all classes availables.
+                                </p>
+                            </div>
+							<div>
+                                <p>
+                                    In a browser, you can use the UMD files located in the 'dist' directory. Note that all the classes will use the 'Curtains' namespace:
+                                </p>
+
+                                <div class="code">
+                                    <span class="code-tag">&lt;script</span> src=<span class="code-string">"dist/curtains.umd.min.js"</span><span class="code-tag">&gt;&lt;/script&gt;</span>
+
+                                </div>
+
+                                <div class="code">
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // "canvas" is the ID of our HTML container element
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> curtains = <span class="code-var">new</span> Curtains.<span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <span class="code-var">const</span> plane = <span class="code-var">new</span> Curtains.<span class="code-tag">Plane</span>(curtains<span class="code-var">,</span> document.<span class="code-tag">getElementById</span>(<span class="code-string">"my-plane"</span>))<span class="code-var">;</span>
+                                    </div>
+                                </div>
+
 							</div>
 						</div>
 

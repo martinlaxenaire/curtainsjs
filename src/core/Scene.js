@@ -233,7 +233,7 @@ export class Scene {
      Enable the first Shader pass scene pass
      ***/
     enableShaderPass() {
-        if(this.stacks.scenePasses.length > 0 && this.stacks.renderPasses.length === 0) {
+        if(this.stacks.scenePasses.length && this.stacks.renderPasses.length === 0 && this.renderer.planes.length) {
             this.renderer.state.scenePassIndex = 0;
             this.renderer.bindFrameBuffer(this.renderer.shaderPasses[this.stacks.scenePasses[0]].target);
         }
@@ -244,7 +244,7 @@ export class Scene {
      ***/
     drawShaderPasses() {
         // if we got one or multiple scene passes after the render passes, bind the first scene pass here
-        if(this.stacks.scenePasses.length > 0 && this.stacks.renderPasses.length > 0) {
+        if(this.stacks.scenePasses.length && this.stacks.renderPasses.length && this.renderer.planes.length) {
             this.renderer.state.scenePassIndex = 0;
             this.renderer.bindFrameBuffer(this.renderer.shaderPasses[this.stacks.scenePasses[0]].target);
         }

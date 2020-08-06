@@ -17,7 +17,7 @@ import {throwWarning, lerp} from "../utils/utils.js";
  @depth (bool, optional): whether the WebGL context should handle depth. Default to true.
  @failIfMajorPerformanceCaveat (bool, optional): whether the WebGL context creation should fail in case of major performance caveat. Default to true.
  @preserveDrawingBuffer (bool, optional): whether the WebGL context should preserve the drawing buffer. Default to false.
- @stencil (bool, optional): whether the WebGL context should handle stencil. Default to true.
+ @stencil (bool, optional): whether the WebGL context should handle stencil. Default to false.
 
  @autoResize (bool, optional): Whether the library should listen to the window resize event and actually resize the scene. Set it to false if you want to handle this by yourself using the resize() method. Default to true.
  @autoRender (bool, optional): Whether the library should create a request animation frame loop to render the scene. Set it to false if you want to handle this by yourself using the render() method. Default to true.

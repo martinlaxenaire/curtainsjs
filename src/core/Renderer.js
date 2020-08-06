@@ -153,7 +153,7 @@ export class Renderer {
     /***
      Add a callback queueing manager (execute functions on the next render call, see CallbackQueueManager class object)
      ***/
-    CallbackQueueManager() {
+    initCallbackQueueManager() {
         this.nextRender = new CallbackQueueManager();
     }
 
@@ -169,7 +169,7 @@ export class Renderer {
         this.state.isContextLost = false;
 
         // callback queue
-        this.CallbackQueueManager();
+        this.initCallbackQueueManager();
 
         // set blend func
         this.setBlendFunc();

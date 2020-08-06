@@ -276,7 +276,7 @@
         line-height: 1.4;
         font-size: 0.85em;
         color: #bababa;
-        margin: 1.5em 0;
+        margin: 1.5em 0 2.5em 0;
         font-family: 'Roboto Mono', Courrier New, sans-serif;
     }
 
@@ -429,6 +429,7 @@
     #api-menu > li {
         margin: 0;
         padding: 1em;
+        font-size: 1.1em;
         border-top: 2px solid white;
         border-bottom: 2px solid white;
     }
@@ -441,6 +442,10 @@
         border-bottom: 0;
     }
 
+    .api-top-menu-item {
+        font-weight: bold;
+    }
+
     #api-menu-nav a {
         text-decoration: none;
     }
@@ -449,73 +454,107 @@
         text-decoration: underline;
     }
 
-    #api-menu li .api-menu-top-link a {
-        color: #202340;
+    #api-menu li li.active:not(:last-child)::after {
+        content: "";
+        display: block;
+        margin: 0 0.5em 1em 0;
+        padding-bottom: 0.5em;
+        border-bottom: 1px solid #b8b9c3;
+    }
+
+    #api-menu li li.active::before {
+        content: "";
+        display: block;
+        margin: 1em 0.5em 0 0;
+        padding-top: 0.5em;
+        border-top: 1px solid #b8b9c3;
+    }
+
+    #api-menu li.active > a {
         font-weight: bold;
     }
 
-    #api-menu li.active .api-menu-top-link a {
-        text-decoration: underline;
-    }
-
-    .api-submenu-content {
+    .api-submenu-content, .api-class-content {
         margin: 0.5em;
     }
 
-    #api-menu li .api-submenu-content {
-        display: none;
-    }
-
-    #api-menu li.active .api-submenu-content {
-        display: block;
-    }
-
-    #api-menu .api-submenu {
+    #api-menu .api-submenu, #api-menu .api-class {
         margin: 0.5em 0;
     }
 
-    .api-submenu-title {
+    .api-submenu-title, .api-class-title {
         margin: 0.5em 0 0 0;
     }
 
-    #content .api-submenu-title a {
+    #content .api-submenu-title a, #content .api-class-title a {
         color: #202340;
     }
 
     #api-menu li li {
         font-size: 0.85em;
+        margin: 0.25em 0;
+        background: transparent;
+        padding: 0;
+    }
+
+    #api-menu li li li {
+        font-size: 0.9em;
         margin: 0.25em;
         background: transparent;
         padding: 0;
     }
 
-    #basic-concept-list, #basic-concept-list ul {
+    #api-menu li li li a {
+        color: #d17379;
+        font-weight: normal;
+    }
+
+    .main-classes-directories {
+
+    }
+
+    .main-classes-list, .internal-classes-list {
         padding-left: 1em;
+        list-style: disc;
     }
 
-    #basic-concept-list li {
-        margin-bottom: 1em;
+    .api-content-inner .main-classes-list li {
+        margin-bottom: 2.5em;
     }
 
-    #basic-concept-list h3, #basic-concept-list h4 {
-        margin-bottom: 0;
+    .api-content-inner .internal-classes-list li {
+        margin-bottom: 0.5em;
+    }
+
+    .content-section .api-content-inner .main-classes-list h4,
+    .content-section .api-content-inner .main-classes-list h5,
+    .content-section .api-content-inner .main-classes-list h6 {
+        margin-bottom: 0.25em;
         display: flex;
         align-items: center;
     }
 
-    #basic-concept-list h3 .api-item-version {
+    .main-classes-list h5, .main-classes-list h6 {
+        font-size: 1.1em;
+        color: #696b7f;
+    }
+
+    .main-classes-list h4 .api-item-version {
         font-size: 0.68375em;
         margin: 0 1em;
         font-weight: normal;
     }
 
-    #basic-concept-list h4 .api-item-version {
-        margin: 0 1em;
-        font-weight: normal;
+    .main-classes-list p {
+        margin-top: 0;
     }
 
-    #basic-concept-list p {
-        margin-top: 0;
+    .internal-classes-list p {
+        margin-bottom: 0.5em;
+    }
+
+    .internal-classes-list strong {
+        color: #696b7f;
     }
 
     /*** content ***/
@@ -598,7 +637,7 @@
     }
 
     .api-content-inner ul li {
-        margin-bottom: 4em;
+        margin-bottom: 3em;
     }
 
     .api-item-parameters {

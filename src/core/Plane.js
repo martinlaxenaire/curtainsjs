@@ -1,6 +1,7 @@
 import {DOMMesh} from "./DOMMesh.js";
 import {Camera} from "../camera/Camera.js";
 import {Mat4} from '../math/Mat4.js';
+import {Vec2} from '../math/Vec2.js';
 import {Vec3} from '../math/Vec3.js';
 import {Quat} from '../math/Quat.js';
 import {throwWarning} from '../utils/utils.js';
@@ -388,19 +389,22 @@ export class Plane extends DOMMesh {
      used internally but can be used externally as well
 
      params :
-     @scaleX (float): scale to apply on X axis
-     @scaleY (float): scale to apply on Y axis
+     @scale (Vec2 object): scale to apply on X and Y axes
      ***/
-    setScale(scaleX, scaleY) {
-        scaleX = isNaN(scaleX) ? this.scale.x : parseFloat(scaleX);
-        scaleY = isNaN(scaleY) ? this.scale.y : parseFloat(scaleY);
+    setScale(scale) {
+        if(!scale.type || scale.type !== "Vec2") {
+            if(!this.renderer.production) {
+                throwWarning(this.type + ": Cannot set scale because the parameter passed is not of Vec2 type:", scale);
+            }
 
-        scaleX = Math.max(scaleX, 0.001);
-        scaleY = Math.max(scaleY, 0.001);
+            return;
+        }
+
+        scale.sanitizeNaNValuesWith(this.scale).max(new Vec2(0.001, 0.001));
 
         // only apply if values changed
-        if(scaleX !== this.scale.x || scaleY !== this.scale.y) {
-            this.scale.set(scaleX, scaleY, 1);
+        if(scale.x !== this.scale.x || scale.y !== this.scale.y) {
+            this.scale.set(scale.x, scale.y, 1);
 
             // adjust textures size
             for(let i = 0; i < this.textures.length; i++) {
@@ -418,20 +422,24 @@ export class Plane extends DOMMesh {
      used internally but can be used externally as well
 
      params :
-     @angleX (float): rotation to apply on X axis (in radians)
-     @angleY (float): rotation to apply on Y axis (in radians)
-     @angleZ (float): rotation to apply on Z axis (in radians)
+     @rotation (Vec3 object): rotation to apply on X, Y and Z axes (in radians)
      ***/
-    setRotation(angleX, angleY, angleZ) {
-        angleX = isNaN(angleX) ? this.rotation.x : parseFloat(angleX);
-        angleY = isNaN(angleY) ? this.rotation.y : parseFloat(angleY);
-        angleZ = isNaN(angleZ) ? this.rotation.z : parseFloat(angleZ);
+    setRotation(rotation) {
+        if(!rotation.type || rotation.type !== "Vec3") {
+            if(!this.renderer.production) {
+                throwWarning(this.type + ": Cannot set rotation because the parameter passed is not of Vec3 type:", rotation);
+            }
+
+            return;
+        }
+
+        rotation.sanitizeNaNValuesWith(this.rotation);
 
         // only apply if values changed
-        if(angleX !== this.rotation.x || angleY !== this.rotation.y || angleZ !== this.rotation.z) {
-            this.rotation.set(angleX, angleY, angleZ);
+        if(!rotation.equals(this.rotation)) {
+            this.rotation.copy(rotation);
 
-            this.quaternion.setFromVec3(this.rotation, "XYZ");
+            this.quaternion.setFromVec3(this.rotation);
 
             // we should update the plane mvMatrix
             this._updateMVMatrix = true;
@@ -446,17 +454,21 @@ export class Plane extends DOMMesh {
      (0.5, 0.5, -1) means behind plane's center
 
      params :
-     @xOrigin (float): coordinate of transformation origin along width
-     @yOrigin (float): coordinate of transformation origin along height
-     @zOrigin (float): coordinate of transformation origin along depth
+     @origin (Vec3 object): coordinate of transformation origin X, Y and Z axes
      ***/
-    setTransformOrigin(xOrigin, yOrigin, zOrigin) {
-        xOrigin = isNaN(xOrigin) ? this.transformOrigin.x : parseFloat(xOrigin);
-        yOrigin = isNaN(yOrigin) ? this.transformOrigin.y : parseFloat(yOrigin);
-        zOrigin = isNaN(zOrigin) ? this.transformOrigin.z : parseFloat(zOrigin);
+    setTransformOrigin(origin) {
+        if(!origin.type || origin.type !== "Vec3") {
+            if(!this.renderer.production) {
+                throwWarning(this.type + ": Cannot set transform origin because the parameter passed is not of Vec3 type:", origin);
+            }
 
-        if(xOrigin !== this.transformOrigin.x || yOrigin !== this.transformOrigin.y || zOrigin !== this.transformOrigin.z) {
-            this.transformOrigin.set(xOrigin, yOrigin, zOrigin);
+            return;
+        }
+
+        origin.sanitizeNaNValuesWith(this.transformOrigin);
+
+        if(!origin.equals(this.transformOrigin)) {
+            this.transformOrigin.copy(origin);
 
             this._updateMVMatrix = true;
         }
@@ -469,7 +481,7 @@ export class Plane extends DOMMesh {
     _setTranslation() {
         // avoid unnecessary calculations if we don't have a users set relative position
         let worldPosition = new Vec3();
-        if(this.relativeTranslation.x !== 0 || this.relativeTranslation.y !== 0 || this.relativeTranslation.z !== 0) {
+        if(!this.relativeTranslation.equals(worldPosition)) {
             worldPosition = this._documentToWorldSpace(this.relativeTranslation);
         }
 
@@ -486,20 +498,40 @@ export class Plane extends DOMMesh {
 
     /***
      This function takes pixel values along X and Y axis and convert them to clip space coordinates, and then apply the corresponding translation
-     TODO rename to setRelativeTranslation()?
+     TODO deprecated and will be removed soon
 
      params :
-     @translationX (float): translation to apply on X axis
-     @translationY (float): translation to apply on Y axis
+     @translation (Vec3): translation to apply on X, Y and Z axes
      ***/
-    setRelativePosition(translationX, translationY, translationZ) {
-        translationX = isNaN(translationX) ? this.relativeTranslation.x : parseFloat(translationX);
-        translationY = isNaN(translationY) ? this.relativeTranslation.y : parseFloat(translationY);
-        translationZ = isNaN(translationZ) ? this.relativeTranslation.z : parseFloat(translationZ);
+    setRelativePosition(translation) {
+        if(!this.renderer.production) {
+            throwWarning(this.type + ": setRelativePosition() is deprecated, use setRelativeTranslation() instead");
+        }
+
+        this.setRelativeTranslation(translation);
+    }
+
+
+    /***
+     This function takes pixel values along X and Y axis and convert them to clip space coordinates, and then apply the corresponding translation
+
+     params :
+     @translation (Vec3): translation to apply on X, Y and Z axes
+     ***/
+    setRelativeTranslation(translation) {
+        if(!translation.type || translation.type !== "Vec3") {
+            if(!this.renderer.production) {
+                throwWarning(this.type + ": Cannot set translation because the parameter passed is not of Vec3 type:", translation);
+            }
+
+            return;
+        }
+
+        translation.sanitizeNaNValuesWith(this.relativeTranslation);
 
         // only apply if values changed
-        if(translationX !== this.relativeTranslation.x || translationY !== this.relativeTranslation.y || translationZ !== this.relativeTranslation.z) {
-            this.relativeTranslation.set(translationX, translationY, translationZ);
+        if(!translation.equals(this.relativeTranslation)) {
+            this.relativeTranslation.copy(translation);
 
             this._setTranslation();
         }
@@ -510,11 +542,10 @@ export class Plane extends DOMMesh {
      This function takes pixel values along X and Y axis and convert them to clip space coordinates
 
      params :
-     @xPosition (float): position to convert on X axis
-     @yPosition (float): position to convert on Y axis
+     @vector (Vec3): position to convert on X, Y and Z axes
 
      returns :
-     @relativePosition: plane's position in WebGL space
+     @worldPosition: plane's position in WebGL space
      ***/
     _documentToWorldSpace(vector) {
         const worldPosition = new Vec3(
@@ -792,17 +823,14 @@ export class Plane extends DOMMesh {
     /***
      Returns our plane WebGL bounding rect relative to document
 
-     params:
-     @forceComputing (bool): whether to force the computing of new values or not. Use forceComputing when a plane alwaysDraw property is set to true because the frustum culling check is bypassed and the plane WebGL bounding rectangle is not updated (default to false)
-
      returns :
      @boundingRectangle (obj): an object containing our plane WebGL element bounding rectangle (width, height, top, bottom, right and left properties)
      ***/
-    getWebGLBoundingRect(forceComputing = false) {
+    getWebGLBoundingRect() {
         if(!this._matrices.mVPMatrix) {
             return this._boundingRect.document;
         }
-        else if(!this._boundingRect.worldToDocument || forceComputing) {
+        else if(!this._boundingRect.worldToDocument || this.alwaysDraw) {
             this._computeWebGLBoundingRect();
         }
 

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
+    <!-- Metas -->
+    <title>curtains.js | Documentation | FXAAPass class</title>
+    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <link rel="canonical" href="https://www.curtainsjs.com/render-target-class.html">
+
+    <!-- Facebook OG -->
+    <meta property="og:title" content="curtains.js | Documentation | FXAAPass class">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <meta property="og:url" content="https://www.curtainsjs.com/render-target-class.html">
+    <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@webdesign_ml">
+    <meta name="twitter:creator" content="@webdesign_ml">
+    <meta name="twitter:title" content="curtains.js | Documentation | FXAAPass class">
+    <meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="images/favicons/site.webmanifest">
+    <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#202340">
+    <link rel="shortcut icon" href="images/favicons/favicon.ico">
+    <meta name="msapplication-TileColor" content="#202340">
+    <meta name="msapplication-config" content="images/favicons/browserconfig.xml">
+    <meta name="theme-color" content="#202340">
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+<div id="page-wrap">
+
+    <div id="canvas"></div>
+
+    <div id="content">
+
+        <header id="header">
+            <div class="wrapper">
+                <div id="header-wrapper" class="flex-wrapper">
+                    <div id="header-title">
+                        <a href="/" title="Home">curtains.js</a>
+                    </div>
+                    <nav id="main-menu">
+                        <ul class="flex-wrapper">
+                            <li>
+                                <a href="get-started.html">Get started</a>
+                            </li>
+                            <li>
+                                <a href="documentation.html" class="active">Docs</a>
+                            </li>
+                            <li>
+                                <a href="download.html">Download</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <section class="content-section api-section">
+
+            <nav id="api-menu-nav">
+                <ul id="api-menu">
+                    <li>
+                        <div class="api-top-menu-item">Core</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="curtains-class.html">Curtains</a>
+                            </li>
+                            <li>
+                                <a href="plane-class.html">Plane</a>
+                            </li>
+                            <li>
+                                <a href="texture-class.html">Texture</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Frame Buffer Objects</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="render-target-class.html">RenderTarget</a>
+                            </li>
+                            <li>
+                                <a href="shader-pass-class.html">ShaderPass</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Loaders</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="texture-loader-class.html">TextureLoader</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Math</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="vec-2-class.html">Vec2</a>
+                            </li>
+                            <li>
+                                <a href="vec-3-class.html">Vec3</a>
+                            </li>
+                            <li>
+                                <a href="mat-4-class.html">Mat4</a>
+                            </li>
+                            <li>
+                                <a href="quat-class.html">Quat</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="active">
+                        <div class="api-top-menu-item">Extras</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="ping-pong-plane-class.html">PingPongPlane</a>
+                            </li>
+                            <li class="active">
+                                <a href="fxaa-pass-class.html">FXAAPass</a>
+
+                                <div class="api-submenu-content">
+                                    <div class="api-submenu-title">
+                                        <a href="fxaa-pass-class.html#basic-usage">Basic usage</a>
+                                    </div>
+                                    <div class="api-submenu-title">
+                                        <a href="fxaa-pass-class.html#parameters">Parameters</a>
+                                    </div>
+                                    <div class="api-submenu-title">
+                                        <a href="fxaa-pass-class.html#properties">Properties</a>
+                                    </div>
+                                    <ul class="api-submenu">
+                                        <li>
+                                            <a href="fxaa-pass-class.html#pass">pass</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+
+            <div id="api-content">
+
+                <div class="api-content-inner">
+                    <div class="inner-section">
+                        <h1>FXAAPass class</h1>
+                        <h2 id="basic-usage">Basic usage</h2>
+                        <p>
+                            The FXAAPass lets you easily add a <strong>Fast Approximate Anti-Aliasing</strong> pass to your scene.<br />
+                        </p>
+                        <p class="api-item-examples">
+                            The fragment shader code used for that FXAA pass has been taken from here:<br />
+                            <a href="https://github.com/spite/Wagner/blob/master/fragment-shaders/fxaa-fs.glsl" target="_blank">https://github.com/spite/Wagner/blob/master/fragment-shaders/fxaa-fs.glsl</a>
+                        </p>
+                        <p>
+                            To create a FXAAPass, just use its constructor:
+                        </p>
+
+                        <div class="code">
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // "canvas" is the ID of our HTML container element
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="code-comment">
+                                    // create our FXAA pass using our curtains object
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> fxaaPass = <span class="code-var">new</span> <span class="code-tag">FXAAPass</span>(curtains)<span class="code-var">;</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h2 id="parameters">Parameters</h2>
+
+                        <p>
+                            To create a FXAAPass you will have to pass your curtains object as the first parameter.<br />
+                            You can add an additional parameter object in which you can pass the following <a href="shader-pass-class.html#shader-pass-parameters">ShaderPass parameters</a> options: <strong>clear, depth, depthTest, renderTarget, texturesOptions</strong>.
+                        </p>
+
+                        <h2 id="properties">Properties</h2>
+
+                        <ul>
+                            <li id="pass">
+                                <p>
+                                    <strong>pass</strong> (<a href="shader-pass-class.html">ShaderPass</a> class object): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    The ShaderPass used to apply the FXAA effect.
+                                </p>
+                            </li>
+                        </ul>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+    </div>
+</div>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-141413267-1');
+</script>
+
+</body>
+</html>

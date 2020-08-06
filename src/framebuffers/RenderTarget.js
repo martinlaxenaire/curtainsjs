@@ -215,6 +215,19 @@ export class RenderTarget {
     }
 
 
+    /*** GET THE RENDER TARGET TEXTURE ***/
+
+    /***
+     Returns the render target's texture
+
+     returns :
+     @texture (Texture class object): our RenderTarget's texture
+     ***/
+    getTexture() {
+        return this.textures[0];
+    }
+
+
     /*** DESTROYING ***/
 
     /***

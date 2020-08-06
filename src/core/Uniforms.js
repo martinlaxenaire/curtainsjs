@@ -16,6 +16,7 @@ import {throwError, throwWarning} from '../utils/utils.js';
  returns:
  @this: our Uniforms manager
 ***/
+
 export class Uniforms {
     constructor(renderer, program, shared, uniforms) {
         this.type = "Uniforms";
@@ -140,6 +141,9 @@ export class Uniforms {
         else if(uniform.value.type === "Mat4") {
             uniform._internalFormat = "Mat4";
         }
+        else if(uniform.value.type === "Quat") {
+            uniform._internalFormat = "Quat";
+        }
         else if(Array.isArray(uniform.value)) {
             uniform._internalFormat = "array";
         }
@@ -253,6 +257,10 @@ export class Uniforms {
                         shouldUpdate = true;
                         uniform.lastValue.copy(uniform.value);
                     }
+                    else if(uniform._internalFormat === "Quat" && !uniform.value.equals(uniform.lastValue)) {
+                        shouldUpdate = true;
+                        uniform.lastValue.copy(uniform.value);
+                    }
                     else if(JSON.stringify(uniform.value) !== JSON.stringify(uniform.lastValue)) { // compare two arrays
                         shouldUpdate = true;
                         // copy array
@@ -346,19 +354,27 @@ export class Uniforms {
 
 
     setUniform4i(uniform) {
-        this.gl.uniform4i(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]);
+        uniform._internalFormat === "Quat" ?
+            this.gl.uniform4i(uniform.location, uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3])
+            : this.gl.uniform4i(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]);
     }
 
     setUniform4iv(uniform) {
-        this.gl.uniform4iv(uniform.location, uniform.value);
+        uniform._internalFormat === "Quat" ?
+            this.gl.uniform4iv(uniform.location, [uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]])
+            : this.gl.uniform4iv(uniform.location, uniform.value);
     }
 
     setUniform4f(uniform) {
-        this.gl.uniform4f(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]);
+        uniform._internalFormat === "Quat" ?
+            this.gl.uniform4f(uniform.location, uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3])
+            : this.gl.uniform4f(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]);
     }
 
     setUniform4fv(uniform) {
-        this.gl.uniform4fv(uniform.location, uniform.value);
+        uniform._internalFormat === "Quat" ?
+            this.gl.uniform4fv(uniform.location, [uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]])
+            : this.gl.uniform4fv(uniform.location, uniform.value);
     }
 
 
@@ -372,7 +388,7 @@ export class Uniforms {
 
     setUniformMatrix4fv(uniform) {
         uniform._internalFormat === "Mat4" ?
-            this.gl.uniformMatrix4fv(uniform.location, uniform.value.elements)
-            : this.gl.uniformMatrix4fv(uniform.location, uniform.value);
+            this.gl.uniformMatrix4fv(uniform.location, false, uniform.value.elements)
+            : this.gl.uniformMatrix4fv(uniform.location, false, uniform.value);
     }
 }

@@ -1,9 +1,22 @@
 /***
  Throw a console warning with the passed arguments
  ***/
+
+let warningThrown = 0;
+
 export function throwWarning() {
-    const args = Array.prototype.slice.call(arguments);
-    console.warn.apply(console, args);
+    if(warningThrown > 100) {
+        return;
+    }
+    else if(warningThrown === 100) {
+        console.warn("Curtains: too many warnings thrown, stop logging.");
+    }
+    else {
+        const args = Array.prototype.slice.call(arguments);
+        console.warn.apply(console, args);
+    }
+
+    warningThrown++;
 }
 
 

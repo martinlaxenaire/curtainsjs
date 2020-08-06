@@ -28,9 +28,19 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    Throw a console warning with the passed arguments
    ***/
 
+  var warningThrown = 0;
+
   function throwWarning() {
-    var args = Array.prototype.slice.call(arguments);
-    console.warn.apply(console, args);
+    if (warningThrown > 100) {
+      return;
+    } else if (warningThrown === 100) {
+      console.warn("Curtains: too many warnings thrown, stop logging.");
+    } else {
+      var args = Array.prototype.slice.call(arguments);
+      console.warn.apply(console, args);
+    }
+
+    warningThrown++;
   }
   /***
    Throw a console error with the passed arguments
@@ -327,7 +337,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "enableShaderPass",
       value: function enableShaderPass() {
-        if (this.stacks.scenePasses.length > 0 && this.stacks.renderPasses.length === 0) {
+        if (this.stacks.scenePasses.length && this.stacks.renderPasses.length === 0 && this.renderer.planes.length) {
           this.renderer.state.scenePassIndex = 0;
           this.renderer.bindFrameBuffer(this.renderer.shaderPasses[this.stacks.scenePasses[0]].target);
         }
@@ -340,7 +350,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "drawShaderPasses",
       value: function drawShaderPasses() {
         // if we got one or multiple scene passes after the render passes, bind the first scene pass here
-        if (this.stacks.scenePasses.length > 0 && this.stacks.renderPasses.length > 0) {
+        if (this.stacks.scenePasses.length && this.stacks.renderPasses.length && this.renderer.planes.length) {
           this.renderer.state.scenePassIndex = 0;
           this.renderer.bindFrameBuffer(this.renderer.shaderPasses[this.stacks.scenePasses[0]].target);
         } // first the render passes
@@ -564,6 +574,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      Sets the matrix values from an array
        params:
      @array (array): an array of at least 16 elements
+       returns:
+     @this (Mat4 class object): this matrix after being set
      ***/
 
 
@@ -573,11 +585,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         for (var i = 0; i < this.elements.length; i++) {
           this.elements[i] = array[i];
         }
+
+        return this;
       }
       /***
        Copy another Mat4
          params:
        @matrix (Mat4 class object): matrix to copy
+         returns:
+       @this (Mat4 class object): this matrix after copy
        ***/
 
     }, {
@@ -600,6 +616,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.elements[13] = array[13];
         this.elements[14] = array[14];
         this.elements[15] = array[15];
+        return this;
       }
       /***
        Simple matrix multiplication helper
@@ -632,70 +649,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         result.elements[14] = b[12] * a[2] + b[13] * a[6] + b[14] * a[10] + b[15] * a[14];
         result.elements[15] = b[12] * a[3] + b[13] * a[7] + b[14] * a[11] + b[15] * a[15];
         return result;
-      }
-      /***
-       Simple matrix multiplication helper
-       TODO not working??
-         params:
-       @matrix (Mat4): Mat4 to multiply with
-         returns:
-       @result (Mat4): Mat4 after mulitplication
-       ***/
-
-    }, {
-      key: "multiplyMatrices",
-      value: function multiplyMatrices(firstMatrix, secondMatrix) {
-        var a = firstMatrix.elements;
-        var b = secondMatrix.elements;
-        var a11 = a[0],
-            a12 = a[4],
-            a13 = a[8],
-            a14 = a[12];
-        var a21 = a[1],
-            a22 = a[5],
-            a23 = a[9],
-            a24 = a[13];
-        var a31 = a[2],
-            a32 = a[6],
-            a33 = a[10],
-            a34 = a[14];
-        var a41 = a[3],
-            a42 = a[7],
-            a43 = a[11],
-            a44 = a[15];
-        var b11 = b[0],
-            b12 = b[4],
-            b13 = b[8],
-            b14 = b[12];
-        var b21 = b[1],
-            b22 = b[5],
-            b23 = b[9],
-            b24 = b[13];
-        var b31 = b[2],
-            b32 = b[6],
-            b33 = b[10],
-            b34 = b[14];
-        var b41 = b[3],
-            b42 = b[7],
-            b43 = b[11],
-            b44 = b[15];
-        this.elements[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
-        this.elements[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
-        this.elements[8] = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
-        this.elements[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
-        this.elements[1] = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
-        this.elements[5] = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
-        this.elements[9] = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
-        this.elements[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
-        this.elements[2] = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
-        this.elements[6] = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
-        this.elements[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
-        this.elements[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
-        this.elements[3] = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
-        this.elements[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
-        this.elements[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
-        this.elements[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
-        return this;
       }
       /***
        Simple Mat4 scaling helper
@@ -832,6 +785,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        params:
      @x (float): X component of our vector
      @y (float): Y component of our vector
+       returns:
+     @this (Vec2): this vector after being set
      ***/
 
 
@@ -840,6 +795,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function set(x, y) {
         this.x = x;
         this.y = y;
+        return this;
       }
       /***
        Adds a vector to this vector
@@ -928,7 +884,54 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return new Vec2(this.x, this.y);
       }
       /***
+       Merges this vector with a vector when values are NaN. Mostly used internally.
+         params:
+       @vector (Vec2): vector to use for sanitization
+         returns:
+       @vector (Vec2): sanitized vector
+       ***/
+
+    }, {
+      key: "sanitizeNaNValuesWith",
+      value: function sanitizeNaNValuesWith(vector) {
+        this.x = isNaN(this.x) ? vector.x : parseFloat(this.x);
+        this.y = isNaN(this.y) ? vector.y : parseFloat(this.y);
+        return this;
+      }
+      /***
+       Apply max values to this vector
+         params:
+       @vector (Vec2): vector representing max values
+         returns:
+       @vector (Vec2): vector with max values applied
+       ***/
+
+    }, {
+      key: "max",
+      value: function max(vector) {
+        this.x = Math.max(this.x, vector.x);
+        this.y = Math.max(this.y, vector.y);
+        return this;
+      }
+      /***
+       Apply min values to this vector
+         params:
+       @vector (Vec2): vector representing min values
+         returns:
+       @vector (Vec2): vector with min values applied
+       ***/
+
+    }, {
+      key: "min",
+      value: function min(vector) {
+        this.x = Math.min(this.x, vector.x);
+        this.y = Math.min(this.y, vector.y);
+        return this;
+      }
+      /***
        Checks if 2 vectors are equal
+         params:
+       @vector (Vec2): vector to compare
          returns:
        @isEqual (bool): whether the vectors are equals or not
        ***/
@@ -960,6 +963,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Calculates the dot product of 2 vectors
+         params:
+       @vector (Vec2): vector to use for dot product
          returns:
        @dotProduct (float): dot product of the 2 vectors
        ***/
@@ -1390,7 +1395,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this._sourceLoaded = texture._sourceLoaded;
         this._uploaded = texture._uploaded;
         this.sourceType = texture.sourceType;
-        this.source = texture.source; // copy texture
+        this.source = texture.source;
+        this._videoFrameCallbackID = texture._videoFrameCallbackID; // copy texture
 
         this._sampler.texture = texture._sampler.texture; // keep a track from the original one
 
@@ -1608,9 +1614,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           // WebGL1 and non PO2
           if (!this.renderer._isWebGL2 && (!isPowerOf2(this._size.width) || !isPowerOf2(this._size.height))) {
             this.parameters.minFilter = this.gl.LINEAR;
-          }
+          } // at this point if generateMipmap is null it means we will generate them later on
 
-          if (!this.parameters.generateMipmap) {
+
+          if (!this.parameters.generateMipmap && this.parameters.generateMipmap !== null) {
             this.parameters.minFilter = this.gl.LINEAR;
           } // handle wrong minFilter values
 
@@ -1835,20 +1842,24 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        Set the texture scale and then update its matrix
          params:
-       @scaleX (float): scale to apply on X axis
-       @scaleY (float): scale to apply on Y axis
+       @scale (Vec2 object): scale to apply on X and Y axes
        ***/
 
     }, {
       key: "setScale",
-      value: function setScale(scaleX, scaleY) {
-        scaleX = isNaN(scaleX) ? this.scale.x : parseFloat(scaleX);
-        scaleY = isNaN(scaleY) ? this.scale.y : parseFloat(scaleY);
-        scaleX = Math.max(scaleX, 0.001);
-        scaleY = Math.max(scaleY, 0.001);
+      value: function setScale(scale) {
+        if (!scale.type || scale.type !== "Vec2") {
+          if (!this.renderer.production) {
+            throwWarning(this.type + ": Cannot set scale because the parameter passed is not of Vec2 type:", scale);
+          }
 
-        if (scaleX !== this.scale.x || scaleY !== this.scale.y) {
-          this.scale.set(scaleX, scaleY);
+          return;
+        }
+
+        scale.sanitizeNaNValuesWith(this.scale).max(new Vec2(0.001, 0.001));
+
+        if (!scale.equals(this.scale)) {
+          this.scale.copy(scale);
           this.resize();
         }
       }
@@ -2048,7 +2059,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (this.sourceType === "video" || this.sourceType === "image" && !this.renderer.state.isActive) {
           // remove event listeners
           if (this._loader) {
-            this._loader.removeSource(this);
+            this._loader._removeSource(this);
           } // clear source
 
 
@@ -2276,6 +2287,19 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.renderer.bindFrameBuffer(null);
       }
+      /*** GET THE RENDER TARGET TEXTURE ***/
+
+      /***
+       Returns the render target's texture
+         returns :
+       @texture (Texture class object): our RenderTarget's texture
+       ***/
+
+    }, {
+      key: "getTexture",
+      value: function getTexture() {
+        return this.textures[0];
+      }
       /*** DESTROYING ***/
 
       /***
@@ -2476,6 +2500,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           uniform._internalFormat = "Vec3";
         } else if (uniform.value.type === "Mat4") {
           uniform._internalFormat = "Mat4";
+        } else if (uniform.value.type === "Quat") {
+          uniform._internalFormat = "Quat";
         } else if (Array.isArray(uniform.value)) {
           uniform._internalFormat = "array";
         } else if (uniform.value.constructor === Float32Array) {
@@ -2568,6 +2594,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
               } else if (uniform._internalFormat === "Vec3" && !uniform.value.equals(uniform.lastValue)) {
                 shouldUpdate = true;
                 uniform.lastValue.copy(uniform.value);
+              } else if (uniform._internalFormat === "Quat" && !uniform.value.equals(uniform.lastValue)) {
+                shouldUpdate = true;
+                uniform.lastValue.copy(uniform.value);
               } else if (JSON.stringify(uniform.value) !== JSON.stringify(uniform.lastValue)) {
                 // compare two arrays
                 shouldUpdate = true; // copy array
@@ -2654,22 +2683,22 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "setUniform4i",
       value: function setUniform4i(uniform) {
-        this.gl.uniform4i(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]);
+        uniform._internalFormat === "Quat" ? this.gl.uniform4i(uniform.location, uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]) : this.gl.uniform4i(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]);
       }
     }, {
       key: "setUniform4iv",
       value: function setUniform4iv(uniform) {
-        this.gl.uniform4iv(uniform.location, uniform.value);
+        uniform._internalFormat === "Quat" ? this.gl.uniform4iv(uniform.location, [uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]]) : this.gl.uniform4iv(uniform.location, uniform.value);
       }
     }, {
       key: "setUniform4f",
       value: function setUniform4f(uniform) {
-        this.gl.uniform4f(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]);
+        uniform._internalFormat === "Quat" ? this.gl.uniform4f(uniform.location, uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]) : this.gl.uniform4f(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]);
       }
     }, {
       key: "setUniform4fv",
       value: function setUniform4fv(uniform) {
-        this.gl.uniform4fv(uniform.location, uniform.value);
+        uniform._internalFormat === "Quat" ? this.gl.uniform4fv(uniform.location, [uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]]) : this.gl.uniform4fv(uniform.location, uniform.value);
       }
     }, {
       key: "setUniformMatrix2fv",
@@ -2684,7 +2713,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "setUniformMatrix4fv",
       value: function setUniformMatrix4fv(uniform) {
-        uniform._internalFormat === "Mat4" ? this.gl.uniformMatrix4fv(uniform.location, uniform.value.elements) : this.gl.uniformMatrix4fv(uniform.location, uniform.value);
+        uniform._internalFormat === "Mat4" ? this.gl.uniformMatrix4fv(uniform.location, false, uniform.value.elements) : this.gl.uniformMatrix4fv(uniform.location, false, uniform.value);
       }
     }]);
 
@@ -3196,7 +3225,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    Load the assets and create a Texture class object that will use those assets as sources
      params:
    @renderer (Curtains or Renderer class object): our curtains object OR our curtains renderer object
-   @type (string): Loader type (used internally)
    @crossOrigin (string, optional): crossorigin policy to use
      returns :
    @this: our TextureLoader element
@@ -3208,12 +3236,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
   var TextureLoader = /*#__PURE__*/function () {
     function TextureLoader(renderer) {
-      var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "TextureLoader";
-      var crossOrigin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "anonymous";
+      var crossOrigin = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "anonymous";
 
       _classCallCheck(this, TextureLoader);
 
-      this.type = type; // we could pass our curtains object OR our curtains renderer object
+      this.type = "TextureLoader"; // we could pass our curtains object OR our curtains renderer object
 
       renderer = renderer.renderer || renderer; // throw warning if no renderer or webgl context
 
@@ -3229,7 +3256,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       this.crossOrigin = crossOrigin; // keep a track of all sources loaded via this loader
 
-      this.els = [];
+      this.elements = [];
     }
     /***
      Keep a track of all sources loaded via this loader with an els array
@@ -3243,15 +3270,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
     _createClass(TextureLoader, [{
-      key: "addElement",
-      value: function addElement(source, texture, successCallback, errorCallback) {
+      key: "_addElement",
+      value: function _addElement(source, texture, successCallback, errorCallback) {
         var el = {
           source: source,
           texture: texture,
           load: this._sourceLoaded.bind(this, source, texture, successCallback),
           error: this._sourceLoadError.bind(this, source, errorCallback)
         };
-        this.els.push(el);
+        this.elements.push(el);
         return el;
       }
       /***
@@ -3387,9 +3414,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           magFilter: textureOptions.magFilter
         }); // add a new entry in our elements array
 
-        var el = this.addElement(source, texture, sucessCallback, errorCallback); // If the image is in the cache of the browser,
+        var el = this._addElement(source, texture, sucessCallback, errorCallback); // If the image is in the cache of the browser,
         // the 'load' event might have been triggered
         // before we registered the event handler.
+
 
         if (source.complete) {
           this._sourceLoaded(source, texture, sucessCallback);
@@ -3446,7 +3474,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           magFilter: textureOptions.magFilter
         }); // add a new entry in our elements array
 
-        var el = this.addElement(source, texture, sucessCallback, errorCallback); // handle our loaded data event inside the texture and tell our plane when the video is ready to play
+        var el = this._addElement(source, texture, sucessCallback, errorCallback); // handle our loaded data event inside the texture and tell our plane when the video is ready to play
+
 
         source.addEventListener('canplaythrough', el.load, false);
         source.addEventListener('error', el.error, false); // If the video is in the cache of the browser,
@@ -3501,7 +3530,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           magFilter: textureOptions.magFilter
         }); // add a new entry in our elements array
 
-        this.addElement(source, texture, sucessCallback, null); // canvas are directly loaded
+        this._addElement(source, texture, sucessCallback, null); // canvas are directly loaded
+
 
         this._sourceLoaded(source, texture, sucessCallback); // if there's a parent (PlaneTextureLoader) add texture and source to it
 
@@ -3517,10 +3547,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        ***/
 
     }, {
-      key: "removeSource",
-      value: function removeSource(texture) {
+      key: "_removeSource",
+      value: function _removeSource(texture) {
         // find our reference el in our els array
-        var el = this.els.find(function (element) {
+        var el = this.elements.find(function (element) {
           return element.texture.uuid === texture.uuid;
         }); // if we have an element, remove its associated event listeners
 
@@ -3584,7 +3614,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       _classCallCheck(this, PlaneTextureLoader);
 
-      _this8 = _super.call(this, renderer, "PlaneTextureLoader", parent.crossOrigin);
+      _this8 = _super.call(this, renderer, parent.crossOrigin);
+      _this8.type = "PlaneTextureLoader";
       _this8._parent = parent;
 
       if (_this8._parent.type !== "Plane" && _this8._parent.type !== "ShaderPass") {
@@ -3814,7 +3845,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         // accepts "none", "half-float" or "float"
         wrapS: this.gl.CLAMP_TO_EDGE,
         wrapT: this.gl.CLAMP_TO_EDGE,
-        minFilter: this.renderer._isWebGL2 && this.type === "Plane" ? this.gl.LINEAR_MIPMAP_NEAREST : this.gl.LINEAR,
+        minFilter: this.gl.LINEAR,
         magFilter: this.gl.LINEAR
       }, texturesOptions);
       this._texturesOptions = texturesOptions;
@@ -4673,12 +4704,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
       if (_this19._program.compiled) {
-        _this19._initShaderPass(); // add shader pass to our scene and renderer shaderPasses array
+        _this19._initShaderPass(); // add shader pass to our renderer shaderPasses array
 
 
-        _this19.renderer.scene.addShaderPass(_assertThisInitialized(_this19));
+        _this19.renderer.shaderPasses.push(_assertThisInitialized(_this19)); // wait one tick before adding our shader pass to the scene to avoid flickering black screen for one frame
 
-        _this19.renderer.shaderPasses.push(_assertThisInitialized(_this19));
+
+        _this19.renderer.nextRender.add(function () {
+          _this19.renderer.scene.addShaderPass(_assertThisInitialized(_this19));
+        });
       }
 
       return _this19;
@@ -4730,7 +4764,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var texture = new Texture(this.renderer, {
           sampler: "uRenderTexture",
           isFBOTexture: true,
-          fromTexture: this.target.textures[0]
+          fromTexture: this.target.getTexture()
         });
         texture.addParent(this); // onReady callback
 
@@ -4751,7 +4785,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var target = new RenderTarget(this.renderer, {
           shaderPass: this,
           clear: this._shouldClear,
-          depth: this._depth
+          depth: this._depth,
+          texturesOptions: this._texturesOptions
         });
         this.setRenderTarget(target);
       }
@@ -4825,6 +4860,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      @x (float): X component of our vector
      @y (float): Y component of our vector
      @z (float): Z component of our vector
+       returns:
+     @this (Vec2): this vector after being set
      ***/
 
 
@@ -4834,6 +4871,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.x = x;
         this.y = y;
         this.z = z;
+        return this;
       }
       /***
        Adds a vector to this vector
@@ -4925,6 +4963,54 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "clone",
       value: function clone() {
         return new Vec3(this.x, this.y, this.z);
+      }
+      /***
+       Merges this vector with a vector when values are NaN. Mostly used internally.
+         params:
+       @vector (Vec3): vector to use for sanitization
+         returns:
+       @vector (Vec3): sanitized vector
+       ***/
+
+    }, {
+      key: "sanitizeNaNValuesWith",
+      value: function sanitizeNaNValuesWith(vector) {
+        this.x = isNaN(this.x) ? vector.x : parseFloat(this.x);
+        this.y = isNaN(this.y) ? vector.y : parseFloat(this.y);
+        this.z = isNaN(this.z) ? vector.z : parseFloat(this.z);
+        return this;
+      }
+      /***
+       Apply max values to this vector
+         params:
+       @vector (Vec3): vector representing max values
+         returns:
+       @vector (Vec3): vector with max values applied
+       ***/
+
+    }, {
+      key: "max",
+      value: function max(vector) {
+        this.x = Math.max(this.x, vector.x);
+        this.y = Math.max(this.y, vector.y);
+        this.z = Math.max(this.z, vector.z);
+        return this;
+      }
+      /***
+       Apply min values to this vector
+         params:
+       @vector (Vec3): vector representing min values
+         returns:
+       @vector (Vec3): vector with min values applied
+       ***/
+
+    }, {
+      key: "min",
+      value: function min(vector) {
+        this.x = Math.min(this.x, vector.x);
+        this.y = Math.min(this.y, vector.y);
+        this.z = Math.min(this.z, vector.z);
+        return this;
       }
       /***
        Checks if 2 vectors are equal
@@ -5225,23 +5311,27 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      returns :
    @this: our Quat class object
    ***/
-  // TODO handle other axis orders in setFromVec3()
   // TODO lot of (unused at the time) methods are missing
 
 
   var Quat = /*#__PURE__*/function () {
     function Quat() {
       var elements = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : new Float32Array([0, 0, 0, 1]);
+      var axisOrder = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "XYZ";
 
       _classCallCheck(this, Quat);
 
       this.type = "Quat";
-      this.elements = elements;
+      this.elements = elements; // rotation axis order
+
+      this.axisOrder = axisOrder;
     }
     /***
      Sets the quaternion values from an array
        params:
      @array (array): an array of at least 4 elements
+       returns:
+     @this (Quat class object): this quaternion after being set
      ***/
 
 
@@ -5252,34 +5342,116 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.elements[1] = array[1];
         this.elements[2] = array[2];
         this.elements[3] = array[3];
+        return this;
       }
       /***
-       Sets a rotation quaternion using Euler angles and XYZ as axis order
+       Sets the quaternion axis order
+         params:
+       @axisOrder (string): an array of at least 4 elements
+         returns:
+       @this (Quat class object): this quaternion after axis order has been set
+       ***/
+
+    }, {
+      key: "setAxisOrder",
+      value: function setAxisOrder(axisOrder) {
+        // force uppercase for strict equality tests
+        axisOrder = axisOrder.toUpperCase();
+
+        switch (axisOrder) {
+          case "XYZ":
+          case "YXZ":
+          case "ZXY":
+          case "ZYX":
+          case "YZX":
+          case "XZY":
+            this.axisOrder = axisOrder;
+            break;
+
+          default:
+            // apply a default axis order
+            this.axisOrder = "XYZ";
+        }
+
+        return this;
+      }
+      /***
+       Copy a quaternion into this quaternion
+         params:
+       @vector (Quat): quaternion to copy
+         returns:
+       @this (Quat): this quaternion after copy
+       ***/
+
+    }, {
+      key: "copy",
+      value: function copy(quaternion) {
+        this.elements = quaternion.elements;
+        this.axisOrder = quaternion.axisOrder;
+        return this;
+      }
+      /***
+       Checks if 2 quaternions are equal
+         returns:
+       @isEqual (bool): whether the quaternions are equals or not
+       ***/
+
+    }, {
+      key: "equals",
+      value: function equals(quaternion) {
+        return this.elements[0] === quaternion.elements[0] && this.elements[1] === quaternion.elements[1] && this.elements[2] === quaternion.elements[2] && this.elements[3] === quaternion.elements[3] && this.axisOrder === quaternion.axisOrder;
+      }
+      /***
+       Sets a rotation quaternion using Euler angles and its axis order
          params:
        @vector (Vec3 class object): rotation vector to set our quaternion from
-       @order (string): rotation axis order. Default to "XYZ"
          returns :
        @this (Quat class object): quaternion after having applied the rotation
        ***/
 
     }, {
       key: "setFromVec3",
-      value: function setFromVec3(vector, order) {
+      value: function setFromVec3(vector) {
         var ax = vector.x * 0.5;
         var ay = vector.y * 0.5;
         var az = vector.z * 0.5;
-        var sinx = Math.sin(ax);
         var cosx = Math.cos(ax);
-        var siny = Math.sin(ay);
         var cosy = Math.cos(ay);
-        var sinz = Math.sin(az);
-        var cosz = Math.cos(az); // XYZ order
+        var cosz = Math.cos(az);
+        var sinx = Math.sin(ax);
+        var siny = Math.sin(ay);
+        var sinz = Math.sin(az); // XYZ order
 
-        if (!order || order === "XYZ") {
+        if (this.axisOrder === "XYZ") {
           this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
           this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
           this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
           this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
+        } else if (this.axisOrder === "YXZ") {
+          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
+        } else if (this.axisOrder === "ZXY") {
+          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
+        } else if (this.axisOrder === "ZYX") {
+          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
+        } else if (this.axisOrder === "YZX") {
+          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
+        } else if (this.axisOrder === "XZY") {
+          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
         }
 
         return this;
@@ -5650,20 +5822,24 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        This will set our plane scale
        used internally but can be used externally as well
          params :
-       @scaleX (float): scale to apply on X axis
-       @scaleY (float): scale to apply on Y axis
+       @scale (Vec2 object): scale to apply on X and Y axes
        ***/
 
     }, {
       key: "setScale",
-      value: function setScale(scaleX, scaleY) {
-        scaleX = isNaN(scaleX) ? this.scale.x : parseFloat(scaleX);
-        scaleY = isNaN(scaleY) ? this.scale.y : parseFloat(scaleY);
-        scaleX = Math.max(scaleX, 0.001);
-        scaleY = Math.max(scaleY, 0.001); // only apply if values changed
+      value: function setScale(scale) {
+        if (!scale.type || scale.type !== "Vec2") {
+          if (!this.renderer.production) {
+            throwWarning(this.type + ": Cannot set scale because the parameter passed is not of Vec2 type:", scale);
+          }
 
-        if (scaleX !== this.scale.x || scaleY !== this.scale.y) {
-          this.scale.set(scaleX, scaleY, 1); // adjust textures size
+          return;
+        }
+
+        scale.sanitizeNaNValuesWith(this.scale).max(new Vec2(0.001, 0.001)); // only apply if values changed
+
+        if (scale.x !== this.scale.x || scale.y !== this.scale.y) {
+          this.scale.set(scale.x, scale.y, 1); // adjust textures size
 
           for (var i = 0; i < this.textures.length; i++) {
             this.textures[i].resize();
@@ -5677,21 +5853,25 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        This will set our plane rotation
        used internally but can be used externally as well
          params :
-       @angleX (float): rotation to apply on X axis (in radians)
-       @angleY (float): rotation to apply on Y axis (in radians)
-       @angleZ (float): rotation to apply on Z axis (in radians)
+       @rotation (Vec3 object): rotation to apply on X, Y and Z axes (in radians)
        ***/
 
     }, {
       key: "setRotation",
-      value: function setRotation(angleX, angleY, angleZ) {
-        angleX = isNaN(angleX) ? this.rotation.x : parseFloat(angleX);
-        angleY = isNaN(angleY) ? this.rotation.y : parseFloat(angleY);
-        angleZ = isNaN(angleZ) ? this.rotation.z : parseFloat(angleZ); // only apply if values changed
+      value: function setRotation(rotation) {
+        if (!rotation.type || rotation.type !== "Vec3") {
+          if (!this.renderer.production) {
+            throwWarning(this.type + ": Cannot set rotation because the parameter passed is not of Vec3 type:", rotation);
+          }
 
-        if (angleX !== this.rotation.x || angleY !== this.rotation.y || angleZ !== this.rotation.z) {
-          this.rotation.set(angleX, angleY, angleZ);
-          this.quaternion.setFromVec3(this.rotation, "XYZ"); // we should update the plane mvMatrix
+          return;
+        }
+
+        rotation.sanitizeNaNValuesWith(this.rotation); // only apply if values changed
+
+        if (!rotation.equals(this.rotation)) {
+          this.rotation.copy(rotation);
+          this.quaternion.setFromVec3(this.rotation); // we should update the plane mvMatrix
 
           this._updateMVMatrix = true;
         }
@@ -5702,20 +5882,24 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        (1, 1, 0) means plane's bottom right corner
        (0.5, 0.5, -1) means behind plane's center
          params :
-       @xOrigin (float): coordinate of transformation origin along width
-       @yOrigin (float): coordinate of transformation origin along height
-       @zOrigin (float): coordinate of transformation origin along depth
+       @origin (Vec3 object): coordinate of transformation origin X, Y and Z axes
        ***/
 
     }, {
       key: "setTransformOrigin",
-      value: function setTransformOrigin(xOrigin, yOrigin, zOrigin) {
-        xOrigin = isNaN(xOrigin) ? this.transformOrigin.x : parseFloat(xOrigin);
-        yOrigin = isNaN(yOrigin) ? this.transformOrigin.y : parseFloat(yOrigin);
-        zOrigin = isNaN(zOrigin) ? this.transformOrigin.z : parseFloat(zOrigin);
+      value: function setTransformOrigin(origin) {
+        if (!origin.type || origin.type !== "Vec3") {
+          if (!this.renderer.production) {
+            throwWarning(this.type + ": Cannot set transform origin because the parameter passed is not of Vec3 type:", origin);
+          }
 
-        if (xOrigin !== this.transformOrigin.x || yOrigin !== this.transformOrigin.y || zOrigin !== this.transformOrigin.z) {
-          this.transformOrigin.set(xOrigin, yOrigin, zOrigin);
+          return;
+        }
+
+        origin.sanitizeNaNValuesWith(this.transformOrigin);
+
+        if (!origin.equals(this.transformOrigin)) {
+          this.transformOrigin.copy(origin);
           this._updateMVMatrix = true;
         }
       }
@@ -5729,7 +5913,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         // avoid unnecessary calculations if we don't have a users set relative position
         var worldPosition = new Vec3();
 
-        if (this.relativeTranslation.x !== 0 || this.relativeTranslation.y !== 0 || this.relativeTranslation.z !== 0) {
+        if (!this.relativeTranslation.equals(worldPosition)) {
           worldPosition = this._documentToWorldSpace(this.relativeTranslation);
         }
 
@@ -5740,21 +5924,41 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This function takes pixel values along X and Y axis and convert them to clip space coordinates, and then apply the corresponding translation
-       TODO rename to setRelativeTranslation()?
+       TODO deprecated and will be removed soon
          params :
-       @translationX (float): translation to apply on X axis
-       @translationY (float): translation to apply on Y axis
+       @translation (Vec3): translation to apply on X, Y and Z axes
        ***/
 
     }, {
       key: "setRelativePosition",
-      value: function setRelativePosition(translationX, translationY, translationZ) {
-        translationX = isNaN(translationX) ? this.relativeTranslation.x : parseFloat(translationX);
-        translationY = isNaN(translationY) ? this.relativeTranslation.y : parseFloat(translationY);
-        translationZ = isNaN(translationZ) ? this.relativeTranslation.z : parseFloat(translationZ); // only apply if values changed
+      value: function setRelativePosition(translation) {
+        if (!this.renderer.production) {
+          throwWarning(this.type + ": setRelativePosition() is deprecated, use setRelativeTranslation() instead");
+        }
 
-        if (translationX !== this.relativeTranslation.x || translationY !== this.relativeTranslation.y || translationZ !== this.relativeTranslation.z) {
-          this.relativeTranslation.set(translationX, translationY, translationZ);
+        this.setRelativeTranslation(translation);
+      }
+      /***
+       This function takes pixel values along X and Y axis and convert them to clip space coordinates, and then apply the corresponding translation
+         params :
+       @translation (Vec3): translation to apply on X, Y and Z axes
+       ***/
+
+    }, {
+      key: "setRelativeTranslation",
+      value: function setRelativeTranslation(translation) {
+        if (!translation.type || translation.type !== "Vec3") {
+          if (!this.renderer.production) {
+            throwWarning(this.type + ": Cannot set translation because the parameter passed is not of Vec3 type:", translation);
+          }
+
+          return;
+        }
+
+        translation.sanitizeNaNValuesWith(this.relativeTranslation); // only apply if values changed
+
+        if (!translation.equals(this.relativeTranslation)) {
+          this.relativeTranslation.copy(translation);
 
           this._setTranslation();
         }
@@ -5762,10 +5966,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This function takes pixel values along X and Y axis and convert them to clip space coordinates
          params :
-       @xPosition (float): position to convert on X axis
-       @yPosition (float): position to convert on Y axis
+       @vector (Vec3): position to convert on X, Y and Z axes
          returns :
-       @relativePosition: plane's position in WebGL space
+       @worldPosition: plane's position in WebGL space
        ***/
 
     }, {
@@ -6013,8 +6216,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Returns our plane WebGL bounding rect relative to document
-         params:
-       @forceComputing (bool): whether to force the computing of new values or not. Use forceComputing when a plane alwaysDraw property is set to true because the frustum culling check is bypassed and the plane WebGL bounding rectangle is not updated (default to false)
          returns :
        @boundingRectangle (obj): an object containing our plane WebGL element bounding rectangle (width, height, top, bottom, right and left properties)
        ***/
@@ -6022,11 +6223,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "getWebGLBoundingRect",
       value: function getWebGLBoundingRect() {
-        var forceComputing = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-
         if (!this._matrices.mVPMatrix) {
           return this._boundingRect.document;
-        } else if (!this._boundingRect.worldToDocument || forceComputing) {
+        } else if (!this._boundingRect.worldToDocument || this.alwaysDraw) {
           this._computeWebGLBoundingRect();
         }
 
@@ -6302,7 +6501,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    ***/
 
 
-  var _CallbackQueueManager = /*#__PURE__*/function () {
+  var CallbackQueueManager = /*#__PURE__*/function () {
     function CallbackQueueManager() {
       _classCallCheck(this, CallbackQueueManager);
 
@@ -6504,9 +6703,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        ***/
 
     }, {
-      key: "CallbackQueueManager",
-      value: function CallbackQueueManager() {
-        this.nextRender = new _CallbackQueueManager();
+      key: "initCallbackQueueManager",
+      value: function initCallbackQueueManager() {
+        this.nextRender = new CallbackQueueManager();
       }
       /***
        Init our renderer
@@ -6521,7 +6720,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.state.isContextLost = false; // callback queue
 
-        this.CallbackQueueManager(); // set blend func
+        this.initCallbackQueueManager(); // set blend func
 
         this.setBlendFunc(); // enable depth by default
 
@@ -7327,7 +7526,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    @depth (bool, optional): whether the WebGL context should handle depth. Default to true.
    @failIfMajorPerformanceCaveat (bool, optional): whether the WebGL context creation should fail in case of major performance caveat. Default to true.
    @preserveDrawingBuffer (bool, optional): whether the WebGL context should preserve the drawing buffer. Default to false.
-   @stencil (bool, optional): whether the WebGL context should handle stencil. Default to true.
+   @stencil (bool, optional): whether the WebGL context should handle stencil. Default to false.
      @autoResize (bool, optional): Whether the library should listen to the window resize event and actually resize the scene. Set it to false if you want to handle this by yourself using the resize() method. Default to true.
    @autoRender (bool, optional): Whether the library should create a request animation frame loop to render the scene. Set it to false if you want to handle this by yourself using the render() method. Default to true.
    @watchScroll (bool, optional): Whether the library should listen to the window scroll event. Set it to false if you want to handle this by yourself. Default to true.
@@ -8122,7 +8321,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       _this31.createTexture({
         sampler: sampler,
-        fromTexture: _this31.readPass.textures[0]
+        fromTexture: _this31.readPass.getTexture()
       }); // override onRender and onAfterRender callbacks
 
 
@@ -8135,7 +8334,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       _this31._onAfterRenderCallback = function () {
         // swap FBOs and update texture
         if (_this31.readPass && _this31.writePass && _this31.textures[0]) {
-          _this31.swapPasses();
+          _this31._swapPasses();
         }
 
         _this31._onPingPongAfterRenderCallback && _this31._onPingPongAfterRenderCallback();
@@ -8149,14 +8348,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
     _createClass(PingPongPlane, [{
-      key: "swapPasses",
-      value: function swapPasses() {
+      key: "_swapPasses",
+      value: function _swapPasses() {
         // swap read and write passes
         var tempFBO = this.readPass;
         this.readPass = this.writePass;
         this.writePass = tempFBO; // apply new texture
 
-        this.textures[0].copy(this.readPass.textures[0]);
+        this.textures[0].copy(this.readPass.getTexture());
       }
       /***
        Returns the created texture where we're writing
@@ -8222,11 +8421,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _this32 = this;
 
     var _ref15 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        shareProgram = _ref15.shareProgram,
-        widthSegments = _ref15.widthSegments,
-        heightSegments = _ref15.heightSegments,
         depthTest = _ref15.depthTest,
-        cullFace = _ref15.cullFace,
+        texturesOptions = _ref15.texturesOptions,
         crossOrigin = _ref15.crossOrigin,
         depth = _ref15.depth,
         clear = _ref15.clear,
@@ -8249,6 +8445,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       depthTest: depthTest,
       fragmentShader: fragmentShader,
       uniforms: uniforms,
+      texturesOptions: texturesOptions,
       crossOrigin: crossOrigin,
       // ShaderPass specific params
       depth: depth,

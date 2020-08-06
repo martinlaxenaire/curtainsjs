@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
+    <!-- Metas -->
+    <title>curtains.js | Documentation | TextureLoader class</title>
+    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <link rel="canonical" href="https://www.curtainsjs.com/render-target-class.html">
+
+    <!-- Facebook OG -->
+    <meta property="og:title" content="curtains.js | Documentation | TextureLoader class">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <meta property="og:url" content="https://www.curtainsjs.com/render-target-class.html">
+    <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@webdesign_ml">
+    <meta name="twitter:creator" content="@webdesign_ml">
+    <meta name="twitter:title" content="curtains.js | Documentation | TextureLoader class">
+    <meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="images/favicons/site.webmanifest">
+    <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#202340">
+    <link rel="shortcut icon" href="images/favicons/favicon.ico">
+    <meta name="msapplication-TileColor" content="#202340">
+    <meta name="msapplication-config" content="images/favicons/browserconfig.xml">
+    <meta name="theme-color" content="#202340">
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+<div id="page-wrap">
+
+    <div id="canvas"></div>
+
+    <div id="content">
+
+        <header id="header">
+            <div class="wrapper">
+                <div id="header-wrapper" class="flex-wrapper">
+                    <div id="header-title">
+                        <a href="/" title="Home">curtains.js</a>
+                    </div>
+                    <nav id="main-menu">
+                        <ul class="flex-wrapper">
+                            <li>
+                                <a href="get-started.html">Get started</a>
+                            </li>
+                            <li>
+                                <a href="documentation.html" class="active">Docs</a>
+                            </li>
+                            <li>
+                                <a href="download.html">Download</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <section class="content-section api-section">
+
+            <nav id="api-menu-nav">
+                <ul id="api-menu">
+                    <li>
+                        <div class="api-top-menu-item">Core</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="curtains-class.html">Curtains</a>
+                            </li>
+                            <li>
+                                <a href="plane-class.html">Plane</a>
+                            </li>
+                            <li>
+                                <a href="texture-class.html">Texture</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Frame Buffer Objects</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="render-target-class.html">RenderTarget</a>
+                            </li>
+                            <li>
+                                <a href="shader-pass-class.html">ShaderPass</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="active">
+                        <div class="api-top-menu-item">Loaders</div>
+                        <ul class="api-submenu-content">
+                            <li class="active">
+                                <a href="texture-loader-class.html">TextureLoader</a>
+
+                                <div class="api-submenu-content">
+                                    <div class="api-submenu-title">
+                                        <a href="texture-loader-class.html#basic-usage">Basic usage</a>
+                                    </div>
+                                    <div class="api-submenu-title">
+                                        <a href="texture-loader-class.html#parameters">Parameters</a>
+                                    </div>
+                                    <div class="api-submenu-title">
+                                        <a href="texture-loader-class.html#properties">Properties</a>
+                                    </div>
+                                    <ul class="api-submenu">
+                                        <li>
+                                            <a href="texture-loader-class.html#cross-origin">crossOrigin</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-loader-class.html#elements">elements</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-loader-class.html#gl">gl</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-loader-class.html#renderer">renderer</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-loader-class.html#type">type</a>
+                                        </li>
+                                    </ul>
+                                    <div class="api-submenu-title">
+                                        <a href="texture-loader-class.html#methods">Methods</a>
+                                    </div>
+                                    <ul class="api-submenu">
+                                        <li>
+                                            <a href="texture-loader-class.html#load-canvas">loadCanvas</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-loader-class.html#load-canvases">loadCanvases</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-loader-class.html#load-image">loadImage</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-loader-class.html#load-images">loadImages</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-loader-class.html#load-source">loadSource</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-loader-class.html#load-sources">loadSources</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-loader-class.html#load-video">loadVideo</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-loader-class.html#load-videos">loadVideos</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Math</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="vec-2-class.html">Vec2</a>
+                            </li>
+                            <li>
+                                <a href="vec-3-class.html">Vec3</a>
+                            </li>
+                            <li>
+                                <a href="mat-4-class.html">Mat4</a>
+                            </li>
+                            <li>
+                                <a href="quat-class.html">Quat</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Extras</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="ping-pong-plane-class.html">PingPongPlane</a>
+                            </li>
+                            <li>
+                                <a href="fxaa-pass-class.html">FXAAPass</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+
+            <div id="api-content">
+
+                <div class="api-content-inner">
+                    <div class="inner-section">
+                        <h1>TextureLoader class</h1>
+                        <h2 id="basic-usage">Basic usage</h2>
+                        <p>
+                            The TextureLoader is specifically useful if you want to create textures before creating any Planes or ShaderPasses objects.<br />
+                            You can for example use a TextureLoader to <strong>preload</strong> all your website's <strong>textures to the GPU</strong> while displaying a loader, and then run your app without having to create any texture afterwards.
+                        </p>
+                        <h3>Creation</h3>
+                        <p>
+                            To create a new texture loader, just use its constructor. You'll the be able to load medias and create textures by using its various load methods:
+                        </p>
+
+                        <div class="code">
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // "canvas" is the ID of our HTML container element
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // create a new texture loader
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> loader = <span class="code-var">new</span> <span class="code-tag">TextureLoader</span>(curtains)<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-comment">
+                                // load an image with the loader
+                            </div>
+
+                            <div class="code-block">
+                                <div>
+                                    <span class="code-var">const</span> image = <span class="code-var">new</span> <span class="code-tag">Image</span>()<span class="code-var">;</span>
+                                </div>
+                                <div>
+                                    image.<span class="code-property">crossOrigin</span> = <span class="code-string">"anonymous"</span><span class="code-var">;</span>
+                                </div>
+                                <div>
+                                    image.<span class="code-property">src</span> = <span class="code-string">"path/to/my-image.jpg"</span><span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                loader.<span class="code-tag">loadImage</span>(image<span class="code-var">,</span> {
+                                <div class="code-indent">
+                                    <div class="code-comment">
+                                        // texture options (we're only setting its sampler name here)
+                                    </div>
+                                    <span class="code-property">sampler</span>: <span class="code-string">"uTexture"</span>
+                                </div>
+                                }<span class="code-var">,</span> (texture) => {
+                            </div>
+
+                            <div class="code-indent">
+                                <div class="code-comment">
+                                    // texture has been successfully created, you can safely use it
+                                </div>
+                            </div>
+                            <div>
+                                }, (image, error) => {
+                            </div>
+                            <div class="code-indent">
+                                <div class="code-comment">
+                                    // there has been an error while loading the image
+                                </div>
+                            </div>
+                            <div>
+                                })<span class="code-var">;</span>
+                            </div>
+
+                        </div>
+
+                        <h2 id="parameters">Parameters</h2>
+
+                        <ul class="api-item-parameters">
+                            <li>
+                                <span class="api-item-parameter-label">
+                                    curtains
+                                </span>
+                                <span class="api-item-parameter-type">
+                                    Curtains class object
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    Your Curtains class object.
+                                </span>
+                            </li>
+                            <li>
+                                <span class="api-item-parameter-label">
+                                    crossOrigin
+                                </span>
+                                 <span class="api-item-parameter-type">
+                                    string, optional
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    defines the crossOrigin process to load images if any (default to "anonymous").
+                                </span>
+                            </li>
+                        </ul>
+
+                        <h2 id="properties">Properties</h2>
+                        <ul>
+                            <li id="cross-origin">
+                                <p>
+                                    <strong>crossOrigin</strong> (string): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    The cross origin process used to load the medias.
+                                </p>
+                            </li>
+                            <li id="elements">
+                                <p>
+                                    <strong>elements</strong> (array of objects): <span class="api-item-version">v7.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    An array containing all the loading and loaded elements. An element is an object containing a texture, its source and the event listeners used to load that source.
+                                </p>
+                            </li>
+                            <li id="gl">
+                                <p>
+                                    <strong>gl</strong> (WebGL context) <span class="api-item-version">v7.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    Our WebGL context.
+                                </p>
+                            </li>
+                            <li id="renderer">
+                                <p>
+                                    <strong>renderer</strong> (Renderer class object): <span class="api-item-version">v7.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    The renderer created by our curtains object.
+                                </p>
+                            </li>
+                            <li id="type">
+                                <p>
+                                    <strong>type</strong> (string): <span class="api-item-version">v7.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    Class object type: "TextureLoader".
+                                </p>
+                            </li>
+                        </ul>
+
+                        <h2 id="methods">Methods</h2>
+                        <ul>
+                            <li id="load-canvas">
+                                <p>
+                                    <strong>loadCanvas</strong>(canvasElement): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    This function takes a canvas HTML element and creates a <a href="texture-class.html">Texture</a> using it.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            canvasElement
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            HTML canvas element
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            a HTML canvas element to load.
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li id="load-canvases">
+                                <p>
+                                    <strong>loadCanvases</strong>(canvasElements): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    This function takes an array of canvas HTML elements and creates a <a href="texture-class.html">Texture</a> for each of them.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            canvasElements
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            array or collection of HTML canvas elements
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            an array or collection of HTML canvas elements to load.
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li id="load-image">
+                                <p>
+                                    <strong>loadImage</strong>(imageElement): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    This function takes an image HTML element and creates a <a href="texture-class.html">Texture</a> using it.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            imageElement
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            HTML image element
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            a HTML image element to load.
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li id="load-images">
+                                <p>
+                                    <strong>loadImages</strong>(imageElements): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    This function takes an array of image HTML elements and creates a <a href="texture-class.html">Texture</a> for each of them.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            imageElements
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            array or collection of HTML image elements
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            an array or collection of HTML image elements to load.
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li id="load-source">
+                                <p>
+                                    <strong>loadSource</strong>(sourceElement): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    This function takes a source element and creates a <a href="texture-class.html">Texture</a> using it.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            sourceElement
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            either image, canvas or video HTML element
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            an image, canvas or video HTML element to load.
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a> example.
+                                </p>
+                            </li>
+
+                            <li id="load-sources">
+                                <p>
+                                    <strong>loadSources</strong>(sourceElements): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    This function takes an array of source elements and creates <a href="texture-class.html">Textures</a> using them.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            sourceElements
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            array or collection of either images, canvased or videos HTML elements
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            an array of image, canvas or video HTML elements to load.
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li id="load-video">
+                                <p>
+                                    <strong>loadVideo</strong>(videoElement): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    This function takes a video HTML element and creates a <a href="texture-class.html">Texture</a> using it.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            videoElement
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            HTML video element
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            a HTML video element to load.
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li id="load-videos">
+                                <p>
+                                    <strong>loadVideos</strong>(videoElements): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    This function takes an array of video HTML elements and creates a <a href="texture-class.html">Texture</a> for each of them.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            videoElements
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            array or collection of HTML video elements
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            an array or collection of HTML video elements to load.
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+    </div>
+</div>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-141413267-1');
+</script>
+
+</body>
+</html>

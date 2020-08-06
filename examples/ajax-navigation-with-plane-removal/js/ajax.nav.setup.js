@@ -10,7 +10,7 @@ let textures = [];
 
 curtains.onError(() => {
     // we will add a class to the document body to display original images
-    document.body.classList.add("no-curtains", "planes-loaded");
+    document.body.classList.add("no-curtains", "site-loaded");
 }).onContextLost(() => {
     // on context lost, try to restore the context
     curtains.restoreContext();
@@ -35,6 +35,8 @@ function preloadTextures() {
         "../medias/plane-small-texture-4.jpg",
     ];
 
+    const loaderEl = document.getElementById("loader-inner");
+
     const loader = new TextureLoader(curtains);
     for(let i = 0; i < images.length; i++) {
         const image = new Image();
@@ -48,11 +50,19 @@ function preloadTextures() {
 
             }).onSourceUploaded(() => {
                 percentLoaded++;
-                // TODO handle a proper loader
-                console.log("percent loaded: " + (percentLoaded / images.length) * 100 + "%");
+
+                loaderEl.innerText = (percentLoaded / images.length) * 100 + "%";
+
+                // we have finished loading our textures
+                if(percentLoaded === images.length) {
+                    document.body.classList.add("site-loaded");
+                }
             });
         }, (image, error) => {
             console.warn("there has been an error", error, " while loading this image", image);
+
+            // display site anyway
+            document.body.classList.add("site-loaded");
         });
     }
 }
@@ -154,7 +164,7 @@ window.addEventListener("load", () => {
             // increment our time uniform
             plane.uniforms.time.value++;
         }).onError(() => {
-            console.log("plane error");
+            // display original HTML image element
             plane.htmlElement.classList.add("no-plane");
         });
     }
@@ -181,7 +191,6 @@ window.addEventListener("load", () => {
     function removePlanes() {
         // remove all planes
         for(let i = 0; i < planes.length; i++) {
-            //curtains.removePlane(planes[i]);
             planes[i].remove();
         }
 

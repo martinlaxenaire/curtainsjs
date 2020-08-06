@@ -206,6 +206,9 @@ window.addEventListener("load", () => {
             fragmentShaderID: "simple-shader-fs",
             widthSegments: 20,
             heightSegments: 1,
+            texturesOptions: {
+                minFilter: curtains.gl.LINEAR_MIPMAP_NEAREST
+            },
             uniforms: {
                 time: {
                     name: "uTime",

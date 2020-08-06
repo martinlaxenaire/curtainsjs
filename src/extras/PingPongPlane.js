@@ -86,7 +86,7 @@ export class PingPongPlane extends Plane {
         // create a texture where we'll draw
         this.createTexture({
             sampler: sampler,
-            fromTexture: this.readPass.textures[0]
+            fromTexture: this.readPass.getTexture()
         });
 
         // override onRender and onAfterRender callbacks
@@ -100,7 +100,7 @@ export class PingPongPlane extends Plane {
         this._onAfterRenderCallback = () => {
             // swap FBOs and update texture
             if(this.readPass && this.writePass && this.textures[0]) {
-                this.swapPasses();
+                this._swapPasses();
             }
 
             this._onPingPongAfterRenderCallback && this._onPingPongAfterRenderCallback();
@@ -110,14 +110,14 @@ export class PingPongPlane extends Plane {
     /***
      After each draw call, we'll swap the 2 render targets and copy the read pass texture again
      ***/
-    swapPasses() {
+    _swapPasses() {
         // swap read and write passes
         const tempFBO = this.readPass;
         this.readPass = this.writePass;
         this.writePass = tempFBO;
 
         // apply new texture
-        this.textures[0].copy(this.readPass.textures[0]);
+        this.textures[0].copy(this.readPass.getTexture());
     }
 
     /***

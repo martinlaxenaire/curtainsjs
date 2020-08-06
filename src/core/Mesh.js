@@ -114,11 +114,10 @@ export class Mesh {
             wrapS: this.gl.CLAMP_TO_EDGE,
             wrapT: this.gl.CLAMP_TO_EDGE,
 
-            minFilter: this.renderer._isWebGL2 && this.type === "Plane" ?
-                this.gl.LINEAR_MIPMAP_NEAREST :
-                this.gl.LINEAR,
+            minFilter: this.gl.LINEAR,
             magFilter: this.gl.LINEAR,
         }, texturesOptions);
+
         this._texturesOptions = texturesOptions;
         this.crossOrigin = crossOrigin;
 

@@ -79,7 +79,6 @@ export class Texture {
             type: this.gl.UNSIGNED_BYTE,
             internalFormat: this.gl.RGBA,
             format: this.gl.RGBA,
-
         };
 
         this.parameters = {
@@ -436,12 +435,13 @@ export class Texture {
         this.parameters = texture.parameters;
         this._state = texture._state;
 
-            // copy source
+        // copy source
         this._size = texture._size;
         this._sourceLoaded = texture._sourceLoaded;
         this._uploaded = texture._uploaded;
         this.sourceType = texture.sourceType;
         this.source = texture.source;
+        this._videoFrameCallbackID = texture._videoFrameCallbackID;
 
         // copy texture
         this._sampler.texture = texture._sampler.texture;
@@ -679,7 +679,8 @@ export class Texture {
                 this.parameters.minFilter = this.gl.LINEAR;
             }
 
-            if(!this.parameters.generateMipmap) {
+            // at this point if generateMipmap is null it means we will generate them later on
+            if(!this.parameters.generateMipmap && this.parameters.generateMipmap !== null) {
                 this.parameters.minFilter = this.gl.LINEAR;
             }
 
@@ -907,18 +908,21 @@ export class Texture {
      Set the texture scale and then update its matrix
 
      params:
-     @scaleX (float): scale to apply on X axis
-     @scaleY (float): scale to apply on Y axis
+     @scale (Vec2 object): scale to apply on X and Y axes
      ***/
-    setScale(scaleX, scaleY) {
-        scaleX = isNaN(scaleX) ? this.scale.x : parseFloat(scaleX);
-        scaleY = isNaN(scaleY) ? this.scale.y : parseFloat(scaleY);
+    setScale(scale) {
+        if(!scale.type || scale.type !== "Vec2") {
+            if(!this.renderer.production) {
+                throwWarning(this.type + ": Cannot set scale because the parameter passed is not of Vec2 type:", scale);
+            }
 
-        scaleX = Math.max(scaleX, 0.001);
-        scaleY = Math.max(scaleY, 0.001);
+            return;
+        }
 
-        if(scaleX !== this.scale.x || scaleY !== this.scale.y) {
-            this.scale.set(scaleX, scaleY);
+        scale.sanitizeNaNValuesWith(this.scale).max(new Vec2(0.001, 0.001));
+
+        if(!scale.equals(this.scale)) {
+            this.scale.copy(scale);
 
             this.resize();
         }
@@ -1126,7 +1130,7 @@ export class Texture {
         if(this.sourceType === "video" || this.sourceType === "image" && !this.renderer.state.isActive) {
             // remove event listeners
             if(this._loader) {
-                this._loader.removeSource(this);
+                this._loader._removeSource(this);
             }
 
             // clear source

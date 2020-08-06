@@ -28,10 +28,15 @@ export class Vec2 {
      params:
      @x (float): X component of our vector
      @y (float): Y component of our vector
+
+     returns:
+     @this (Vec2): this vector after being set
      ***/
     set(x, y) {
         this.x = x;
         this.y = y;
+
+        return this;
     }
 
     /***
@@ -118,6 +123,7 @@ export class Vec2 {
         return this;
     }
 
+
     /***
      Clone this vector
 
@@ -130,7 +136,61 @@ export class Vec2 {
 
 
     /***
+     Merges this vector with a vector when values are NaN. Mostly used internally.
+
+     params:
+     @vector (Vec2): vector to use for sanitization
+
+     returns:
+     @vector (Vec2): sanitized vector
+     ***/
+    sanitizeNaNValuesWith(vector) {
+        this.x = isNaN(this.x) ? vector.x : parseFloat(this.x);
+        this.y = isNaN(this.y) ? vector.y : parseFloat(this.y);
+
+        return this;
+    }
+
+
+    /***
+     Apply max values to this vector
+
+     params:
+     @vector (Vec2): vector representing max values
+
+     returns:
+     @vector (Vec2): vector with max values applied
+     ***/
+    max(vector) {
+        this.x = Math.max(this.x, vector.x);
+        this.y = Math.max(this.y, vector.y);
+
+        return this;
+    }
+
+
+    /***
+     Apply min values to this vector
+
+     params:
+     @vector (Vec2): vector representing min values
+
+     returns:
+     @vector (Vec2): vector with min values applied
+     ***/
+    min(vector) {
+        this.x = Math.min(this.x, vector.x);
+        this.y = Math.min(this.y, vector.y);
+
+        return this;
+    }
+
+
+    /***
      Checks if 2 vectors are equal
+
+     params:
+     @vector (Vec2): vector to compare
 
      returns:
      @isEqual (bool): whether the vectors are equals or not
@@ -161,6 +221,9 @@ export class Vec2 {
 
     /***
      Calculates the dot product of 2 vectors
+
+     params:
+     @vector (Vec2): vector to use for dot product
 
      returns:
      @dotProduct (float): dot product of the 2 vectors

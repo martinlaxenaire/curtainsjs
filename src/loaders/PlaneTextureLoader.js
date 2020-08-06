@@ -28,7 +28,8 @@ export class PlaneTextureLoader extends TextureLoader {
         onComplete = () => {},
     } = {}) {
 
-        super(renderer, "PlaneTextureLoader", parent.crossOrigin);
+        super(renderer, parent.crossOrigin);
+        this.type = "PlaneTextureLoader";
 
         this._parent = parent;
         if(this._parent.type !== "Plane" && this._parent.type !== "ShaderPass") {
