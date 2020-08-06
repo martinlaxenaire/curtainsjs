@@ -704,6 +704,11 @@ export class Renderer {
 
         this.renderTargets = this.renderTargets.filter(element => element.uuid !== renderTarget.uuid);
 
+        // update render target indexes
+        for(let i = 0; i < this.renderTargets.length; i++) {
+            this.renderTargets[i].index = i;
+        }
+
         renderTarget = null;
 
         // clear the buffer to clean scene

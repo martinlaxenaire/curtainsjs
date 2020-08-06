@@ -35,19 +35,58 @@
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://www.curtainsjs.com/shader-pass-class.html</loc>
+        <loc>https://www.curtainsjs.com/texture-class.html</loc>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
+
     <url>
         <loc>https://www.curtainsjs.com/render-target-class.html</loc>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://www.curtainsjs.com/texture-class.html</loc>
+        <loc>https://www.curtainsjs.com/shader-pass-class.html</loc>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/vec-2-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/vec-3-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/mat-4-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/quat-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/ping-pong-plane-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/fxaa-pass-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/migration-guide-to-v7.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
     </url>
 
     <!-- examples -->

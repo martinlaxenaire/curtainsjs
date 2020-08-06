@@ -60,7 +60,7 @@ export class Mesh {
         this.type = type;
 
         // we could pass our curtains object OR our curtains renderer object
-        renderer = renderer.renderer || renderer;
+        renderer = renderer && renderer.renderer || renderer;
 
         if(!renderer || renderer.type !== "Renderer") {
             throwError(this.type + ": Curtains not passed as first argument or Curtains Renderer is missing", renderer);

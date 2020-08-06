@@ -73,7 +73,7 @@
 					<div>
 						<h2>Removing and adding planes at each AJAX call</h2>
 						<p>
-							Sometimes, you may want to use curtains.js with an ajax navigation. Thanks to the removePlane() method there's an easy way to achieve it.<br/>
+							Sometimes, you may want to use curtains.js with an ajax navigation. Thanks to the remove() method there's an easy way to achieve it.<br/>
 							The idea is to delete the planes just before each AJAX call and to add new planes just after we'd get the AJAX response.
 						</p>
 						<p>
@@ -84,10 +84,10 @@
 								Get the link href and send an AJAX call
 							</li>
 							<li>
-								Once we got the response, remove all the existing planes via the removePlane() method, set a timeout (useful to animate page transitions) and append the new content
+								Once we got the response, remove all the existing planes via the <strong>remove()</strong> method, set a timeout (useful to animate page transitions) and append the new content
 							</li>
 							<li>
-								After the content has been appended, add the new planes via the addPlane() method if needed
+                                After the content has been appended, add the new planes using the <strong>new Plane()</strong> constructor if needed
 							</li>
 						</ol>
 						<h3>Pros</h3>

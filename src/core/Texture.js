@@ -54,7 +54,7 @@ export class Texture {
         this.type = "Texture";
 
         // we could pass our curtains object OR our curtains renderer object
-        renderer = renderer.renderer || renderer;
+        renderer = renderer && renderer.renderer || renderer;
 
         if(!renderer || renderer.type !== "Renderer") {
             throwError(this.type + ": Renderer not passed as first argument", renderer);

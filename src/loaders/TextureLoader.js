@@ -27,7 +27,7 @@ export class TextureLoader {
         this.type = "TextureLoader";
 
         // we could pass our curtains object OR our curtains renderer object
-        renderer = renderer.renderer || renderer;
+        renderer = renderer && renderer.renderer || renderer;
 
         // throw warning if no renderer or webgl context
         if(!renderer || renderer.type !== "Renderer") {
