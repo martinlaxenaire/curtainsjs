@@ -142,7 +142,10 @@ window.addEventListener("load", () => {
 
     const multiTexturesPlane = new Plane(curtains, planeElements[0], params);
 
-    multiTexturesPlane.onReady(() => {
+    multiTexturesPlane.onLoading((texture) => {
+        // improve texture rendering on small screens with LINEAR_MIPMAP_NEAREST minFilter
+        texture.setMinFilter(curtains.gl.LINEAR_MIPMAP_NEAREST);
+    }).onReady(() => {
         // the idea here is to create two additionnal textures
         // the first one will contain our visible image
         // the second one will contain our entering (next) image

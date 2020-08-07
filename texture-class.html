@@ -397,7 +397,59 @@
                             Eventually, if your plane <a href="plane-class.html#autoload-sources">autoloadSources</a> initial parameter is set to true (which is by default), they will be created on initialization for each image, canvas or video children of your plane.
                         </p>
 
-                        <h5>Built-in uniform names</h5>
+                        <h4>Texture options</h4>
+                        <p>
+                            Upon creation, you can pass a few options like magnification and minification filters, anisotropy, wrapping or premultiplyAlpha, etc.<br />
+                            See the complete <a href="texture-class.html#parameters">parameters list</a> to have a look at all the options available.
+                        </p>
+
+                        <div class="code">
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // "canvas" is the ID of our HTML container element
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-comment">
+                                // create a new texture using our curtains object
+                            </div>
+                            <div class="code-comment">
+                                // use "uTexture" as sampler name and set a few options as well
+                            </div>
+                            <div class="code-block">
+                                <span class="code-var">const</span> texture = <span class="code-var">new</span> <span class="code-tag">Texture</span>(curtains<span class="code-var">,</span> {
+                                <div class="code-indent">
+                                    <div class="code-comment">
+                                        // set premultiplyAlpha to true, minFilter, anisotropy and use half-floating point texture
+                                    </div>
+                                    <div>
+                                        <span class="code-property">sampler</span>: <span class="code-string">"uTexture"</span><span class="code-var">,</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">premultiplyAlpha</span>: <span class="code-var">true</span><span class="code-var">,</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">minFilter</span>: curtains.<span class="code-property">gl</span>.LINEAR_MIPMAP_NEAREST<span class="code-var">,</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">anisotropy</span>: <span class="code-number">16</span><span class="code-var">,</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">floatingPoint</span>: <span class="code-string">"half-float"</span>
+                                    </div>
+                                </div>})<span class="code-var">;</span>
+                            </div>
+
+                            <div class="code-comment">
+                                // ...you could add it to a plane or a shader pass later with the addParent() method
+                            </div>
+
+                        </div>
+
+                        <h4>Built-in uniform names</h4>
 
                         <p>
                             By default the textures sampler and matrix uniform names sent to your shaders will be set upon their media element order inside your plane element, following this rule:
@@ -407,7 +459,7 @@
                             <strong>`uTextureMatrix{index}`</strong> for texture matrices
                         </p>
 
-                        <h6>HTML</h6>
+                        <h5>HTML</h5>
 
                         <div class="code">
                             <div class="code-block">
@@ -440,7 +492,7 @@
                             </div>
                         </div>
 
-                        <h6>Javascript</h6>
+                        <h5>Javascript</h5>
 
                         <div class="code">
 
@@ -463,7 +515,7 @@
 
                         </div>
 
-                        <h6>Shaders</h6>
+                        <h5>Shaders</h5>
 
                         <div class="code">
                             <div class="code-block">
@@ -493,7 +545,7 @@
                             </div>
                         </div>
 
-                        <h5>Using custom uniform names</h5>
+                        <h4>Using custom uniform names</h4>
 
                         <p>
                             You can define custom uniform names by specifying a <strong>data-sampler attribute</strong> of your media HTML element. The uniform names will then follow these rules:
@@ -503,7 +555,7 @@
                             <strong>`{data-sampler}Matrix`</strong> for texture matrices
                         </p>
 
-                        <h6>HTML</h6>
+                        <h5>HTML</h5>
 
                         <div class="code">
                             <div class="code-block">
@@ -536,7 +588,7 @@
                             </div>
                         </div>
 
-                        <h6>Shaders</h6>
+                        <h5>Shaders</h5>
 
                         <div class="code">
                             <div class="code-block">
@@ -1286,7 +1338,7 @@
                                     </li>
                                 </ul>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a> example.
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a> example.
                                 </p>
                             </li>
 

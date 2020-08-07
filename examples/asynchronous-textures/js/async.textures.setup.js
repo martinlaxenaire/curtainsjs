@@ -170,11 +170,13 @@ window.addEventListener("load", () => {
         const imagesToLoad = asyncImgElements.length;
 
         // load the images
-        asyncTexturesPlane.loadImages(asyncImgElements);
-        asyncTexturesPlane.onLoading((texture) => {
+        asyncTexturesPlane.loadImages(asyncImgElements, {
+            // textures options
             // improve texture rendering on small screens with LINEAR_MIPMAP_NEAREST minFilter
-            texture.setMinFilter(curtains.gl.LINEAR_MIPMAP_NEAREST);
+            minFilter: curtains.gl.LINEAR_MIPMAP_NEAREST
+        });
 
+        asyncTexturesPlane.onLoading(() => {
             imagesLoaded++;
             if(imagesLoaded === imagesToLoad) {
                 // everything is ready, we need to render at least one frame
