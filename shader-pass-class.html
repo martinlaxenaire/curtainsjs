@@ -927,7 +927,7 @@
 
                             <li id="load-canvas">
                                 <p>
-                                    <strong>loadCanvas</strong>(canvasElement): <span class="api-item-version">v3.0</span>
+                                    <strong>loadCanvas</strong>(canvasElement, textureOptions, successCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
                                 </p>
                                 <p>
                                     This function takes a canvas HTML element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
@@ -944,12 +944,50 @@
                                             a HTML canvas element to load into your shader pass.
                                         </span>
                                     </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            textureOptions
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            object, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Default options to apply to that texture. See the Texture class <a href="texture-class.html#parameters">parameters</a>.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            successCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(texture), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on successful source load.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    texture
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    <a href="texture-class.html">Texture</a> class object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    newly created texture. You'll have access to the textures <a href="texture-class.html#on-source-loaded">onSourceLoaded</a> and <a href="texture-class.html#on-source-uploaded">onSourceUploaded</a> callbacks here.
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </li>
                                 </ul>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a> example.
+                                </p>
                             </li>
 
                             <li id="load-canvases">
                                 <p>
-                                    <strong>loadCanvases</strong>(canvasElements): <span class="api-item-version">v3.0</span>
+                                    <strong>loadCanvases</strong>(canvasElements, texturesOptions, successCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
                                 </p>
                                 <p>
                                     This function takes an array of canvas HTML elements and creates a <a href="texture-class.html">Texture</a> for each of them.
@@ -966,12 +1004,47 @@
                                             an array or collection of HTML canvas elements to load into your shader pass.
                                         </span>
                                     </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            texturesOptions
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            object, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Default options to apply to those textures. See the Texture class <a href="texture-class.html#parameters">parameters</a>.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            successCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(texture), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on each successful source load.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    texture
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    <a href="texture-class.html">Texture</a> class object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    newly created texture. You'll have access to the textures <a href="texture-class.html#on-source-loaded">onSourceLoaded</a> and <a href="texture-class.html#on-source-uploaded">onSourceUploaded</a> callbacks here.
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </li>
                                 </ul>
                             </li>
 
                             <li id="load-image">
                                 <p>
-                                    <strong>loadImage</strong>(imageElement): <span class="api-item-version">v3.0</span>
+                                    <strong>loadImage</strong>(imageElement, textureOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
                                 </p>
                                 <p>
                                     This function takes an image HTML element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
@@ -988,15 +1061,82 @@
                                             a HTML image element to load into your shader pass.
                                         </span>
                                     </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            textureOptions
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            object, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Default options to apply to that texture. See the Texture class <a href="texture-class.html#parameters">parameters</a>.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            successCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(texture), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on successful source load.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    texture
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    <a href="texture-class.html">Texture</a> class object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    newly created texture. You'll have access to the textures <a href="texture-class.html#on-source-loaded">onSourceLoaded</a> and <a href="texture-class.html#on-source-uploaded">onSourceUploaded</a> callbacks here.
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            errorCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(image, error), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on source load error.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    image
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    HTML image element
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    The image you were trying to load
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    error
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    Error thrown
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </li>
                                 </ul>
-                                <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a> example.
-                                </p>
                             </li>
 
                             <li id="load-images">
                                 <p>
-                                    <strong>loadImages</strong>(imageElements): <span class="api-item-version">v3.0</span>
+                                    <strong>loadImages</strong>(imageElements, texturesOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
                                 </p>
                                 <p>
                                     This function takes an array of image HTML elements and creates a <a href="texture-class.html">Texture</a> for each of them.
@@ -1013,12 +1153,85 @@
                                             an array or collection of HTML image elements to load into your shader pass.
                                         </span>
                                     </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            texturesOptions
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            object, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Default options to apply to those textures. See the Texture class <a href="texture-class.html#parameters">parameters</a>.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            successCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(texture), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on each successful source load.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    texture
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    <a href="texture-class.html">Texture</a> class object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    newly created texture. You'll have access to the textures <a href="texture-class.html#on-source-loaded">onSourceLoaded</a> and <a href="texture-class.html#on-source-uploaded">onSourceUploaded</a> callbacks here.
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            errorCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(image, error), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on each source load error.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    image
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    HTML image element
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    The image you were trying to load
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    error
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    Error thrown
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </li>
                                 </ul>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a> example.
+                                </p>
                             </li>
 
                             <li id="load-source">
                                 <p>
-                                    <strong>loadSource</strong>(sourceElement): <span class="api-item-version">v3.0</span>
+                                    <strong>loadSource</strong>(sourceElement, textureOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
                                 </p>
                                 <p>
                                     This function takes a source element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
@@ -1035,12 +1248,82 @@
                                             an image, canvas or video HTML element to load into your shader pass.
                                         </span>
                                     </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            textureOptions
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            object, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Default options to apply to that texture. See the Texture class <a href="texture-class.html#parameters">parameters</a>.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            successCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(texture), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on successful source load.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    texture
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    <a href="texture-class.html">Texture</a> class object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    newly created texture. You'll have access to the textures <a href="texture-class.html#on-source-loaded">onSourceLoaded</a> and <a href="texture-class.html#on-source-uploaded">onSourceUploaded</a> callbacks here.
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            errorCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(source, error), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on source load error.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    source
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    either an image, canvas or video HTML element
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    The source you were trying to load
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    error
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    Error thrown
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </li>
                                 </ul>
                             </li>
 
                             <li id="load-sources">
                                 <p>
-                                    <strong>loadSources</strong>(sourceElements): <span class="api-item-version">v3.0</span>
+                                    <strong>loadSources</strong>(sourceElements, texturesOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
                                 </p>
                                 <p>
                                     This function takes an array of source elements, creates <a href="texture-class.html">Textures</a> using them and loads them into your shader pass.
@@ -1051,18 +1334,88 @@
                                             sourceElements
                                         </span>
                                         <span class="api-item-parameter-type">
-                                            array or collection of either images, canvased or videos HTML elements
+                                            array or collection of either images, canvases or videos HTML elements
                                         </span>
                                         <span class="api-item-parameter-desc">
                                             an array of image, canvas or video HTML elements to load into your shader pass.
                                         </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            textureOptions
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            object, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Default options to apply to that texture. See the Texture class <a href="texture-class.html#parameters">parameters</a>.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            successCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(texture), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on each successful source load.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    texture
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    <a href="texture-class.html">Texture</a> class object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    newly created texture. You'll have access to the textures <a href="texture-class.html#on-source-loaded">onSourceLoaded</a> and <a href="texture-class.html#on-source-uploaded">onSourceUploaded</a> callbacks here.
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            errorCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(source, error), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on each source load error.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    source
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    either an image, canvas or video HTML element
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    The source you were trying to load
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    error
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    Error thrown
+                                                </span>
+                                            </li>
+                                        </ul>
                                     </li>
                                 </ul>
                             </li>
 
                             <li id="load-video">
                                 <p>
-                                    <strong>loadVideo</strong>(videoElement): <span class="api-item-version">v3.0</span>
+                                    <strong>loadVideo</strong>(videoElement, textureOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
                                 </p>
                                 <p>
                                     This function takes a video HTML element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
@@ -1079,12 +1432,82 @@
                                             a HTML video element to load into your shader pass.
                                         </span>
                                     </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            textureOptions
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            object, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Default options to apply to that texture. See the Texture class <a href="texture-class.html#parameters">parameters</a>.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            successCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(texture), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on successful source load.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    texture
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    <a href="texture-class.html">Texture</a> class object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    newly created texture. You'll have access to the textures <a href="texture-class.html#on-source-loaded">onSourceLoaded</a> and <a href="texture-class.html#on-source-uploaded">onSourceUploaded</a> callbacks here.
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            errorCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(video, error), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on source load error.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    video
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    HTML video element
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    The video you were trying to load
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    error
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    Error thrown
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </li>
                                 </ul>
                             </li>
 
                             <li id="load-videos">
                                 <p>
-                                    <strong>loadVideos</strong>(videoElements): <span class="api-item-version">v3.0</span>
+                                    <strong>loadVideos</strong>(videoElements, texturesOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
                                 </p>
                                 <p>
                                     This function takes an array of video HTML elements and creates a <a href="texture-class.html">Texture</a> for each of them.
@@ -1100,6 +1523,76 @@
                                         <span class="api-item-parameter-desc">
                                             an array or collection of HTML video elements to load into your shader pass.
                                         </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            texturesOptions
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            object, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Default options to apply to those textures. See the Texture class <a href="texture-class.html#parameters">parameters</a>.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            successCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(texture), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on each successful source load.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    texture
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    <a href="texture-class.html">Texture</a> class object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    newly created texture. You'll have access to the textures <a href="texture-class.html#on-source-loaded">onSourceLoaded</a> and <a href="texture-class.html#on-source-uploaded">onSourceUploaded</a> callbacks here.
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            errorCallback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function(video, error), optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Callback executed on each source load error.
+                                        </span>
+                                        <ul class="api-item-parameters-inner-list">
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    video
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    HTML video element
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    The video you were trying to load
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span class="api-item-parameter-label">
+                                                    error
+                                                </span>
+                                                <span class="api-item-parameter-type">
+                                                    object
+                                                </span>
+                                                <span class="api-item-parameter-desc">
+                                                    Error thrown
+                                                </span>
+                                            </li>
+                                        </ul>
                                     </li>
                                 </ul>
                             </li>
