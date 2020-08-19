@@ -156,7 +156,7 @@ export class Camera {
 
     /***
      Sets the camera position based on its fov
-     Used by the Plane class objects to translate the planes along the Z axis from the right amount
+     Used by the Plane class objects to scale the planes with the right amount
      ***/
     setPosition() {
         this.position.set(0, 0, Math.tan((Math.PI / 180) * 0.5 * this.fov) * 2.0);
@@ -167,7 +167,7 @@ export class Camera {
      Used to translate planes along the Z axis using pixel units as CSS would do
      ***/
     setCSSPerspective() {
-        this.CSSPerspective = Math.pow(Math.pow(this.width / (2 * this.pixelRatio), 2) + Math.pow(this.height / (2 * this.pixelRatio), 2), 0.5) / Math.tan((this.fov / 2) * Math.PI / 180);
+        this.CSSPerspective = Math.pow(Math.pow(this.width / (2 * this.pixelRatio), 2) + Math.pow(this.height / (2 * this.pixelRatio), 2), 0.5) / (this.position.z * 0.5);
     }
 
     /***

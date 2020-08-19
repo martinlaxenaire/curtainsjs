@@ -335,33 +335,29 @@ export class Plane extends DOMMesh {
             // translation
             // along the Z axis it's based on the relativeTranslation.z, CSSPerspective and camera Z position values
             // we're computing it here because it will change when our fov changes
-            this._translation.z = this.relativeTranslation.z / this.camera.CSSPerspective;
-            const translation = new Vec3(
-                this._translation.x,
-                this._translation.y,
-                -((1 - this._translation.z) / this.camera.position.z)
-            );
+            this._translation.z = -((1 - (this.relativeTranslation.z / this.camera.CSSPerspective)) / this.camera.position.z);
 
-            const adjustedOrigin = {
-                x: this.transformOrigin.x * 2 - 1, // between -1 and 1
-                y: -(this.transformOrigin.y * 2 - 1), // between -1 and 1
-            };
-
+            // get transformation origin relative to world space
             const origin = new Vec3(
-                adjustedOrigin.x * this._boundingRect.world.scale.x,
-                adjustedOrigin.y * this._boundingRect.world.scale.y,
+                (this.transformOrigin.x * 2 - 1) // between -1 and 1
+                    * this._boundingRect.world.scale.x,
+                -(this.transformOrigin.y * 2 - 1) // between -1 and 1
+                    * this._boundingRect.world.scale.y,
                 this.transformOrigin.z
             );
 
-            let transformFromOrigin = new Mat4().composeFromOrigin(translation, this.quaternion, this.scale, origin);
+            // get our transformation matrix
+            let transformFromOrigin = new Mat4().composeFromOrigin(this._translation, this.quaternion, this.scale, origin);
 
+            // now scale our plane according to its world bounding rect
             const scaleMatrix = new Mat4([
-                this._boundingRect.world.scale.x, 0.0, 0.0, 0.0,
-                0.0, this._boundingRect.world.scale.y, 0.0, 0.0,
-                0.0, 0.0, 1.0, 0.0,
-                0.0, 0.0, 0.0, 1.0
+                this._boundingRect.world.scale.x, 0, 0, 0,
+                0, this._boundingRect.world.scale.y, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
             ]);
 
+            // we've got our model view matrix
             this._matrices.mvMatrix.matrix = transformFromOrigin.multiply(scaleMatrix);
 
             // this is the result of our projection matrix * our mv matrix, useful for bounding box calculations and frustum culling
