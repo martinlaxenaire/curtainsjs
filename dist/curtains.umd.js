@@ -1026,7 +1026,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       this.type = "Texture"; // we could pass our curtains object OR our curtains renderer object
 
-      renderer = renderer.renderer || renderer;
+      renderer = renderer && renderer.renderer || renderer;
 
       if (!renderer || renderer.type !== "Renderer") {
         throwError(this.type + ": Renderer not passed as first argument", renderer);
@@ -2122,7 +2122,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       this.type = "RenderTarget"; // we could pass our curtains object OR our curtains renderer object
 
-      renderer = renderer.renderer || renderer;
+      renderer = renderer && renderer.renderer || renderer;
 
       if (!renderer || renderer.type !== "Renderer") {
         throwError(this.type + ": Renderer not passed as first argument", renderer);
@@ -3242,7 +3242,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       this.type = "TextureLoader"; // we could pass our curtains object OR our curtains renderer object
 
-      renderer = renderer.renderer || renderer; // throw warning if no renderer or webgl context
+      renderer = renderer && renderer.renderer || renderer; // throw warning if no renderer or webgl context
 
       if (!renderer || renderer.type !== "Renderer") {
         throwError(this.type + ": Renderer not passed as first argument", renderer);
@@ -3798,7 +3798,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       this.type = type; // we could pass our curtains object OR our curtains renderer object
 
-      renderer = renderer.renderer || renderer;
+      renderer = renderer && renderer.renderer || renderer;
 
       if (!renderer || renderer.type !== "Renderer") {
         throwError(this.type + ": Curtains not passed as first argument or Curtains Renderer is missing", renderer); // no renderer, we can't use the renderer nextRender method
@@ -5240,7 +5240,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Sets the camera position based on its fov
-       Used by the Plane class objects to translate the planes along the Z axis from the right amount
+       Used by the Plane class objects to scale the planes with the right amount
        ***/
 
     }, {
@@ -5256,7 +5256,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "setCSSPerspective",
       value: function setCSSPerspective() {
-        this.CSSPerspective = Math.pow(Math.pow(this.width / (2 * this.pixelRatio), 2) + Math.pow(this.height / (2 * this.pixelRatio), 2), 0.5) / Math.tan(this.fov / 2 * Math.PI / 180);
+        this.CSSPerspective = Math.pow(Math.pow(this.width / (2 * this.pixelRatio), 2) + Math.pow(this.height / (2 * this.pixelRatio), 2), 0.5) / (this.position.z * 0.5);
       }
       /***
        Updates the camera projection matrix
@@ -5789,17 +5789,16 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           // translation
           // along the Z axis it's based on the relativeTranslation.z, CSSPerspective and camera Z position values
           // we're computing it here because it will change when our fov changes
-          this._translation.z = this.relativeTranslation.z / this.camera.CSSPerspective;
-          var translation = new Vec3(this._translation.x, this._translation.y, -((1 - this._translation.z) / this.camera.position.z));
-          var adjustedOrigin = {
-            x: this.transformOrigin.x * 2 - 1,
-            // between -1 and 1
-            y: -(this.transformOrigin.y * 2 - 1) // between -1 and 1
+          this._translation.z = -((1 - this.relativeTranslation.z / this.camera.CSSPerspective) / this.camera.position.z); // get transformation origin relative to world space
 
-          };
-          var origin = new Vec3(adjustedOrigin.x * this._boundingRect.world.scale.x, adjustedOrigin.y * this._boundingRect.world.scale.y, this.transformOrigin.z);
-          var transformFromOrigin = new Mat4().composeFromOrigin(translation, this.quaternion, this.scale, origin);
-          var scaleMatrix = new Mat4([this._boundingRect.world.scale.x, 0.0, 0.0, 0.0, 0.0, this._boundingRect.world.scale.y, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
+          var origin = new Vec3((this.transformOrigin.x * 2 - 1) * // between -1 and 1
+          this._boundingRect.world.scale.x, -(this.transformOrigin.y * 2 - 1) // between -1 and 1
+          * this._boundingRect.world.scale.y, this.transformOrigin.z); // get our transformation matrix
+
+          var transformFromOrigin = new Mat4().composeFromOrigin(this._translation, this.quaternion, this.scale, origin); // now scale our plane according to its world bounding rect
+
+          var scaleMatrix = new Mat4([this._boundingRect.world.scale.x, 0, 0, 0, 0, this._boundingRect.world.scale.y, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]); // we've got our model view matrix
+
           this._matrices.mvMatrix.matrix = transformFromOrigin.multiply(scaleMatrix); // this is the result of our projection matrix * our mv matrix, useful for bounding box calculations and frustum culling
 
           this._matrices.mVPMatrix = this._matrices.pMatrix.matrix.multiply(this._matrices.mvMatrix.matrix); // check if we should draw the plane but only if everything has been initialized
@@ -7236,7 +7235,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.renderTargets = this.renderTargets.filter(function (element) {
           return element.uuid !== renderTarget.uuid;
-        });
+        }); // update render target indexes
+
+        for (var _i12 = 0; _i12 < this.renderTargets.length; _i12++) {
+          this.renderTargets[_i12].index = _i12;
+        }
+
         renderTarget = null; // clear the buffer to clean scene
 
         if (this.gl) this.clear(); // we've removed an object, keep Curtains class in sync with our renderer
