@@ -22,6 +22,12 @@
     
 ```javascript
 import {Curtains, Plane} from 'path/to/src/index.mjs';
+
+const curtains = new Curtains({
+    container: "canvas"
+});
+
+const plane = new Plane(curtains, document.querySelector("#plane"));
 ```
 </div>
 <div>
@@ -37,12 +43,6 @@ npm i curtainsjs
 
 ```javascript
 import {Curtains, Plane} from 'curtainsjs';
-
-const curtains = new Curtains({
-    container: "canvas"
-});
-
-const plane = new Plane(curtains, document.querySelector("#plane"));
 ```
 
 </div>
@@ -90,7 +90,7 @@ The library is split into classes modules. Most of them are used internally by t
         RenderTarget: creates a frame buffer object.
     </li>
     <li>
-        ShaderPass: creates a post processing pass using a frame buffer object.
+        ShaderPass: creates a post processing pass using a RenderTarget object.
     </li>
 </ul>
 
