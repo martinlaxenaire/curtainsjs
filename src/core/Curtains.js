@@ -458,8 +458,8 @@ export class Curtains {
      DEPRECATED SOON!
      ***/
     removePlane(plane) {
-        throwWarning("Curtains: removePlane() is deprecated. To remove this plane ", plane, ", use the remove() method");
-        this.renderer.removePlane(plane);
+        throwWarning("Curtains: removePlane() is deprecated. To remove this plane ", plane, ", use its remove() method");
+        plane.remove();
     }
 
 
@@ -480,8 +480,8 @@ export class Curtains {
      DEPRECATED SOON!
      ***/
     removeRenderTarget(renderTarget) {
-        throwWarning("Curtains: removeRenderTarget() is deprecated. To remove this render target ", renderTarget, ", use the remove() method");
-        this.renderer.removeRenderTarget(renderTarget);
+        throwWarning("Curtains: removeRenderTarget() is deprecated. To remove this render target ", renderTarget, ", use its remove() method");
+        renderTarget.remove();
     }
 
 
@@ -502,8 +502,8 @@ export class Curtains {
      DEPRECATED SOON!
      ***/
     removeShaderPass(shaderPass) {
-        throwWarning("Curtains: removeShaderPass() is deprecated. To remove this shader pass ", shaderPass, ", use the remove() method");
-        this.renderer.removeShaderPass(shaderPass);
+        throwWarning("Curtains: removeShaderPass() is deprecated. To remove this shader pass ", shaderPass, ", use its remove() method");
+        shaderPass.remove();
     }
 
 

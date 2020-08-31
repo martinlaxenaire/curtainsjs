@@ -8006,8 +8006,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "removePlane",
       value: function removePlane(plane) {
-        throwWarning("Curtains: removePlane() is deprecated. To remove this plane ", plane, ", use the remove() method");
-        this.renderer.removePlane(plane);
+        throwWarning("Curtains: removePlane() is deprecated. To remove this plane ", plane, ", use its remove() method");
+        plane.remove();
       }
       /*** RENDER TARGETS ***/
 
@@ -8030,8 +8030,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "removeRenderTarget",
       value: function removeRenderTarget(renderTarget) {
-        throwWarning("Curtains: removeRenderTarget() is deprecated. To remove this render target ", renderTarget, ", use the remove() method");
-        this.renderer.removeRenderTarget(renderTarget);
+        throwWarning("Curtains: removeRenderTarget() is deprecated. To remove this render target ", renderTarget, ", use its remove() method");
+        renderTarget.remove();
       }
       /*** SHADER PASSES ***/
 
@@ -8054,8 +8054,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "removeShaderPass",
       value: function removeShaderPass(shaderPass) {
-        throwWarning("Curtains: removeShaderPass() is deprecated. To remove this shader pass ", shaderPass, ", use the remove() method");
-        this.renderer.removeShaderPass(shaderPass);
+        throwWarning("Curtains: removeShaderPass() is deprecated. To remove this shader pass ", shaderPass, ", use its remove() method");
+        shaderPass.remove();
       }
       /*** UTILS ***/
 

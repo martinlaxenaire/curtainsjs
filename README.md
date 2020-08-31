@@ -37,6 +37,12 @@ npm i curtainsjs
 
 ```javascript
 import {Curtains, Plane} from 'curtainsjs';
+
+const curtains = new Curtains({
+    container: "canvas"
+});
+
+const plane = new Plane(curtains, document.querySelector("#plane"));
 ```
 
 </div>
@@ -108,6 +114,9 @@ The library is split into classes modules. Most of them are used internally by t
     <li>
         Mat4: creates a new Matrix 4.
     </li>
+    <li>
+        Quat: creates a new Quaternion.
+    </li>
 </ul>
 
 <h3>Extras</h3>
@@ -124,9 +133,9 @@ The library is split into classes modules. Most of them are used internally by t
 <h3>Full documentation</h3>
 
 <p>
-    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/get-started.html" title="Getting started" target="_blank">Getting started</a><br />
-    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/documentation.html" title="API docs" target="_blank">API docs</a><br />
-    <a href="https://www.martin-laxenaire.fr/libs/curtainsjs/index.html#examples">Examples</a>
+    <a href="https://www.curtainsjs.com/get-started.html" title="Getting started" target="_blank">Getting started</a><br />
+    <a href="https://www.curtainsjs.com/documentation.html" title="API docs" target="_blank">API docs</a><br />
+    <a href="https://www.curtainsjs.com/index.html#examples">Examples</a>
 </p>
 
 <h2>Basic example</h2>
