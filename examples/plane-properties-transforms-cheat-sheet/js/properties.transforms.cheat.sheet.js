@@ -99,13 +99,12 @@ window.addEventListener("load", () => {
         addGUI();
 
         updatePlaneBBoxViewer();
+    }).onAfterResize(() => {
+        updatePlaneBBoxViewer();
     });
 
     // once everything is ready, stop drawing the scene
-    curtains.nextRender(() => {
-        updatePlaneBBoxViewer();
-        curtains.disableDrawing();
-    });
+    curtains.disableDrawing();
 
     function initGUIParams() {
         return {

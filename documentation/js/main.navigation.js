@@ -1,4 +1,4 @@
-import {Curtains, Plane, Vec2} from '../src/index.mjs';
+import {Curtains, Plane, Vec2} from 'https://www.curtainsjs.com/src/index.mjs';
 
 window.addEventListener("load", () => {
     const mousePosition = new Vec2();

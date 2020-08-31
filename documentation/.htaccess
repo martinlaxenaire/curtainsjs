@@ -1,0 +1,8 @@
+# Allow access
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>
+
+<Files "*.mjs">
+    ForceType text/javascript
+</Files>
