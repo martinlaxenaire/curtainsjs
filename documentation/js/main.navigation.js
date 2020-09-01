@@ -296,7 +296,7 @@ window.addEventListener("load", () => {
             },
         };
 
-        const aboutPlane = curtains.addPlane(aboutElements[0], aboutPlaneParams);
+        const aboutPlane = new Plane(curtains, aboutElements[0], aboutPlaneParams);
 
         aboutPlane.onRender(() => {
             aboutPlane.uniforms.time.value++;
