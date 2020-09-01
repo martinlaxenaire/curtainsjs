@@ -102,7 +102,7 @@
     }
 
     .curtain img, .curtain video {
-        display: none;
+        opacity: 0;
     }
 
 

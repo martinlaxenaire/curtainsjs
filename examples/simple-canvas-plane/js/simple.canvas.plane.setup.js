@@ -1,38 +1,28 @@
-function initCurtains() {
+import {Curtains, Plane, Vec2} from '../../../src/index.mjs';
 
-    function lerp (start, end, amt){
-        return (1 - amt) * start + amt * end;
-    }
-
+window.addEventListener("load", () => {
     // track the mouse positions to send it to the shaders
-    var mousePosition = {
-        x: 0,
-        y: 0,
-    };
+    const mousePosition = new Vec2();
     // we will keep track of the last position in order to calculate the movement strength/delta
-    var mouseLastPosition = {
-        x: 0,
-        y: 0,
-    };
+    const mouseLastPosition = new Vec2();
 
-    var deltas = {
+    const deltas = {
         max: 0,
         applied: 0,
     };
 
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains({
+    const curtains = new Curtains({
         container: "canvas",
         watchScroll: false, // no need to listen for the scroll in this example
-        premultipliedAlpha: true, // sharpen the rendering of the canvas texture
+        pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
     });
 
     // get our plane element
-    var planeElements = document.getElementsByClassName("curtain");
-
+    const planeElements = document.getElementsByClassName("curtain");
 
     // handling errors
-    webGLCurtain.onError(function() {
+    curtains.onError(() => {
         // we will add a class to the document body to display original canvas
         document.body.classList.add("no-curtains");
 
@@ -45,9 +35,9 @@ function initCurtains() {
         }
 
         animate();
-    }).onContextLost(function() {
+    }).onContextLost(() => {
         // on context lost, try to restore the context
-        webGLCurtain.restoreContext();
+        curtains.restoreContext();
     });
 
     function animateTextureCanvas() {
@@ -67,11 +57,7 @@ function initCurtains() {
     }
 
 
-    // could be useful to get pixel ratio
-    var pixelRatio = window.devicePixelRatio ? window.devicePixelRatio : 1.0;
-
-
-    var vs = `
+    const vs = `
         precision mediump float;
 
         // default mandatory variables
@@ -119,7 +105,7 @@ function initCurtains() {
         }
     `;
 
-    var fs = `
+    const fs = `
         precision mediump float;
 
         varying vec3 vVertexPosition;
@@ -141,7 +127,7 @@ function initCurtains() {
     `;
 
     // some basic parameters
-    var params = {
+    const params = {
         vertexShader: vs,
         fragmentShader: fs,
         widthSegments: 20,
@@ -155,7 +141,7 @@ function initCurtains() {
             mousePosition: { // our mouse position
                 name: "uMousePosition",
                 type: "2f", // again an array of floats
-                value: [mousePosition.x, mousePosition.y],
+                value: mousePosition,
             },
             mouseMoveStrength: { // the mouse move strength
                 name: "uMouseMoveStrength",
@@ -165,22 +151,23 @@ function initCurtains() {
         }
     };
 
+
+    // our texture canvas
+    const simpleCanvas = document.getElementById("canvas-texture");
+    const simpleCanvasContext = simpleCanvas.getContext("2d");
+
     // create our plane
-    var simplePlane = webGLCurtain.addPlane(planeElements[0], params);
+    const simplePlane = new Plane(curtains.renderer, planeElements[0], params);
 
     // i our plane has been successfully created
     if(simplePlane) {
-        // our texture canvas
-        var simpleCanvas = document.getElementById("canvas-texture");
-        var simpleCanvasContext = simpleCanvas.getContext("2d");
-
         // get our plane dimensions
-        var planeBoundingRect = simplePlane.getBoundingRect();
+        const planeBoundingRect = simplePlane.getBoundingRect();
 
         // size our canvas
         // we are dividing it by the pixel ratio value to gain performance
-        simpleCanvas.width = planeBoundingRect.width / webGLCurtain.pixelRatio;
-        simpleCanvas.height = planeBoundingRect.height / webGLCurtain.pixelRatio;
+        simpleCanvas.width = planeBoundingRect.width / curtains.pixelRatio;
+        simpleCanvas.height = planeBoundingRect.height / curtains.pixelRatio;
 
         simplePlane.onReady(function() {
             // display the button
@@ -193,17 +180,19 @@ function initCurtains() {
             deltas.max = 4;
 
             // now that our plane is ready we can listen to mouse move event
-            var wrapper = document.getElementById("page-wrap");
+            const wrapper = document.getElementById("page-wrap");
 
-            wrapper.addEventListener("mousemove", function(e) {
+            wrapper.addEventListener("mousemove", (e) => {
                 handleMovement(e, simplePlane);
             });
 
-            wrapper.addEventListener("touchmove", function(e) {
+            wrapper.addEventListener("touchmove", (e) => {
                 handleMovement(e, simplePlane);
+            }, {
+                passive: true
             });
 
-        }).onRender(function() {
+        }).onRender(() => {
             // increment our time uniform
             simplePlane.uniforms.time.value++;
 
@@ -216,50 +205,45 @@ function initCurtains() {
 
             // animate our texture canvas
             animateTextureCanvas();
-        }).onAfterResize(function() {
+        }).onAfterResize(() => {
             // get our plane dimensions
-            var planeBoundingRect = simplePlane.getBoundingRect();
+            const planeBoundingRect = simplePlane.getBoundingRect();
 
             // size our canvas
             // we are dividing it by the pixel ratio value to gain performance
-            simpleCanvas.width = planeBoundingRect.width / webGLCurtain.pixelRatio;
-            simpleCanvas.height = planeBoundingRect.height / webGLCurtain.pixelRatio;
+            simpleCanvas.width = planeBoundingRect.width / curtains.pixelRatio;
+            simpleCanvas.height = planeBoundingRect.height / curtains.pixelRatio;
         });
     }
 
     // handle the mouse move event
     function handleMovement(e, plane) {
+    // update mouse last pos
+        mouseLastPosition.copy(mousePosition);
 
-        // update mouse last pos
-        mouseLastPosition.x = mousePosition.x;
-        mouseLastPosition.y = mousePosition.y;
-
-        var mouse = {};
+        const mouse = new Vec2();
 
         // touch event
         if(e.targetTouches) {
-
-            mouse.x = e.targetTouches[0].clientX;
-            mouse.y = e.targetTouches[0].clientY;
+            mouse.set(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
         }
         // mouse event
         else {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
+            mouse.set(e.clientX, e.clientY);
         }
 
         // lerp the mouse position a bit to smoothen the overall effect
-        mousePosition.x = lerp(mousePosition.x, mouse.x, 0.3);
-        mousePosition.y = lerp(mousePosition.y, mouse.y, 0.3);
+        mousePosition.set(
+            curtains.lerp(mousePosition.x, mouse.x, 0.3),
+            curtains.lerp(mousePosition.y, mouse.y, 0.3)
+        );
 
-        // convert our mouse/touch position to coordinates relative to the vertices of the plane
-        var mouseCoords = plane.mouseToPlaneCoords(mousePosition.x, mousePosition.y);
-        // update our mouse position uniform
-        plane.uniforms.mousePosition.value = [mouseCoords.x, mouseCoords.y];
+        // convert our mouse/touch position to coordinates relative to the vertices of the plane and update our uniform
+        plane.uniforms.mousePosition.value = plane.mouseToPlaneCoords(mousePosition);
 
         // calculate the mouse move strength
         if(mouseLastPosition.x && mouseLastPosition.y) {
-            var delta = Math.sqrt(Math.pow(mousePosition.x - mouseLastPosition.x, 2) + Math.pow(mousePosition.y - mouseLastPosition.y, 2)) / 30;
+            let delta = Math.sqrt(Math.pow(mousePosition.x - mouseLastPosition.x, 2) + Math.pow(mousePosition.y - mouseLastPosition.y, 2)) / 30;
             delta = Math.min(4, delta);
             // update max delta only if it increased
             if(delta >= deltas.max) {
@@ -267,8 +251,4 @@ function initCurtains() {
             }
         }
     }
-}
-
-window.addEventListener("load", function() {
-    initCurtains();
 });

@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<!-- Metas -->
+		<title>curtains.js | Get Started</title>
+	    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+	    <link rel="canonical" href="https://www.curtainsjs.com/get-started.html">
+
+	    <!-- Facebook OG -->
+	    <meta property="og:title" content="curtains.js | Get Started">
+	    <meta property="og:type" content="website">
+	    <meta property="og:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+	    <meta property="og:url" content="https://www.curtainsjs.com/get-started.html">
+	    <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+	    <!-- Twitter card -->
+	    <meta name="twitter:card" content="summary_large_image">
+	    <meta name="twitter:site" content="@webdesign_ml">
+		<meta name="twitter:creator" content="@webdesign_ml">
+		<meta name="twitter:title" content="curtains.js | Get Started">
+		<meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+		<meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+		<!-- Favicon -->
+		<link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="images/favicons/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="images/favicons/favicon-16x16.png">
+		<link rel="manifest" href="images/favicons/site.webmanifest">
+		<link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#202340">
+		<link rel="shortcut icon" href="images/favicons/favicon.ico">
+		<meta name="msapplication-TileColor" content="#202340">
+		<meta name="msapplication-config" content="images/favicons/browserconfig.xml">
+		<meta name="theme-color" content="#202340">
+
+		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="style.css" type="text/css">
+	</head>
+	<body>
+        <div id="page-wrap">
+
+			<div id="canvas"></div>
+
+			<div id="content">
+
+				<header id="header">
+					<div class="wrapper">
+						<div id="header-wrapper" class="flex-wrapper">
+							<div id="header-title">
+								<a href="/" title="Home">curtains.js</a>
+							</div>
+							<nav id="main-menu">
+								<ul class="flex-wrapper">
+									<li>
+										<a href="get-started.html" class="active">Get started</a>
+									</li>
+									<li>
+										<a href="documentation.html">Docs</a>
+									</li>
+									<li>
+										<a href="download.html">Download</a>
+									</li>
+								</ul>
+							</nav>
+						</div>
+					</div>
+				</header>
+
+				<section class="content-section">
+					<div class="wrapper">
+
+						<div class="text-section inner-section">
+							<h1>Get started</h1>
+						</div>
+
+						<nav class="text-section inner-section">
+							<ol>
+								<li>
+									<a href="#basic-setup" title="Basic setup example">Basic setup example</a>
+								</li>
+								<li>
+									<a href="#image-uniform-sampler" title="Textures uniform sampler names">Textures uniform sampler names</a>
+								</li>
+                                <li>
+                                    <a href="#handling-scroll-event" title="Handling scroll event">Handling scroll event</a>
+                                </li>
+								<li>
+									<a href="#videos-textures" title="Videos as textures">Videos as textures</a>
+								</li>
+								<li>
+									<a href="#canvases-textures" title="Canvas as texture">Canvas as texture</a>
+								</li>
+                                <li>
+                                    <a href="#adding-post-processing" title="Adding post-processing">Adding post-processing</a>
+                                </li>
+								<li>
+									<a href="#performance-tips" title="Performance tips">Performance tips</a>
+								</li>
+								<li>
+									<a href="#useful-examples" title="Useful examples">Useful examples</a>
+								</li>
+							</ol>
+						</nav>
+
+						<div id="basic-setup" class="text-section inner-section">
+							<h2>Basic setup example</h2>
+							<div id="basic-example">
+								<img src="examples/medias/plane-texture-3.jpg" alt="Basic example image" />
+							</div>
+							<p>
+								<a href="examples/basic-plane/index.html" title="Open it in a new tab" target="_blank">Open it in a new tab</a>
+							</p>
+							<h3>HTML</h3>
+							<p>
+								The HTML set up is pretty easy. Just create a div that will hold your canvas and a div that will hold your images.
+							</p>
+
+                            <div class="code">
+                                <div class="code-block">
+                                    <span class="code-tag">&lt;body&gt;</span>
+                                </div>
+
+                                <div class="code-block code-indent">
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            &lt;!-- div that will hold our WebGL canvas --&gt;
+                                        </div>
+                                        <div>
+                                            <span class="code-tag">&lt;div</span> id=<span class="code-string">"canvas"</span><span class="code-tag">&gt;</span><span class="code-tag">&lt;/div&gt;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+
+                                        <div class="code-comment">
+                                            &lt;!-- div used to create our plane --&gt;
+                                        </div>
+                                        <div>
+                                            <span class="code-tag">&lt;div</span> class=<span class="code-string">"plane"</span><span class="code-tag">&gt;</span>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="code-indent">
+
+                                        <div class="code-comment">
+                                            &lt;!-- image that will be used as texture by our plane --&gt;
+                                        </div>
+                                        <div>
+                                            <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image.jpg"</span> <span class="code-tag">/&gt;</span>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="code-tag">
+                                        &lt;/div&gt;
+                                    </div>
+                                </div>
+
+                                <div class="code-block">
+                                    <span class="code-tag">&lt;/body&gt;</span>
+                                </div>
+                            </div>
+
+							<h3>CSS</h3>
+							<p>
+								The CSS is also very easy. Make sure the div that will wrap the canvas fits the document, and apply any size you want to your plane div element.
+							</p>
+
+                            <div class="code">
+
+                                <div class="code-block">
+                                    <span class="code-var">body</span> {
+                                    <div class="code-indent">
+                                        <div class="code-comment">
+                                            /* make the body fits our viewport */
+                                        </div>
+                                        <div>
+                                            position: <span class="code-string">relative</span><span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            width: <span class="code-number">100</span>%<span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            height: <span class="code-number">100</span><span class="code-string">vh</span><span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            margin: <span class="code-number">0</span><span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            overflow: <span class="code-string">hidden</span><span class="code-var">;</span>
+                                        </div>
+                                    </div>
+                                    }
+                                </div>
+
+                                <div class="code-block">
+                                    <span class="code-tag">#canvas</span> {
+                                    <div class="code-indent">
+                                        <div class="code-comment">
+                                            /* make the canvas wrapper fits the document */
+                                        </div>
+                                        <div>
+                                            position: <span class="code-string">absolute</span><span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            top: <span class="code-number">0</span><span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            right: <span class="code-number">0</span><span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            bottom: <span class="code-number">0</span><span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            left: <span class="code-number">0</span><span class="code-var">;</span>
+                                        </div>
+                                    </div>
+                                    }
+                                </div>
+
+                                <div class="code-block">
+                                    .<span class="code-tag">plane</span> {
+                                    <div class="code-indent">
+                                        <div class="code-comment">
+                                            /* define the size of your plane */
+                                        </div>
+                                        <div>
+                                            width: <span class="code-number">80</span>%<span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            height: <span class="code-number">80</span><span class="code-string">vh</span><span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            margin: <span class="code-number">10</span><span class="code-string">vh</span> <span class="code-string">auto</span><span class="code-var">;</span>
+                                        </div>
+                                    </div>
+                                    }
+                                </div>
+
+                                <div class="code-block">
+                                    .<span class="code-tag">plane</span> <span class="code-var">img</span> {
+                                    <div class="code-indent">
+                                        <div class="code-comment">
+                                            /* hide the img element */
+                                        </div>
+                                        <div>
+                                            display: <span class="code-string">none</span><span class="code-var">;</span>
+                                        </div>
+                                    </div>
+                                    }
+                                </div>
+
+                            </div>
+
+							<h3>Javascript</h3>
+							<p>
+								There's a bit more work in the javascript part : we need to instanciate our WebGL context, create a plane with basic uniforms parameters and use it.
+							</p>
+
+                            <div class="code">
+                                <div class="code-block">
+                                    <span class="code-var">import</span> {Curtains<span class="code-var">,</span> Plane} <span class="code-var">from</span> <span class="code-string">"curtainsjs"</span><span class="code-var">;</span>
+                                </div>
+                                <div class="code-comment">
+                                    // wait for everything to be ready
+                                </div>
+                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"load"</span>, () => {
+                                <div class="code-block code-indent">
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // set up our WebGL context and append the canvas to our wrapper
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // get our plane element
+                                        </div>
+                                        <span class="code-var">const</span> planeElement = document.<span class="code-tag">getElementsByClassName</span>(<span class="code-string">"plane"</span>)[<span class="code-number">0</span>]<span class="code-var">;</span>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // set our initial parameters (basic uniforms)
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> params = {
+                                        </div>
+                                        <div class="code-indent">
+                                            <div>
+                                                <span class="code-property">vertexShaderID</span>: <span class="code-string">"plane-vs"</span><span class="code-var">,</span> <span class="code-comment">// our vertex shader ID</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">fragmentShaderID</span>: <span class="code-string">"plane-fs"</span><span class="code-var">,</span> <span class="code-comment">// our fragment shader ID</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">uniforms</span>: {
+                                            </div>
+                                            <div class="code-indent">
+                                                <div>
+                                                    <span class="code-property">time</span>: {
+                                                </div>
+                                                <div class="code-indent">
+                                                    <div>
+                                                        <span class="code-property">name</span>: <span class="code-string">"uTime"</span><span class="code-var">,</span> <span class="code-comment">// uniform name that will be passed to our shaders</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">type</span>: <span class="code-string">"1f"</span><span class="code-var">,</span> <span class="code-comment">// this means our uniform is a float</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">value</span>: <span class="code-number">0</span><span class="code-var">,</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    }<span class="code-var">,</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                }<span class="code-var">,</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            }<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // create our plane using our curtains object, the HTML element and the parameters
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> plane = <span class="code-var">new</span> <span class="code-tag">Plane</span>(curtains<span class="code-var">,</span> planeElement<span class="code-var">,</span> params)<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        plane.<span class="code-tag">onRender</span>(() => {
+                                        <div class="code-indent">
+                                            <div class="code-comment">
+                                                // use the onRender method of our plane fired at each requestAnimationFrame call
+                                            </div>
+                                            plane.<span class="code-property">uniforms</span>.<span class="code-property">time</span>.<span class="code-property">value</span>++<span class="code-var">;</span> <span class="code-comment">// update our time uniform value</span>
+                                        </div>
+                                        })<span class="code-var">;</span>
+                                    </div>
+                                </div>
+                                })<span class="code-var">;</span>
+                            </div>
+
+							<h3>Shaders</h3>
+							<p>
+								Here are some basic vertex and fragment shaders. Just put it inside your body tag, right before you include the library.
+							</p>
+
+                            <div class="code">
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        &lt;!-- vertex shader --&gt;
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;script</span> id=<span class="code-string">"plane-vs"</span> type=<span class="code-string">"x-shader/x-vertex"</span><span class="code-tag">&gt;</span>
+                                    </div>
+
+                                    <div class="code-indent">
+                                        <div class="code-block">
+                                            precision mediump float<span class="code-var">;</span>
+                                        </div>
+
+                                        <div class="code-block">
+                                            <div class="code-comment">
+                                                // those are the mandatory attributes that the lib sets
+                                            </div>
+                                            <div>
+                                                <span class="code-var">attribute</span> <span class="code-tag">vec3</span> aVertexPosition<span class="code-var">;</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-var">attribute</span> <span class="code-tag">vec2</span> aTextureCoord<span class="code-var">;</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="code-block">
+                                            <div class="code-comment">
+                                                // those are mandatory uniforms that the lib sets and that contain our model view and projection matrix
+                                            </div>
+                                            <div>
+                                                <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uMVMatrix<span class="code-var">;</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uPMatrix<span class="code-var">;</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="code-block">
+                                            <div class="code-comment">
+                                                // our texture matrix that will handle image cover
+                                            </div>
+                                            <div>
+                                                <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uTextureMatrix0<span class="code-var">;</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="code-block">
+                                            <div class="code-comment">
+                                                // pass your vertex and texture coords to the fragment shader
+                                            </div>
+                                            <div>
+                                                <span class="code-var">varying</span> <span class="code-tag">vec3</span> vVertexPosition<span class="code-var">;</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-var">varying</span> <span class="code-tag">vec2</span> vTextureCoord<span class="code-var">;</span>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <span class="code-var">void</span> main() {
+                                        </div>
+
+                                        <div class="code-indent">
+                                            <div class="code-block">
+                                                <span class="code-tag">vec3</span> vertexPosition = aVertexPosition<span class="code-var">;</span>
+                                            </div>
+
+                                            <div class="code-block">
+                                                gl_Position = uPMatrix * uMVMatrix * <span class="code-tag">vec4</span>(vertexPosition<span class="code-var">,</span> <span class="code-number">1.0</span>)<span class="code-var">;</span>
+                                            </div>
+
+                                            <div class="code-comment">
+                                                // set the varyings
+                                            </div>
+                                            <div class="code-comment">
+                                                // here we use our texture matrix to calculate the accurate texture coords
+                                            </div>
+                                            <div>
+                                                vTextureCoord = (uTextureMatrix0 * <span class="code-tag">vec4</span>(aTextureCoord<span class="code-var">,</span> <span class="code-number">0.0</span><span class="code-var">,</span> <span class="code-number">1.0</span>)).<span class="code-property">xy</span><span class="code-var">;</span>
+                                            </div>
+                                            <div>
+                                                vVertexPosition = vertexPosition<span class="code-var">;</span>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <span class="code-tag">&lt;/script&gt;</span>
+                                    </div>
+                                </div>
+
+                                <div class="code-comment">
+                                    &lt;!-- fragment shader --&gt;
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;script</span> id=<span class="code-string">"plane-fs"</span> type=<span class="code-string">"x-shader/x-fragment"</span><span class="code-tag">&gt;</span>
+                                </div>
+
+                                <div class="code-indent">
+                                    <div class="code-block">
+                                        precision mediump float<span class="code-var">;</span>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // get our varyings
+                                        </div>
+                                        <div>
+                                            <span class="code-var">varying</span> <span class="code-tag">vec3</span> vVertexPosition<span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            <span class="code-var">varying</span> <span class="code-tag">vec2</span> vTextureCoord<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // the uniform we declared inside our javascript
+                                        </div>
+                                        <div>
+                                            <span class="code-var">uniform</span> <span class="code-tag">float</span> uTime<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // our texture sampler (default name, to use a different name please refer to the documentation)
+                                        </div>
+                                        <div>
+                                            <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uSampler0<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div>
+                                            <span class="code-var">void</span> main() {
+                                        </div>
+
+                                        <div class="code-indent">
+                                            <div class="code-block">
+                                                <div class="code-comment">
+                                                    // get our texture coords from our varying
+                                                </div>
+                                                <span class="code-tag">vec2</span> textureCoord = vTextureCoord<span class="code-var">;</span>
+                                            </div>
+
+                                            <div class="code-block">
+                                                <div class="code-comment">
+                                                    // displace our pixels along the X axis based on our time uniform
+                                                </div>
+                                                <div class="code-comment">
+                                                    // textures coords are ranging from 0.0 to 1.0 on both axis
+                                                </div>
+
+                                                <div>
+                                                    textureCoord.<span class="code-property">x</span> += <span class="code-tag">sin</span>(textureCoord.<span class="code-property">y</span> * <span class="code-number">25.0</span>) * <span class="code-tag">cos</span>(textureCoord.<span class="code-property">x</span> * <span class="code-number">25.0</span>) * (<span class="code-tag">cos</span>(uTime / <span class="code-number">50.0</span>)) / <span class="code-number">25.0</span><span class="code-var">;</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="code-comment">
+                                                // map our texture with the texture matrix coords
+                                            </div>
+                                            <div>
+                                                gl_FragColor = <span class="code-tag">texture2D</span>(uSampler0<span class="code-var">,</span> textureCoord)<span class="code-var">;</span>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span class="code-tag">&lt;/script&gt;</span>
+                                </div>
+
+                            </div>
+
+							<p>
+								Et voilà !
+							</p>
+						</div>
+						<div id="images-uniforms-samplers" class="text-section inner-section">
+							<h2>Textures uniforms matrices and sampler names</h2>
+							<p>
+								Let's say you want to build a slideshow with 3 images and a displacement image to create a nice transition effect.<br />
+								By default, the textures uniforms matrices and sampler will be named upon their indexes inside your plane element. If you got something like that :
+							</p>
+
+                            <div class="code">
+
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        &lt;!-- div used to create our plane --&gt;
+                                    </div>
+                                    <span class="code-tag">&lt;div</span> class=<span class="code-string">"plane"</span><span class="code-tag">&gt;</span>
+                                </div>
+
+                                <div class="code-block code-indent">
+                                    <div class="code-comment">
+                                        &lt;!-- images that will be used as textures by our plane --&gt;
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/displacement.jpg"</span><span class="code-tag"> /&gt;</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-1.jpg"</span><span class="code-tag"> /&gt;</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-2.jpg"</span><span class="code-tag"> /&gt;</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-3.jpg"</span><span class="code-tag"> /&gt;</span>
+                                    </div>
+
+                                </div>
+
+                                <span class="code-tag">&lt;/div&gt;</span>
+
+                            </div>
+
+							<p>
+								Then, in your shaders, your textures matrices and samplers would have to be declared that way :
+							</p>
+
+                            <div class="code">
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // use this in your vertex shader
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uTextureMatrix0<span class="code-var">;</span> <span class="code-comment">// texture matrix of displacement.jpg</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uTextureMatrix1<span class="code-var">;</span> <span class="code-comment">// texture matrix of my-image-1.jpg</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uTextureMatrix2<span class="code-var">;</span> <span class="code-comment">// texture matrix of my-image-2.jpg</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uTextureMatrix3<span class="code-var">;</span> <span class="code-comment">// texture matrix of my-image-3.jpg</span>
+                                    </div>
+                                </div>
+                                <div class="code-block">
+                                    ...
+                                </div>
+                                <div>
+                                    <div class="code-comment">
+                                        // use this in your fragment shader
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uSampler0<span class="code-var">;</span> <span class="code-comment">// bound to displacement.jpg</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uSampler1<span class="code-var">;</span> <span class="code-comment">// bound to my-image-1.jpg</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uSampler2<span class="code-var">;</span> <span class="code-comment">// bound to my-image-2.jpg</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uSampler3<span class="code-var">;</span> <span class="code-comment">// bound to my-image-3.jpg</span>
+                                    </div>
+                                </div>
+                            </div>
+
+							<p>
+								It is handy but you could also get easily confused.<br />
+								By using a data-sampler attribute on the &lt;img /&gt; tag, you could specify custom uniforms matrices and samplers names to use in your shaders. With the example above, this would become :
+							</p>
+
+                            <div class="code">
+
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        &lt;!-- div used to create our plane --&gt;
+                                    </div>
+                                    <span class="code-tag">&lt;div</span> class=<span class="code-string">"plane"</span><span class="code-tag">&gt;</span>
+                                </div>
+
+                                <div class="code-block code-indent">
+                                    <div class="code-comment">
+                                        &lt;!-- images that will be used as textures by our plane --&gt;
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/displacement.jpg"</span><span class="code-tag"> data-sampler=<span class="code-string">"uDisplacement"</span> /&gt;</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-1.jpg"</span><span class="code-tag"> data-sampler=<span class="code-string">"uSlide1"</span> /&gt;</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-2.jpg"</span><span class="code-tag"> data-sampler=<span class="code-string">"uSlide2"</span> /&gt;</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-3.jpg"</span><span class="code-tag"> data-sampler=<span class="code-string">"uLastSlide"</span> /&gt;</span>
+                                    </div>
+
+                                </div>
+
+                                <span class="code-tag">&lt;/div&gt;</span>
+
+                            </div>
+
+                            <div class="code">
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // use this in your vertex shader
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uDisplacementMatrix<span class="code-var">;</span> <span class="code-comment">// texture matrix of displacement.jpg</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uSlide1Matrix<span class="code-var">;</span> <span class="code-comment">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// texture matrix of my-image-1.jpg</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uSlide2Matrix<span class="code-var">;</span> <span class="code-comment">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// texture matrix of my-image-2.jpg</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uLastSlideMatrix<span class="code-var">;</span> <span class="code-comment">&nbsp;&nbsp;&nbsp;// texture matrix of my-image-3.jpg</span>
+                                    </div>
+                                </div>
+                                <div class="code-block">
+                                    ...
+                                </div>
+                                <div>
+                                    <div class="code-comment">
+                                        // use this in your fragment shader
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uDisplacement<span class="code-var">;</span> <span class="code-comment">// bound to displacement.jpg</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uSlide1<span class="code-var">;</span> <span class="code-comment">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// bound to my-image-1.jpg</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uSlide2<span class="code-var">;</span> <span class="code-comment">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// bound to my-image-2.jpg</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uLastSlide<span class="code-var">;</span> <span class="code-comment">&nbsp;&nbsp;&nbsp;// bound to my-image-3.jpg</span>
+                                    </div>
+                                </div>
+                            </div>
+
+						</div>
+
+                        <div id="handling-scroll-event" class="text-section inner-section">
+                            <h2>Handling scroll event</h2>
+                            <p>
+                                By default since version 4.0 your planes positions are now updated while you scroll the page. You can define each plane ability to update its position according to the scroll by setting its own watchScroll property.
+                            </p>
+                            <p>
+                                This means that the library automatically listens to the scroll event. But you might not want to listen to that event at all and handle this by yourself:
+                            </p>
+
+                            <h3>Doing it your own way</h3>
+                            <p>
+                                If you don't want the library to listen to the scroll under the hood, just set the watchScroll parameter to false when initializing your Curtains object. You will then have to listen to the scroll by yourself and update your curtains object scroll values manually.<br />
+                                This could be pretty handy if you're using a virtual scroll library for example like here: <a href="examples/multiple-planes-scroll-effect-custom-scroll/index.html" title="Multiple planes scroll effect with Locomotive scroll" target="_blank">Multiple planes scroll effect with Locomotive scroll</a>.
+                            </p>
+
+                            <div class="code">
+                                <div class="code-block">
+                                    <span class="code-var">import</span> {Curtains<span class="code-var">,</span> Plane} <span class="code-var">from</span> <span class="code-string">"curtainsjs"</span><span class="code-var">;</span>
+                                </div>
+                                <div class="code-comment">
+                                    // wait for everything to be ready
+                                </div>
+                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"load"</span>, () => {
+                                <div class="code-block code-indent">
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // set up our WebGL context and append the canvas to our wrapper
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><div><span class="code-property">container</span>: <span class="code-string">"canvas"</span><span class="code-var">,</span></div><div><span class="code-property">watchScroll</span>: <span class="code-var">false</span></div></div>})<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // get our plane element
+                                        </div>
+                                        <span class="code-var">const</span> planeElement = document.<span class="code-tag">getElementsByClassName</span>(<span class="code-string">"plane"</span>)[<span class="code-number">0</span>]<span class="code-var">;</span>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // set our initial parameters (basic uniforms)
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> params = {
+                                        </div>
+                                        <div class="code-indent">
+                                            <div>
+                                                <span class="code-property">vertexShaderID</span>: <span class="code-string">"plane-vs"</span><span class="code-var">,</span> <span class="code-comment">// our vertex shader ID</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">fragmentShaderID</span>: <span class="code-string">"plane-fs"</span><span class="code-var">,</span> <span class="code-comment">// our fragment shader ID</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">uniforms</span>: {
+                                            </div>
+                                            <div class="code-indent">
+                                                <div>
+                                                    <span class="code-property">time</span>: {
+                                                </div>
+                                                <div class="code-indent">
+                                                    <div>
+                                                        <span class="code-property">name</span>: <span class="code-string">"uTime"</span><span class="code-var">,</span> <span class="code-comment">// uniform name that will be passed to our shaders</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">type</span>: <span class="code-string">"1f"</span><span class="code-var">,</span> <span class="code-comment">// this means our uniform is a float</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">value</span>: <span class="code-number">0</span><span class="code-var">,</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    }<span class="code-var">,</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                }<span class="code-var">,</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            }<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // create our plane using our curtains object, the HTML element and the parameters
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> plane = <span class="code-var">new</span> <span class="code-tag">Plane</span>(curtains<span class="code-var">,</span> planeElement<span class="code-var">,</span> params)<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        plane.<span class="code-tag">onRender</span>(() => {
+                                        <div class="code-indent">
+                                            <div class="code-comment">
+                                                // use the onRender method of our plane fired at each requestAnimationFrame call
+                                            </div>
+                                            plane.<span class="code-property">uniforms</span>.<span class="code-property">time</span>.<span class="code-property">value</span>++<span class="code-var">;</span> <span class="code-comment">// update our time uniform value</span>
+                                        </div>
+                                        })<span class="code-var">;</span>
+                                    </div>
+
+                                    <div>
+
+                                        <div class="code-comment">
+                                            // listen to the scroll event
+                                        </div>
+                                        <div class="code-comment">
+                                            // could be your virtual scroll library custom scroll event
+                                        </div>
+                                        window.<span class="code-tag">addEventListener</span>(<span class="code-string">"scroll"</span>, () => {
+                                        <div class="code-indent">
+                                            <div class="code-block">
+                                                <div class="code-comment">
+                                                    // get our scroll values
+                                                </div>
+                                                <span class="code-var">var</span> scrollValues = {
+                                                <div class="code-indent">
+                                                    <div>
+                                                        <span class="code-property">x</span>: window.<span class="code-property">pageXOffset</span><span class="code-var">,</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">y</span>: window.<span class="code-property">pageYOffset</span><span class="code-var">,</span>
+                                                    </div>
+                                                </div>
+
+                                                }<span class="code-var">;</span>
+                                            </div>
+
+                                            <div class="code-comment">
+                                                // pass those values to the lib
+                                            </div>
+                                            <div>
+                                                curtains.<span class="code-tag">updateScrollValues</span>(scrollValues.<span class="code-property">x</span>, scrollValues.<span class="code-property">y</span>)<span class="code-var">;</span>
+                                            </div>
+                                        </div>
+                                        })<span class="code-var">;</span>
+                                    </div>
+
+                                </div>
+                                })<span class="code-var">;</span>
+                            </div>
+
+                            <p>
+                                Note that this is how the library handles the scroll internally by default.<br />
+                                This is the most performant way to keep your whole scene in sync with the scroll as it requires only one layout repaint call.
+                            </p>
+
+                        </div>
+
+						<div id="videos-textures" class="text-section inner-section">
+							<h2>Using videos as textures</h2>
+							<p>
+								Yes, videos as textures are supported ! However there are a few downsides you need to know.<br />
+								<strong>First, you might encounter some trouble trying to autoplay videos without a user gesture on most mobile devices</strong>. Unless you don't care about mobile users, you will have to start the videos playback after a user interaction like a click event.<br />
+								Also, please note that videos tend to use a lot of memory and <strong>could have a significant impact on performance</strong>, so try to keep them small.<br />
+								Besides that, videos are really easy to use (and can be mixed with images as well). Let's see how we can handle them :
+							</p>
+							<h3>HTML</h3>
+                            <div class="code">
+                                <div class="code-block">
+
+                                    <div class="code-comment">
+                                        &lt;!-- div used to create our plane --&gt;
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;div</span> class=<span class="code-string">"plane"</span><span class="code-tag">&gt;</span>
+                                    </div>
+
+                                </div>
+
+                                <div class="code-block code-indent">
+
+                                    <div class="code-comment">
+                                        &lt;!-- video that will be used as texture by our plane --&gt;
+                                    </div>
+
+                                    <div>
+                                        <span class="code-tag">&lt;video </span> src=<span class="code-string">"path/to/my-video.mp4"</span><span class="code-tag">&gt;&lt;/video&gt;</span>
+                                    </div>
+
+                                </div>
+
+                                <div class="code-tag">
+                                    &lt;/div&gt;
+                                </div>
+                            </div>
+
+							<p>
+								Like with images, you can use a data-sampler attribute to set a uniform sampler name. You can use one or more videos, or mixed them with images if you want :
+							</p>
+
+                            <div class="code">
+                                <div class="code-block">
+
+                                    <div class="code-comment">
+                                        &lt;!-- div used to create our plane --&gt;
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;div</span> class=<span class="code-string">"plane"</span><span class="code-tag">&gt;</span>
+                                    </div>
+
+                                </div>
+
+                                <div class="code-block code-indent">
+
+                                    <div class="code-comment">
+                                        &lt;!-- elements that will be used as textures by our plane --&gt;
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/displacement.jpg"</span> data-sampler=<span class="code-string">"uDisplacement"</span> <span class="code-tag">/&gt;</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;video </span> src=<span class="code-string">"path/to/my-video-1.mp4"</span> data-sampler=<span class="code-string">"uFirstVideo"</span><span class="code-tag">&gt;&lt;/video&gt;</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;video </span> src=<span class="code-string">"path/to/my-video-2.mp4"</span> data-sampler=<span class="code-string">"uSecondVideo"</span><span class="code-tag">&gt;&lt;/video&gt;</span>
+                                    </div>
+
+                                </div>
+
+                                <div class="code-tag">
+                                    &lt;/div&gt;
+                                </div>
+                            </div>
+
+							<h3>Javascript</h3>
+							<p>
+								There's only one change inside our javascript : we need to tell our plane when to start playing the videos. We've got a <a href="plane-class.html#play-videos">playVideos</a> method that we will put inside an event listener in our <a href="plane-class.html#on-ready">onReady</a> method :
+							</p>
+
+                            <div class="code">
+                                <div class="code-block">
+                                    <span class="code-var">import</span> {Curtains<span class="code-var">,</span> Plane} <span class="code-var">from</span> <span class="code-string">"curtainsjs"</span><span class="code-var">;</span>
+                                </div>
+                                <div class="code-comment">
+                                    // wait for everything to be ready
+                                </div>
+                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"load"</span>, () => {
+                                <div class="code-block code-indent">
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // set up our WebGL context and append the canvas to our wrapper
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // get our plane element
+                                        </div>
+                                        <span class="code-var">const</span> planeElement = document.<span class="code-tag">getElementsByClassName</span>(<span class="code-string">"plane"</span>)[<span class="code-number">0</span>]<span class="code-var">;</span>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // set our initial parameters (basic uniforms)
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> params = {
+                                        </div>
+                                        <div class="code-indent">
+                                            <div>
+                                                <span class="code-property">vertexShaderID</span>: <span class="code-string">"plane-vs"</span><span class="code-var">,</span> <span class="code-comment">// our vertex shader ID</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">fragmentShaderID</span>: <span class="code-string">"plane-fs"</span><span class="code-var">,</span> <span class="code-comment">// our fragment shader ID</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">uniforms</span>: {
+                                            </div>
+                                            <div class="code-indent">
+                                                <div>
+                                                    <span class="code-property">time</span>: {
+                                                </div>
+                                                <div class="code-indent">
+                                                    <div>
+                                                        <span class="code-property">name</span>: <span class="code-string">"uTime"</span><span class="code-var">,</span> <span class="code-comment">// uniform name that will be passed to our shaders</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">type</span>: <span class="code-string">"1f"</span><span class="code-var">,</span> <span class="code-comment">// this means our uniform is a float</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">value</span>: <span class="code-number">0</span><span class="code-var">,</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    }<span class="code-var">,</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                }<span class="code-var">,</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            }<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // create our plane using our curtains object, the HTML element and the parameters
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> plane = <span class="code-var">new</span> <span class="code-tag">Plane</span>(curtains<span class="code-var">,</span> planeElement<span class="code-var">,</span> params)<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+
+                                        <div class="code-block">
+                                            plane.<span class="code-tag">onReady</span>(() => {
+                                        </div>
+                                        <div class="code-block code-indent">
+                                            <div class="code-comment">
+                                                // set an event listener to start our playback
+                                            </div>
+                                            document.<span class="code-tag">getElementbyId</span>(<span class="code-string">"start-playing"</span>).<span class="code-tag">addEventListener</span>(<span class="code-string">"click"</span>, () => {
+                                            <div class="code-indent">
+                                                plane.<span class="code-tag">playVideos</span>()<span class="code-var">;</span>
+                                            </div>
+                                            })<span class="code-var">;</span>
+                                        </div>
+                                        <div class="code-block">
+                                            }).<span class="code-tag">onRender</span>(() => {
+                                        </div>
+                                        <div class="code-indent">
+                                            <div class="code-comment">
+                                                // use the onRender method of our plane fired at each requestAnimationFrame call
+                                            </div>
+                                            plane.<span class="code-property">uniforms</span>.<span class="code-property">time</span>.<span class="code-property">value</span>++<span class="code-var">;</span> <span class="code-comment">// update our time uniform value</span>
+                                        </div>
+                                        })<span class="code-var">;</span>
+
+                                    </div>
+                                </div>
+                                })<span class="code-var">;</span>
+                            </div>
+
+							<p>
+								And that's it. Check the video examples (and source codes) if you want to see what's possible.
+							</p>
+						</div>
+
+						<div id="canvases-textures" class="text-section inner-section">
+							<h2>Using canvas as texture</h2>
+							<p>
+								Last but not least, you can use a canvas as a texture. It is once again really easy to use. You just have to insert a canvas tag inside your HTML, or eventually create it in your javascript and load it using the <a href="plane-class.html#load-canvas">loadCanvas</a> method.
+							</p>
+							<h3>HTML</h3>
+
+                            <div class="code">
+                                <div class="code-block">
+
+                                    <div class="code-comment">
+                                        &lt;!-- div used to create our plane --&gt;
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;div</span> class=<span class="code-string">"plane"</span><span class="code-tag">&gt;</span>
+                                    </div>
+
+                                </div>
+
+                                <div class="code-block code-indent">
+
+                                    <div class="code-comment">
+                                        &lt;!-- canvas that will be used as textures by our plane --&gt;
+                                    </div>
+                                    <div>
+                                        <span class="code-tag">&lt;canvas </span> id=<span class="code-string">"canvas-texture"</span> data-sampler=<span class="code-string">"uCanvas"</span><span class="code-tag">&gt;&lt;/canvas&gt;</span>
+                                    </div>
+
+                                </div>
+
+                                <div class="code-tag">
+                                    &lt;/div&gt;
+                                </div>
+                            </div>
+
+							<p>
+								You can use multiple canvases and data-sampler attributes as well, like you'd do with images or videos.
+							</p>
+							<h3>Javascript</h3>
+							<p>
+								The javascript code remains almost the same. We just set the size of our canvas, get its context and draw a simple rotating red rectangle inside our animation loop.
+							</p>
+
+                            <div class="code">
+                                <div class="code-block">
+                                    <span class="code-var">import</span> {Curtains<span class="code-var">,</span> Plane} <span class="code-var">from</span> <span class="code-string">"curtainsjs"</span><span class="code-var">;</span>
+                                </div>
+                                <div class="code-comment">
+                                    // wait for everything to be ready
+                                </div>
+                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"load"</span>, () => {
+                                <div class="code-block code-indent">
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // set up our WebGL context and append the canvas to our wrapper
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // get our plane element
+                                        </div>
+                                        <span class="code-var">const</span> planeElement = document.<span class="code-tag">getElementsByClassName</span>(<span class="code-string">"plane"</span>)[<span class="code-number">0</span>]<span class="code-var">;</span>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // set our initial parameters (basic uniforms)
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> params = {
+                                        </div>
+                                        <div class="code-indent">
+                                            <div>
+                                                <span class="code-property">vertexShaderID</span>: <span class="code-string">"plane-vs"</span><span class="code-var">,</span> <span class="code-comment">// our vertex shader ID</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">fragmentShaderID</span>: <span class="code-string">"plane-fs"</span><span class="code-var">,</span> <span class="code-comment">// our fragment shader ID</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">uniforms</span>: {
+                                            </div>
+                                            <div class="code-indent">
+                                                <div>
+                                                    <span class="code-property">time</span>: {
+                                                </div>
+                                                <div class="code-indent">
+                                                    <div>
+                                                        <span class="code-property">name</span>: <span class="code-string">"uTime"</span><span class="code-var">,</span> <span class="code-comment">// uniform name that will be passed to our shaders</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">type</span>: <span class="code-string">"1f"</span><span class="code-var">,</span> <span class="code-comment">// this means our uniform is a float</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">value</span>: <span class="code-number">0</span><span class="code-var">,</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    }<span class="code-var">,</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                }<span class="code-var">,</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            }<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // create our plane using our curtains object, the HTML element and the parameters
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> plane = <span class="code-var">new</span> <span class="code-tag">Plane</span>(curtains<span class="code-var">,</span> planeElement<span class="code-var">,</span> params)<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // our texture canvas
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> textureCanvas = document.<span class="code-tag">getElementById</span>(<span class="code-string">"canvas-texture"</span>)<span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> textureCanvasContext = textureCanvas.<span class="code-tag">getContext</span>(<span class="code-string">"2d"</span>)<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // get our plane dimensions without triggering reflow
+                                        </div>
+                                        <span class="code-var">const</span> planeBoundingRect = plane.<span class="code-tag">getBoundingRect</span>()<span class="code-var">;</span>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // set the size of our canvas
+                                        </div>
+                                        <div>
+                                            textureCanvas.<span class="code-property">width</span> = planeBoundingRect.<span class="code-property">width</span><span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            textureCanvas.<span class="code-property">height</span> = planeBoundingRect.<span class="code-property">height</span><span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // use the onRender method of our plane fired at each requestAnimationFrame call
+                                        </div>
+                                        plane.<span class="code-tag">onRender</span>(() => {
+                                        <div class="code-indent">
+                                            <div class="code-block">
+                                                plane.<span class="code-property">uniforms</span>.<span class="code-property">time</span>.<span class="code-property">value</span>++<span class="code-var">;</span> <span class="code-comment">// update our time uniform value</span>
+                                            </div>
+
+                                            <div class="code-block">
+                                                <div class="code-comment">
+                                                    // here we will handle our canvas texture animation
+                                                </div>
+                                                <div class="code-comment">
+                                                    // clear scene
+                                                </div>
+                                                <div>
+                                                    textureCanvasContext.<span class="code-tag">clearRect</span>(<span class="code-number">0</span><span class="code-var">,</span> <span class="code-number">0</span><span class="code-var">,</span> textureCanvas.<span class="code-property">width</span><span class="code-var">,</span> textureCanvas.<span class="code-property">height</span>)<span class="code-var">;</span>
+
+                                                </div>
+                                            </div>
+
+                                            <div class="code-block">
+                                                <div class="code-comment">
+                                                    // continuously rotate the canvas
+                                                </div>
+                                                <div>
+                                                    textureCanvasContext.<span class="code-tag">translate</span>(textureCanvas.<span class="code-property">width</span> / <span class="code-number">2</span><span class="code-var">,</span> textureCanvas.<span class="code-property">height</span> / <span class="code-number">2</span>)<span class="code-var">;</span>
+                                                </div>
+                                                <div>
+                                                    textureCanvasContext.<span class="code-tag">rotate</span>(Math.PI / <span class="code-number">360</span>)<span class="code-var">;</span>
+                                                </div>
+                                                <div>
+                                                    textureCanvasContext.<span class="code-tag">translate</span>(-textureCanvas.<span class="code-property">width</span> / <span class="code-number">2</span><span class="code-var">,</span> -textureCanvas.<span class="code-property">height</span> / <span class="code-number">2</span>)<span class="code-var">;</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="code-block">
+                                                <div class="code-comment">
+                                                    // draw a red rectangle
+                                                </div>
+                                                <div>
+                                                    textureCanvasContext.fillStyle = <span class="code-string">"#ff0000"</span><span class="code-var">;</span>
+                                                </div>
+                                                <div>
+                                                    textureCanvasContext.<span class="code-tag">fillRect</span>(textureCanvas.<span class="code-property">width</span> / <span class="code-number">2</span> - textureCanvas.<span class="code-property">width</span> / <span class="code-number">8</span><span class="code-var">,</span> textureCanvas.<span class="code-property">height</span> / <span class="code-number">2</span> - textureCanvas.<span class="code-property">height</span> / <span class="code-number">8</span><span class="code-var">,</span> textureCanvas.<span class="code-property">width</span> / <span class="code-number">4</span><span class="code-var">,</span> textureCanvas.<span class="code-property">height</span> / <span class="code-number">4</span>)<span class="code-var">;</span>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                        })<span class="code-var">;</span>
+                                    </div>
+                                </div>
+                                })<span class="code-var">;</span>
+                            </div>
+						</div>
+
+                        <div id="adding-post-processing" class="text-section inner-section">
+                            <h2>Adding post-processing</h2>
+                            <p>
+                                You can add post-processing to your scene by using a <a href="shader-pass-class.html">ShaderPass</a> object. It uses FBO (short for Frame Buffer Objects) under the hood and allows some really cool effects.
+                            </p>
+
+                            <div class="code">
+                                <div class="code-block">
+                                    <span class="code-var">import</span> {Curtains<span class="code-var">,</span> Plane<span class="code-var">,</span> ShaderPass} <span class="code-var">from</span> <span class="code-string">"curtainsjs"</span><span class="code-var">;</span>
+                                </div>
+                                <div class="code-comment">
+                                    // wait for everything to be ready
+                                </div>
+                                window.<span class="code-tag">addEventListener</span>(<span class="code-string">"load"</span>, () => {
+                                <div class="code-indent">
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // "canvas" is the ID of our HTML container element
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // get our plane element
+                                        </div>
+                                        <span class="code-var">const</span> planeElement = document.<span class="code-tag">getElementsByClassName</span>(<span class="code-string">"plane"</span>)[<span class="code-number">0</span>]<span class="code-var">;</span>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // set our initial parameters (basic uniforms)
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> params = {
+                                        </div>
+                                        <div class="code-indent">
+                                            <div>
+                                                <span class="code-property">vertexShaderID</span>: <span class="code-string">"plane-vs"</span><span class="code-var">,</span> <span class="code-comment">// our plane vertex shader ID</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">fragmentShaderID</span>: <span class="code-string">"plane-fs"</span><span class="code-var">,</span> <span class="code-comment">// our plane fragment shader ID</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">uniforms</span>: {
+                                            </div>
+                                            <div class="code-indent">
+                                                <div>
+                                                    <span class="code-property">time</span>: {
+                                                </div>
+                                                <div class="code-indent">
+                                                    <div>
+                                                        <span class="code-property">name</span>: <span class="code-string">"uTime"</span><span class="code-var">,</span> <span class="code-comment">// uniform name that will be passed to our shaders</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">type</span>: <span class="code-string">"1f"</span><span class="code-var">,</span> <span class="code-comment">// this means our uniform is a float</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">value</span>: <span class="code-number">0</span><span class="code-var">,</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    }<span class="code-var">,</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                }<span class="code-var">,</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            }<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // create our plane using our curtains object, the HTML element and the parameters
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> plane = <span class="code-var">new</span> <span class="code-tag">Plane</span>(curtains<span class="code-var">,</span> planeElement<span class="code-var">,</span> params)<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        plane.<span class="code-tag">onRender</span>(() => {
+                                        <div class="code-indent">
+                                            <div class="code-comment">
+                                                // use the onRender method of our plane fired at each requestAnimationFrame call
+                                            </div>
+                                            plane.<span class="code-property">uniforms</span>.<span class="code-property">time</span>.<span class="code-property">value</span>++<span class="code-var">;</span> <span class="code-comment">// update our time uniform value</span>
+                                        </div>
+                                        })<span class="code-var">;</span>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // now that we've added a plane, add post processing
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // our shader pass parameters
+                                        </div>
+                                        <div>
+                                            <span class="code-var">const</span> passParams = {
+                                        </div>
+                                        <div class="code-indent">
+                                            <div>
+                                                <span class="code-property">vertexShaderID</span>: <span class="code-string">"my-shader-pass-vs"</span><span class="code-var">,</span> <span class="code-comment">// ID of your shader pass vertex shader script tag</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">fragmentShaderID</span>: <span class="code-string">"my-shader-pass-fs"</span><span class="code-var">,</span> <span class="code-comment">// ID of your shader pass fragment shader script tag</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">uniforms</span>: { <span class="code-comment">// uniforms are what will allow you to interact with your shader pass</span>
+                                            </div>
+                                            <div class="code-indent">
+                                                <div>
+                                                    <span class="code-property">time</span>: {
+                                                </div>
+                                                <div class="code-indent">
+                                                    <div>
+                                                        <span class="code-property">name</span>: <span class="code-string">"uTime"</span><span class="code-var">,</span> <span class="code-comment">// uniform name that will be passed to our shaders</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">type</span>: <span class="code-string">"1f"</span><span class="code-var">,</span> <span class="code-comment">// this means our uniform is a float</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="code-property">value</span>: <span class="code-number">0</span><span class="code-var">,</span> <span class="code-comment">// initial value of the uniform</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    }<span class="code-var">,</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                }<span class="code-var">,</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            }<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // add our shader pass using our curtains object and the parameters
+                                        </div>
+                                        <span class="code-var">const</span> shaderPass = <span class="code-var">new</span> <span class="code-tag">ShaderPass</span>(curtains<span class="code-var">,</span> passParams)<span class="code-var">;</span>
+                                    </div>
+
+                                    <div>
+                                        shaderPass.<span class="code-tag">onRender</span>(<span class="code-var">function</span>() {
+                                    </div>
+                                    <div class="code-indent">
+                                        shaderPass.<span class="code-property">uniforms</span>.<span class="code-property">time</span>.<span class="code-property">value</span>++<span class="code-var">;</span> <span class="code-comment">// update our time uniform value</span>
+                                    </div>
+                                    <div>
+                                        })<span class="code-var">;</span>
+                                    </div>
+                                </div>
+                                })<span class="code-var">;</span>
+                            </div>
+
+                            <p>
+                                Post-processing shaders are a bit different than plane shaders. They do not have any projection or model view matrix and they also silently create a render texture that will hold our scene (called <strong>uRenderTexture</strong> in our fragment shader).<br />
+                                Here are some very basic vertex and fragment shaders example, that will use the same effect as our <a href="#basic-setup">basic plane</a> example seen above.
+                            </p>
+
+                            <h3>Post processing vertex shader</h3>
+
+                            <div class="code">
+                                <div class="code-block">
+                                    precision mediump float<span class="code-var">;</span>
+                                </div>
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // those are the mandatory attributes that the lib sets
+                                    </div>
+                                    <div>
+                                        <span class="code-var">attribute</span> <span class="code-tag">vec3</span> aVertexPosition<span class="code-var">;</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">attribute</span> <span class="code-tag">vec2</span> aTextureCoord<span class="code-var">;</span>
+                                    </div>
+                                </div>
+
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // pass your vertex and texture coords to the fragment shader
+                                    </div>
+                                    <div>
+                                        <span class="code-var">varying</span> <span class="code-tag">vec3</span> vVertexPosition<span class="code-var">;</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">varying</span> <span class="code-tag">vec2</span> vTextureCoord<span class="code-var">;</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span class="code-var">void</span> main() {
+                                </div>
+
+                                <div class="code-indent">
+
+                                    <div class="code-block">
+                                        gl_Position = <span class="code-tag">vec4</span>(aVertexPosition<span class="code-var">,</span> <span class="code-number">1.0</span>)<span class="code-var">;</span>
+                                    </div>
+
+                                    <div class="code-comment">
+                                        // set the varyings
+                                    </div>
+                                    <div class="code-comment">
+                                        // use our aTextureCoord attributes as texture coords in our fragment shader
+                                    </div>
+                                    <div>
+                                        vTextureCoord = aTextureCoord<span class="code-var">;</span>
+                                    </div>
+                                    <div>
+                                        vVertexPosition = aVertexPosition<span class="code-var">;</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    }
+                                </div>
+                            </div>
+
+                            <h3>Post processing fragment shader</h3>
+
+                            <div class="code">
+                                <div class="code-block">
+                                    precision mediump float<span class="code-var">;</span>
+                                </div>
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // get our varyings
+                                    </div>
+                                    <div>
+                                        <span class="code-var">varying</span> <span class="code-tag">vec3</span> vVertexPosition<span class="code-var">;</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">varying</span> <span class="code-tag">vec2</span> vTextureCoord<span class="code-var">;</span>
+                                    </div>
+                                </div>
+
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // the uniform we declared inside our javascript
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">float</span> uTime<span class="code-var">;</span>
+                                    </div>
+                                </div>
+
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // our render texture (our WebGL scene)
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uRenderTexture<span class="code-var">;</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div>
+                                        <span class="code-var">void</span> main() {
+                                    </div>
+
+                                    <div class="code-indent">
+                                        <div class="code-block">
+                                            <div class="code-comment">
+                                                // get our texture coords from our varying
+                                            </div>
+                                            <span class="code-tag">vec2</span> textureCoord = vTextureCoord<span class="code-var">;</span>
+                                        </div>
+
+                                        <div class="code-block">
+                                            <div class="code-comment">
+                                                // displace our pixels along the X axis based on our time uniform
+                                            </div>
+                                            <div class="code-comment">
+                                                // textures coords are ranging from 0.0 to 1.0 on both axis
+                                            </div>
+
+                                            <div>
+                                                textureCoord.<span class="code-property">x</span> += <span class="code-tag">sin</span>(textureCoord.<span class="code-property">y</span> * <span class="code-number">25.0</span>) * <span class="code-tag">cos</span>(textureCoord.<span class="code-property">x</span> * <span class="code-number">25.0</span>) * (<span class="code-tag">cos</span>(uTime / <span class="code-number">50.0</span>)) / <span class="code-number">25.0</span><span class="code-var">;</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="code-comment">
+                                            // map our texture with the texture matrix coords
+                                        </div>
+                                        <div>
+                                            gl_FragColor = <span class="code-tag">texture2D</span>(uRenderTexture<span class="code-var">,</span> textureCoord)<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p>
+                                You can also load images, videos or canvases into your shader pass, as you'd do with a regular plane.
+                            </p>
+                            <p>Finally, if you want to apply your shader pass to just a set of planes instead of your whole scene, you'll have to pass a RenderTarget element as a parameter. See <a href="render-target-class.html#assigning-render-target-to-shader-pass">Assigning a RenderTarget to a ShaderPass</a>.</p>
+
+                        </div>
+
+						<div id="performance-tips" class="text-section inner-section">
+							<h2>Performance tips</h2>
+							<ul>
+                                <li>
+                                    Try to use only one global request animation frame loop and one scroll event listener in your application. You could either hook to the library <a href="curtains-class.html#on-render">onRender()</a> and <a href="curtains-class.html#on-scroll">onScroll()</a> events or handle this by yourself by not instancing them in the first place thanks to the init params.
+                                </li>
+                                <li>
+                                    If you have a significant number of planes that are using the same shaders, try to set their init paramater <a href="plane-classe.html#share-program">shareProgram</a> property to true as it can speed up their creation a lot.
+                                </li>
+                                <li>
+                                    Disable and reenable the scene drawing each time you can. This can save a lot of performance and battery usage when your WebGL scene is idling.
+                                </li>
+                                <li>
+                                    You can try to use a rendering scale lower than 1 to improve performance (see the Curtains class <a href="curtains-class.html#curtains-init-parameters">init parameters</a>). This will however decrease the rendering quality.
+                                </li>
+								<li>
+									Plane's canvases textures are updated at each frame (videos are updated each time a new frame is available), which has a significant impact on performance. When those textures are not visible (if they are hidden by another texture, or if you have finished drawing on your canvas...), you should set those <a href="texture-class.html#should-update">textures shouldUpdate property</a> to false, and switch it back to true before displaying them again.
+								</li>
+								<li>
+									Large images have a bigger impact on performance. Try to scale your images so they will fit your plane maximum size. It goes the same for videos of course: try to keep them as light as possible.
+								</li>
+                                <li>
+                                    Render targets (and therefore shader passes) disable the WebGL context default antialiasing. If you use them, you should set the <a href="curtains-class.html#curtains-init-parameters">antialias Curtains property</a> to false when initiating your context.<br />
+                                    You might then want to add an extra antialiasing pass, like a <a href="fxaa-pass-class.html">FXAAPass</a>. See the <a href="examples/post-processing-transform-origin/index.html" title="Post processing scrolling wheel with custom transform origin" target="_blank">Post processing scrolling wheel with custom transform origin</a> for an example of how to add one.
+                                </li>
+                                <li>
+                                    Shader passes could be expensive, use them with caution.
+                                </li>
+								<li>
+							        Try to use as less javascript as possible in the onRender() methods as this get executed at each draw call.
+							    </li>
+							</ul>
+						</div>
+						<div id="useful-examples" class="text-section inner-section">
+							<h2>Useful examples</h2>
+							<p>
+								Those examples might seem a little rough: they don't use any tweening or animation engine to keep the code centered around the library usage itself. You should definitely consider using easings in your own animations.<br />
+                                Do not hesitate to check their source code as they are all fully commented:
+							</p>
+                            <h3>Images</h3>
+                            <p>
+                                <a href="examples/vertex-coords-helper/index.html" title="Vertex coordinates helper" target="_blank">Vertex coordinates helper</a><br />
+                                <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a><br />
+                                <a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a><br />
+                                <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a><br />
+                                <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a><br />
+                                <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a><br />
+                                <a href="examples/asynchronous-textures/index.html" title="Asynchronous textures loading" target="_blank">Asynchronous textures loading</a><br />
+                                <a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a><br />
+                            </p>
+                            <h3>Videos</h3>
+                            <p>
+                                <a href="examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a><br />
+                                <a href="examples/multiple-video-textures/index.html" title="Multiple video textures" target="_blank">Multiple video textures with a displacement shader</a><br />
+                            </p>
+                            <h3>Canvas</h3>
+                            <p>
+                                <a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a><br />
+                                <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a>
+                            </p>
+                            <h3>Post processing</h3>
+                            <p>
+                                <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a><br />
+                                <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a><br />
+                                <a href="examples/post-processing-transform-origin/index.html" title="Post processing scrolling wheel with custom transform origin" target="_blank">Post processing scrolling wheel with custom transform origin</a>
+                            </p>
+                            <h3>Advanced render targets usage</h3>
+                            <p>
+                                <a href="examples/ping-pong-shading-flowmap/index.html" title="Ping pong shading flowmap example" target="_blank">Ping pong shading / FBOs swapping flowmap example</a><br />
+                                <a href="examples/render-passes-using-render-targets/index.html" title="Selective shader passes using render targets" target="_blank">Selective shader passes using render targets</a>
+                            </p>
+                            <h3>Custom scroll</h3>
+                            <p>
+                                <a href="examples/multiple-planes-scroll-effect-custom-scroll/index.html" title="Multiple planes scroll effect with Locomotive scroll" target="_blank">Multiple planes scroll effect with Locomotive scroll</a>
+                            </p>
+						</div>
+
+					</div>
+				</section>
+			</div>
+		</div>
+
+
+		<script id="basic-plane-vs" type="x-shader/x-vertex">
+			precision mediump float;
+
+			// those are the mandatory attributes that the lib sets
+			attribute vec3 aVertexPosition;
+			attribute vec2 aTextureCoord;
+
+			// those are mandatory uniforms that the lib sets and that contain our model view and projection matrix
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+
+			// our texture matrix that will handle image cover
+			uniform mat4 uTextureMatrix0;
+
+			// if you want to pass your vertex and texture coords to the fragment shader
+			varying vec3 vVertexPosition;
+			varying vec2 vTextureCoord;
+
+			void main() {
+				vec3 vertexPosition = aVertexPosition;
+
+				gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+
+				// set the varyings
+				// here we use our texture matrix to calculate te accurate texture coords
+				vTextureCoord = (uTextureMatrix0 * vec4(aTextureCoord, 0.0, 1.0)).xy;
+				vVertexPosition = vertexPosition;
+			}
+        </script>
+		<script id="basic-plane-fs" type="x-shader/x-fragment">
+			precision mediump float;
+
+			// get our varyings
+			varying vec3 vVertexPosition;
+			varying vec2 vTextureCoord;
+
+			// the uniform we declared inside our javascript
+			uniform float uTime;
+
+			// our texture sampler (default name, to use a different name please refer to the documentation)
+			uniform sampler2D uSampler0;
+
+			void main() {
+				vec2 textureCoord = vec2(vTextureCoord.x, vTextureCoord.y);
+
+				// displace our pixels along the X axis based on our time uniform
+				// textures coords are ranging from 0.0 to 1.0 on both axis
+				textureCoord.x += sin(textureCoord.y * 25.0) * cos(textureCoord.x * 25.0) * (cos(uTime / 50.0)) / 25.0;
+
+				gl_FragColor = texture2D(uSampler0, textureCoord);
+			}
+        </script>
+
+		<script src="js/main.navigation.js" type="module"></script>
+
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
+		<script>
+		  	window.dataLayer = window.dataLayer || [];
+		  	function gtag(){dataLayer.push(arguments);}
+		  	gtag('js', new Date());
+
+		  	gtag('config', 'UA-141413267-1');
+		</script>
+
+	</body>
+</html>

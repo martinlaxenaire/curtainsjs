@@ -1,30 +1,33 @@
-window.addEventListener("load", function() {
+import {Curtains, Plane} from '../../../src/index.mjs';
+
+window.addEventListener("load", () => {
     // here we will handle which texture is visible and the timer to transition between images
-    var activeTexture = 1;
-    var transitionTimer = 0;
+    let activeTexture = 0;
+    let transitionTimer = 0;
 
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains({
+    const curtains = new Curtains({
         container: "canvas",
-        watchScroll: false // no need to listen for the scroll in this example
+        watchScroll: false, // no need to listen for the scroll in this example
+        pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
     });
 
     // handling errors
-    webGLCurtain.onError(function() {
+    curtains.onError(() => {
         // we will add a class to the document body
         document.body.classList.add("no-curtains", "curtains-ready");
 
         // display an error message
         document.getElementById("enter-site").innerHTML = "There has been an error while initiating the WebGL context.";
-    }).onContextLost(function() {
+    }).onContextLost(() => {
         // on context lost, try to restore the context
-        webGLCurtain.restoreContext();
+        curtains.restoreContext();
     });
 
     // get our plane element
-    var planeElements = document.getElementsByClassName("multi-textures");
+    const planeElements = document.getElementsByClassName("multi-textures");
 
-    var vs = `
+    const vs = `
         precision mediump float;
 
         // default mandatory variables
@@ -61,7 +64,7 @@ window.addEventListener("load", function() {
         }
     `;
 
-    var fs = `
+    const fs = `
         precision mediump float;
 
         varying vec3 vVertexPosition;
@@ -85,14 +88,14 @@ window.addEventListener("load", function() {
 
             float displacementFactor = (cos(uTransitionTimer / (60.0 / 3.141592)) + 1.0) / 2.0;
             float effectFactor = 1.0;
-
-            vec2 firstDisplacementCoords = vec2(vFirstTextureCoord.x + displacementFactor * (displacementTexture.r * effectFactor), vFirstTextureCoord.y);
-            vec2 secondDisplacementCoords = vec2(vSecondTextureCoord.x - (1.0 - displacementFactor) * (displacementTexture.r * effectFactor), vSecondTextureCoord.y);
+            
+            vec2 firstDisplacementCoords = vec2(vFirstTextureCoord.x - (1.0 - displacementFactor) * (displacementTexture.r * effectFactor), vFirstTextureCoord.y);
+            vec2 secondDisplacementCoords = vec2(vSecondTextureCoord.x + displacementFactor * (displacementTexture.r * effectFactor), vSecondTextureCoord.y);
 
             vec4 firstDistortedColor = texture2D(firstTexture, firstDisplacementCoords);
             vec4 secondDistortedColor = texture2D(secondTexture, secondDisplacementCoords);
 
-            vec4 finalColor = mix(firstDistortedColor, secondDistortedColor, displacementFactor);
+            vec4 finalColor = mix(secondDistortedColor, firstDistortedColor, displacementFactor);
 
             // handling premultiplied alpha
             finalColor = vec4(finalColor.rgb * finalColor.a, finalColor.a);
@@ -102,7 +105,7 @@ window.addEventListener("load", function() {
     `;
 
     // some basic parameters
-    var params = {
+    const params = {
         vertexShader: vs,
         fragmentShader: fs,
         uniforms: {
@@ -111,58 +114,47 @@ window.addEventListener("load", function() {
                 type: "1f",
                 value: 0,
             },
-        },
+        }
     };
 
-    var multiTexturesPlane = webGLCurtain.addPlane(planeElements[0], params);
+    const multiTexturesPlane = new Plane(curtains, planeElements[0], params);
 
     // create our plane
-    multiTexturesPlane && multiTexturesPlane.onReady(function() {
+    multiTexturesPlane.onReady(() => {
         // display the button
         document.body.classList.add("curtains-ready");
 
         // when our plane is ready we add a click event listener that will switch the active texture value
-        planeElements[0].addEventListener("click", function() {
-            if(activeTexture === 1) {
-                activeTexture = 2;
-                // play next video
-                multiTexturesPlane.videos[0].play();
-            }
-            else {
-                activeTexture = 1;
-                // play next video
-                multiTexturesPlane.videos[1].play();
-            }
-        });
-
-        // on resize, update the resolution uniform
-        window.addEventListener("resize", function() {
-            multiTexturesPlane.uniforms.resolution.value = [pixelRatio * planeElements[0].clientWidth, pixelRatio * planeElements[0].clientHeight];
+        planeElements[0].addEventListener("click", () => {
+            // change the activeTexture value and start playing the video that will be visible
+            activeTexture = activeTexture === 0 ? 1 : 0;
+            multiTexturesPlane.videos[activeTexture].play();
         });
 
         // click to play the videos
-        document.getElementById("enter-site").addEventListener("click", function() {
+        document.getElementById("enter-site").addEventListener("click", () => {
             // display canvas and hide the button
             document.body.classList.add("video-started");
 
             // play all videos to force uploading the first frame of each texture
             multiTexturesPlane.playVideos();
-            // now pause the first video (the one that is hidden)
-            setTimeout(function() {
-                multiTexturesPlane.videos[0].pause();
-            }, 100);
+
+            // wait a tick and pause the second video (the one that is hidden)
+            curtains.nextRender(() => {
+                multiTexturesPlane.videos[1].pause();
+            });
         }, false);
 
-    }).onRender(function() {
+    }).onRender(() => {
         // increase or decrease our timer based on the active texture value
-        if(activeTexture === 2) {
+        if(activeTexture === 1) {
             // lerp values to smoothen animation
             transitionTimer = (1 - 0.05) * transitionTimer + 0.05 * 60;
 
             // transition is over, pause previous video
             if(transitionTimer >= 59 && transitionTimer !== 60) {
                 transitionTimer = 60;
-                multiTexturesPlane.videos[1].pause();
+                multiTexturesPlane.videos[0].pause();
             }
         }
         else {
@@ -172,7 +164,7 @@ window.addEventListener("load", function() {
             // transition is over, pause previous video
             if(transitionTimer <= 1 && transitionTimer !== 0) {
                 transitionTimer = 0;
-                multiTexturesPlane.videos[0].pause();
+                multiTexturesPlane.videos[1].pause();
             }
         }
         // update our transition timer uniform

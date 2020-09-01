@@ -42,6 +42,10 @@
 	<body>
         <div id="page-wrap">
 
+            <div id="loader">
+                <div id="loader-inner"></div>
+            </div>
+
 			<div id="canvas"></div>
 
 			<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
@@ -69,7 +73,7 @@
 					<div>
 						<h2>Removing and adding planes at each AJAX call</h2>
 						<p>
-							Sometimes, you may want to use curtains.js with an ajax navigation. Thanks to the removePlane() method there's an easy way to achieve it.<br/>
+							Sometimes, you may want to use curtains.js with an ajax navigation. Thanks to the remove() method there's an easy way to achieve it.<br/>
 							The idea is to delete the planes just before each AJAX call and to add new planes just after we'd get the AJAX response.
 						</p>
 						<p>
@@ -80,10 +84,10 @@
 								Get the link href and send an AJAX call
 							</li>
 							<li>
-								Once we got the response, remove all the existing planes via the removePlane() method, set a timeout (useful to animate page transitions) and append the new content
+								Once we got the response, remove all the existing planes via the <strong>remove()</strong> method, set a timeout (useful to animate page transitions) and append the new content
 							</li>
 							<li>
-								After the content has been appended, add the new planes via the addPlane() method if needed
+                                After the content has been appended, add the new planes using the <strong>new Plane()</strong> constructor if needed
 							</li>
 						</ol>
 						<h3>Pros</h3>
@@ -108,9 +112,7 @@
 			</div>
 		</div>
 
-		<script src="../../build/curtains.js" type="text/javascript"></script>
-        <script src="js/ajax.nav.setup.js" type="text/javascript"></script>
-
+        <script src="js/ajax.nav.setup.js" type="module"></script>
 
 		<!-- Global site tag (gtag.js) - Google Analytics -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>

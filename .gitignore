@@ -1,10 +1,5 @@
-/old
-/bloglist.txt
 /sitemap.xml
 /.htaccess
-context-lost
-/backups
-/npm
 /node_modules
-/promo
+/build
 /.idea

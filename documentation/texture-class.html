@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
+    <!-- Metas -->
+    <title>curtains.js | Documentation | Texture class</title>
+    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <link rel="canonical" href="https://www.curtainsjs.com/texture-class.html">
+
+    <!-- Facebook OG -->
+    <meta property="og:title" content="curtains.js | Documentation | Texture class">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <meta property="og:url" content="https://www.curtainsjs.com/texture-class.html">
+    <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@webdesign_ml">
+    <meta name="twitter:creator" content="@webdesign_ml">
+    <meta name="twitter:title" content="curtains.js | Documentation | Texture class">
+    <meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="images/favicons/site.webmanifest">
+    <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#202340">
+    <link rel="shortcut icon" href="images/favicons/favicon.ico">
+    <meta name="msapplication-TileColor" content="#202340">
+    <meta name="msapplication-config" content="images/favicons/browserconfig.xml">
+    <meta name="theme-color" content="#202340">
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+<div id="page-wrap">
+
+    <div id="canvas"></div>
+
+    <div id="content">
+
+        <header id="header">
+            <div class="wrapper">
+                <div id="header-wrapper" class="flex-wrapper">
+                    <div id="header-title">
+                        <a href="/" title="Home">curtains.js</a>
+                    </div>
+                    <nav id="main-menu">
+                        <ul class="flex-wrapper">
+                            <li>
+                                <a href="get-started.html">Get started</a>
+                            </li>
+                            <li>
+                                <a href="documentation.html" class="active">Docs</a>
+                            </li>
+                            <li>
+                                <a href="download.html">Download</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <section class="content-section api-section">
+
+            <nav id="api-menu-nav">
+                <ul id="api-menu">
+                    <li class="active">
+                        <div class="api-top-menu-item">Core</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="curtains-class.html">Curtains</a>
+                            </li>
+                            <li>
+                                <a href="plane-class.html">Plane</a>
+                            </li>
+                            <li class="active">
+                                <a href="texture-class.html">Texture</a>
+
+                                <div class="api-submenu-content">
+                                    <div class="api-submenu-title">
+                                        <a href="texture-class.html#basic-usage">Basic usage</a>
+                                    </div>
+                                    <div class="api-submenu-title">
+                                        <a href="texture-class.html#parameters">Parameters</a>
+                                    </div>
+                                    <div class="api-submenu-title">
+                                        <a href="texture-class.html#properties">Properties</a>
+                                    </div>
+                                    <ul class="api-submenu">
+                                        <li>
+                                            <a href="texture-class.html#gl">gl</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#index">index</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#texture-parameters">parameters</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#renderer">renderer</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#scale">scale</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#should-update">shouldUpdate</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#source">source</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#source-type">sourceType</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#type">type</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#user-data">userData</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#uuid">uuid</a>
+                                        </li>
+                                    </ul>
+                                    <div class="api-submenu-title">
+                                        <a href="texture-class.html#methods">Methods</a>
+                                    </div>
+                                    <ul class="api-submenu">
+                                        <li>
+                                            <a href="texture-class.html#add-parent">addParent</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#copy">copy</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#has-parent">hasParent</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#need-update">needUpdate</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#resize">resize</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#set-anisotropy">setAnisotropy</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#set-mag-filter">setMagFilter</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#set-min-filter">setMinFilter</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#set-scale">setScale</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#set-wrap-s">setWrapS</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#set-wrap-t">setWrapT</a>
+                                        </li>
+                                    </ul>
+                                    <div class="api-submenu-title">
+                                        <a href="texture-class.html#events">Events</a>
+                                    </div>
+                                    <ul class="api-submenu">
+                                        <li>
+                                            <a href="texture-class.html#on-source-loaded">onSourceLoaded</a>
+                                        </li>
+                                        <li>
+                                            <a href="texture-class.html#on-source-uploaded">onSourceUploaded</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Frame Buffer Objects</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="render-target-class.html">RenderTarget</a>
+                            </li>
+                            <li>
+                                <a href="shader-pass-class.html">ShaderPass</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Loaders</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="texture-loader-class.html">TextureLoader</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Math</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="vec-2-class.html">Vec2</a>
+                            </li>
+                            <li>
+                                <a href="vec-3-class.html">Vec3</a>
+                            </li>
+                            <li>
+                                <a href="mat-4-class.html">Mat4</a>
+                            </li>
+                            <li>
+                                <a href="quat-class.html">Quat</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Extras</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="ping-pong-plane-class.html">PingPongPlane</a>
+                            </li>
+                            <li>
+                                <a href="fxaa-pass-class.html">FXAAPass</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+
+            <div id="api-content">
+
+                <div class="api-content-inner">
+                    <div class="inner-section">
+                        <h1>Texture class</h1>
+
+                        <div class="api-item-examples">
+                            <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/src/core/Texture.js" title="Texture class source code" target="_blank">Source code</a>
+                        </div>
+
+                        <h2 id="basic-usage">Basic usage</h2>
+                        <h3>Creation</h3>
+                        <p>
+                            There are <strong>several ways</strong> to create textures.<br />
+                            The easiest one is by simply calling its constructor:
+                        </p>
+
+                        <div class="code">
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // "canvas" is the ID of our HTML container element
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-comment">
+                                // create a new texture using our curtains object
+                            </div>
+                            <div class="code-comment">
+                                // use "uTexture" as sampler name
+                            </div>
+                            <div class="code-block">
+                                <span class="code-var">const</span> texture = <span class="code-var">new</span> <span class="code-tag">Texture</span>(curtains<span class="code-var">,</span> {
+                                <div class="code-indent">
+                                    <span class="code-property">sampler</span>: <span class="code-string">"uTexture"</span>
+                                </div>})<span class="code-var">;</span>
+                            </div>
+
+                            <div class="code-comment">
+                                // ...you could add it to a plane or a shader pass later with the addParent() method
+                            </div>
+
+                        </div>
+
+                        <p>
+                            You can also create textures by creating a <a href="texture-loader-class.html">TextureLoader</a> first and then load HTML medias elements with it:
+                        </p>
+
+                        <div class="code">
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // "canvas" is the ID of our HTML container element
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // create a new texture loader
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> loader = <span class="code-var">new</span> <span class="code-tag">TextureLoader</span>(curtains)<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-comment">
+                                // load an image with the loader
+                            </div>
+
+                            <div class="code-block">
+                                <div>
+                                    <span class="code-var">const</span> image = <span class="code-var">new</span> <span class="code-tag">Image</span>()<span class="code-var">;</span>
+                                </div>
+                                <div>
+                                    image.<span class="code-property">crossOrigin</span> = <span class="code-string">"anonymous"</span><span class="code-var">;</span>
+                                </div>
+                                <div>
+                                    image.<span class="code-property">src</span> = <span class="code-string">"path/to/my-image.jpg"</span><span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="code-var">let</span> newTexture<span class="code-var">;</span>
+                            </div>
+                            <div>
+                                loader.<span class="code-tag">loadImage</span>(image<span class="code-var">,</span> {
+                                <div class="code-indent">
+                                    <div class="code-comment">
+                                        // texture options (we're only setting its sampler name here)
+                                    </div>
+                                    <span class="code-property">sampler</span>: <span class="code-string">"uTexture"</span>
+                                </div>
+                                }<span class="code-var">,</span> (texture) => {
+                            </div>
+
+                            <div class="code-indent">
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // texture has been successfully created
+                                    </div>
+                                    newTexture = texture<span class="code-var">;</span>
+                                </div>
+
+                                <div class="code-comment">
+                                    // ...you could add it to a plane or a shader pass with the addParent() method
+                                </div>
+                            </div>
+                            <div>
+                                }, (image, error) => {
+                            </div>
+                            <div class="code-indent">
+                                <div class="code-comment">
+                                    // there has been an error while loading the image
+                                </div>
+                            </div>
+                            <div>
+                                })<span class="code-var">;</span>
+                            </div>
+
+                        </div>
+
+                        <p>
+                        Another way to create a texture is by using the <a href="plane-class.html#create-texture">createTexture</a> method of your <a href="plane-class.html">Plane</a> or <a href="shader-pass-class.html#textures">ShaderPass</a> class object:
+
+                        <div class="code">
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // "canvas" is the ID of our HTML container element
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-block">
+                                <span class="code-var">const</span> planeElement = document.<span class="code-tag">getElementById</span>(<span class="code-string">"my-plane"</span>)<span class="code-var">;</span>
+                            </div>
+
+                            <div class="code-block">
+                                <span class="code-var">const</span> plane = <span class="code-var">new</span> <span class="code-tag">Plane</span>(curtains<span class="code-var">,</span> planeElement)<span class="code-var">;</span>
+                            </div>
+
+                            <div>
+                                <div class="code-comment">
+                                    // create a new texture using our plane createTexture method
+                                </div>
+                                <div class="code-comment">
+                                    // use "uTexture" as sampler name
+                                </div>
+                                <span class="code-var">const</span> myTexture = plane.<span class="code-tag">createTexture</span>({
+                                <div class="code-indent">
+                                    <span class="code-property">sampler</span>: <span class="code-string">"uTexture"</span>
+                                </div>})<span class="code-var">;</span>
+                            </div>
+
+                        </div>
+
+                        <p>
+                            Textures are also automatically created each time one of the plane <a href="plane-class.html#load-canvas">loading methods</a> is called.<br />
+                            Eventually, if your plane <a href="plane-class.html#autoload-sources">autoloadSources</a> initial parameter is set to true (which is by default), they will be created on initialization for each image, canvas or video children of your plane.
+                        </p>
+
+                        <h4>Texture options</h4>
+                        <p>
+                            Upon creation, you can pass a few options like magnification and minification filters, anisotropy, wrapping or premultiplyAlpha, etc.<br />
+                            See the complete <a href="texture-class.html#parameters">parameters list</a> to have a look at all the options available.
+                        </p>
+
+                        <div class="code">
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // "canvas" is the ID of our HTML container element
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-comment">
+                                // create a new texture using our curtains object
+                            </div>
+                            <div class="code-comment">
+                                // use "uTexture" as sampler name and set a few options as well
+                            </div>
+                            <div class="code-block">
+                                <span class="code-var">const</span> texture = <span class="code-var">new</span> <span class="code-tag">Texture</span>(curtains<span class="code-var">,</span> {
+                                <div class="code-indent">
+                                    <div class="code-comment">
+                                        // set premultiplyAlpha to true, minFilter, anisotropy and use half-floating point texture
+                                    </div>
+                                    <div>
+                                        <span class="code-property">sampler</span>: <span class="code-string">"uTexture"</span><span class="code-var">,</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">premultiplyAlpha</span>: <span class="code-var">true</span><span class="code-var">,</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">minFilter</span>: curtains.<span class="code-property">gl</span>.LINEAR_MIPMAP_NEAREST<span class="code-var">,</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">anisotropy</span>: <span class="code-number">16</span><span class="code-var">,</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">floatingPoint</span>: <span class="code-string">"half-float"</span>
+                                    </div>
+                                </div>})<span class="code-var">;</span>
+                            </div>
+
+                            <div class="code-comment">
+                                // ...you could add it to a plane or a shader pass later with the addParent() method
+                            </div>
+
+                        </div>
+
+                        <h4>Built-in uniform names</h4>
+
+                        <p>
+                            By default the textures sampler and matrix uniform names sent to your shaders will be set upon their media element order inside your plane element, following this rule:
+                        </p>
+                        <p>
+                            <strong>`uSampler{index}`</strong> for texture samplers<br />
+                            <strong>`uTextureMatrix{index}`</strong> for texture matrices
+                        </p>
+
+                        <h5>HTML</h5>
+
+                        <div class="code">
+                            <div class="code-block">
+
+                                <div class="code-comment">
+                                    &lt;!-- div used to create our plane --&gt;
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;div</span> id=<span class="code-string">"my-plane"</span><span class="code-tag">&gt;</span>
+                                </div>
+
+                            </div>
+
+                            <div class="code-indent">
+
+                                <div class="code-comment">
+                                    &lt;!-- images that will be used as textures by our plane --&gt;
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-1.jpg"</span> <span class="code-tag">/&gt;</span>
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-2.jpg"</span> <span class="code-tag">/&gt;</span>
+                                </div>
+
+                            </div>
+
+                            <div class="code-tag">
+                                &lt;/div&gt;
+                            </div>
+                        </div>
+
+                        <h5>Javascript</h5>
+
+                        <div class="code">
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // "canvas" is the ID of our HTML container element
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-block">
+                                <span class="code-var">const</span> planeElement = document.<span class="code-tag">getElementById</span>(<span class="code-string">"my-plane"</span>)<span class="code-var">;</span>
+                            </div>
+
+                            <div>
+                                <span class="code-var">const</span> plane = <span class="code-var">new</span> <span class="code-tag">Plane</span>(curtains<span class="code-var">,</span> planeElement)<span class="code-var">;</span>
+                            </div>
+
+                        </div>
+
+                        <h5>Shaders</h5>
+
+                        <div class="code">
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // use this in your vertex shader
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uTextureMatrix0<span class="code-var">;</span> <span class="code-comment">// texture matrix of my-image-1.jpg</span>
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uTextureMatrix1<span class="code-var">;</span> <span class="code-comment">// texture matrix of my-image-2.jpg</span>
+                                </div>
+                            </div>
+                            <div class="code-block">
+                                ...
+                            </div>
+                            <div>
+                                <div class="code-comment">
+                                    // use this in your fragment shader
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uSampler0<span class="code-var">;</span> <span class="code-comment">// bound to my-image-1.jpg</span>
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uSampler1<span class="code-var">;</span> <span class="code-comment">// bound to my-image-2.jpg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4>Using custom uniform names</h4>
+
+                        <p>
+                            You can define custom uniform names by specifying a <strong>data-sampler attribute</strong> of your media HTML element. The uniform names will then follow these rules:
+                        </p>
+                        <p>
+                            <strong>`{data-sampler}`</strong> for texture samplers<br />
+                            <strong>`{data-sampler}Matrix`</strong> for texture matrices
+                        </p>
+
+                        <h5>HTML</h5>
+
+                        <div class="code">
+                            <div class="code-block">
+
+                                <div class="code-comment">
+                                    &lt;!-- div used to create our plane --&gt;
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;div</span> id=<span class="code-string">"my-plane"</span><span class="code-tag">&gt;</span>
+                                </div>
+
+                            </div>
+
+                            <div class="code-indent">
+
+                                <div class="code-comment">
+                                    &lt;!-- images that will be used as textures by our plane --&gt;
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-1.jpg"</span> data-sampler=<span class="code-string">"firstTexture"</span> <span class="code-tag">/&gt;</span>
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;img</span> src=<span class="code-string">"path/to/my-image-2.jpg"</span> data-sampler=<span class="code-string">"secondTex"</span> <span class="code-tag">/&gt;</span>
+                                </div>
+
+                            </div>
+
+                            <div class="code-tag">
+                                &lt;/div&gt;
+                            </div>
+                        </div>
+
+                        <h5>Shaders</h5>
+
+                        <div class="code">
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // use this in your vertex shader
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">mat4</span> firstTextureMatrix<span class="code-var">;</span> <span class="code-comment">// texture matrix of my-image-1.jpg</span>
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">mat4</span> secondTexMatrix<span class="code-var">;</span> <span class="code-comment">// texture matrix of my-image-2.jpg</span>
+                                </div>
+                            </div>
+                            <div class="code-block">
+                                ...
+                            </div>
+                            <div>
+                                <div class="code-comment">
+                                    // use this in your fragment shader
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> firstTexture<span class="code-var">;</span> <span class="code-comment">// bound to my-image-1.jpg</span>
+                                </div>
+                                <div>
+                                    <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> secondTex<span class="code-var">;</span> <span class="code-comment">// bound to my-image-2.jpg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p>
+                            A newly created texture will just display black pixels until you've <a href="texture-class.html#set-source">set it a source</a> from one of the images, canvases or videos already loaded in your plane.
+                        </p>
+                        <h3 id="texture-matrix">Using texture matrices</h3>
+                        <p>
+                            Shaders use texture coordinates (or UVs) to map a texture to the plane.<br />
+                            By default the library sets an arbitrary aTextureCoord attributes that you could use in your shaders:
+                        </p>
+
+                        <div class="code">
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    &lt;!-- vertex shader --&gt;
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;script</span> id=<span class="code-string">"plane-vs"</span> type=<span class="code-string">"x-shader/x-vertex"</span><span class="code-tag">&gt;</span>
+                                </div>
+
+                                <div class="code-indent">
+                                    <div class="code-block">
+                                        precision mediump float<span class="code-var">;</span>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // those are the mandatory attributes that the lib sets
+                                        </div>
+                                        <div>
+                                            <span class="code-var">attribute</span> <span class="code-tag">vec3</span> aVertexPosition<span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            <span class="code-var">attribute</span> <span class="code-tag">vec2</span> aTextureCoord<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // those are mandatory uniforms that the lib sets and that contain our model view and projection matrix
+                                        </div>
+                                        <div>
+                                            <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uMVMatrix<span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uPMatrix<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // pass your vertex and texture coords to the fragment shader
+                                        </div>
+                                        <div>
+                                            <span class="code-var">varying</span> <span class="code-tag">vec3</span> vVertexPosition<span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            <span class="code-var">varying</span> <span class="code-tag">vec2</span> vTextureCoord<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <span class="code-var">void</span> main() {
+                                    </div>
+
+                                    <div class="code-indent">
+
+                                        <div class="code-block">
+                                            gl_Position = uPMatrix * uMVMatrix * <span class="code-tag">vec4</span>(aVertexPosition<span class="code-var">,</span> <span class="code-number">1.0</span>)<span class="code-var">;</span>
+                                        </div>
+
+                                        <div class="code-comment">
+                                            // set the varyings
+                                        </div>
+                                        <div class="code-comment">
+                                            // use our aTextureCoord attributes as texture coords in our fragment shader
+                                        </div>
+                                        <div>
+                                            vTextureCoord = aTextureCoord<span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            vVertexPosition = aVertexPosition<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span class="code-tag">&lt;/script&gt;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-comment">
+                                &lt;!-- fragment shader --&gt;
+                            </div>
+                            <div>
+                                <span class="code-tag">&lt;script</span> id=<span class="code-string">"plane-fs"</span> type=<span class="code-string">"x-shader/x-fragment"</span><span class="code-tag">&gt;</span>
+                            </div>
+
+                            <div class="code-indent">
+                                <div class="code-block">
+                                    precision mediump float<span class="code-var">;</span>
+                                </div>
+
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // get our varyings
+                                    </div>
+                                    <div>
+                                        <span class="code-var">varying</span> <span class="code-tag">vec3</span> vVertexPosition<span class="code-var">;</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">varying</span> <span class="code-tag">vec2</span> vTextureCoord<span class="code-var">;</span>
+                                    </div>
+                                </div>
+
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // our texture sampler (default sampler name)
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uSampler0<span class="code-var">;</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div>
+                                        <span class="code-var">void</span> main() {
+                                    </div>
+
+                                    <div class="code-indent">
+
+                                        <div class="code-comment">
+                                            // map our texture with the original texture coords
+                                        </div>
+                                        <div>
+                                            gl_FragColor = <span class="code-tag">texture2D</span>(uSampler0<span class="code-var">,</span> vTextureCoord)<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="code-tag">&lt;/script&gt;</span>
+                            </div>
+
+                        </div>
+
+
+                        <p>
+                            You may use it to map your texture to your plane, but if the plane and the media aspect ratio are different, <strong>you'll end up with a distorted texture</strong>.
+                        </p>
+                        <p>
+                            Fortunately, there's a built-in solution to display your textures without them being distorted: texture matrices. Each time you set a source to a texture (or each time a plane is resized), its texture matrix is automatically computed and sent to your shader as a uniform. With the same example as above, here's how to use it:
+                        </p>
+
+                        <div class="code">
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    &lt;!-- vertex shader --&gt;
+                                </div>
+                                <div>
+                                    <span class="code-tag">&lt;script</span> id=<span class="code-string">"plane-vs"</span> type=<span class="code-string">"x-shader/x-vertex"</span><span class="code-tag">&gt;</span>
+                                </div>
+
+                                <div class="code-indent">
+                                    <div class="code-block">
+                                        precision mediump float<span class="code-var">;</span>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // those are the mandatory attributes that the lib sets
+                                        </div>
+                                        <div>
+                                            <span class="code-var">attribute</span> <span class="code-tag">vec3</span> aVertexPosition<span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            <span class="code-var">attribute</span> <span class="code-tag">vec2</span> aTextureCoord<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // those are mandatory uniforms that the lib sets and that contain our model view and projection matrix
+                                        </div>
+                                        <div>
+                                            <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uMVMatrix<span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uPMatrix<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // our texture matrix that will handle image cover
+                                        </div>
+                                        <div>
+                                            <span class="code-var">uniform</span> <span class="code-tag">mat4</span> uTextureMatrix0<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="code-block">
+                                        <div class="code-comment">
+                                            // pass your vertex and texture coords to the fragment shader
+                                        </div>
+                                        <div>
+                                            <span class="code-var">varying</span> <span class="code-tag">vec3</span> vVertexPosition<span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            <span class="code-var">varying</span> <span class="code-tag">vec2</span> vTextureCoord<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <span class="code-var">void</span> main() {
+                                    </div>
+
+                                    <div class="code-indent">
+
+                                        <div class="code-block">
+                                            gl_Position = uPMatrix * uMVMatrix * <span class="code-tag">vec4</span>(aVertexPosition<span class="code-var">,</span> <span class="code-number">1.0</span>)<span class="code-var">;</span>
+                                        </div>
+
+                                        <div class="code-comment">
+                                            // set the varyings
+                                        </div>
+                                        <div class="code-comment">
+                                            // here we use our texture matrix to calculate the accurate texture coords
+                                        </div>
+                                        <div>
+                                            vTextureCoord = (uTextureMatrix0 * <span class="code-tag">vec4</span>(aTextureCoord<span class="code-var">,</span> <span class="code-number">0.0</span><span class="code-var">,</span> <span class="code-number">1.0</span>)).<span class="code-property">xy</span><span class="code-var">;</span>
+                                        </div>
+                                        <div>
+                                            vVertexPosition = aVertexPosition<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span class="code-tag">&lt;/script&gt;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-comment">
+                                &lt;!-- fragment shader --&gt;
+                            </div>
+                            <div>
+                                <span class="code-tag">&lt;script</span> id=<span class="code-string">"plane-fs"</span> type=<span class="code-string">"x-shader/x-fragment"</span><span class="code-tag">&gt;</span>
+                            </div>
+
+                            <div class="code-indent">
+                                <div class="code-block">
+                                    precision mediump float<span class="code-var">;</span>
+                                </div>
+
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // get our varyings
+                                    </div>
+                                    <div>
+                                        <span class="code-var">varying</span> <span class="code-tag">vec3</span> vVertexPosition<span class="code-var">;</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-var">varying</span> <span class="code-tag">vec2</span> vTextureCoord<span class="code-var">;</span>
+                                    </div>
+                                </div>
+
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // our texture sampler (default sampler name)
+                                    </div>
+                                    <div>
+                                        <span class="code-var">uniform</span> <span class="code-tag">sampler2D</span> uSampler0<span class="code-var">;</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div>
+                                        <span class="code-var">void</span> main() {
+                                    </div>
+
+                                    <div class="code-indent">
+
+                                        <div class="code-comment">
+                                            // map our texture with the texture matrix coords
+                                        </div>
+                                        <div>
+                                            gl_FragColor = <span class="code-tag">texture2D</span>(uSampler0<span class="code-var">,</span> vTextureCoord)<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="code-tag">&lt;/script&gt;</span>
+                            </div>
+
+                        </div>
+
+                        <p>
+                            The texture matrix uniform name will follow the same rule as the sampler uniform name:<br />
+                            If you did not specify any name, it will be named "uTextureMatrix" + your texture index.<br />
+                            If you did specify a sampler name, it will be named samplerName + "Matrix".
+                        </p>
+
+                        <h2 id="parameters">Parameters</h2>
+
+                        <p>Here is the complete list of mandatory and optional parameters for the texture:</p>
+
+                        <ul class="api-item-parameters">
+                            <li>
+                                <span class="api-item-parameter-label">
+                                    curtains
+                                </span>
+                                <span class="api-item-parameter-type">
+                                    Curtains class object
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    Your Curtains class object.
+                                </span>
+                            </li>
+                            <li>
+                                <span class="api-item-parameter-label">
+                                    params
+                                </span>
+                                <span class="api-item-parameter-type">
+                                    object, optional
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    an object containing the texture parameters:
+                                </span>
+
+                                <ul id="add-plane-parameters" class="api-item-parameters-inner-list">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            sampler
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            string, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Sampler name to use in your sampler and texture matrix uniforms.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            fromTexture
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            Texture class object, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Copy the texture passed into this texture
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            premultiplyAlpha
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            bool, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            whether this texture should use premultiplied alpha or not. Default to false.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            floatingPoint
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            string, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            whether this texture should use floating points or not (if available, depending on the WebGL context and extensions). Accepted values are "none", "half-float" and "float". Default to "none".
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            anisotropy
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            integer, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            texture anisotropy value (see <a href="https://developer.mozilla.org/en-US/docs/Web/API/EXT_texture_filter_anisotropic" target="_blank">anisotropic filtering</a> explanation). Usually ranging from 1 to 16, depending on the WebGL context and extensions available. Default to 1.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            generateMipmap
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            bool, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Whether to generate mipmaps for that texture (see <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/generateMipmap" target="_blank">mip maps</a> explanation). Default to true for images textures. Note that videos and canvases textures will never generate mip maps as they are frequently uploaded.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            minFilter
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            GLenum, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            the texture minification filter. Use one of the <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter" target="_blank">GLenum possible values</a>, depending on the WebGL context and size of the source (some WebGL1 filters need a power of 2 sized source). Default to <strong>gl.LINEAR</strong>.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            magFilter
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            GLenum, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            the texture magnification filter. Use one of the <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter" target="_blank">GLenum possible values</a>, depending on the WebGL context and size of the source (some WebGL1 filters need a power of 2 sized source). Default to <strong>gl.LINEAR</strong>.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            wrapS
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            GLenum, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            the texture wrapping along the X axis. Use one of the <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter" target="_blank">GLenum possible values</a>, depending on the WebGL context and size of the source (some WebGL1 wrapping need a power of 2 sized source). Default to <strong>gl.CLAMP_TO_EDGE</strong>.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            wrapT
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            GLenum, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            the texture wrapping along the Y axis. Use one of the <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter" target="_blank">GLenum possible values</a>, depending on the WebGL context and size of the source (some WebGL1 wrapping need a power of 2 sized source). Default to <strong>gl.CLAMP_TO_EDGE</strong>.
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                        <h2 id="properties">Properties</h2>
+                        <ul>
+                            <li id="gl">
+                                <p>
+                                    <strong>gl</strong> (WebGL context) <span class="api-item-version">v7.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    Our WebGL context.
+                                </p>
+                            </li>
+                            <li id="index">
+                                <p>
+                                    <strong>index</strong> (integer): <span class="api-item-version">v2.0</span> <span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    The index of your texture in the <a href="plane-class.html#textures">Plane</a> or <a href="shader-pass-class.html#textures">ShaderPass</a> textures array.<br />
+                                    Since ShaderPass silently creates a texture on init, if you add a texture to it later, this texture will have an index of 1.
+                                </p>
+                            </li>
+                            <li id="texture-parameters">
+                                <p>
+                                    <strong>parameters</strong> (object): <span class="api-item-version">v7.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    Actual texture parameters values used: anisotropy, generateMipmap, minFilter, magFilter, wrapS and wrapT.
+                                </p>
+                            </li>
+                            <li id="renderer">
+                                <p>
+                                    <strong>renderer</strong> (Renderer class object): <span class="api-item-version">v7.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    The renderer created by our curtains object.
+                                </p>
+                            </li>
+                            <li id="scale">
+                                <p>
+                                    <strong>scale</strong> (object): <span class="api-item-version">v2.0</span>
+                                </p>
+                                <p>
+                                    An object containing the scale applied to your texture on x and y axis. Only applied if you are using the texture matrix to map your texture in your shaders.
+                                </p>
+                            </li>
+                            <li id="should-update">
+                                <p>
+                                    <strong>shouldUpdate</strong> (boolean): <span class="api-item-version">v2.0</span>
+                                </p>
+                                <p>
+                                    Depends on your texture <a href="texture-class.html#source-type">sourceType</a>.<br />
+                                    By default, a canvas texture will be updated at each requestAnimationFrame call, a video texture will be updated when the next frame is available, and an image texture will never be updated.<br />
+                                    If you want to stop updating your canvas or video texture, set this flag to false for performance boost.
+                                </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a> example.
+                                </p>
+                            </li>
+                            <li id="source">
+                                <p>
+                                    <strong>source</strong> (HTML element): <span class="api-item-version">v2.0</span>
+                                </p>
+                                <p>
+                                    The source used by your texture. Could be either an image, canvas or video HTML element. Use it to safely access any property or method of that element, like play() or pause() for videos.
+                                </p>
+                            </li>
+                            <li id="source-type">
+                                <p>
+                                    <strong>sourceType</strong> (string): <span class="api-item-version">v7.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    The type or your texture. Could be either "empty", "image", "canvas", "video" or "fboTexture".<br />
+                                    A "fboTexture" is a <a href="render-target-class.html">RenderTarget</a> texture onto which your plane or scene is drawn.
+                                </p>
+                            </li>
+                            <li id="type">
+                                <p>
+                                    <strong>type</strong> (string): <span class="api-item-version">v7.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    Class object type: "Texture".
+                                </p>
+                            </li>
+                            <li id="user-data">
+                                <p>
+                                    <strong>userData</strong> (object): <span class="api-item-version">v5.0</span>
+                                </p>
+                                <p>
+                                    An empty object to store any additional data or custom properties into your texture.
+                                </p>
+                            </li>
+                            <li id="uuid">
+                                <p>
+                                    <strong>uuid</strong> (string): <span class="api-item-version">v6.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    The texture's unique identifier.
+                                </p>
+                            </li>
+                        </ul>
+
+                        <h2 id="methods">Methods</h2>
+                        <ul>
+                            <li id="add-parent">
+                                <p>
+                                    <strong>addParent</strong>(parent): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Adds your texture to a <a href="plane-class.html">Plane</a> or a <a href="shader-pass-class.html">ShaderPass</a> so it can display it.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            parent
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            Plane class object or ShaderPass class object
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            The WebGL object that should use that texture.
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a> example.
+                                </p>
+                            </li>
+
+                            <li id="copy">
+                                <p>
+                                    <strong>copy</strong>(texture): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Copy an already existing Texture into this texture.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            texture
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            Texture class object
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            The texture to copy.
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/ping-pong-shading-flowmap/index.html" title="Ping pong shading flowmap" target="_blank">Ping pong shading flowmap</a> example.
+                                </p>
+                            </li>
+
+                            <li id="has-parent">
+                                <p>
+                                    <strong>hasParent</strong>(): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Whether this texture currently has a parent or not.
+                                </p>
+                                <p>
+                                    <strong>returns:</strong> true if this texture has a parent, false otherwise.
+                                </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a> example.
+                                </p>
+                            </li>
+
+                            <li id="need-update">
+                                <p>
+                                    <strong>needUpdate</strong>(): <span class="api-item-version">v4.1</span>
+                                </p>
+                                <p>
+                                    Force your texture to be updated during the next draw call, even if its <a href="texture-class.html#should-update">shouldUpdate</a> property is set to false. Use it if you want to force a canvas texture update just once for example.
+                                </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a> example.
+                                </p>
+                            </li>
+
+                            <li id="resize">
+                                <p>
+                                    <strong>resize</strong>(): <span class="api-item-version">v4.2</span>
+                                </p>
+                                <p>
+                                    Force the update of your texture matrix. Useful when you manually resize your source (usually a canvas).
+                                </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-canvas-text/index.html" title="Text planes using canvas" target="_blank">Text planes using canvas</a> example.
+                                </p>
+                            </li>
+
+                            <li id="set-anisotropy">
+                                <p>
+                                    <strong>setAnisotropy</strong>(anisotropy): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Set the texture's anisotropy value (see <a href="https://developer.mozilla.org/en-US/docs/Web/API/EXT_texture_filter_anisotropic" target="_blank">anisotropic filtering</a> explanation).
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            anistropy
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            integer
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            anisotropy value to apply (usually between 1 - low and 16 - high).
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a> example.
+                                </p>
+                            </li>
+
+                            <li id="set-mag-filter">
+                                <p>
+                                    <strong>setMagFilter</strong>(magFilter): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Set the texture's magnification filter.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            magFilter
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            GLenum
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            magnification filter to apply. Use one of the <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter" target="_blank">GLenum possible values</a>, depending on the WebGL context and size of the source (some WebGL1 filters need a power of 2 sized source).
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li id="set-min-filter">
+                                <p>
+                                    <strong>setMinFilter</strong>(minFilter): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Set the texture's minification filter.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            minFilter
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            GLenum
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            minification filter to apply. Use one of the <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter" target="_blank">GLenum possible values</a>, depending on the WebGL context and size of the source (some WebGL1 filters need a power of 2 sized source).
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a> example.
+                                </p>
+                            </li>
+
+                            <li id="set-scale">
+                                <p>
+                                    <strong>setScale</strong>(scale): <span class="api-item-version">v2.0</span><span class="api-item-warning">updated in v7.0</span>
+                                </p>
+                                <p>
+                                    Set the texture new scale. Only applied if you are using the texture matrix to map your texture in your shaders.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            scale
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            <a href="vec-2-class.html">Vec2</a> class object
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            the scale to set along the X and Y axes.
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
+                                </p>
+                            </li>
+
+                            <li id="set-source">
+                                <p>
+                                    <strong>setSource</strong>(sourceElement): <span class="api-item-version">v2.0</span>
+                                </p>
+                                <p>
+                                    Use this method to set a source to your texture. The source <strong>must be already loaded in your plane</strong>, otherwise use one of the load method of your <a href="plane-class.html#load-canvas">Plane</a> or <a href="shader-pass-class.html#load-canvas">ShaderPass</a> classes.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            sourceElement
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            either an image, canvas or video HTML element
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            a source to apply to your texture. It must be an element already loaded by your plane.
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/multiple-textures/index.html" title="Slideshow with a displacement shader" target="_blank">Slideshow with a displacement shader</a> example.
+                                </p>
+                            </li>
+
+                            <li id="set-wrap-s">
+                                <p>
+                                    <strong>setWrapS</strong>(wrapS): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Set the texture's wrapS value.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            wrapS
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            GLenum
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            texture wrapping to apply along the X axis. Use one of the <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter" target="_blank">GLenum possible values</a>, depending on the WebGL context and size of the source (some WebGL1 wrapping need a power of 2 sized source).
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li id="set-wrap-t">
+                                <p>
+                                    <strong>setWrapT</strong>(wrapT): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Set the texture's wrapT value.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            wrapT
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            GLenum
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            texture wrapping to apply along the Y axis. Use one of the <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter" target="_blank">GLenum possible values</a>, depending on the WebGL context and size of the source (some WebGL1 wrapping need a power of 2 sized source).
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+
+                        </ul>
+
+                        <h2 id="events">Events</h2>
+                        <ul>
+                            <li id="on-source-loaded">
+                                <p>
+                                    <strong>onSourceLoaded</strong>(): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    This function will be called the first time your texture source has been loaded.
+                                </p>
+                                <p>
+                                    <strong>returns:</strong> your Texture object, allowing it to be chainable.
+                                </p>
+                            </li>
+                            <li id="on-source-uploaded">
+                                <p>
+                                    <strong>onSourceUploaded</strong>(): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    This function will be called the first time your texture source has been uploaded to the GPU.
+                                </p>
+                                <p>
+                                    <strong>returns:</strong> your Texture object, allowing it to be chainable.
+                                </p>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a> example.
+                                </p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+    </div>
+</div>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-141413267-1');
+</script>
+
+</body>
+</html>

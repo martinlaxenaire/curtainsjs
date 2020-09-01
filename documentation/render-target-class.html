@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
+    <!-- Metas -->
+    <title>curtains.js | Documentation | RenderTarget class</title>
+    <meta name="description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <link rel="canonical" href="https://www.curtainsjs.com/render-target-class.html">
+
+    <!-- Facebook OG -->
+    <meta property="og:title" content="curtains.js | Documentation | RenderTarget class">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <meta property="og:url" content="https://www.curtainsjs.com/render-target-class.html">
+    <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@webdesign_ml">
+    <meta name="twitter:creator" content="@webdesign_ml">
+    <meta name="twitter:title" content="curtains.js | Documentation | RenderTarget class">
+    <meta name="twitter:description" content="curtains.js is a lightweight vanilla WebGL javascript library that turns HTML DOM elements into interactive textured planes.">
+    <meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="images/favicons/site.webmanifest">
+    <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#202340">
+    <link rel="shortcut icon" href="images/favicons/favicon.ico">
+    <meta name="msapplication-TileColor" content="#202340">
+    <meta name="msapplication-config" content="images/favicons/browserconfig.xml">
+    <meta name="theme-color" content="#202340">
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+<div id="page-wrap">
+
+    <div id="canvas"></div>
+
+    <div id="content">
+
+        <header id="header">
+            <div class="wrapper">
+                <div id="header-wrapper" class="flex-wrapper">
+                    <div id="header-title">
+                        <a href="/" title="Home">curtains.js</a>
+                    </div>
+                    <nav id="main-menu">
+                        <ul class="flex-wrapper">
+                            <li>
+                                <a href="get-started.html">Get started</a>
+                            </li>
+                            <li>
+                                <a href="documentation.html" class="active">Docs</a>
+                            </li>
+                            <li>
+                                <a href="download.html">Download</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <section class="content-section api-section">
+
+            <nav id="api-menu-nav">
+                <ul id="api-menu">
+                    <li>
+                        <div class="api-top-menu-item">Core</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="curtains-class.html">Curtains</a>
+                            </li>
+                            <li>
+                                <a href="plane-class.html">Plane</a>
+                            </li>
+                            <li>
+                                <a href="texture-class.html">Texture</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="active">
+                        <div class="api-top-menu-item">Frame Buffer Objects</div>
+                        <ul class="api-submenu-content">
+                            <li class="active">
+                                <a href="render-target-class.html">RenderTarget</a>
+
+                                <div class="api-submenu-content">
+                                    <div class="api-submenu-title">
+                                        <a href="render-target-class.html#basic-usage">Basic usage</a>
+                                    </div>
+                                    <div class="api-submenu-title">
+                                        <a href="render-target-class.html#parameters">Parameters</a>
+                                    </div>
+                                    <div class="api-submenu-title">
+                                        <a href="render-target-class.html#properties">Properties</a>
+                                    </div>
+                                    <ul class="api-submenu">
+                                        <li>
+                                            <a href="render-target-class.html#index">index</a>
+                                        </li>
+                                        <li>
+                                            <a href="render-target-class.html#gl">gl</a>
+                                        </li>
+                                        <li>
+                                            <a href="render-target-class.html#renderer">renderer</a>
+                                        </li>
+                                        <li>
+                                            <a href="render-target-class.html#textures">textures</a>
+                                        </li>
+                                        <li>
+                                            <a href="render-target-class.html#type">type</a>
+                                        </li>
+                                        <li>
+                                            <a href="render-target-class.html#user-data">userData</a>
+                                        </li>
+                                        <li>
+                                            <a href="render-target-class.html#uuid">uuid</a>
+                                        </li>
+                                    </ul>
+                                    <div class="api-submenu-title">
+                                        <a href="render-target-class.html#methods">Methods</a>
+                                    </div>
+                                    <ul class="api-submenu">
+                                        <li>
+                                            <a href="render-target-class.html#get-texture">getTexture</a>
+                                        </li>
+                                        <li>
+                                            <a href="render-target-class.html#remove">remove</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li>
+                                <a href="shader-pass-class.html">ShaderPass</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Loaders</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="texture-loader-class.html">TextureLoader</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Math</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="vec-2-class.html">Vec2</a>
+                            </li>
+                            <li>
+                                <a href="vec-3-class.html">Vec3</a>
+                            </li>
+                            <li>
+                                <a href="mat-4-class.html">Mat4</a>
+                            </li>
+                            <li>
+                                <a href="quat-class.html">Quat</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="api-top-menu-item">Extras</div>
+                        <ul class="api-submenu-content">
+                            <li>
+                                <a href="ping-pong-plane-class.html">PingPongPlane</a>
+                            </li>
+                            <li>
+                                <a href="fxaa-pass-class.html">FXAAPass</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+
+            <div id="api-content">
+
+                <div class="api-content-inner">
+                    <div class="inner-section">
+                        <h1>RenderTarget class</h1>
+
+                        <div class="api-item-examples">
+                            <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/src/framebuffers/RenderTarget.js" title="RenderTarget class source code" target="_blank">Source code</a>
+                        </div>
+
+                        <h2 id="basic-usage">Basic usage</h2>
+                        <p>
+                            The RenderTarget class is just a class that creates Frame Buffer Objects (FBO). You can render a plane to a render a target instead of your canvas and then use that render target either by assigning it to a ShaderPass or by grabbing its content (ie its <a href="texture-class.html">Texture</a>) and use it in another plane.
+                        </p>
+                        <p class="api-item-examples">
+                            Please note that render targets (and therefore shader passes) disable the WebGL context default antialiasing. If you use them, you should set the <a href="curtains-class.html#curtains-init-parameters">antialias Curtains property</a> to false when initiating your context.<br />
+                            You might then want to add an extra antialiasing pass, by using the built-in <a href="fxaa-pass-class.html">FXAAPass</a> class or your own FXAA or MSAA implementation.<br />
+                            See the <a href="examples/post-processing-transform-origin/index.html" title="Post processing scrolling wheel with custom transform origin" target="_blank">Post processing scrolling wheel with custom transform origin</a> for an example of how to add a FXAAPass.
+                        </p>
+                        <h3>Creation</h3>
+                        <p>
+                            To create a new render target, just use its constructor:
+                        </p>
+
+                        <div class="code">
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // "canvas" is the ID of our HTML container element
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-comment">
+                                // create a new render target using our curtains object
+                            </div>
+                            <div class="code-block">
+                                <span class="code-var">const</span> renderTarget = <span class="code-var">new</span> <span class="code-tag">RenderTarget</span>(curtains)<span class="code-var">;</span>
+                            </div>
+
+                            <div class="code-comment">
+                                // ...do whatever you want to do with your render target
+                            </div>
+
+                        </div>
+
+                        <p>
+                            To use it you'll have to apply it to a plane by using the <a href="plane-class.html#set-render-target">setRenderTarget</a> of our <a href="plane-class.html">Plane</a> class.
+                        </p>
+                        <h3>Using a RenderTarget texture in a plane</h3>
+
+                        <div class="code">
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // "canvas" is the ID of our HTML container element
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // create a new render target using our curtains object
+                                </div>
+                                <div class="code-block">
+                                    <span class="code-var">const</span> renderTarget = <span class="code-var">new</span> <span class="code-tag">RenderTarget</span>(curtains)<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-block">
+                                <span class="code-var">const</span> planeElement = document.<span class="code-tag">getElementById</span>(<span class="code-string">"my-plane"</span>)<span class="code-var">;</span>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // create a plane
+                                </div>
+                                <span class="code-var">const</span> plane = <span class="code-var">new</span> <span class="code-tag">Plane</span>(curtains<span class="code-var">,</span> planeElement<span class="code-var">,</span> {
+                                <div class="code-indent">
+                                    <div><span class="code-property">vertexShaderID</span>: <span class="code-string">"plane-vs"</span><span class="code-var">,</span></div>
+                                    <div><span class="code-property">fragmentShaderID</span>: <span class="code-string">"plane-fs"</span><span class="code-var">,</span></div>
+                                </div>
+                                })<span class="code-var">;</span>
+                            </div>
+
+                            <div>
+
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // add our plane to our frame buffer object
+                                    </div>
+                                    <div>
+                                        plane.<span class="code-tag">setRenderTarget</span>(renderTarget)<span class="code-var">;</span>
+                                    </div>
+                                </div>
+
+                                <div class="code-block">
+                                    <div class="code-comment">
+                                        // create a plane to display our render target result
+                                    </div>
+                                    <span class="code-var">const</span> renderElement = document.<span class="code-tag">getElementById</span>(<span class="code-string">"render-plane"</span>)<span class="code-var">;</span>
+                                </div>
+                                <div class="code-block">
+                                    <span class="code-var">const</span> renderPlane = <span class="code-var">new</span> <span class="code-tag">Plane</span>(curtains<span class="code-var">,renderElement<span class="code-var">,</span> {
+                                    <div class="code-indent">
+                                        <div><span class="code-property">vertexShaderID</span>: <span class="code-string">"render-plane-vs"</span><span class="code-var">,</span></div>
+                                        <div><span class="code-property">fragmentShaderID</span>: <span class="code-string">"render-plane-fs"</span><span class="code-var">,</span></div>
+                                    </div>
+                                    })<span class="code-var">;</span>
+                                </div>
+
+                                <div>
+                                    renderPlane.<span class="code-tag">onReady</span>(<span class="code-var">function</span>() {
+                                    <div class="code-indent">
+                                        <div class="code-comment">
+                                            // create a new texture and copy the render target texture into it
+                                        </div>
+                                        <div class="code-comment">
+                                            // you'll be able to use it as a regular texture in your plane shader
+                                        </div>
+                                        <span class="code-var">const</span> renderTexture = renderPlane.<span class="code-tag">createTexture</span>({
+                                        <div class="code-indent">
+                                            <div><span class="code-property">sampler</span>: <span class="code-string">"uRenderTexture"</span><span class="code-var">,</span></div>
+                                            <div><span class="code-property">fromTexture</span>: renderTarget.<span class="code-tag">getTexture</span>()<span class="code-var">,</span></div>
+                                        </div>
+                                        })<span class="code-var">;</span>
+                                    </div>
+                                    })<span class="code-var">;</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 id="assigning-render-target-to-shader-pass">Assigning a RenderTarget to a ShaderPass</h3>
+                        <p>
+                            You can decide to add a <a href="shader-pass-class.html">ShaderPass</a> to a defined set of plane instead of your whole scene. By combining a shader pass with a render target, you'll be able to add an additional pass to all the planes that use that render target.
+                        </p>
+
+                        <div class="code">
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // "canvas" is the ID of our HTML container element
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // create a new render target using our curtains object
+                                </div>
+                                <div class="code-block">
+                                    <span class="code-var">const</span> renderTarget = <span class="code-var">new</span> <span class="code-tag">RenderTarget</span>(curtains)<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div class="code-block">
+                                <span class="code-var">const</span> planeElements = document.<span class="code-tag">getElementsByClassName</span>(<span class="code-string">"my-planes"</span>)<span class="code-var">;</span>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // create a bunch of planes
+                                </div>
+                                <div class="code-block">
+                                    <div>
+                                        <span class="code-var">for</span>(<span class="code-var">let</span> i = <span class="code-number">0</span><span class="code-var">;</span> i < planeElements.<span class="code-property">length</span><span class="code-var">;</span> i++) {</span>
+                                    </div>
+
+                                    <div class="code-indent">
+                                        <div class="code-block">
+                                            <span class="code-var">const</span> plane = <span class="code-var">new</span> <span class="code-tag">Plane</span>(curtains<span class="code-var">,</span> planeElements[i]<span class="code-var">,</span> {
+                                            <div class="code-indent">
+                                                <div><span class="code-property">vertexShaderID</span>: <span class="code-string">"plane-vs"</span><span class="code-var">,</span></div>
+                                                <div><span class="code-property">fragmentShaderID</span>: <span class="code-string">"plane-fs"</span><span class="code-var">,</span></div>
+                                            </div>
+                                            })<span class="code-var">;</span>
+                                        </div>
+
+
+                                        <div class="code-comment">
+                                            // add our plane to our frame buffer object
+                                        </div>
+                                        <div>
+                                            plane.<span class="code-tag">setRenderTarget</span>(renderTarget)<span class="code-var">;</span>
+                                        </div>
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-comment">
+                                    // now assign our render target to a shader pass
+                                </div>
+                                <div>
+                                    <span class="code-var">const</span> shaderPassParams = {
+                                </div>
+                                <div class="code-indent">
+                                    <div>
+                                        <span class="code-property">vertexShaderID</span>: <span class="code-string">"my-shader-pass-vs"</span><span class="code-var">,</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">fragmentShaderID</span>: <span class="code-string">"my-shader-pass-fs"</span><span class="code-var">,</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">renderTarget</span>: renderTarget<span class="code-var">,</span> <span class="code-comment">// this is how we assign the render target to our shader pass</span>
+                                    </div>
+                                    <div>
+                                        <span class="code-property">uniforms</span>: {
+                                    </div>
+                                    <div class="code-indent">
+                                        <div>
+                                            <span class="code-property">time</span>: {
+                                        </div>
+                                        <div class="code-indent">
+                                            <div>
+                                                <span class="code-property">name</span>: <span class="code-string">"uTime"</span><span class="code-var">,</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">type</span>: <span class="code-string">"1f"</span><span class="code-var">,</span>
+                                            </div>
+                                            <div>
+                                                <span class="code-property">value</span>: <span class="code-number">0</span><span class="code-var">,</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            }<span class="code-var">,</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        }<span class="code-var">,</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    }<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="code-var">const</span> shaderPass = <span class="code-var">new</span> <span class="code-tag">ShaderPass</span>(curtains<span class="code-var">,</span> shaderPassParams)<span class="code-var">;</span>
+                            </div>
+
+                        </div>
+
+                        <p>
+                            Check the <a href="examples/render-passes-using-render-targets/index.html" title="Selective shader passes using render targets" target="_blank">Selective shader passes using render targets</a> example to see how you can apply different shader passes to different bunch of planes.
+                        </p>
+
+                        <h2 id="parameters">Parameters</h2>
+
+                        <p>Here is the complete list of mandatory and optional parameters for the render target:</p>
+
+                        <ul class="api-item-parameters">
+                            <li>
+                                <span class="api-item-parameter-label">
+                                    curtains
+                                </span>
+                                <span class="api-item-parameter-type">
+                                    Curtains class object
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    Your Curtains class object.
+                                </span>
+                            </li>
+                            <li>
+                                <span class="api-item-parameter-label">
+                                    params
+                                </span>
+                                <span class="api-item-parameter-type">
+                                    object, optional
+                                </span>
+                                <span class="api-item-parameter-desc">
+                                    an object containing the render target parameters:
+                                </span>
+
+                                <ul id="add-plane-parameters" class="api-item-parameters-inner-list">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            depth
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            bool, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Whether to create a depth buffer (handle depth inside your render target). Default to false.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            clear
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            bool, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Whether the content of the render target should be cleared before being drawn. Should be set to false to handle ping-pong shading. Default to true.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            minWidth
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Minimum width of the render target. Default to 1024.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            minHeight
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Minimum height of the render target. Default to 1024.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            texturesOptions
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            object, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            Default options to apply to the texture of the render target. See the Texture class <a href="texture-class.html#parameters">parameters</a>.
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                        <h2 id="properties">Properties</h2>
+                        <ul>
+                            <li id="index">
+                                <p>
+                                    <strong>index</strong>(integer): <span class="api-item-version">v5.0</span> <span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    The index of the render target in the <a href="curtains-class.html#render-targets">renderTargets</a> array</a>.<br />
+                                </p>
+                            </li>
+                            <li id="gl">
+                                <p>
+                                    <strong>gl</strong> (WebGL context) <span class="api-item-version">v7.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    Our WebGL context.
+                                </p>
+                            </li>
+                            <li id="renderer">
+                                <p>
+                                    <strong>renderer</strong> (Renderer class object): <span class="api-item-version">v7.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    The renderer created by our curtains object.
+                                </p>
+                            </li>
+                            <li id="textures">
+                                <p>
+                                    <strong>textures</strong>(array): <span class="api-item-version">v5.0</span>
+                                </p>
+                                <p>
+                                    An array of length 1 containing the only render target's <a href="texture-class.html">Texture</a>.
+                                </p>
+                            </li>
+                            <li id="type">
+                                <p>
+                                    <strong>type</strong> (string): <span class="api-item-version">v7.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    Class object type: "RenderTarget".
+                                </p>
+                            </li>
+                            <li id="user-data">
+                                <p>
+                                    <strong>userData</strong> (object): <span class="api-item-version">v5.0</span>
+                                </p>
+                                <p>
+                                    An empty object to store any additional data or custom properties into your render target.
+                                </p>
+                            </li>
+                            <li id="uuid">
+                                <p>
+                                    <strong>uuid</strong> (string): <span class="api-item-version">v6.0</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    The render target's unique identifier.
+                                </p>
+                            </li>
+                        </ul>
+
+                        <h2 id="methods">Methods</h2>
+                        <ul>
+                            <li id="get-texture">
+                                <p>
+                                    <strong>getTexture</strong>(): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    Returns the render target texture to be used later.
+                                </p>
+                                <p>
+                                    <strong>returns:</strong> the render target <a href="texture-class.html">texture</a>.
+                                </p>
+                            </li>
+                            <li id="remove">
+                                <p>
+                                    <strong>remove</strong>(): <span class="api-item-version">v7.0</span>
+                                </p>
+                                <p>
+                                    This function will remove the render target from our Curtains object and renderer and delete its texture. It will also update all other render targets indexes.
+                                </p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+    </div>
+</div>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-141413267-1');
+</script>
+
+</body>
+</html>

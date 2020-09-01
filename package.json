@@ -1,11 +1,38 @@
 {
   "name": "curtainsjs",
-  "version": "6.2.2",
-  "main": "build/curtains.js",
-  "author": "martinlaxenaire",
+  "version": "7.0.0",
+  "description": "<h2>What is it ?</h2>\r <p>\r     Shaders are the next front-end web developpment big thing, with the ability to create very powerful 3D interactions and animations. A lot of very good javascript libraries already handle WebGL but with most of them it's kind of a headache to position your meshes relative to the DOM elements of your web page.\r </p>\r <p>\r     curtains.js was created with just that issue in mind. It is a small vanilla WebGL javascript library that converts HTML elements containing images and videos into 3D WebGL textured planes, allowing you to animate them via shaders.<br />\r     You can define each plane size and position via CSS, which makes it super easy to add WebGL responsive planes all over your pages.\r </p>\r <p>\r <a href=\"https://www.curtainsjs.com/\" title=\"Documentation\" target=\"_blank\">Documentation</a> - <a href=\"https://github.com/martinlaxenaire/curtainsjs\" title=\"GitHub\" target=\"_blank\">GitHub</a> </p>\r ",
+  "main": "src/index.mjs",
+  "directories": {
+    "example": "examples",
+    "documentation": "documentation"
+  },
+  "keywords": [
+    "webgl"
+  ],
+  "author": {
+    "name": "Martin Laxenaire",
+    "email": "martin.laxenaire@gmail.com",
+    "url": "https://twitter.com/webdesign_ml"
+  },
   "homepage": "https://github.com/martinlaxenaire/curtainsjs",
   "bugs": {
     "url": "https://github.com/martinlaxenaire/curtainsjs/issues"
   },
-  "description": "<h2>What is it ?</h2>\r <p>\r     Shaders are the next front-end web developpment big thing, with the ability to create very powerful 3D interactions and animations. A lot of very good javascript libraries already handle WebGL but with most of them it's kind of a headache to position your meshes relative to the DOM elements of your web page.\r </p>\r <p>\r     curtains.js was created with just that issue in mind. It is a small vanilla WebGL javascript library that converts HTML elements containing images and videos into 3D WebGL textured planes, allowing you to animate them via shaders.<br />\r     You can define each plane size and position via CSS, which makes it super easy to add WebGL responsive planes all over your pages.\r </p>\r <p>\r <a href=\"https://www.martin-laxenaire.fr/libs/curtainsjs/index.html\" title=\"Examples\" target=\"_blank\">Examples</a> - <a href=\"https://github.com/martinlaxenaire/curtainsjs\" title=\"GitHub\" target=\"_blank\">GitHub</a> </p>\r "
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/martinlaxenaire/curtainsjs.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.10.5",
+    "@babel/preset-env": "^7.10.4",
+    "@rollup/plugin-babel": "^5.1.0",
+    "rollup": "^2.21.0",
+    "rollup-plugin-terser": "^6.1.0"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "prepublish": "npm run build"
+  }
 }

@@ -7,33 +7,6 @@
 		<!-- Metas -->
 		<title>curtains.js | Basic plane example</title>
 	    <meta name="description" content="A basic WebGL plane bound to a HTML DOM element with curtains.js">
-	    <link rel="canonical" href="https://www.curtainsjs.com/examples/basic-plane/index.html">
-
-	    <!-- Facebook OG -->
-	    <meta property="og:title" content="curtains.js | Basic plane example">
-	    <meta property="og:type" content="website">
-	    <meta property="og:description" content="A basic WebGL plane bound to a HTML DOM element with curtains.js">
-	    <meta property="og:url" content="https://www.curtainsjs.com/examples/basic-plane/index.html">
-	    <meta property="og:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
-
-	    <!-- Twitter card -->
-	    <meta name="twitter:card" content="summary_large_image">
-	    <meta name="twitter:site" content="@webdesign_ml">
-		<meta name="twitter:creator" content="@webdesign_ml">
-		<meta name="twitter:title" content="curtains.js | Basic plane example">
-		<meta name="twitter:description" content="A basic WebGL plane bound to a HTML DOM element with curtains.js">
-		<meta name="twitter:image" content="https://www.curtainsjs.com/images/curtains-js-logo.jpg">
-
-		<!-- Favicon -->
-		<link rel="apple-touch-icon" sizes="180x180" href="../../images/favicons/apple-touch-icon.png">
-		<link rel="icon" type="image/png" sizes="32x32" href="../../images/favicons/favicon-32x32.png">
-		<link rel="icon" type="image/png" sizes="16x16" href="../../images/favicons/favicon-16x16.png">
-		<link rel="manifest" href="../../images/favicons/site.webmanifest">
-		<link rel="mask-icon" href="../../images/favicons/safari-pinned-tab.svg" color="#202340">
-		<link rel="shortcut icon" href="../../images/favicons/favicon.ico">
-		<meta name="msapplication-TileColor" content="#202340">
-		<meta name="msapplication-config" content="../../images/favicons/browserconfig.xml">
-		<meta name="theme-color" content="#202340">
 
 		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400" rel="stylesheet">
 
@@ -91,11 +64,17 @@
                 background: black;
             }
 
+            .wrapper {
+                width: 100%;
+                height: 100vh;
+                display: flex;
+            }
+
 			.plane {
 				/* define the size of your plane */
-				width: 80%;
-				height: 80vh;
-				margin: 10vh auto;
+                width: 80%;
+                height: 80vh;
+                margin: 10vh auto;
 			}
 
 			.plane img {
@@ -110,9 +89,12 @@
 
 		<a href="https://www.curtainsjs.com/" title="back to curtains.js website" id="back-to-lib-link" target="_blank">back to curtains.js website</a>
 
-		<div class="plane">
-			<img src="../medias/plane-texture-3.jpg" />
-		</div>
+        <div class="wrapper">
+            <div class="plane">
+                <img src="../medias/plane-texture-3.jpg" />
+            </div>
+        </div>
+
 
         <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/examples/basic-plane/index.html" title="Show source code" id="source-code-link" target="_blank">&lt;/ &gt;</a>
 
@@ -159,7 +141,7 @@
 			uniform sampler2D uSampler0;
 
 			void main() {
-				vec2 textureCoord = vec2(vTextureCoord.x, vTextureCoord.y);
+				vec2 textureCoord = vTextureCoord;
 
 				// displace our pixels along the X axis based on our time uniform
 				// textures coords are ranging from 0.0 to 1.0 on both axis
@@ -169,21 +151,21 @@
 			}
         </script>
 
+		<script type="module">
+            import {Curtains, Plane} from '../../src/index.mjs';
 
-		<script src="../../build/curtains.js" type="text/javascript"></script>
-
-		<script type="text/javascript">
-            window.addEventListener("load", function() {
+            window.addEventListener("load", () => {
 				// set up our WebGL context and append the canvas to our wrapper
-				var webGLCurtain = new Curtains({
-                    container: "canvas"
+				const curtains = new Curtains({
+                    container: "canvas",
+                    pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
                 });
 
 				// get our plane element
-				var planeElement = document.getElementsByClassName("plane")[0];
+				const planeElements = document.getElementsByClassName("plane");
 
 				// set our initial parameters (basic uniforms)
-				var params = {
+				const params = {
 					vertexShaderID: "plane-vs", // our vertex shader ID
 					fragmentShaderID: "plane-fs", // our framgent shader ID
 					uniforms: {
@@ -195,28 +177,14 @@
 					}
 				};
 
-				// create our plane mesh
-				var plane = webGLCurtain.addPlane(planeElement, params);
+                const plane = new Plane(curtains, planeElements[0], params);
 
-				if(plane) {
-                    // set up our basic methods
-                    plane.onRender(function() { // fired at each requestAnimationFrame call
-                        plane.uniforms.time.value++; // update our time uniform value
-                    });
-                }
+                // set up our basic methods
+                plane.onRender(() => { // fired at each requestAnimationFrame call
+                    plane.uniforms.time.value++; // update our time uniform value
+                });
 
 			});
-		</script>
-
-
-		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-141413267-1"></script>
-		<script>
-		  	window.dataLayer = window.dataLayer || [];
-		  	function gtag(){dataLayer.push(arguments);}
-		  	gtag('js', new Date());
-
-		  	gtag('config', 'UA-141413267-1');
 		</script>
 
 	</body>

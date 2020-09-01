@@ -1,0 +1,5 @@
+/examples
+/documentation
+*.html
+*.css
+*.xml

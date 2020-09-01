@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+    <url>
+        <loc>https://www.curtainsjs.com/</loc>
+        <changefreq>monthly</changefreq>
+        <priority>1.0</priority>
+    </url>
+
+    <!-- documentation -->
+    <url>
+        <loc>https://www.curtainsjs.com/documentation.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/get-started.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/download.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.8</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/curtains-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/plane-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/texture-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/render-target-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/shader-pass-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/vec-2-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/vec-3-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/mat-4-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/quat-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/ping-pong-plane-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/fxaa-pass-class.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/migration-guide-to-v7.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <!-- examples -->
+    <url>
+        <loc>https://www.curtainsjs.com/examples/ajax-navigation-with-plane-removal/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/examples/ajax-navigation-with-plane-removal/archive1.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    <url>
+        <loc>https://www.curtainsjs.com/examples/ajax-navigation-with-plane-removal/archive2.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/asynchronous-textures/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/basic-plane/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/multiple-planes/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/multiple-planes-canvas-text/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/multiple-planes-scroll-effect/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/multiple-planes-scroll-effect-custom-scroll/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/multiple-textures/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/multiple-video-textures/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/ping-pong-shading-flowmap/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/plane-properties-transforms-cheat-sheet/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/post-processing-displacement/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/post-processing-scroll-effect/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/post-processing-transform-origin/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/render-passes-using-render-targets/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/simple-canvas-plane/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/simple-plane/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/simple-video-plane/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/vertex-coords-helper/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+</urlset>

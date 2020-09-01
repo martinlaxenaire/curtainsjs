@@ -1,45 +1,37 @@
-window.addEventListener("load", function() {
+import {Curtains, Plane, Vec2} from '../../../src/index.mjs';
 
-    function lerp (start, end, amt){
-        return (1 - amt) * start + amt * end;
-    }
-
+window.addEventListener("load", () => {
     // track the mouse positions to send it to the shaders
-    var mousePosition = {
-        x: 0,
-        y: 0,
-    };
+    const mousePosition = new Vec2();
     // we will keep track of the last position in order to calculate the movement strength/delta
-    var mouseLastPosition = {
-        x: 0,
-        y: 0,
-    };
+    const mouseLastPosition = new Vec2();
 
-    var deltas = {
+    const deltas = {
         max: 0,
         applied: 0,
     };
 
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains({
+    const curtains = new Curtains({
         container: "canvas",
-        watchScroll: false // no need to listen for the scroll in this example
+        watchScroll: false, // no need to listen for the scroll in this example
+        pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
     });
 
     // handling errors
-    webGLCurtain.onError(function() {
+    curtains.onError(() => {
         // we will add a class to the document body to display original images
         document.body.classList.add("no-curtains");
-    }).onContextLost(function() {
+    }).onContextLost(() => {
         // on context lost, try to restore the context
-        webGLCurtain.restoreContext();
+        curtains.restoreContext();
     });
 
     // get our plane element
-    var planeElements = document.getElementsByClassName("curtain");
+    const planeElements = document.getElementsByClassName("curtain");
 
 
-    var vs = `
+    const vs = `
         precision mediump float;
 
         // default mandatory variables
@@ -91,7 +83,7 @@ window.addEventListener("load", function() {
         }
     `;
 
-    var fs = `
+    const fs = `
         precision mediump float;
 
         varying vec3 vVertexPosition;
@@ -116,7 +108,7 @@ window.addEventListener("load", function() {
     `;
 
     // some basic parameters
-    var params = {
+    const params = {
         vertexShader: vs,
         fragmentShader: fs,
         widthSegments: 20,
@@ -135,7 +127,7 @@ window.addEventListener("load", function() {
             mousePosition: { // our mouse position
                 name: "uMousePosition",
                 type: "2f", // again an array of floats
-                value: [mousePosition.x, mousePosition.y],
+                value: mousePosition,
             },
             mouseMoveStrength: { // the mouse move strength
                 name: "uMouseMoveStrength",
@@ -146,31 +138,30 @@ window.addEventListener("load", function() {
     };
 
     // create our plane
-    var simplePlane = webGLCurtain.addPlane(planeElements[0], params);
+    const simplePlane = new Plane(curtains, planeElements[0], params);
 
     // if there has been an error during init, simplePlane will be null
-    simplePlane && simplePlane.onReady(function() {
-        // set a fov of 35 to reduce perspective
+    simplePlane.onReady(() => {
+        // set a fov of 35 to reduce perspective (we could have used the fov init parameter)
         simplePlane.setPerspective(35);
 
         // apply a little effect once everything is ready
         deltas.max = 2;
 
         // now that our plane is ready we can listen to mouse move event
-        var wrapper = document.getElementById("page-wrap");
+        const wrapper = document.getElementById("page-wrap");
 
-        //simplePlane.textures[0].setScale(0.25, 0.25);
-        //simplePlane.textures[0].setOffset(-0.5, 0);
-
-        wrapper.addEventListener("mousemove", function(e) {
+        wrapper.addEventListener("mousemove", (e) => {
             handleMovement(e, simplePlane);
         });
 
-        wrapper.addEventListener("touchmove", function(e) {
+        wrapper.addEventListener("touchmove", (e) => {
             handleMovement(e, simplePlane);
+        }, {
+            passive: true
         });
 
-    }).onRender(function() {
+    }).onRender(() => {
         // increment our time uniform
         simplePlane.uniforms.time.value++;
 
@@ -181,44 +172,42 @@ window.addEventListener("load", function() {
         // send the new mouse move strength value
         simplePlane.uniforms.mouseMoveStrength.value = deltas.applied;
 
-    }).onAfterResize(function() {
-        var planeBoundingRect = simplePlane.getBoundingRect();
+    }).onAfterResize(() => {
+        const planeBoundingRect = simplePlane.getBoundingRect();
         simplePlane.uniforms.resolution.value = [planeBoundingRect.width, planeBoundingRect.height];
+    }).onError(() => {
+        // we will add a class to the document body to display original images
+        document.body.classList.add("no-curtains");
     });
 
     // handle the mouse move event
     function handleMovement(e, plane) {
-
         // update mouse last pos
-        mouseLastPosition.x = mousePosition.x;
-        mouseLastPosition.y = mousePosition.y;
+        mouseLastPosition.copy(mousePosition);
 
-        var mouse = {};
+        const mouse = new Vec2();
 
         // touch event
         if(e.targetTouches) {
-
-            mouse.x = e.targetTouches[0].clientX;
-            mouse.y = e.targetTouches[0].clientY;
+            mouse.set(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
         }
         // mouse event
         else {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
+            mouse.set(e.clientX, e.clientY);
         }
 
         // lerp the mouse position a bit to smoothen the overall effect
-        mousePosition.x = lerp(mousePosition.x, mouse.x, 0.3);
-        mousePosition.y = lerp(mousePosition.y, mouse.y, 0.3);
+        mousePosition.set(
+            curtains.lerp(mousePosition.x, mouse.x, 0.3),
+            curtains.lerp(mousePosition.y, mouse.y, 0.3)
+        );
 
-        // convert our mouse/touch position to coordinates relative to the vertices of the plane
-        var mouseCoords = plane.mouseToPlaneCoords(mousePosition.x, mousePosition.y);
-        // update our mouse position uniform
-        plane.uniforms.mousePosition.value = [mouseCoords.x, mouseCoords.y];
+        // convert our mouse/touch position to coordinates relative to the vertices of the plane and update our uniform
+        plane.uniforms.mousePosition.value = plane.mouseToPlaneCoords(mousePosition);
 
         // calculate the mouse move strength
         if(mouseLastPosition.x && mouseLastPosition.y) {
-            var delta = Math.sqrt(Math.pow(mousePosition.x - mouseLastPosition.x, 2) + Math.pow(mousePosition.y - mouseLastPosition.y, 2)) / 30;
+            let delta = Math.sqrt(Math.pow(mousePosition.x - mouseLastPosition.x, 2) + Math.pow(mousePosition.y - mouseLastPosition.y, 2)) / 30;
             delta = Math.min(4, delta);
             // update max delta only if it increased
             if(delta >= deltas.max) {

@@ -1,31 +1,34 @@
-window.addEventListener("load", function() {
+import {Curtains, Plane} from '../../../src/index.mjs';
+
+window.addEventListener("load", () => {
     // here we will handle which texture is visible and the timer to transition between images
-    var activeTexture = 1;
-    var transitionTimer = 0;
+    let activeTexture = 1;
+    let transitionTimer = 0;
 
     // set up our WebGL context and append the canvas to our wrapper
-    var webGLCurtain = new Curtains({
+    const curtains = new Curtains({
         container: "canvas",
-        watchScroll: false // no need to listen for the scroll in this example
+        watchScroll: false, // no need to listen for the scroll in this example
+        pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
     });
 
     // disable drawing for now
-    webGLCurtain.disableDrawing();
+    curtains.disableDrawing();
 
-    webGLCurtain.onError(function() {
+    curtains.onError(() => {
         // we will add a class to the document body to display original images
         document.body.classList.add("no-curtains");
         // display an error message
         document.getElementById("load-images").innerHTML = "There has been an error while initiating the WebGL context.";
-    }).onContextLost(function() {
+    }).onContextLost(() => {
         // on context lost, try to restore the context
-        webGLCurtain.restoreContext();
+        curtains.restoreContext();
     });
 
     // get our plane element
-    var planeElements = document.getElementsByClassName("async-textures");
+    const planeElements = document.getElementsByClassName("async-textures");
 
-    var vs = `
+    const vs = `
         precision mediump float;
 
         // default mandatory variables
@@ -70,7 +73,7 @@ window.addEventListener("load", function() {
         }
     `;
 
-    var fs = `
+    const fs = `
         precision mediump float;
 
         varying vec3 vVertexPosition;
@@ -99,11 +102,12 @@ window.addEventListener("load", function() {
     `;
 
     // really basic params
-    var params = {
+    const params = {
         vertexShader: vs,
         fragmentShader: fs,
         widthSegments: 20,
         heightSegments: 1,
+        visible: false, // hide the plane while its empty
         uniforms: {
             transitionTimer: {
                 name: "uTransitionTimer",
@@ -115,73 +119,75 @@ window.addEventListener("load", function() {
 
     // first we create en empty plane
     // it won't appear because it does not have any texture, but it will be there !
-    var asyncTexturesPlane = webGLCurtain.addPlane(planeElements[0], params);
+    const asyncTexturesPlane = new Plane(curtains, planeElements[0], params);
 
-    // if there has not been any error during init
-    if(asyncTexturesPlane) {
-        // hide the plane while its empty
-        asyncTexturesPlane.visible = false;
+    asyncTexturesPlane.onReady(() => {
+        // images are loaded, we are ready to attach event listener and do stuff
+        planeElements[0].addEventListener("click", function() {
+            // enable drawing to display transitions
+            curtains.enableDrawing();
 
-        asyncTexturesPlane.onReady(function() {
+            // switch the active texture
+            if(activeTexture === 1) {
+                activeTexture = 2;
 
-            // images are loaded, we are ready to attach event listener and do stuff
-            planeElements[0].addEventListener("click", function() {
-                // enable drawing to display transitions
-                webGLCurtain.enableDrawing();
-
-                // switch the active texture
-                if(activeTexture == 1) {
-                    activeTexture = 2;
-
-                    document.getElementById("async-textures-wrapper").classList.add("second-image-shown");
-                }
-                else {
-                    activeTexture = 1;
-
-                    document.getElementById("async-textures-wrapper").classList.remove("second-image-shown");
-                }
-            });
-        }).onRender(function() {
-            // increase/decrease our timer based on active texture
-            if(activeTexture == 2) {
-                // use damping to smoothen transition
-                transitionTimer += (60 - transitionTimer) * 0.05;
+                document.getElementById("async-textures-wrapper").classList.add("second-image-shown");
             }
             else {
-                // use damping to smoothen transition
-                transitionTimer += (0 - transitionTimer) * 0.05;
+                activeTexture = 1;
+
+                document.getElementById("async-textures-wrapper").classList.remove("second-image-shown");
             }
-            // update the uniform
-            asyncTexturesPlane.uniforms.transitionTimer.value = transitionTimer;
+        });
+    }).onRender(() => {
+        // increase/decrease our timer based on active texture
+        if(activeTexture === 2) {
+            // use damping to smoothen transition
+            transitionTimer += (60 - transitionTimer) * 0.05;
+        }
+        else {
+            // use damping to smoothen transition
+            transitionTimer += (0 - transitionTimer) * 0.05;
+        }
+        // update the uniform
+        asyncTexturesPlane.uniforms.transitionTimer.value = transitionTimer;
+    }).onError(() => {
+        // we will add a class to the document body to display original images
+        document.body.classList.add("no-curtains");
+        // display an error message
+        document.getElementById("load-images").innerHTML = "There has been an error while initiating the WebGL context.";
+    });
+
+    // then we add images to it, could be after an event or an AJAX call
+    document.getElementById("load-images").addEventListener("click", function() {
+        document.getElementById("page-wrap").classList.add("load-images");
+
+        // get our images in the HTML, but it could be inside an AJAX response
+        const asyncImgElements = document.getElementById("async-textures-wrapper").getElementsByTagName("img");
+
+        // track image loading
+        let imagesLoaded = 0;
+        const imagesToLoad = asyncImgElements.length;
+
+        // load the images
+        asyncTexturesPlane.loadImages(asyncImgElements, {
+            // textures options
+            // improve texture rendering on small screens with LINEAR_MIPMAP_NEAREST minFilter
+            minFilter: curtains.gl.LINEAR_MIPMAP_NEAREST
         });
 
-        // then we add images to it, could be after an event or an AJAX call
-        document.getElementById("load-images").addEventListener("click", function() {
+        asyncTexturesPlane.onLoading(() => {
+            imagesLoaded++;
+            if(imagesLoaded === imagesToLoad) {
+                // everything is ready, we need to render at least one frame
+                curtains.needRender();
 
-            document.getElementById("page-wrap").classList.add("load-images");
-
-            // get our images in the HTML, but it could be inside an AJAX response
-            var asyncImgElements = document.getElementById("async-textures-wrapper").getElementsByTagName("img");
-
-            // track image loading
-            var imagesLoaded = 0;
-            var imagesToLoad = asyncImgElements.length;
-
-            // load the images
-            asyncTexturesPlane.loadImages(asyncImgElements);
-            asyncTexturesPlane.onLoading(function() {
-                imagesLoaded++;
-                if(imagesLoaded == imagesToLoad) {
-                    // everything is ready, we need to render at least one frame
-                    webGLCurtain.needRender();
-
-                    // if window has been resized between plane creation and image loading, we need to trigger a resize
-                    asyncTexturesPlane.planeResize();
-                    // show our plane now
-                    asyncTexturesPlane.visible = true;
-                }
-            });
-
+                // if window has been resized between plane creation and image loading, we need to trigger a resize
+                asyncTexturesPlane.resize();
+                // show our plane now
+                asyncTexturesPlane.visible = true;
+            }
         });
-    }
+
+    });
 });
