@@ -1,6 +1,5 @@
 /examples
-/images
-/js
+/documentation
 *.html
 *.css
 *.xml
