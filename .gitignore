@@ -2,4 +2,5 @@
 /.htaccess
 /node_modules
 /build
+/examples/tests
 /.idea

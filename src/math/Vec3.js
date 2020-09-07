@@ -117,6 +117,42 @@ export class Vec3 {
 
 
     /***
+     Multiplies a vector with this vector
+
+     params:
+     @vector (Vec3): vector to use for multiplication
+
+     returns:
+     @this (Vec3): this vector after multiplication
+     ***/
+    multiply(vector) {
+        this.x *= vector.x;
+        this.y *= vector.y;
+        this.z *= vector.z;
+
+        return this;
+    }
+
+
+    /***
+     Multiplies a scalar with this vector
+
+     params:
+     @value (float): number to use for multiplication
+
+     returns:
+     @this (Vec3): this vector after multiplication
+     ***/
+    multiplyScalar(value) {
+        this.x *= value;
+        this.y *= value;
+        this.z *= value;
+
+        return this;
+    }
+
+
+    /***
      Copy a vector into this vector
 
      params:
@@ -262,6 +298,60 @@ export class Vec3 {
         this.y = (mArray[1] * x + mArray[5] * y + mArray[9] * z + mArray[13]) / w;
         this.z = (mArray[2] * x + mArray[6] * y + mArray[10] * z + mArray[14]) / w;
 
+        return this;
+    }
+
+
+    /***
+     Apply a Quaternion (rotation in 3D space) to this vector
+
+     params :
+     @quaternion (Quat): quaternion to use
+
+     returns :
+     @this (Vec3): this vector after applying the transformation
+     ***/
+    applyQuaternion(quaternion) {
+        const x = this.x, y = this.y, z = this.z;
+        const qx = quaternion.elements[0], qy = quaternion.elements[1], qz = quaternion.elements[2], qw = quaternion.elements[3];
+
+        // calculate quat * vector
+
+        const ix = qw * x + qy * z - qz * y;
+        const iy = qw * y + qz * x - qx * z;
+        const iz = qw * z + qx * y - qy * x;
+        const iw = - qx * x - qy * y - qz * z;
+
+        // calculate result * inverse quat
+
+        this.x = ix * qw + iw * - qx + iy * - qz - iz * - qy;
+        this.y = iy * qw + iw * - qy + iz * - qx - ix * - qz;
+        this.z = iz * qw + iw * - qz + ix * - qy - iy * - qx;
+
+        return this;
+    }
+
+
+    /***
+     Project 3D coordinate to 2D point
+
+     params:
+     @camera (Camera): camera to use for projection
+     ***/
+    project(camera) {
+        this.applyMat4(camera.viewMatrix).applyMat4(camera.projectionMatrix);
+        return this;
+    }
+
+
+    /***
+     Unproject 2D point to 3D coordinate
+
+     params:
+     @camera (Camera): camera to use for projection
+     ***/
+    unproject(camera) {
+        this.applyMat4(camera.projectionMatrix.getInverse()).applyMat4(camera.worldMatrix);
         return this;
     }
 }
