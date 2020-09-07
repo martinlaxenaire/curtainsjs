@@ -16,7 +16,6 @@ import {throwError} from "../utils/utils.js";
  ***/
 
 // TODO create a new Image or Video element for each of this sources (allows to set crossorigin before src to avois CORS issues)?
-// TODO allow to load medias using their src?
 // TODO load assets with a web worker?
 
 export class TextureLoader {
@@ -119,25 +118,131 @@ export class TextureLoader {
 
 
     /***
+     Get the source type based on its file extension if it's a string or it's tag name if its a HTML element
+
+     params:
+     @source (html element or string): html image, video, canvas element or source url
+
+     returns :
+     @sourceType (string): either "image", "video", "canvas" or null if source type cannot be determined
+     ***/
+    _getSourceType(source) {
+        let sourceType;
+
+        if(typeof source === "string") {
+            // from https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#Supported_image_formats
+            if(source.match(/\.(jpeg|jpg|jfif|pjpeg|pjp|gif|bmp|png|webp|svg)$/) !== null) {
+                sourceType = "image";
+            }
+            else if(source.match(/\.(webm|mp4|ogg|mov)$/) !== null) {
+                sourceType = "video";
+            }
+        }
+        else {
+            if(source.tagName.toUpperCase() === "IMG") {
+                sourceType = "image";
+            }
+            else if(source.tagName.toUpperCase() === "VIDEO") {
+                sourceType = "video";
+            }
+            else if(source.tagName.toUpperCase() === "CANVAS") {
+                sourceType = "canvas";
+            }
+        }
+
+        return sourceType;
+    }
+
+
+    /***
+     Create an image HTML element based on an image source url
+
+     params:
+     @source (string): source url
+
+     returns :
+     @image (HTML image element): an HTML image element
+     ***/
+    _createImage(source) {
+        const image = new Image();
+        image.crossOrigin = this.crossOrigin;
+        image.src = source;
+
+        return image;
+    }
+
+
+    /***
+     Create a video HTML element based on a video source url
+
+     params:
+     @source (string): source url
+
+     returns :
+     @video (HTML video element): an HTML video element
+     ***/
+    _createVideo(source) {
+        const video = document.createElement('video');
+        video.crossOrigin = this.crossOrigin;
+        video.src = source;
+
+        return video;
+    }
+
+
+    /***
      This method loads one source
      It checks what type of source it is then use the right loader
 
      params:
      @source (html element): html image, video or canvas element
+     @textureOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
+     @successCallback (function): function to execute when the source has been loaded
+     @errorCallback (function): function to execute if the source fails to load
      ***/
-    loadSource(source, params, sucessCallback, errorCallback) {
-        if(source.tagName.toUpperCase() === "IMG") {
-            return this.loadImage(source, params, sucessCallback, errorCallback);
+    loadSource(
+        source,
+        textureOptions,
+        successCallback,
+        errorCallback
+    ) {
+        // get source type to use the right loader
+        const sourceType = this._getSourceType(source);
+
+        switch(sourceType) {
+            case "image":
+                this.loadImage(source, textureOptions, successCallback, errorCallback);
+                break;
+            case "video":
+                this.loadVideo(source, textureOptions, successCallback, errorCallback);
+                break;
+            case "canvas":
+                this.loadCanvas(source, textureOptions, successCallback);
+                break;
+            default:
+                this._sourceLoadError(source, errorCallback, "this source could not be converted into a texture: " + source);
+                break;
         }
-        else if(source.tagName.toUpperCase() === "VIDEO") {
-            return this.loadVideo(source, params, sucessCallback, errorCallback);
-        }
-        else if(source.tagName.toUpperCase() === "CANVAS") {
-            return this.loadCanvas(source, params, sucessCallback);
-        }
-        else {
-            // this type of source is not handled
-            return this._sourceLoadError(source, errorCallback, "this HTML tag could not be converted into a texture: " + source.tagName)
+    }
+
+
+    /***
+     This method loads an array of sources by calling loadSource() for each one of them
+
+     params:
+     @sources (array of html elements / sources url): array of html images, videos, canvases element or sources url
+     @texturesOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
+     @successCallback (function): function to execute when each source has been loaded
+     @errorCallback (function): function to execute if a source fails to load
+     ***/
+    loadSources(
+        sources,
+        texturesOptions,
+        successCallback,
+        errorCallback
+    ) {
+        for(let i = 0; i < sources.length; i++) {
+            this.loadSource(sources[i], texturesOptions, successCallback, errorCallback);
         }
     }
 
@@ -155,9 +260,13 @@ export class TextureLoader {
     loadImage(
         source,
         textureOptions = {},
-        sucessCallback,
+        successCallback,
         errorCallback
     ) {
+        if(typeof source === "string") {
+            source = this._createImage(source);
+        }
+
         source.crossOrigin = this.crossOrigin;
 
         // merge texture options with its parent textures options if needed
@@ -184,16 +293,15 @@ export class TextureLoader {
             });
 
             // execute sucess callback directly
-            if(sucessCallback) {
-                sucessCallback(texture);
+            if(successCallback) {
+                successCallback(texture);
             }
 
             // if there's a parent (PlaneTextureLoader) add texture and source to it
             this._parent && this._addToParent(texture, source, "image");
 
-            // return our texture
             // that's all!
-            return texture;
+            return;
         }
 
         // create a new texture that will use our image later
@@ -211,16 +319,16 @@ export class TextureLoader {
         });
 
         // add a new entry in our elements array
-        const el = this._addElement(source, texture, sucessCallback, errorCallback);
+        const el = this._addElement(source, texture, successCallback, errorCallback);
 
         // If the image is in the cache of the browser,
         // the 'load' event might have been triggered
         // before we registered the event handler.
         if(source.complete) {
-            this._sourceLoaded(source, texture, sucessCallback);
+            this._sourceLoaded(source, texture, successCallback);
         }
         else if(source.decode) {
-            source.decode().then(this._sourceLoaded.bind(this, source, texture, sucessCallback)).catch(() => {
+            source.decode().then(this._sourceLoaded.bind(this, source, texture, successCallback)).catch(() => {
                 // fallback to classic load & error events
                 source.addEventListener('load', el.load, false);
                 source.addEventListener('error', el.error, false);
@@ -237,6 +345,27 @@ export class TextureLoader {
 
 
     /***
+     This method loads an array of images by calling loadImage() for each one of them
+
+     params:
+     @sources (array of images / images url): array of html images elements or images url
+     @texturesOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
+     @successCallback (function): function to execute when each source has been loaded
+     @errorCallback (function): function to execute if a source fails to load
+     ***/
+    loadImages(
+        sources,
+        texturesOptions,
+        successCallback,
+        errorCallback
+    ) {
+        for(let i = 0; i < sources.length; i++) {
+            this.loadImage(sources[i], texturesOptions, successCallback, errorCallback);
+        }
+    }
+
+
+    /***
      This method loads a video
      Creates a new texture object right away and once the video has enough data it uses it as our WebGL texture
 
@@ -249,9 +378,13 @@ export class TextureLoader {
     loadVideo(
         source,
         textureOptions = {},
-        sucessCallback,
+        successCallback,
         errorCallback
     ) {
+        if(typeof source === "string") {
+            source = this._createVideo(source);
+        }
+
         source.preload = true;
         source.muted = true;
         source.loop = true;
@@ -278,7 +411,7 @@ export class TextureLoader {
         });
 
         // add a new entry in our elements array
-        const el = this._addElement(source, texture, sucessCallback, errorCallback);
+        const el = this._addElement(source, texture, successCallback, errorCallback);
 
         // handle our loaded data event inside the texture and tell our plane when the video is ready to play
         source.addEventListener('canplaythrough', el.load, false);
@@ -287,8 +420,8 @@ export class TextureLoader {
         // If the video is in the cache of the browser,
         // the 'canplaythrough' event might have been triggered
         // before we registered the event handler.
-        if(source.readyState >= source.HAVE_FUTURE_DATA && sucessCallback) {
-            this._sourceLoaded(source, texture, sucessCallback);
+        if(source.readyState >= source.HAVE_FUTURE_DATA && successCallback) {
+            this._sourceLoaded(source, texture, successCallback);
         }
 
         // start loading our video
@@ -306,6 +439,27 @@ export class TextureLoader {
 
 
     /***
+     This method loads an array of images by calling loadVideo() for each one of them
+
+     params:
+     @sources (array of videos / videos url): array of html videos elements or videos url
+     @texturesOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
+     @successCallback (function): function to execute when each source has been loaded
+     @errorCallback (function): function to execute if a source fails to load
+     ***/
+    loadVideos(
+        sources,
+        texturesOptions,
+        successCallback,
+        errorCallback
+    ) {
+        for(let i = 0; i < sources.length; i++) {
+            this.loadVideo(sources[i], texturesOptions, successCallback, errorCallback);
+        }
+    }
+
+
+    /***
      This method loads a canvas
      Creates a new texture object right away and uses the canvas as our WebGL texture
 
@@ -313,12 +467,11 @@ export class TextureLoader {
      @source (canvas): html canvas element
      @textureOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
      @successCallback (function): function to execute when the source has been loaded
-     @errorCallback (function): function to execute if the source fails to load
      ***/
     loadCanvas(
         source,
         textureOptions = {},
-        sucessCallback
+        successCallback
     ) {
         // merge texture options with its parent textures options if needed
         if(this._parent) {
@@ -339,13 +492,32 @@ export class TextureLoader {
         });
 
         // add a new entry in our elements array
-        this._addElement(source, texture, sucessCallback, null);
+        this._addElement(source, texture, successCallback, null);
 
         // canvas are directly loaded
-        this._sourceLoaded(source, texture, sucessCallback);
+        this._sourceLoaded(source, texture, successCallback);
 
         // if there's a parent (PlaneTextureLoader) add texture and source to it
         this._parent && this._addToParent(texture, source, "canvas");
+    }
+
+
+    /***
+     This method loads an array of images by calling loadCanvas() for each one of them
+
+     params:
+     @sources (array of canvas): array of html canvases elements
+     @texturesOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
+     @successCallback (function): function to execute when each source has been loaded
+     ***/
+    loadCanvases(
+        sources,
+        texturesOptions,
+        successCallback,
+    ) {
+        for(let i = 0; i < sources.length; i++) {
+            this.loadCanvas(sources[i], texturesOptions, successCallback);
+        }
     }
 
 
