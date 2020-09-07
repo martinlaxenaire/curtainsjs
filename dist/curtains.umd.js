@@ -651,6 +651,72 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return result;
       }
       /***
+       Get matrix inverse
+         returns:
+       @result (Mat4 class object): inverted Mat4
+       ***/
+
+    }, {
+      key: "getInverse",
+      value: function getInverse() {
+        var te = this.elements;
+        var out = new Mat4();
+        var oe = out.elements;
+        var a00 = te[0],
+            a01 = te[1],
+            a02 = te[2],
+            a03 = te[3];
+        var a10 = te[4],
+            a11 = te[5],
+            a12 = te[6],
+            a13 = te[7];
+        var a20 = te[8],
+            a21 = te[9],
+            a22 = te[10],
+            a23 = te[11];
+        var a30 = te[12],
+            a31 = te[13],
+            a32 = te[14],
+            a33 = te[15];
+        var b00 = a00 * a11 - a01 * a10;
+        var b01 = a00 * a12 - a02 * a10;
+        var b02 = a00 * a13 - a03 * a10;
+        var b03 = a01 * a12 - a02 * a11;
+        var b04 = a01 * a13 - a03 * a11;
+        var b05 = a02 * a13 - a03 * a12;
+        var b06 = a20 * a31 - a21 * a30;
+        var b07 = a20 * a32 - a22 * a30;
+        var b08 = a20 * a33 - a23 * a30;
+        var b09 = a21 * a32 - a22 * a31;
+        var b10 = a21 * a33 - a23 * a31;
+        var b11 = a22 * a33 - a23 * a32; // Calculate the determinant
+
+        var det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+
+        if (!det) {
+          return null;
+        }
+
+        det = 1 / det;
+        oe[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+        oe[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+        oe[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+        oe[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+        oe[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+        oe[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+        oe[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+        oe[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+        oe[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+        oe[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+        oe[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+        oe[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+        oe[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+        oe[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+        oe[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+        oe[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+        return out;
+      }
+      /***
        Simple Mat4 scaling helper
          params :
        @vector (Vec3 class object): Vec3 representing scale along X, Y and Z axis
@@ -855,6 +921,36 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function subScalar(value) {
         this.x -= value;
         this.y -= value;
+        return this;
+      }
+      /***
+       Multiplies a vector with this vector
+         params:
+       @vector (Vec2): vector to use for multiplication
+         returns:
+       @this (Vec2): this vector after multiplication
+       ***/
+
+    }, {
+      key: "multiply",
+      value: function multiply(vector) {
+        this.x *= vector.x;
+        this.y *= vector.y;
+        return this;
+      }
+      /***
+       Multiplies a scalar with this vector
+         params:
+       @value (float): number to use for multiplication
+         returns:
+       @this (Vec2): this vector after multiplication
+       ***/
+
+    }, {
+      key: "multiplyScalar",
+      value: function multiplyScalar(value) {
+        this.x *= value;
+        this.y *= value;
         return this;
       }
       /***
@@ -3230,7 +3326,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    @this: our TextureLoader element
    ***/
   // TODO create a new Image or Video element for each of this sources (allows to set crossorigin before src to avois CORS issues)?
-  // TODO allow to load medias using their src?
   // TODO load assets with a web worker?
 
 
@@ -3330,24 +3425,118 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
+       Get the source type based on its file extension if it's a string or it's tag name if its a HTML element
+         params:
+       @source (html element or string): html image, video, canvas element or source url
+         returns :
+       @sourceType (string): either "image", "video", "canvas" or null if source type cannot be determined
+       ***/
+
+    }, {
+      key: "_getSourceType",
+      value: function _getSourceType(source) {
+        var sourceType;
+
+        if (typeof source === "string") {
+          // from https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#Supported_image_formats
+          if (source.match(/\.(jpeg|jpg|jfif|pjpeg|pjp|gif|bmp|png|webp|svg)$/) !== null) {
+            sourceType = "image";
+          } else if (source.match(/\.(webm|mp4|ogg|mov)$/) !== null) {
+            sourceType = "video";
+          }
+        } else {
+          if (source.tagName.toUpperCase() === "IMG") {
+            sourceType = "image";
+          } else if (source.tagName.toUpperCase() === "VIDEO") {
+            sourceType = "video";
+          } else if (source.tagName.toUpperCase() === "CANVAS") {
+            sourceType = "canvas";
+          }
+        }
+
+        return sourceType;
+      }
+      /***
+       Create an image HTML element based on an image source url
+         params:
+       @source (string): source url
+         returns :
+       @image (HTML image element): an HTML image element
+       ***/
+
+    }, {
+      key: "_createImage",
+      value: function _createImage(source) {
+        var image = new Image();
+        image.crossOrigin = this.crossOrigin;
+        image.src = source;
+        return image;
+      }
+      /***
+       Create a video HTML element based on a video source url
+         params:
+       @source (string): source url
+         returns :
+       @video (HTML video element): an HTML video element
+       ***/
+
+    }, {
+      key: "_createVideo",
+      value: function _createVideo(source) {
+        var video = document.createElement('video');
+        video.crossOrigin = this.crossOrigin;
+        video.src = source;
+        return video;
+      }
+      /***
        This method loads one source
        It checks what type of source it is then use the right loader
          params:
        @source (html element): html image, video or canvas element
+       @textureOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
+       @successCallback (function): function to execute when the source has been loaded
+       @errorCallback (function): function to execute if the source fails to load
        ***/
 
     }, {
       key: "loadSource",
-      value: function loadSource(source, params, sucessCallback, errorCallback) {
-        if (source.tagName.toUpperCase() === "IMG") {
-          return this.loadImage(source, params, sucessCallback, errorCallback);
-        } else if (source.tagName.toUpperCase() === "VIDEO") {
-          return this.loadVideo(source, params, sucessCallback, errorCallback);
-        } else if (source.tagName.toUpperCase() === "CANVAS") {
-          return this.loadCanvas(source, params, sucessCallback);
-        } else {
-          // this type of source is not handled
-          return this._sourceLoadError(source, errorCallback, "this HTML tag could not be converted into a texture: " + source.tagName);
+      value: function loadSource(source, textureOptions, successCallback, errorCallback) {
+        // get source type to use the right loader
+        var sourceType = this._getSourceType(source);
+
+        switch (sourceType) {
+          case "image":
+            this.loadImage(source, textureOptions, successCallback, errorCallback);
+            break;
+
+          case "video":
+            this.loadVideo(source, textureOptions, successCallback, errorCallback);
+            break;
+
+          case "canvas":
+            this.loadCanvas(source, textureOptions, successCallback);
+            break;
+
+          default:
+            this._sourceLoadError(source, errorCallback, "this source could not be converted into a texture: " + source);
+
+            break;
+        }
+      }
+      /***
+       This method loads an array of sources by calling loadSource() for each one of them
+         params:
+       @sources (array of html elements / sources url): array of html images, videos, canvases element or sources url
+       @texturesOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
+       @successCallback (function): function to execute when each source has been loaded
+       @errorCallback (function): function to execute if a source fails to load
+       ***/
+
+    }, {
+      key: "loadSources",
+      value: function loadSources(sources, texturesOptions, successCallback, errorCallback) {
+        for (var i = 0; i < sources.length; i++) {
+          this.loadSource(sources[i], texturesOptions, successCallback, errorCallback);
         }
       }
       /***
@@ -3364,8 +3553,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "loadImage",
       value: function loadImage(source) {
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-        var sucessCallback = arguments.length > 2 ? arguments[2] : undefined;
+        var successCallback = arguments.length > 2 ? arguments[2] : undefined;
         var errorCallback = arguments.length > 3 ? arguments[3] : undefined;
+
+        if (typeof source === "string") {
+          source = this._createImage(source);
+        }
+
         source.crossOrigin = this.crossOrigin; // merge texture options with its parent textures options if needed
 
         if (this._parent) {
@@ -3390,15 +3584,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           }); // execute sucess callback directly
 
 
-          if (sucessCallback) {
-            sucessCallback(_texture);
+          if (successCallback) {
+            successCallback(_texture);
           } // if there's a parent (PlaneTextureLoader) add texture and source to it
 
 
-          this._parent && this._addToParent(_texture, source, "image"); // return our texture
-          // that's all!
+          this._parent && this._addToParent(_texture, source, "image"); // that's all!
 
-          return _texture;
+          return;
         } // create a new texture that will use our image later
 
 
@@ -3414,15 +3607,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           magFilter: textureOptions.magFilter
         }); // add a new entry in our elements array
 
-        var el = this._addElement(source, texture, sucessCallback, errorCallback); // If the image is in the cache of the browser,
+        var el = this._addElement(source, texture, successCallback, errorCallback); // If the image is in the cache of the browser,
         // the 'load' event might have been triggered
         // before we registered the event handler.
 
 
         if (source.complete) {
-          this._sourceLoaded(source, texture, sucessCallback);
+          this._sourceLoaded(source, texture, successCallback);
         } else if (source.decode) {
-          source.decode().then(this._sourceLoaded.bind(this, source, texture, sucessCallback))["catch"](function () {
+          source.decode().then(this._sourceLoaded.bind(this, source, texture, successCallback))["catch"](function () {
             // fallback to classic load & error events
             source.addEventListener('load', el.load, false);
             source.addEventListener('error', el.error, false);
@@ -3434,6 +3627,22 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
         this._parent && this._addToParent(texture, source, "image");
+      }
+      /***
+       This method loads an array of images by calling loadImage() for each one of them
+         params:
+       @sources (array of images / images url): array of html images elements or images url
+       @texturesOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
+       @successCallback (function): function to execute when each source has been loaded
+       @errorCallback (function): function to execute if a source fails to load
+       ***/
+
+    }, {
+      key: "loadImages",
+      value: function loadImages(sources, texturesOptions, successCallback, errorCallback) {
+        for (var i = 0; i < sources.length; i++) {
+          this.loadImage(sources[i], texturesOptions, successCallback, errorCallback);
+        }
       }
       /***
        This method loads a video
@@ -3449,8 +3658,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "loadVideo",
       value: function loadVideo(source) {
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-        var sucessCallback = arguments.length > 2 ? arguments[2] : undefined;
+        var successCallback = arguments.length > 2 ? arguments[2] : undefined;
         var errorCallback = arguments.length > 3 ? arguments[3] : undefined;
+
+        if (typeof source === "string") {
+          source = this._createVideo(source);
+        }
+
         source.preload = true;
         source.muted = true;
         source.loop = true;
@@ -3474,7 +3688,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           magFilter: textureOptions.magFilter
         }); // add a new entry in our elements array
 
-        var el = this._addElement(source, texture, sucessCallback, errorCallback); // handle our loaded data event inside the texture and tell our plane when the video is ready to play
+        var el = this._addElement(source, texture, successCallback, errorCallback); // handle our loaded data event inside the texture and tell our plane when the video is ready to play
 
 
         source.addEventListener('canplaythrough', el.load, false);
@@ -3482,8 +3696,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         // the 'canplaythrough' event might have been triggered
         // before we registered the event handler.
 
-        if (source.readyState >= source.HAVE_FUTURE_DATA && sucessCallback) {
-          this._sourceLoaded(source, texture, sucessCallback);
+        if (source.readyState >= source.HAVE_FUTURE_DATA && successCallback) {
+          this._sourceLoaded(source, texture, successCallback);
         } // start loading our video
 
 
@@ -3497,20 +3711,35 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
+       This method loads an array of images by calling loadVideo() for each one of them
+         params:
+       @sources (array of videos / videos url): array of html videos elements or videos url
+       @texturesOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
+       @successCallback (function): function to execute when each source has been loaded
+       @errorCallback (function): function to execute if a source fails to load
+       ***/
+
+    }, {
+      key: "loadVideos",
+      value: function loadVideos(sources, texturesOptions, successCallback, errorCallback) {
+        for (var i = 0; i < sources.length; i++) {
+          this.loadVideo(sources[i], texturesOptions, successCallback, errorCallback);
+        }
+      }
+      /***
        This method loads a canvas
        Creates a new texture object right away and uses the canvas as our WebGL texture
          params:
        @source (canvas): html canvas element
        @textureOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
        @successCallback (function): function to execute when the source has been loaded
-       @errorCallback (function): function to execute if the source fails to load
        ***/
 
     }, {
       key: "loadCanvas",
       value: function loadCanvas(source) {
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-        var sucessCallback = arguments.length > 2 ? arguments[2] : undefined;
+        var successCallback = arguments.length > 2 ? arguments[2] : undefined;
 
         // merge texture options with its parent textures options if needed
         if (this._parent) {
@@ -3530,13 +3759,28 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           magFilter: textureOptions.magFilter
         }); // add a new entry in our elements array
 
-        this._addElement(source, texture, sucessCallback, null); // canvas are directly loaded
+        this._addElement(source, texture, successCallback, null); // canvas are directly loaded
 
 
-        this._sourceLoaded(source, texture, sucessCallback); // if there's a parent (PlaneTextureLoader) add texture and source to it
+        this._sourceLoaded(source, texture, successCallback); // if there's a parent (PlaneTextureLoader) add texture and source to it
 
 
         this._parent && this._addToParent(texture, source, "canvas");
+      }
+      /***
+       This method loads an array of images by calling loadCanvas() for each one of them
+         params:
+       @sources (array of canvas): array of html canvases elements
+       @texturesOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
+       @successCallback (function): function to execute when each source has been loaded
+       ***/
+
+    }, {
+      key: "loadCanvases",
+      value: function loadCanvases(sources, texturesOptions, successCallback) {
+        for (var i = 0; i < sources.length; i++) {
+          this.loadCanvas(sources[i], texturesOptions, successCallback);
+        }
       }
       /*** REMOVING EVENT LISTENERS ***/
 
@@ -4413,6 +4657,503 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return Mesh;
   }();
   /***
+   Here we create a Vec3 class object
+   This is a really basic Vector3 class used for vector calculations
+   Highly based on https://github.com/mrdoob/three.js/blob/dev/src/math/Vector3.js and http://glmatrix.net/docs/vec3.js.html
+     params :
+   @x (float): X component of our vector
+   @y (float): Y component of our vector
+   @z (float): Z component of our vector
+     returns :
+   @this: our Vec3 class object
+   ***/
+  // TODO lot of (unused at the time) methods are missing
+
+
+  var Vec3 = /*#__PURE__*/function () {
+    function Vec3() {
+      var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+      var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      var z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+
+      _classCallCheck(this, Vec3);
+
+      this.type = "Vec3";
+      this.set(x, y, z);
+    }
+    /***
+     Sets the vector from values
+       params:
+     @x (float): X component of our vector
+     @y (float): Y component of our vector
+     @z (float): Z component of our vector
+       returns:
+     @this (Vec2): this vector after being set
+     ***/
+
+
+    _createClass(Vec3, [{
+      key: "set",
+      value: function set(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        return this;
+      }
+      /***
+       Adds a vector to this vector
+         params:
+       @vector (Vec3): vector to add
+         returns:
+       @this (Vec3): this vector after addition
+       ***/
+
+    }, {
+      key: "add",
+      value: function add(vector) {
+        this.x += vector.x;
+        this.y += vector.y;
+        this.z += vector.z;
+        return this;
+      }
+      /***
+       Adds a scalar to this vector
+         params:
+       @value (float): number to add
+         returns:
+       @this (Vec3): this vector after addition
+       ***/
+
+    }, {
+      key: "addScalar",
+      value: function addScalar(value) {
+        this.x += value;
+        this.y += value;
+        this.z += value;
+        return this;
+      }
+      /***
+       Subtracts a vector from this vector
+         params:
+       @vector (Vec3): vector to use for subtraction
+         returns:
+       @this (Vec3): this vector after subtraction
+       ***/
+
+    }, {
+      key: "sub",
+      value: function sub(vector) {
+        this.x -= vector.x;
+        this.y -= vector.y;
+        this.z -= vector.z;
+        return this;
+      }
+      /***
+       Subtracts a scalar to this vector
+         params:
+       @value (float): number to use for subtraction
+         returns:
+       @this (Vec3): this vector after subtraction
+       ***/
+
+    }, {
+      key: "subScalar",
+      value: function subScalar(value) {
+        this.x -= value;
+        this.y -= value;
+        this.z -= value;
+        return this;
+      }
+      /***
+       Multiplies a vector with this vector
+         params:
+       @vector (Vec3): vector to use for multiplication
+         returns:
+       @this (Vec3): this vector after multiplication
+       ***/
+
+    }, {
+      key: "multiply",
+      value: function multiply(vector) {
+        this.x *= vector.x;
+        this.y *= vector.y;
+        this.z *= vector.z;
+        return this;
+      }
+      /***
+       Multiplies a scalar with this vector
+         params:
+       @value (float): number to use for multiplication
+         returns:
+       @this (Vec3): this vector after multiplication
+       ***/
+
+    }, {
+      key: "multiplyScalar",
+      value: function multiplyScalar(value) {
+        this.x *= value;
+        this.y *= value;
+        this.z *= value;
+        return this;
+      }
+      /***
+       Copy a vector into this vector
+         params:
+       @vector (Vec3): vector to copy
+         returns:
+       @this (Vec3): this vector after copy
+       ***/
+
+    }, {
+      key: "copy",
+      value: function copy(vector) {
+        this.x = vector.x;
+        this.y = vector.y;
+        this.z = vector.z;
+        return this;
+      }
+      /***
+       Clone this vector
+         returns:
+       @vector (Vec3): cloned vector
+       ***/
+
+    }, {
+      key: "clone",
+      value: function clone() {
+        return new Vec3(this.x, this.y, this.z);
+      }
+      /***
+       Merges this vector with a vector when values are NaN. Mostly used internally.
+         params:
+       @vector (Vec3): vector to use for sanitization
+         returns:
+       @vector (Vec3): sanitized vector
+       ***/
+
+    }, {
+      key: "sanitizeNaNValuesWith",
+      value: function sanitizeNaNValuesWith(vector) {
+        this.x = isNaN(this.x) ? vector.x : parseFloat(this.x);
+        this.y = isNaN(this.y) ? vector.y : parseFloat(this.y);
+        this.z = isNaN(this.z) ? vector.z : parseFloat(this.z);
+        return this;
+      }
+      /***
+       Apply max values to this vector
+         params:
+       @vector (Vec3): vector representing max values
+         returns:
+       @vector (Vec3): vector with max values applied
+       ***/
+
+    }, {
+      key: "max",
+      value: function max(vector) {
+        this.x = Math.max(this.x, vector.x);
+        this.y = Math.max(this.y, vector.y);
+        this.z = Math.max(this.z, vector.z);
+        return this;
+      }
+      /***
+       Apply min values to this vector
+         params:
+       @vector (Vec3): vector representing min values
+         returns:
+       @vector (Vec3): vector with min values applied
+       ***/
+
+    }, {
+      key: "min",
+      value: function min(vector) {
+        this.x = Math.min(this.x, vector.x);
+        this.y = Math.min(this.y, vector.y);
+        this.z = Math.min(this.z, vector.z);
+        return this;
+      }
+      /***
+       Checks if 2 vectors are equal
+         returns:
+       @isEqual (bool): whether the vectors are equals or not
+       ***/
+
+    }, {
+      key: "equals",
+      value: function equals(vector) {
+        return this.x === vector.x && this.y === vector.y && this.z === vector.z;
+      }
+      /***
+       Normalize this vector
+         returns:
+       @this (Vec3): normalized vector
+       ***/
+
+    }, {
+      key: "normalize",
+      value: function normalize() {
+        // normalize
+        var len = this.x * this.x + this.y * this.y + this.z * this.z;
+
+        if (len > 0) {
+          len = 1 / Math.sqrt(len);
+        }
+
+        this.x *= len;
+        this.y *= len;
+        this.z *= len;
+        return this;
+      }
+      /***
+       Calculates the dot product of 2 vectors
+         returns:
+       @dotProduct (float): dot product of the 2 vectors
+       ***/
+
+    }, {
+      key: "dot",
+      value: function dot(vector) {
+        return this.x * vector.x + this.y * vector.y + this.z * vector.z;
+      }
+      /***
+       Apply a matrix 4 to a point (vec3)
+       Useful to convert a point position from plane local world to webgl space using projection view matrix for example
+       Source code from: http://glmatrix.net/docs/vec3.js.html
+         params :
+       @matrix (array): 4x4 matrix used
+         returns :
+       @this (Vec3): this vector after matrix application
+       ***/
+
+    }, {
+      key: "applyMat4",
+      value: function applyMat4(matrix) {
+        var x = this.x,
+            y = this.y,
+            z = this.z;
+        var mArray = matrix.elements;
+        var w = mArray[3] * x + mArray[7] * y + mArray[11] * z + mArray[15];
+        w = w || 1;
+        this.x = (mArray[0] * x + mArray[4] * y + mArray[8] * z + mArray[12]) / w;
+        this.y = (mArray[1] * x + mArray[5] * y + mArray[9] * z + mArray[13]) / w;
+        this.z = (mArray[2] * x + mArray[6] * y + mArray[10] * z + mArray[14]) / w;
+        return this;
+      }
+      /***
+       Apply a quaternion (rotation in 3D space) to this vector
+         params :
+       @quaternion (Quat): quaternion to use
+         returns :
+       @this (Vec3): this vector after applying the transformation
+       ***/
+
+    }, {
+      key: "applyQuat",
+      value: function applyQuat(quaternion) {
+        var x = this.x,
+            y = this.y,
+            z = this.z;
+        var qx = quaternion.elements[0],
+            qy = quaternion.elements[1],
+            qz = quaternion.elements[2],
+            qw = quaternion.elements[3]; // calculate quat * vector
+
+        var ix = qw * x + qy * z - qz * y;
+        var iy = qw * y + qz * x - qx * z;
+        var iz = qw * z + qx * y - qy * x;
+        var iw = -qx * x - qy * y - qz * z; // calculate result * inverse quat
+
+        this.x = ix * qw + iw * -qx + iy * -qz - iz * -qy;
+        this.y = iy * qw + iw * -qy + iz * -qx - ix * -qz;
+        this.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
+        return this;
+      }
+      /***
+       Project 3D coordinate to 2D point
+         params:
+       @camera (Camera): camera to use for projection
+       ***/
+
+    }, {
+      key: "project",
+      value: function project(camera) {
+        this.applyMat4(camera.viewMatrix).applyMat4(camera.projectionMatrix);
+        return this;
+      }
+      /***
+       Unproject 2D point to 3D coordinate
+         params:
+       @camera (Camera): camera to use for projection
+       ***/
+
+    }, {
+      key: "unproject",
+      value: function unproject(camera) {
+        this.applyMat4(camera.projectionMatrix.getInverse()).applyMat4(camera.worldMatrix);
+        return this;
+      }
+    }]);
+
+    return Vec3;
+  }();
+  /***
+   Here we create a Quat class object
+   This is a really basic Quaternion class used for rotation calculations
+   Highly based on https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js
+     params :
+   @elements (Float32Array of length 4): our quaternion array. Default to identity quaternion.
+     returns :
+   @this: our Quat class object
+   ***/
+  // TODO lot of (unused at the time) methods are missing
+
+
+  var Quat = /*#__PURE__*/function () {
+    function Quat() {
+      var elements = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : new Float32Array([0, 0, 0, 1]);
+      var axisOrder = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "XYZ";
+
+      _classCallCheck(this, Quat);
+
+      this.type = "Quat";
+      this.elements = elements; // rotation axis order
+
+      this.axisOrder = axisOrder;
+    }
+    /***
+     Sets the quaternion values from an array
+       params:
+     @array (array): an array of at least 4 elements
+       returns:
+     @this (Quat class object): this quaternion after being set
+     ***/
+
+
+    _createClass(Quat, [{
+      key: "setFromArray",
+      value: function setFromArray(array) {
+        this.elements[0] = array[0];
+        this.elements[1] = array[1];
+        this.elements[2] = array[2];
+        this.elements[3] = array[3];
+        return this;
+      }
+      /***
+       Sets the quaternion axis order
+         params:
+       @axisOrder (string): an array of at least 4 elements
+         returns:
+       @this (Quat class object): this quaternion after axis order has been set
+       ***/
+
+    }, {
+      key: "setAxisOrder",
+      value: function setAxisOrder(axisOrder) {
+        // force uppercase for strict equality tests
+        axisOrder = axisOrder.toUpperCase();
+
+        switch (axisOrder) {
+          case "XYZ":
+          case "YXZ":
+          case "ZXY":
+          case "ZYX":
+          case "YZX":
+          case "XZY":
+            this.axisOrder = axisOrder;
+            break;
+
+          default:
+            // apply a default axis order
+            this.axisOrder = "XYZ";
+        }
+
+        return this;
+      }
+      /***
+       Copy a quaternion into this quaternion
+         params:
+       @vector (Quat): quaternion to copy
+         returns:
+       @this (Quat): this quaternion after copy
+       ***/
+
+    }, {
+      key: "copy",
+      value: function copy(quaternion) {
+        this.elements = quaternion.elements;
+        this.axisOrder = quaternion.axisOrder;
+        return this;
+      }
+      /***
+       Checks if 2 quaternions are equal
+         returns:
+       @isEqual (bool): whether the quaternions are equals or not
+       ***/
+
+    }, {
+      key: "equals",
+      value: function equals(quaternion) {
+        return this.elements[0] === quaternion.elements[0] && this.elements[1] === quaternion.elements[1] && this.elements[2] === quaternion.elements[2] && this.elements[3] === quaternion.elements[3] && this.axisOrder === quaternion.axisOrder;
+      }
+      /***
+       Sets a rotation quaternion using Euler angles and its axis order
+         params:
+       @vector (Vec3 class object): rotation vector to set our quaternion from
+         returns :
+       @this (Quat class object): quaternion after having applied the rotation
+       ***/
+
+    }, {
+      key: "setFromVec3",
+      value: function setFromVec3(vector) {
+        var ax = vector.x * 0.5;
+        var ay = vector.y * 0.5;
+        var az = vector.z * 0.5;
+        var cosx = Math.cos(ax);
+        var cosy = Math.cos(ay);
+        var cosz = Math.cos(az);
+        var sinx = Math.sin(ax);
+        var siny = Math.sin(ay);
+        var sinz = Math.sin(az); // XYZ order
+
+        if (this.axisOrder === "XYZ") {
+          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
+        } else if (this.axisOrder === "YXZ") {
+          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
+        } else if (this.axisOrder === "ZXY") {
+          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
+        } else if (this.axisOrder === "ZYX") {
+          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
+        } else if (this.axisOrder === "YZX") {
+          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
+        } else if (this.axisOrder === "XZY") {
+          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
+        }
+
+        return this;
+      }
+    }]);
+
+    return Quat;
+  }();
+  /***
    Here we create our DOMGLObject object
    We will extend our Mesh class object by adding HTML sizes helpers (bounding boxes getter/setter and mouse to mesh positioning)
      params:
@@ -4584,19 +5325,109 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "mouseToPlaneCoords",
       value: function mouseToPlaneCoords(mouseCoordinates) {
-        // remember our ShaderPass objects don't have a scale property
-        var scale = this.scale ? this.scale : new Vec2(1, 1); // we need to adjust our plane document bounding rect to it's webgl scale
+        var identityQuat = new Quat().setAxisOrder(this.quaternion.axisOrder);
 
-        var scaleAdjustment = new Vec2((this._boundingRect.document.width - this._boundingRect.document.width * scale.x) / 2, (this._boundingRect.document.height - this._boundingRect.document.height * scale.y) / 2); // also we need to divide by pixel ratio
+        if (identityQuat.equals(this.quaternion)) {
+          // remember our ShaderPass objects don't have a scale property
+          var scale = this.scale ? this.scale : new Vec2(1, 1); // we need to adjust our plane document bounding rect to it's webgl scale
 
-        var planeBoundingRect = {
-          width: this._boundingRect.document.width * scale.x / this.renderer.pixelRatio,
-          height: this._boundingRect.document.height * scale.y / this.renderer.pixelRatio,
-          top: (this._boundingRect.document.top + scaleAdjustment.y) / this.renderer.pixelRatio,
-          left: (this._boundingRect.document.left + scaleAdjustment.x) / this.renderer.pixelRatio
-        }; // mouse position conversion from document to plane space
+          var scaleAdjustment = new Vec2((this._boundingRect.document.width - this._boundingRect.document.width * scale.x) / 2, (this._boundingRect.document.height - this._boundingRect.document.height * scale.y) / 2); // also we need to divide by pixel ratio
 
-        return new Vec2((mouseCoordinates.x - planeBoundingRect.left) / planeBoundingRect.width * 2 - 1, 1 - (mouseCoordinates.y - planeBoundingRect.top) / planeBoundingRect.height * 2);
+          var planeBoundingRect = {
+            width: this._boundingRect.document.width * scale.x / this.renderer.pixelRatio,
+            height: this._boundingRect.document.height * scale.y / this.renderer.pixelRatio,
+            top: (this._boundingRect.document.top + scaleAdjustment.y) / this.renderer.pixelRatio,
+            left: (this._boundingRect.document.left + scaleAdjustment.x) / this.renderer.pixelRatio
+          }; // mouse position conversion from document to plane space
+
+          return new Vec2((mouseCoordinates.x - planeBoundingRect.left) / planeBoundingRect.width * 2 - 1, 1 - (mouseCoordinates.y - planeBoundingRect.top) / planeBoundingRect.height * 2);
+        } else {
+          // remember our ShaderPass objects don't have a scale property
+
+          /*const scale = this.scale ? this.scale : new Vec2(1, 1);
+            // we need to adjust our plane document bounding rect to it's webgl scale
+          const scaleAdjustment = new Vec2(
+              (this._boundingRect.document.width - this._boundingRect.document.width * scale.x) / 2,
+              (this._boundingRect.document.height - this._boundingRect.document.height * scale.y) / 2,
+          );
+            // also we need to divide by pixel ratio
+          const planeBoundingRect = {
+              width: (this._boundingRect.document.width * scale.x) / this.renderer.pixelRatio,
+              height: (this._boundingRect.document.height * scale.y) / this.renderer.pixelRatio,
+              top: (this._boundingRect.document.top + scaleAdjustment.y) / this.renderer.pixelRatio,
+              left: (this._boundingRect.document.left + scaleAdjustment.x) / this.renderer.pixelRatio,
+          };
+            // mouse position conversion from document to plane space
+          const mouse = new Vec3(
+              (((mouseCoordinates.x - planeBoundingRect.left) / planeBoundingRect.width) * 2) - 1,
+              1 - (((mouseCoordinates.y - planeBoundingRect.top) / planeBoundingRect.height) * 2),
+              this._translation.z
+          );
+                const inverseQuaternion = new Quat().setAxisOrder(this.quaternion.axisOrder).setFromVec3(new Vec3(-this.rotation.x, -this.rotation.y, -this.rotation.z));
+            mouse.applyQuat(inverseQuaternion);*/
+          //mouse.applyMat4(this._matrices.mvMatrix.matrix);
+          var rendererBBox = this.renderer._boundingRect;
+          var mouseWorldPos = new Vec2(2 * (mouseCoordinates.x / (rendererBBox.width / this.renderer.pixelRatio)) - 1, 1 - 2 * mouseCoordinates.y / (rendererBBox.height / this.renderer.pixelRatio));
+          var viewFrustum = new Mat4([1 / Math.tan(this.camera.fov), 0, 0, 0, 0, this.camera.width / this.camera.height / Math.tan(this.camera.fov), 0, 0, 0, 0, (this.camera.far + this.camera.near) / (this.camera.far - this.camera.near), 1, 0, 0, -2 * this.camera.far * this.camera.near / (this.camera.far - this.camera.near), 0]);
+          /*let mouseWorldPos = new Vec3(
+              (2 * mouseCoordinates.x) / (rendererBBox.width / this.renderer.pixelRatio) - 1,
+              1 - (2 * mouseCoordinates.y) / (rendererBBox.height / this.renderer.pixelRatio),
+              1
+          );*/
+          //let tmp = mouseWorldPos.applyMat4(viewFrustum.getInverse().multiply(this.camera.projectionMatrix)).normalize();
+          //console.log(tmp);
+
+          /*
+          // 2 ways to get the same result!
+            // first
+          const eyeSpacePoint = mouseWorldPos.applyMat4(this.camera.projectionMatrix.getInverse());
+          const worldSpacePoint1 = eyeSpacePoint.applyMat4(cameraMatrix.getInverse());
+            // second
+          const worldToClipMatrix = new Mat4().copy(this.camera.projectionMatrix).multiply(cameraMatrix);
+          const clipToWorldMatrix = worldToClipMatrix.getInverse();
+          const worldSpacePoint2 = mouseWorldPos.applyMat4(clipToWorldMatrix);
+          */
+          //let rayStart = this.camera.position.clone();
+          //let rayStart = new Vec3(mouseWorldPos.x, mouseWorldPos.y, this.camera.position.z - this.camera.near).unproject(this.camera);
+
+          var rayStart = new Vec3(mouseWorldPos.x, mouseWorldPos.y, 100).unproject(this.camera); //let rayEnd = new Vec3(mouseWorldPos.x, mouseWorldPos.y, this.camera.position.z - this.camera.far).unproject(this.camera);
+          //let rayEnd = new Vec3(mouseWorldPos.x, mouseWorldPos.y, this._translation.z).unproject(this.camera);
+
+          var rayEnd = new Vec3(mouseWorldPos.x, mouseWorldPos.y, -100).unproject(this.camera);
+          var rayDir = rayEnd.sub(rayStart).normalize();
+          var transformedRayStart = rayStart.clone().applyMat4(this._matrices.mvMatrix.matrix.getInverse());
+          var transformedRayEnd = rayEnd.clone().applyMat4(this._matrices.mvMatrix.matrix.getInverse());
+          var transformedRayDir = transformedRayEnd.sub(transformedRayStart).normalize(); //rayStart = rayStart.applyMat4(this._matrices.mvMatrix.matrix.getInverse());
+          //rayDir = rayDir.applyMat4(this._matrices.mvMatrix.matrix.getInverse());
+          //console.log(rayEnd.sub(this.camera.position).normalize(), this.camera.position.sub(rayEnd).normalize());
+
+          var planeNormals = new Vec3(0, 0, 1).applyQuat(this.quaternion);
+          var planeOrigin = new Vec3().applyMat4(this._matrices.mvMatrix.matrix); //const planeOrigin = new Vec3(mouseWorldPos.x, mouseWorldPos.y, 0).applyMat4(this._matrices.mvMatrix.matrix);
+          //const planeWorldOrigin = planeOrigin.clone().unproject(this.camera);
+          //const planeOrigin = new Vec3().unproject(this.camera).applyMat4(this._matrices.mvMatrix.matrix);
+          // from https://people.cs.clemson.edu/~dhouse/courses/405/notes/raycast.pdf
+
+          var denominator = planeNormals.dot(rayDir);
+
+          if (Math.abs(denominator) <= 0.000001) {
+            return new Vec2(Infinity, Infinity);
+          }
+
+          var t = Math.abs(-1 * planeNormals.dot(rayStart.clone().sub(planeOrigin)) / denominator); //console.log("distance", planeNormals.dot(rayStart.clone().sub(planeOrigin)));
+          //console.log("distance", denominator);
+
+          var point = rayStart.add(rayDir.multiplyScalar(t));
+          var tDenominator = planeNormals.dot(transformedRayDir);
+
+          if (Math.abs(tDenominator) <= 0.000001) {
+            return new Vec2(Infinity, Infinity);
+          }
+
+          var tT = Math.abs(-1 * planeNormals.dot(transformedRayStart.clone().sub(planeOrigin)) / denominator); //console.log("distance", planeNormals.dot(rayStart.clone().sub(planeOrigin)));
+
+          var tPoint = transformedRayStart.add(transformedRayDir.multiplyScalar(tT));
+          return new Vec2(tPoint.x, tPoint.y);
+        }
       }
       /*** EVENTS ***/
 
@@ -4830,260 +5661,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return ShaderPass;
   }(DOMMesh);
   /***
-   Here we create a Vec3 class object
-   This is a really basic Vector3 class used for vector calculations
-   Highly based on https://github.com/mrdoob/three.js/blob/dev/src/math/Vector3.js and http://glmatrix.net/docs/vec3.js.html
-     params :
-   @x (float): X component of our vector
-   @y (float): Y component of our vector
-   @z (float): Z component of our vector
-     returns :
-   @this: our Vec3 class object
-   ***/
-  // TODO lot of (unused at the time) methods are missing
-
-
-  var Vec3 = /*#__PURE__*/function () {
-    function Vec3() {
-      var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-      var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-      var z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-
-      _classCallCheck(this, Vec3);
-
-      this.type = "Vec3";
-      this.set(x, y, z);
-    }
-    /***
-     Sets the vector from values
-       params:
-     @x (float): X component of our vector
-     @y (float): Y component of our vector
-     @z (float): Z component of our vector
-       returns:
-     @this (Vec2): this vector after being set
-     ***/
-
-
-    _createClass(Vec3, [{
-      key: "set",
-      value: function set(x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        return this;
-      }
-      /***
-       Adds a vector to this vector
-         params:
-       @vector (Vec3): vector to add
-         returns:
-       @this (Vec3): this vector after addition
-       ***/
-
-    }, {
-      key: "add",
-      value: function add(vector) {
-        this.x += vector.x;
-        this.y += vector.y;
-        this.z += vector.z;
-        return this;
-      }
-      /***
-       Adds a scalar to this vector
-         params:
-       @value (float): number to add
-         returns:
-       @this (Vec3): this vector after addition
-       ***/
-
-    }, {
-      key: "addScalar",
-      value: function addScalar(value) {
-        this.x += value;
-        this.y += value;
-        this.z += value;
-        return this;
-      }
-      /***
-       Subtracts a vector from this vector
-         params:
-       @vector (Vec3): vector to use for subtraction
-         returns:
-       @this (Vec3): this vector after subtraction
-       ***/
-
-    }, {
-      key: "sub",
-      value: function sub(vector) {
-        this.x -= vector.x;
-        this.y -= vector.y;
-        this.z -= vector.z;
-        return this;
-      }
-      /***
-       Subtracts a scalar to this vector
-         params:
-       @value (float): number to use for subtraction
-         returns:
-       @this (Vec3): this vector after subtraction
-       ***/
-
-    }, {
-      key: "subScalar",
-      value: function subScalar(value) {
-        this.x -= value;
-        this.y -= value;
-        this.z -= value;
-        return this;
-      }
-      /***
-       Copy a vector into this vector
-         params:
-       @vector (Vec3): vector to copy
-         returns:
-       @this (Vec3): this vector after copy
-       ***/
-
-    }, {
-      key: "copy",
-      value: function copy(vector) {
-        this.x = vector.x;
-        this.y = vector.y;
-        this.z = vector.z;
-        return this;
-      }
-      /***
-       Clone this vector
-         returns:
-       @vector (Vec3): cloned vector
-       ***/
-
-    }, {
-      key: "clone",
-      value: function clone() {
-        return new Vec3(this.x, this.y, this.z);
-      }
-      /***
-       Merges this vector with a vector when values are NaN. Mostly used internally.
-         params:
-       @vector (Vec3): vector to use for sanitization
-         returns:
-       @vector (Vec3): sanitized vector
-       ***/
-
-    }, {
-      key: "sanitizeNaNValuesWith",
-      value: function sanitizeNaNValuesWith(vector) {
-        this.x = isNaN(this.x) ? vector.x : parseFloat(this.x);
-        this.y = isNaN(this.y) ? vector.y : parseFloat(this.y);
-        this.z = isNaN(this.z) ? vector.z : parseFloat(this.z);
-        return this;
-      }
-      /***
-       Apply max values to this vector
-         params:
-       @vector (Vec3): vector representing max values
-         returns:
-       @vector (Vec3): vector with max values applied
-       ***/
-
-    }, {
-      key: "max",
-      value: function max(vector) {
-        this.x = Math.max(this.x, vector.x);
-        this.y = Math.max(this.y, vector.y);
-        this.z = Math.max(this.z, vector.z);
-        return this;
-      }
-      /***
-       Apply min values to this vector
-         params:
-       @vector (Vec3): vector representing min values
-         returns:
-       @vector (Vec3): vector with min values applied
-       ***/
-
-    }, {
-      key: "min",
-      value: function min(vector) {
-        this.x = Math.min(this.x, vector.x);
-        this.y = Math.min(this.y, vector.y);
-        this.z = Math.min(this.z, vector.z);
-        return this;
-      }
-      /***
-       Checks if 2 vectors are equal
-         returns:
-       @isEqual (bool): whether the vectors are equals or not
-       ***/
-
-    }, {
-      key: "equals",
-      value: function equals(vector) {
-        return this.x === vector.x && this.y === vector.y && this.z === vector.z;
-      }
-      /***
-       Normalize this vector
-         returns:
-       @this (Vec3): normalized vector
-       ***/
-
-    }, {
-      key: "normalize",
-      value: function normalize() {
-        // normalize
-        var len = this.x * this.x + this.y * this.y + this.z * this.z;
-
-        if (len > 0) {
-          len = 1 / Math.sqrt(len);
-        }
-
-        this.x *= len;
-        this.y *= len;
-        this.z *= len;
-        return this;
-      }
-      /***
-       Calculates the dot product of 2 vectors
-         returns:
-       @dotProduct (float): dot product of the 2 vectors
-       ***/
-
-    }, {
-      key: "dot",
-      value: function dot(vector) {
-        return this.x * vector.x + this.y * vector.y + this.z * vector.z;
-      }
-      /***
-       Apply a matrix 4 to a point (vec3)
-       Useful to convert a point position from plane local world to webgl space using projection view matrix for example
-       Source code from: http://glmatrix.net/docs/vec3.js.html
-         params :
-       @matrix (array): 4x4 matrix used
-         returns :
-       @this (Vec3): this vector after matrix application
-       ***/
-
-    }, {
-      key: "applyMat4",
-      value: function applyMat4(matrix) {
-        var x = this.x,
-            y = this.y,
-            z = this.z;
-        var mArray = matrix.elements;
-        var w = mArray[3] * x + mArray[7] * y + mArray[11] * z + mArray[15];
-        w = w || 1;
-        this.x = (mArray[0] * x + mArray[4] * y + mArray[8] * z + mArray[12]) / w;
-        this.y = (mArray[1] * x + mArray[5] * y + mArray[9] * z + mArray[13]) / w;
-        this.z = (mArray[2] * x + mArray[6] * y + mArray[10] * z + mArray[14]) / w;
-        return this;
-      }
-    }]);
-
-    return Vec3;
-  }();
-  /***
    Here we create our Camera object
    Creates a perspective camera and its projection matrix (which is used by Plane's class objects)
    Uses a dirty _shouldUpdate flag used to determine if we should update the matrix
@@ -5117,6 +5694,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       this.position = new Vec3();
       this.projectionMatrix = new Mat4();
+      this.worldMatrix = new Mat4();
+      this.viewMatrix = new Mat4();
       this._shouldUpdate = false;
       this.setSize();
       this.setPerspective(fov, near, far, width, height, pixelRatio);
@@ -5246,7 +5825,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "setPosition",
       value: function setPosition() {
-        this.position.set(0, 0, Math.tan(Math.PI / 180 * 0.5 * this.fov) * 2.0);
+        this.position.set(0, 0, Math.tan(Math.PI / 180 * 0.5 * this.fov) * 2.0); // update matrices
+
+        this.worldMatrix.setFromArray([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, this.position.x, this.position.y, this.position.z, 1]);
+        this.viewMatrix = this.viewMatrix.copy(this.worldMatrix).getInverse();
       }
       /***
        Sets a CSSPerspective property based on width, height, pixelRatio and fov
@@ -5303,164 +5885,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return Camera;
   }();
   /***
-   Here we create a Quat class object
-   This is a really basic Quaternion class used for rotation calculations
-   Highly based on https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js
-     params :
-   @elements (Float32Array of length 4): our quaternion array. Default to identity quaternion.
-     returns :
-   @this: our Quat class object
-   ***/
-  // TODO lot of (unused at the time) methods are missing
-
-
-  var Quat = /*#__PURE__*/function () {
-    function Quat() {
-      var elements = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : new Float32Array([0, 0, 0, 1]);
-      var axisOrder = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "XYZ";
-
-      _classCallCheck(this, Quat);
-
-      this.type = "Quat";
-      this.elements = elements; // rotation axis order
-
-      this.axisOrder = axisOrder;
-    }
-    /***
-     Sets the quaternion values from an array
-       params:
-     @array (array): an array of at least 4 elements
-       returns:
-     @this (Quat class object): this quaternion after being set
-     ***/
-
-
-    _createClass(Quat, [{
-      key: "setFromArray",
-      value: function setFromArray(array) {
-        this.elements[0] = array[0];
-        this.elements[1] = array[1];
-        this.elements[2] = array[2];
-        this.elements[3] = array[3];
-        return this;
-      }
-      /***
-       Sets the quaternion axis order
-         params:
-       @axisOrder (string): an array of at least 4 elements
-         returns:
-       @this (Quat class object): this quaternion after axis order has been set
-       ***/
-
-    }, {
-      key: "setAxisOrder",
-      value: function setAxisOrder(axisOrder) {
-        // force uppercase for strict equality tests
-        axisOrder = axisOrder.toUpperCase();
-
-        switch (axisOrder) {
-          case "XYZ":
-          case "YXZ":
-          case "ZXY":
-          case "ZYX":
-          case "YZX":
-          case "XZY":
-            this.axisOrder = axisOrder;
-            break;
-
-          default:
-            // apply a default axis order
-            this.axisOrder = "XYZ";
-        }
-
-        return this;
-      }
-      /***
-       Copy a quaternion into this quaternion
-         params:
-       @vector (Quat): quaternion to copy
-         returns:
-       @this (Quat): this quaternion after copy
-       ***/
-
-    }, {
-      key: "copy",
-      value: function copy(quaternion) {
-        this.elements = quaternion.elements;
-        this.axisOrder = quaternion.axisOrder;
-        return this;
-      }
-      /***
-       Checks if 2 quaternions are equal
-         returns:
-       @isEqual (bool): whether the quaternions are equals or not
-       ***/
-
-    }, {
-      key: "equals",
-      value: function equals(quaternion) {
-        return this.elements[0] === quaternion.elements[0] && this.elements[1] === quaternion.elements[1] && this.elements[2] === quaternion.elements[2] && this.elements[3] === quaternion.elements[3] && this.axisOrder === quaternion.axisOrder;
-      }
-      /***
-       Sets a rotation quaternion using Euler angles and its axis order
-         params:
-       @vector (Vec3 class object): rotation vector to set our quaternion from
-         returns :
-       @this (Quat class object): quaternion after having applied the rotation
-       ***/
-
-    }, {
-      key: "setFromVec3",
-      value: function setFromVec3(vector) {
-        var ax = vector.x * 0.5;
-        var ay = vector.y * 0.5;
-        var az = vector.z * 0.5;
-        var cosx = Math.cos(ax);
-        var cosy = Math.cos(ay);
-        var cosz = Math.cos(az);
-        var sinx = Math.sin(ax);
-        var siny = Math.sin(ay);
-        var sinz = Math.sin(az); // XYZ order
-
-        if (this.axisOrder === "XYZ") {
-          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
-          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
-          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
-          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
-        } else if (this.axisOrder === "YXZ") {
-          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
-          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
-          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
-          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
-        } else if (this.axisOrder === "ZXY") {
-          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
-          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
-          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
-          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
-        } else if (this.axisOrder === "ZYX") {
-          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
-          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
-          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
-          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
-        } else if (this.axisOrder === "YZX") {
-          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
-          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
-          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
-          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
-        } else if (this.axisOrder === "XZY") {
-          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
-          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
-          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
-          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
-        }
-
-        return this;
-      }
-    }]);
-
-    return Quat;
-  }();
-  /***
    Here we create our Plane object
    We will extend our DOMMesh class that handles all the WebGL part and basic HTML sizings
      Plane class will add:
@@ -5487,10 +5911,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     var _super4 = _createSuper(Plane);
 
-    function Plane(renderer, htmlElement, _ref10) {
+    function Plane(renderer, htmlElement) {
       var _this20;
 
-      var shareProgram = _ref10.shareProgram,
+      var _ref10 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+          shareProgram = _ref10.shareProgram,
           widthSegments = _ref10.widthSegments,
           heightSegments = _ref10.heightSegments,
           depthTest = _ref10.depthTest,
@@ -7671,9 +8096,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this._addListeners(); // we are ready to go
 
 
-        this.container.appendChild(this.canvas); // watermak
+        this.container.appendChild(this.canvas); // watermark
 
-        console.log("curtains.js - v7.0"); // start rendering
+        console.log("curtains.js - v7.1"); // start rendering
 
         this._animationFrameID = null;
 
