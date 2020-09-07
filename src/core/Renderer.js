@@ -1,8 +1,5 @@
 import {Scene} from "./Scene.js";
 import {CacheManager} from "../utils/CacheManager.js";
-import {RenderTarget} from "../framebuffers/RenderTarget.js";
-import {ShaderPass} from "../framebuffers/ShaderPass.js";
-import {Plane} from "./Plane.js";
 import {CallbackQueueManager} from "../utils/CallbackQueueManager.js";
 import {throwWarning} from '../utils/utils.js';
 
@@ -26,8 +23,6 @@ import {throwWarning} from '../utils/utils.js';
  returns :
  @this: our Renderer
 ***/
-
-// TODO deprecate all add* objects method and get rid of imports. BIG breaking change!
 
 export class Renderer {
     constructor({
@@ -586,50 +581,6 @@ export class Renderer {
 
     /*** PLANES ***/
 
-    /***
-     Create a Plane element and load its images
-
-     params:
-     @planesHtmlElement (html element): the html element that we will use for our plane
-     @params (obj): plane params:
-     - vertexShaderID (string, optionnal): the vertex shader ID. If not specified, will look for a data attribute data-vs-id on the plane HTML element. Will throw an error if nothing specified
-     - fragmentShaderID (string, optionnal): the fragment shader ID. If not specified, will look for a data attribute data-fs-id on the plane HTML element. Will throw an error if nothing specified
-     - widthSegments (optionnal): plane definition along the X axis (1 by default)
-     - heightSegments (optionnal): plane definition along the Y axis (1 by default)
-     - alwaysDraw (boolean, optionnal): define if the plane should always be drawn or it should be drawn only if its within the canvas (false by default)
-     - autoloadSources (boolean, optionnal): define if the sources should be load on init automatically (true by default)
-     - crossOrigin (string, optionnal): define the crossOrigin process to load images if any
-     - fov (int, optionnal): define the perspective field of view (default to 75)
-     - uniforms (obj, otpionnal): the uniforms that will be passed to the shaders (if no uniforms specified there wont be any interaction with the plane)
-
-     returns :
-     @plane: our newly created plane object
-     ***/
-    addPlane(planeHtmlElement, params) {
-        // if the WebGL context couldn't be created, return null
-        if(!this.gl) {
-            if(!this.production) throwWarning(this.type + ": Unable to create a Plane because the WebGl context is not defined");
-
-            return false;
-        }
-        else {
-            if(!planeHtmlElement || planeHtmlElement.length === 0) {
-                if(!this.production) throwWarning(this.type + ": The HTML element you specified does not currently exists in the DOM");
-
-                return false;
-            }
-
-            // init the plane
-            let plane = new Plane(this, planeHtmlElement, params);
-
-            if(!plane._program.compiled) {
-                plane = false;
-            }
-
-            return plane;
-        }
-    }
-
 
     /***
      Removes a Plane element (that has already been disposed) from the scene and the planes array
@@ -657,33 +608,6 @@ export class Renderer {
 
 
     /*** POST PROCESSING ***/
-
-
-    /*** RENDER TARGETS ***/
-
-
-    /***
-     Create a new RenderTarget element
-
-     params:
-     @params (obj): plane params:
-     - depth (bool, optionnal): if the render target should use a depth buffer in order to preserve depth (default to false)
-
-     returns :
-     @renderTarget: our newly created RenderTarget object
-     ***/
-    addRenderTarget(params) {
-        // if the WebGL context couldn't be created, return null
-        if(!this.gl) {
-            if(!this.production) throwWarning(this.type + ": Unable to create a RenderTarget because the WebGl context is not defined");
-
-            return false;
-        }
-        else {
-            // init the render target
-            return new RenderTarget(this, params);
-        }
-    }
 
 
     /***
@@ -720,39 +644,6 @@ export class Renderer {
 
 
     /*** SHADER PASSES ***/
-
-
-    /***
-     Create a new ShaderPass element
-
-     params:
-     @params (obj): plane params:
-     - vertexShaderID (string, optionnal): the vertex shader ID. If not specified, will look for a data attribute data-vs-id on the plane HTML element. Will throw an error if nothing specified
-     - fragmentShaderID (string, optionnal): the fragment shader ID. If not specified, will look for a data attribute data-fs-id on the plane HTML element. Will throw an error if nothing specified
-     - crossOrigin (string, optionnal): define the crossOrigin process to load images if any
-     - uniforms (obj, otpionnal): the uniforms that will be passed to the shaders (if no uniforms specified there wont be any interaction with the plane)
-
-     returns :
-     @shaderPass: our newly created ShaderPass object
-     ***/
-    addShaderPass(params) {
-        // if the WebGL context couldn't be created, return null
-        if(!this.gl) {
-            if(!this.production) throwWarning(this.type + ": Unable to create a ShaderPass because the WebGl context is not defined");
-
-            return false;
-        }
-        else {
-            // init the shader pass
-            let shaderPass = new ShaderPass(this, params);
-
-            if(!shaderPass._program.compiled) {
-                shaderPass = false;
-            }
-
-            return shaderPass;
-        }
-    }
 
 
     /***

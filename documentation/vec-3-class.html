@@ -152,6 +152,9 @@
                                             <a href="vec-3-class.html#apply-mat-4">applyMat4</a>
                                         </li>
                                         <li>
+                                            <a href="vec-3-class.html#apply-quat">applyQuat</a>
+                                        </li>
+                                        <li>
                                             <a href="vec-3-class.html#clone">clone</a>
                                         </li>
                                         <li>
@@ -170,7 +173,16 @@
                                             <a href="vec-3-class.html#min">min</a>
                                         </li>
                                         <li>
+                                            <a href="vec-3-class.html#multiply">multiply</a>
+                                        </li>
+                                        <li>
+                                            <a href="vec-3-class.html#multiply-scalar">multiplyScalar</a>
+                                        </li>
+                                        <li>
                                             <a href="vec-3-class.html#normalize">normalize</a>
+                                        </li>
+                                        <li>
+                                            <a href="vec-3-class.html#project">project</a>
                                         </li>
                                         <li>
                                             <a href="vec-3-class.html#sanitize-nan-values-with">sanitizeNaNValuesWith</a>
@@ -183,6 +195,9 @@
                                         </li>
                                         <li>
                                             <a href="vec-3-class.html#sub-scalar">subScalar</a>
+                                        </li>
+                                        <li>
+                                            <a href="vec-3-class.html#unproject">unproject</a>
                                         </li>
                                     </ul>
                                 </div>
@@ -404,6 +419,31 @@
                                 </p>
                             </li>
 
+                            <li id="apply-quat">
+                                <p>
+                                    <strong>applyQuat</strong>(quaternion): <span class="api-item-version">v7.1</span>
+                                </p>
+                                <p>
+                                    Apply a quaternion (rotation in 3D space) to this vector.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            quaternion
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            <a href="quat-class.html">Quat</a> class object
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            quaternion to apply
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>returns:</strong> this vector after quaternion application.
+                                </p>
+                            </li>
+
                             <li id="clone">
                                 <p>
                                     <strong>clone</strong>(): <span class="api-item-version">v7.0</span>
@@ -541,6 +581,56 @@
                                 </p>
                             </li>
 
+                            <li id="multiply">
+                                <p>
+                                    <strong>multiply</strong>(vector): <span class="api-item-version">v7.1</span>
+                                </p>
+                                <p>
+                                    Multiplies a vector with this vector.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            vector
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            Vec3 class object
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            vector to use for multiplication
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>returns:</strong> this vector after multiplication.
+                                </p>
+                            </li>
+
+                            <li id="multiply-scalar">
+                                <p>
+                                    <strong>multiplyScalar</strong>(scalar): <span class="api-item-version">v7.1</span>
+                                </p>
+                                <p>
+                                    Multiplies a scalar with this vector.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            scalar
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            number to use for multiplication
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>returns:</strong> this vector after multiplication.
+                                </p>
+                            </li>
+
                             <li id="normalize">
                                 <p>
                                     <strong>normalize</strong>(): <span class="api-item-version">v7.0</span>
@@ -550,6 +640,31 @@
                                 </p>
                                 <p>
                                     <strong>returns:</strong> normalized vector.
+                                </p>
+                            </li>
+
+                            <li id="project">
+                                <p>
+                                    <strong>project</strong>(camera): <span class="api-item-version">v7.1</span>
+                                </p>
+                                <p>
+                                    Project 3D coordinate to 2D point.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            camera
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            Camera class object. Use a plane <a href="plane-class.html#camera">camera</a>.
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            camera to use to project this vector from 3D to 2D space.
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>returns:</strong> this vector after having been projected.
                                 </p>
                             </li>
 
@@ -672,6 +787,31 @@
                                 </ul>
                                 <p>
                                     <strong>returns:</strong> this vector after subtraction.
+                                </p>
+                            </li>
+
+                            <li id="unproject">
+                                <p>
+                                    <strong>unproject</strong>(camera): <span class="api-item-version">v7.1</span>
+                                </p>
+                                <p>
+                                    Unproject 2D point to 3D coordinate.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            camera
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            Camera class object. Use a plane <a href="plane-class.html#camera">camera</a>.
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            camera to use to unproject this vector from 2D to 3D space.
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>returns:</strong> this vector after having been unprojected.
                                 </p>
                             </li>
                         </ul>

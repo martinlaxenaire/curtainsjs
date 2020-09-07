@@ -113,6 +113,79 @@ export class Mat4 {
 
 
     /***
+     Get matrix inverse
+
+     returns:
+     @result (Mat4 class object): inverted Mat4
+     ***/
+    getInverse() {
+        const te = this.elements;
+        const out = new Mat4();
+        const oe = out.elements;
+
+        let a00 = te[0],
+            a01 = te[1],
+            a02 = te[2],
+            a03 = te[3];
+
+        let a10 = te[4],
+            a11 = te[5],
+            a12 = te[6],
+            a13 = te[7];
+
+        let a20 = te[8],
+            a21 = te[9],
+            a22 = te[10],
+            a23 = te[11];
+
+        let a30 = te[12],
+            a31 = te[13],
+            a32 = te[14],
+            a33 = te[15];
+
+        let b00 = a00 * a11 - a01 * a10;
+        let b01 = a00 * a12 - a02 * a10;
+        let b02 = a00 * a13 - a03 * a10;
+        let b03 = a01 * a12 - a02 * a11;
+        let b04 = a01 * a13 - a03 * a11;
+        let b05 = a02 * a13 - a03 * a12;
+        let b06 = a20 * a31 - a21 * a30;
+        let b07 = a20 * a32 - a22 * a30;
+        let b08 = a20 * a33 - a23 * a30;
+        let b09 = a21 * a32 - a22 * a31;
+        let b10 = a21 * a33 - a23 * a31;
+        let b11 = a22 * a33 - a23 * a32;
+
+        // Calculate the determinant
+
+        let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+        if (!det) {
+            return null;
+        }
+        det = 1 / det;
+
+        oe[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+        oe[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+        oe[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+        oe[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+        oe[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+        oe[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+        oe[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+        oe[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+        oe[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+        oe[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+        oe[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+        oe[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+        oe[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+        oe[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+        oe[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+        oe[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+
+        return out;
+    }
+
+
+    /***
      Simple Mat4 scaling helper
 
      params :

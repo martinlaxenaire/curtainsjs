@@ -1049,10 +1049,10 @@
 
                             <li id="load-image">
                                 <p>
-                                    <strong>loadImage</strong>(imageElement, textureOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
+                                    <strong>loadImage</strong>(imageElement, textureOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.1</span>
                                 </p>
                                 <p>
-                                    This function takes an image HTML element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
+                                    This function takes an image HTML element (or image source URL), creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -1060,10 +1060,10 @@
                                             imageElement
                                         </span>
                                         <span class="api-item-parameter-type">
-                                            HTML image element
+                                            HTML image element or string
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            a HTML image element to load into your shader pass.
+                                            a HTML image element or image source URL to load into your shader pass.
                                         </span>
                                     </li>
                                     <li>
@@ -1141,10 +1141,10 @@
 
                             <li id="load-images">
                                 <p>
-                                    <strong>loadImages</strong>(imageElements, texturesOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
+                                    <strong>loadImages</strong>(imageElements, texturesOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.1</span>
                                 </p>
                                 <p>
-                                    This function takes an array of image HTML elements and creates a <a href="texture-class.html">Texture</a> for each of them.
+                                    This function takes an array of image HTML elements (or images sources URL) and creates a <a href="texture-class.html">Texture</a> for each of them.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -1152,10 +1152,10 @@
                                             imageElements
                                         </span>
                                         <span class="api-item-parameter-type">
-                                            array or collection of HTML image elements
+                                            array or collection of HTML image elements or strings
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            an array or collection of HTML image elements to load into your shader pass.
+                                            an array or collection of HTML image elements or images sources URL to load into your shader pass.
                                         </span>
                                     </li>
                                     <li>
@@ -1236,10 +1236,10 @@
 
                             <li id="load-source">
                                 <p>
-                                    <strong>loadSource</strong>(sourceElement, textureOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
+                                    <strong>loadSource</strong>(sourceElement, textureOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.1</span>
                                 </p>
                                 <p>
-                                    This function takes a source element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
+                                    This function takes a source element (or source URL), creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -1247,7 +1247,7 @@
                                             sourceElement
                                         </span>
                                         <span class="api-item-parameter-type">
-                                            either image, canvas or video HTML element
+                                            either image, canvas, video HTML element or string
                                         </span>
                                         <span class="api-item-parameter-desc">
                                             an image, canvas or video HTML element to load into your shader pass.
@@ -1328,10 +1328,10 @@
 
                             <li id="load-sources">
                                 <p>
-                                    <strong>loadSources</strong>(sourceElements, texturesOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
+                                    <strong>loadSources</strong>(sourceElements, texturesOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.1</span>
                                 </p>
                                 <p>
-                                    This function takes an array of source elements, creates <a href="texture-class.html">Textures</a> using them and loads them into your shader pass.
+                                    This function takes an array of source elements (or sources URL), creates <a href="texture-class.html">Textures</a> using them and loads them into your shader pass.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -1339,10 +1339,10 @@
                                             sourceElements
                                         </span>
                                         <span class="api-item-parameter-type">
-                                            array or collection of either images, canvases or videos HTML elements
+                                            array or collection of either images, canvases or videos HTML elements or strings
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            an array of image, canvas or video HTML elements to load into your shader pass.
+                                            an array of image, canvas or video HTML elements or sources URL to load into your shader pass.
                                         </span>
                                     </li>
                                     <li>
@@ -1420,10 +1420,10 @@
 
                             <li id="load-video">
                                 <p>
-                                    <strong>loadVideo</strong>(videoElement, textureOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
+                                    <strong>loadVideo</strong>(videoElement, textureOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.1</span>
                                 </p>
                                 <p>
-                                    This function takes a video HTML element, creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
+                                    This function takes a video HTML element (or video source URL), creates a <a href="texture-class.html">Texture</a> using it and loads it into your shader pass.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -1431,10 +1431,10 @@
                                             videoElement
                                         </span>
                                         <span class="api-item-parameter-type">
-                                            HTML video element
+                                            HTML video element or string
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            a HTML video element to load into your shader pass.
+                                            a HTML video element or video source URL to load into your shader pass.
                                         </span>
                                     </li>
                                     <li>
@@ -1512,10 +1512,10 @@
 
                             <li id="load-videos">
                                 <p>
-                                    <strong>loadVideos</strong>(videoElements, texturesOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.0</span>
+                                    <strong>loadVideos</strong>(videoElements, texturesOptions, successCallback, errorCallback): <span class="api-item-version">v3.0</span><span class="api-item-warning">updated in v7.1</span>
                                 </p>
                                 <p>
-                                    This function takes an array of video HTML elements and creates a <a href="texture-class.html">Texture</a> for each of them.
+                                    This function takes an array of video HTML elements (or videos sources URL) and creates a <a href="texture-class.html">Texture</a> for each of them.
                                 </p>
                                 <ul class="api-item-parameters">
                                     <li>
@@ -1523,10 +1523,10 @@
                                             videoElements
                                         </span>
                                         <span class="api-item-parameter-type">
-                                            array or collection of HTML video elements
+                                            array or collection of HTML video elements or strings
                                         </span>
                                         <span class="api-item-parameter-desc">
-                                            an array or collection of HTML video elements to load into your shader pass.
+                                            an array or collection of HTML video elements or videos sources URL to load into your shader pass.
                                         </span>
                                     </li>
                                     <li>

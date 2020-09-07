@@ -10,9 +10,8 @@ import {throwWarning} from '../utils/utils.js';
  @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
  @plane (html element): the html element that we will use for our DOMMesh object
  @type (string): Object type (should be either "Plane" or "ShaderPass")
-
  @Meshparams (object): see Mesh class object
-
+ 
  returns:
  @this: our BasePlane element
  ***/

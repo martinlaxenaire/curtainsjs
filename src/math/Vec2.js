@@ -108,6 +108,40 @@ export class Vec2 {
 
 
     /***
+     Multiplies a vector with this vector
+
+     params:
+     @vector (Vec2): vector to use for multiplication
+
+     returns:
+     @this (Vec2): this vector after multiplication
+     ***/
+    multiply(vector) {
+        this.x *= vector.x;
+        this.y *= vector.y;
+
+        return this;
+    }
+
+
+    /***
+     Multiplies a scalar with this vector
+
+     params:
+     @value (float): number to use for multiplication
+
+     returns:
+     @this (Vec2): this vector after multiplication
+     ***/
+    multiplyScalar(value) {
+        this.x *= value;
+        this.y *= value;
+
+        return this;
+    }
+
+
+    /***
      Copy a vector into this vector
 
      params:

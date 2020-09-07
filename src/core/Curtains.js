@@ -157,8 +157,8 @@ export class Curtains {
         // we are ready to go
         this.container.appendChild(this.canvas);
 
-        // watermak
-        console.log("curtains.js - v7.0");
+        // watermark
+        console.log("curtains.js - v7.1");
 
         // start rendering
         this._animationFrameID = null;
@@ -441,69 +441,6 @@ export class Curtains {
         this.planes = this.renderer.planes;
         this.shaderPasses = this.renderer.shaderPasses;
         this.renderTargets = this.renderer.renderTargets;
-    }
-
-    /***
-     See Renderer Class addPlane() method
-     DEPRECATED SOON!
-     ***/
-    addPlane(planeHtmlElement, params) {
-        throwWarning("Curtains: addPlane() is deprecated. To create a plane, use new Plane() with the following arguments:\ncurtains:", this, "\nhtmlElement:", planeHtmlElement, "\nparameters:", params);
-        return this.renderer.addPlane(planeHtmlElement, params);
-    }
-
-
-    /***
-     See Renderer Class removePlane() method
-     DEPRECATED SOON!
-     ***/
-    removePlane(plane) {
-        throwWarning("Curtains: removePlane() is deprecated. To remove this plane ", plane, ", use its remove() method");
-        plane.remove();
-    }
-
-
-    /*** RENDER TARGETS ***/
-
-    /***
-     See Renderer Class addRenderTarget() method
-     DEPRECATED SOON!
-     ***/
-    addRenderTarget(params) {
-        throwWarning("Curtains: addRenderTarget() is deprecated. To create a render target, use new RenderTarget() with the following arguments:\ncurtains:", this, "\nparameters:", params);
-        return this.renderer.addRenderTarget(params);
-    }
-
-
-    /***
-     See Renderer Class removeRenderTarget() method
-     DEPRECATED SOON!
-     ***/
-    removeRenderTarget(renderTarget) {
-        throwWarning("Curtains: removeRenderTarget() is deprecated. To remove this render target ", renderTarget, ", use its remove() method");
-        renderTarget.remove();
-    }
-
-
-    /*** SHADER PASSES ***/
-
-    /***
-     See Renderer Class addShaderPass() method
-     DEPRECATED SOON!
-     ***/
-    addShaderPass(params) {
-        throwWarning("Curtains: addShaderPass() is deprecated. To create a shader pass, use new ShaderPass() with the following arguments:\ncurtains:", this, "\nparameters:", params);
-        return this.renderer.addShaderPass(params);
-    }
-
-
-    /***
-     See Renderer Class removeShaderPass() method
-     DEPRECATED SOON!
-     ***/
-    removeShaderPass(shaderPass) {
-        throwWarning("Curtains: removeShaderPass() is deprecated. To remove this shader pass ", shaderPass, ", use its remove() method");
-        shaderPass.remove();
     }
 
 

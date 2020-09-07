@@ -40,43 +40,46 @@ function preloadTextures() {
         const image = new Image();
         image.src = images[i];
 
-        loader.loadImage(image, {
-            wrapS: curtains.gl.REPEAT,
-            wrapT: curtains.gl.REPEAT,
-            anisotropy: 16,
-        }, (texture) => {
 
-            textures.push(texture);
+    }
 
 
-            texture.onSourceLoaded(() => {
-                //console.log("source loaded!")
-            }).onSourceUploaded(() => {
-                //console.log("texture uploaded here");
+    loader.loadImages(images, {
+        wrapS: curtains.gl.REPEAT,
+        wrapT: curtains.gl.REPEAT,
+        anisotropy: 16,
+    }, (texture) => {
 
-                percentLoaded++;
-                console.log("percent loaded", percentLoaded / images.length);
-            });
+        textures.push(texture);
 
-            /*if(texture.uuid.indexOf("A") !== -1) {
-                console.log("set anisotropy");
-                texture.setAnisotropy(16);
-            }*/
 
+        texture.onSourceLoaded(() => {
+            //console.log("source loaded!")
+        }).onSourceUploaded(() => {
+            console.log("texture uploaded here", texture);
+
+            percentLoaded++;
+            console.log("percent loaded", percentLoaded / images.length);
+        });
+
+        /*if(texture.uuid.indexOf("A") !== -1) {
+            console.log("set anisotropy");
+            texture.setAnisotropy(16);
+        }*/
+
+        //texture.setWrapS(curtains.gl.REPEAT);
+        //texture.setWrapT(curtains.gl.REPEAT);
+
+        //console.log(texture.uuid, texture);
+
+        /*texture.onSourceUploaded(() => {
+            console.log("texture uploaded");
             //texture.setWrapS(curtains.gl.REPEAT);
             //texture.setWrapT(curtains.gl.REPEAT);
-
-            //console.log(texture.uuid, texture);
-
-            /*texture.onSourceUploaded(() => {
-                console.log("texture uploaded");
-                //texture.setWrapS(curtains.gl.REPEAT);
-                //texture.setWrapT(curtains.gl.REPEAT);
-            })*/
-        }, (image, error) => {
-            console.warn("there has been an error", error, " while loading this image", image);
-        });
-    }
+        })*/
+    }, (image, error) => {
+        console.warn("there has been an error", error, " while loading this image", image);
+    });
 }
 
 preloadTextures();

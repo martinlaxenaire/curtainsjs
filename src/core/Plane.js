@@ -60,7 +60,7 @@ export class Plane extends DOMMesh {
         autoloadSources = true,
         watchScroll = true,
         fov = 50
-    }) {
+    } = {}) {
         super(renderer, htmlElement, "Plane", {
             shareProgram,
             widthSegments,

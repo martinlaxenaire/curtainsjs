@@ -38,33 +38,29 @@ function preloadTextures() {
     const loaderEl = document.getElementById("loader-inner");
 
     const loader = new TextureLoader(curtains);
-    for(let i = 0; i < images.length; i++) {
-        const image = new Image();
-        image.src = images[i];
 
-        loader.loadImage(image, {}, (texture) => {
+    loader.loadImages(images, {}, (texture) => {
 
-            textures.push(texture);
+        textures.push(texture);
 
-            texture.onSourceLoaded(() => {
+        texture.onSourceLoaded(() => {
 
-            }).onSourceUploaded(() => {
-                percentLoaded++;
+        }).onSourceUploaded(() => {
+            percentLoaded++;
 
-                loaderEl.innerText = (percentLoaded / images.length) * 100 + "%";
+            loaderEl.innerText = (percentLoaded / images.length) * 100 + "%";
 
-                // we have finished loading our textures
-                if(percentLoaded === images.length) {
-                    document.body.classList.add("site-loaded");
-                }
-            });
-        }, (image, error) => {
-            console.warn("there has been an error", error, " while loading this image", image);
-
-            // display site anyway
-            document.body.classList.add("site-loaded");
+            // we have finished loading our textures
+            if(percentLoaded === images.length) {
+                document.body.classList.add("site-loaded");
+            }
         });
-    }
+    }, (image, error) => {
+        console.warn("there has been an error", error, " while loading this image", image);
+
+        // display site anyway
+        document.body.classList.add("site-loaded");
+    });
 }
 
 preloadTextures();

@@ -31,6 +31,9 @@ export class Camera {
         this.position = new Vec3();
         this.projectionMatrix = new Mat4();
 
+        this.worldMatrix = new Mat4();
+        this.viewMatrix = new Mat4();
+
         this._shouldUpdate = false;
 
         this.setSize();
@@ -160,6 +163,16 @@ export class Camera {
      ***/
     setPosition() {
         this.position.set(0, 0, Math.tan((Math.PI / 180) * 0.5 * this.fov) * 2.0);
+
+        // update matrices
+        this.worldMatrix.setFromArray([
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            this.position.x, this.position.y, this.position.z, 1
+        ]);
+
+        this.viewMatrix = this.viewMatrix.copy(this.worldMatrix).getInverse();
     }
 
     /***
