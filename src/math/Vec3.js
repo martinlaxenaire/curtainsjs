@@ -303,7 +303,7 @@ export class Vec3 {
 
 
     /***
-     Apply a Quaternion (rotation in 3D space) to this vector
+     Apply a quaternion (rotation in 3D space) to this vector
 
      params :
      @quaternion (Quat): quaternion to use
@@ -311,7 +311,7 @@ export class Vec3 {
      returns :
      @this (Vec3): this vector after applying the transformation
      ***/
-    applyQuaternion(quaternion) {
+    applyQuat(quaternion) {
         const x = this.x, y = this.y, z = this.z;
         const qx = quaternion.elements[0], qy = quaternion.elements[1], qz = quaternion.elements[2], qw = quaternion.elements[3];
 
