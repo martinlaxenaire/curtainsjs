@@ -550,6 +550,2457 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return CacheManager;
   }();
   /***
+   Here we create a CallbackQueueManager class object
+   This allows to store callbacks in a queue array with a timeout of 0 to be executed on next render call
+     returns:
+   @this: our CallbackQueueManager class object
+   ***/
+
+
+  var CallbackQueueManager = /*#__PURE__*/function () {
+    function CallbackQueueManager() {
+      _classCallCheck(this, CallbackQueueManager);
+
+      this.clear();
+    }
+    /***
+     Clears our queue array (used on init)
+     ***/
+
+
+    _createClass(CallbackQueueManager, [{
+      key: "clear",
+      value: function clear() {
+        this.queue = [];
+      }
+      /***
+       Adds a callback to our queue list with a timeout of 0
+         params:
+       @callback (function): the callback to execute on next render call
+       @keep (bool): whether to keep calling that callback on each rendering call or not (act as a setInterval). Default to false
+         returns:
+       @queueItem: the queue item. Allows to keep a track of it and set its keep property to false when needed
+       ***/
+
+    }, {
+      key: "add",
+      value: function add(callback) {
+        var _this2 = this;
+
+        var keep = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+        var queueItem = {
+          callback: callback,
+          keep: keep,
+          timeout: null // keep a reference to the timeout so we can safely delete if afterwards
+
+        };
+        queueItem.timeout = setTimeout(function () {
+          _this2.queue.push(queueItem);
+        }, 0);
+        return queueItem;
+      }
+      /***
+       Executes all callbacks in the queue and remove the ones that have their keep property set to false.
+       Called at the beginning of each render call
+       ***/
+
+    }, {
+      key: "execute",
+      value: function execute() {
+        var _this3 = this;
+
+        // execute queue callbacks list
+        this.queue.map(function (entry) {
+          if (entry.callback) {
+            entry.callback();
+          } // clear our timeout
+
+
+          clearTimeout(_this3.queue.timeout);
+        }); // remove all items that have their keep property set to false
+
+        this.queue = this.queue.filter(function (entry) {
+          return entry.keep;
+        });
+      }
+    }]);
+
+    return CallbackQueueManager;
+  }();
+  /***
+   Here we create our Renderer object
+   It will create our WebGL context and handle everything that relates to it
+   Will create a container, append a canvas, handle WebGL extensions, context lost/restoration events
+   Will create a Scene class object that will keep tracks of all added objects
+   Will also handle all global WebGL commands, like clearing scene, binding frame buffers, setting depth, blend func, etc.
+   Will use a state object to handle all those commands and keep a track of what is being drawned to avoid redundant WebGL calls.
+     params:
+   @Curtainsparams see Curtains class object
+     @onError (function): called when there has been an error while initiating the WebGL context
+   @onContextLost (function): called when the WebGL context is lost
+   @onContextRestored (function): called when the WebGL context is restored
+   @onSceneChange (function): called every time an object has been added/removed from the scene
+     returns :
+   @this: our Renderer
+  ***/
+  // TODO deprecate all add* objects method and get rid of imports. BIG breaking change!
+
+
+  var Renderer = /*#__PURE__*/function () {
+    function Renderer(_ref) {
+      var alpha = _ref.alpha,
+          antialias = _ref.antialias,
+          premultipliedAlpha = _ref.premultipliedAlpha,
+          depth = _ref.depth,
+          failIfMajorPerformanceCaveat = _ref.failIfMajorPerformanceCaveat,
+          preserveDrawingBuffer = _ref.preserveDrawingBuffer,
+          stencil = _ref.stencil,
+          container = _ref.container,
+          pixelRatio = _ref.pixelRatio,
+          renderingScale = _ref.renderingScale,
+          production = _ref.production,
+          onError = _ref.onError,
+          onContextLost = _ref.onContextLost,
+          onContextRestored = _ref.onContextRestored,
+          onDisposed = _ref.onDisposed,
+          onSceneChange = _ref.onSceneChange;
+
+      _classCallCheck(this, Renderer);
+
+      this.type = "Renderer"; // context attributes
+
+      this.alpha = alpha;
+      this.antialias = antialias;
+      this.premultipliedAlpha = premultipliedAlpha;
+      this.depth = depth;
+      this.failIfMajorPerformanceCaveat = failIfMajorPerformanceCaveat;
+      this.preserveDrawingBuffer = preserveDrawingBuffer;
+      this.stencil = stencil;
+      this.container = container;
+      this.pixelRatio = pixelRatio;
+      this._renderingScale = renderingScale;
+      this.production = production; // callbacks
+
+      this.onError = onError;
+      this.onContextLost = onContextLost;
+      this.onContextRestored = onContextRestored;
+      this.onDisposed = onDisposed; // keep sync between Curtains objects arrays and renderer objects arrays
+
+      this.onSceneChange = onSceneChange; // managing our webgl draw states
+
+      this.initState(); // create the canvas
+
+      this.canvas = document.createElement("canvas"); // set our webgl context
+
+      var glAttributes = {
+        alpha: this.alpha,
+        premultipliedAlpha: this.premultipliedAlpha,
+        antialias: this.antialias,
+        depth: this.depth,
+        failIfMajorPerformanceCaveat: this.failIfMajorPerformanceCaveat,
+        preserveDrawingBuffer: this.preserveDrawingBuffer,
+        stencil: this.stencil
+      }; // try webgl2 context first
+
+      this.gl = this.canvas.getContext("webgl2", glAttributes);
+      this._isWebGL2 = !!this.gl; // fallback to webgl1
+
+      if (!this.gl) {
+        this.gl = this.canvas.getContext("webgl", glAttributes) || this.canvas.getContext("experimental-webgl", glAttributes);
+      } // WebGL context could not be created
+
+
+      if (!this.gl) {
+        if (!this.production) throwWarning(this.type + ": WebGL context could not be created");
+        this.state.isActive = false;
+
+        if (this.onError) {
+          this.onError();
+        }
+
+        return;
+      }
+
+      this.initRenderer();
+    }
+    /***
+     Set/reset our context state object
+     ***/
+
+
+    _createClass(Renderer, [{
+      key: "initState",
+      value: function initState() {
+        this.state = {
+          // if we are currently rendering
+          isActive: true,
+          isContextLost: true,
+          drawingEnabled: true,
+          forceRender: false,
+          // current program ID
+          currentProgramID: null,
+          // if we're using depth test or not
+          setDepth: null,
+          // face culling
+          cullFace: null,
+          // current frame buffer ID
+          frameBufferID: null,
+          // current scene pass ID
+          scenePassIndex: null,
+          // textures
+          activeTexture: null,
+          unpackAlignment: null,
+          flipY: null,
+          premultiplyAlpha: null
+        };
+      }
+      /***
+       Add a callback queueing manager (execute functions on the next render call, see CallbackQueueManager class object)
+       ***/
+
+    }, {
+      key: "initCallbackQueueManager",
+      value: function initCallbackQueueManager() {
+        this.nextRender = new CallbackQueueManager();
+      }
+      /***
+       Init our renderer
+       ***/
+
+    }, {
+      key: "initRenderer",
+      value: function initRenderer() {
+        this.planes = [];
+        this.renderTargets = [];
+        this.shaderPasses = []; // context is not lost
+
+        this.state.isContextLost = false; // callback queue
+
+        this.initCallbackQueueManager(); // set blend func
+
+        this.setBlendFunc(); // enable depth by default
+
+        this.setDepth(true); // texture cache
+
+        this.cache = new CacheManager(); // init our scene
+
+        this.scene = new Scene(this); // get webgl extensions
+
+        this.getExtensions(); // handling context
+
+        this._contextLostHandler = this.contextLost.bind(this);
+        this.canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
+        this._contextRestoredHandler = this.contextRestored.bind(this);
+        this.canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
+      }
+      /***
+       Get all available WebGL extensions based on WebGL used version
+       Called on init and on context restoration
+       ***/
+
+    }, {
+      key: "getExtensions",
+      value: function getExtensions() {
+        this.extensions = [];
+
+        if (this._isWebGL2) {
+          this.extensions['EXT_color_buffer_float'] = this.gl.getExtension('EXT_color_buffer_float');
+          this.extensions['OES_texture_float_linear'] = this.gl.getExtension('OES_texture_float_linear');
+          this.extensions['EXT_texture_filter_anisotropic'] = this.gl.getExtension('EXT_texture_filter_anisotropic');
+          this.extensions['WEBGL_lose_context'] = this.gl.getExtension('WEBGL_lose_context');
+        } else {
+          this.extensions['OES_vertex_array_object'] = this.gl.getExtension('OES_vertex_array_object');
+          this.extensions['OES_texture_float'] = this.gl.getExtension('OES_texture_float');
+          this.extensions['OES_texture_float_linear'] = this.gl.getExtension('OES_texture_float_linear');
+          this.extensions['OES_texture_half_float'] = this.gl.getExtension('OES_texture_half_float');
+          this.extensions['OES_texture_half_float_linear'] = this.gl.getExtension('OES_texture_half_float_linear');
+          this.extensions['EXT_texture_filter_anisotropic'] = this.gl.getExtension('EXT_texture_filter_anisotropic');
+          this.extensions['OES_element_index_uint'] = this.gl.getExtension('OES_element_index_uint');
+          this.extensions['OES_standard_derivatives'] = this.gl.getExtension('OES_standard_derivatives');
+          this.extensions['EXT_sRGB'] = this.gl.getExtension('EXT_sRGB');
+          this.extensions['WEBGL_depth_texture'] = this.gl.getExtension('WEBGL_depth_texture');
+          this.extensions['WEBGL_draw_buffers'] = this.gl.getExtension('WEBGL_draw_buffers');
+          this.extensions['WEBGL_lose_context'] = this.gl.getExtension('WEBGL_lose_context');
+        }
+      }
+      /*** HANDLING CONTEXT LOST/RESTORE ***/
+
+      /***
+       Called when the WebGL context is lost
+       ***/
+
+    }, {
+      key: "contextLost",
+      value: function contextLost(event) {
+        var _this4 = this;
+
+        this.state.isContextLost = true; // do not try to restore the context if we're disposing everything!
+
+        if (!this.state.isActive) return;
+        event.preventDefault();
+        this.nextRender.add(function () {
+          return _this4.onContextLost && _this4.onContextLost();
+        });
+      }
+      /***
+       Call this method to restore your context
+       ***/
+
+    }, {
+      key: "restoreContext",
+      value: function restoreContext() {
+        // do not try to restore the context if we're disposing everything!
+        if (!this.state.isActive) return;
+        this.initState();
+
+        if (this.gl && this.extensions['WEBGL_lose_context']) {
+          this.extensions['WEBGL_lose_context'].restoreContext();
+        } else {
+          if (!this.gl && !this.production) {
+            throwWarning(this.type + ": Could not restore the context because the context is not defined");
+          } else if (!this.extensions['WEBGL_lose_context'] && !this.production) {
+            throwWarning(this.type + ": Could not restore the context because the restore context extension is not defined");
+          }
+
+          if (this.onError) {
+            this.onError();
+          }
+        }
+      }
+      /***
+       Check that all objects and textures have been restored
+         returns:
+       @isRestored (bool): whether everything has been restored or not
+       ***/
+
+    }, {
+      key: "isContextexFullyRestored",
+      value: function isContextexFullyRestored() {
+        var isRestored = true;
+
+        for (var i = 0; i < this.renderTargets.length; i++) {
+          if (!this.renderTargets[i].textures[0]._canDraw) {
+            isRestored = false;
+          }
+
+          break;
+        }
+
+        if (isRestored) {
+          for (var _i2 = 0; _i2 < this.planes.length; _i2++) {
+            if (!this.planes[_i2]._canDraw) {
+              isRestored = false;
+              break;
+            } else {
+              for (var j = 0; j < this.planes[_i2].textures.length; j++) {
+                if (!this.planes[_i2].textures[j]._canDraw) {
+                  isRestored = false;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        if (isRestored) {
+          for (var _i3 = 0; _i3 < this.shaderPasses.length; _i3++) {
+            if (!this.shaderPasses[_i3]._canDraw) {
+              isRestored = false;
+              break;
+            } else {
+              for (var _j = 0; _j < this.shaderPasses[_i3].textures.length; _j++) {
+                if (!this.shaderPasses[_i3].textures[_j]._canDraw) {
+                  isRestored = false;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        return isRestored;
+      }
+      /***
+       Called when the WebGL context is restored
+       ***/
+
+    }, {
+      key: "contextRestored",
+      value: function contextRestored() {
+        var _this5 = this;
+
+        this.getExtensions(); // set blend func
+
+        this.setBlendFunc(); // enable depth by default
+
+        this.setDepth(true); // clear texture and programs cache
+
+        this.cache.clear(); // reset draw stacks
+
+        this.scene.initStacks(); // we need to reset everything : planes programs, shaders, buffers and textures !
+
+        for (var i = 0; i < this.renderTargets.length; i++) {
+          this.renderTargets[i]._restoreContext();
+        }
+
+        for (var _i4 = 0; _i4 < this.planes.length; _i4++) {
+          this.planes[_i4]._restoreContext();
+        } // same goes for shader passes
+
+
+        for (var _i5 = 0; _i5 < this.shaderPasses.length; _i5++) {
+          this.shaderPasses[_i5]._restoreContext();
+        } // callback if everything is restored
+
+
+        var isRestoredQueue = this.nextRender.add(function () {
+          var isRestored = _this5.isContextexFullyRestored();
+
+          if (isRestored) {
+            isRestoredQueue.keep = false; // start drawing again
+
+            _this5.state.isContextLost = false;
+
+            if (_this5.onContextRestored) {
+              _this5.onContextRestored();
+            } // we've changed the objects, keep Curtains class in sync with our renderer
+
+
+            _this5.onSceneChange(); // force next frame render whatever our drawing flag value
+
+
+            _this5.needRender();
+          }
+        }, true);
+      }
+      /*** SIZING ***/
+
+      /***
+       Updates pixelRatio property
+       ***/
+
+    }, {
+      key: "setPixelRatio",
+      value: function setPixelRatio(pixelRatio) {
+        this.pixelRatio = pixelRatio;
+      }
+      /***
+       Set/reset container sizes and WebGL viewport sizes
+       ***/
+
+    }, {
+      key: "setSize",
+      value: function setSize() {
+        if (!this.gl) return; // get our container bounding client rectangle
+
+        var containerBoundingRect = this.container.getBoundingClientRect(); // use the bounding rect values
+
+        this._boundingRect = {
+          width: containerBoundingRect.width * this.pixelRatio,
+          height: containerBoundingRect.height * this.pixelRatio,
+          top: containerBoundingRect.top * this.pixelRatio,
+          left: containerBoundingRect.left * this.pixelRatio
+        }; // iOS Safari > 8+ has a known bug due to navigation bar appearing/disappearing
+        // this causes wrong bounding client rect calculations, especially negative top value when it shouldn't
+        // to fix this we'll use a dirty but useful workaround
+        // first we check if we're on iOS Safari
+
+        var isSafari = !!navigator.userAgent.match(/Version\/[\d\.]+.*Safari/);
+        var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+        if (isSafari && iOS) {
+          // if we are on iOS Safari we'll need a custom function to retrieve our container absolute top position
+          var getTopOffset = function getTopOffset(el) {
+            var topOffset = 0;
+
+            while (el && !isNaN(el.offsetTop)) {
+              topOffset += el.offsetTop - el.scrollTop;
+              el = el.offsetParent;
+            }
+
+            return topOffset;
+          }; // use it to update our top value
+
+
+          this._boundingRect.top = getTopOffset(this.container) * this.pixelRatio;
+        }
+
+        this.canvas.style.width = Math.floor(this._boundingRect.width / this.pixelRatio) + "px";
+        this.canvas.style.height = Math.floor(this._boundingRect.height / this.pixelRatio) + "px";
+        this.canvas.width = Math.floor(this._boundingRect.width * this._renderingScale);
+        this.canvas.height = Math.floor(this._boundingRect.height * this._renderingScale);
+        this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+      }
+      /***
+       Resize all our elements: planes, shader passes and render targets
+       Their textures will be resized as well
+       ***/
+
+    }, {
+      key: "resize",
+      value: function resize() {
+        // resize the planes only if they are fully initiated
+        for (var i = 0; i < this.planes.length; i++) {
+          if (this.planes[i]._canDraw) {
+            this.planes[i].resize();
+          }
+        } // resize the shader passes only if they are fully initiated
+
+
+        for (var _i6 = 0; _i6 < this.shaderPasses.length; _i6++) {
+          if (this.shaderPasses[_i6]._canDraw) {
+            this.shaderPasses[_i6].resize();
+          }
+        } // resize the render targets
+
+
+        for (var _i7 = 0; _i7 < this.renderTargets.length; _i7++) {
+          this.renderTargets[_i7].resize();
+        } // be sure we'll update the scene even if drawing is disabled
+
+
+        this.needRender();
+      }
+      /*** CLEAR SCENE ***/
+
+      /***
+       Clear our WebGL scene colors and depth
+       ***/
+
+    }, {
+      key: "clear",
+      value: function clear() {
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+      }
+      /*** FRAME BUFFER OBJECTS ***/
+
+      /***
+       Called to bind or unbind a FBO
+         params:
+       @frameBuffer (frameBuffer): if frameBuffer is not null, bind it, unbind it otherwise
+       @cancelClear (bool / undefined): if we should cancel clearing the frame buffer (typically on init & resize)
+       ***/
+
+    }, {
+      key: "bindFrameBuffer",
+      value: function bindFrameBuffer(frameBuffer, cancelClear) {
+        var bufferId = null;
+
+        if (frameBuffer) {
+          bufferId = frameBuffer.index; // new frame buffer, bind it
+
+          if (bufferId !== this.state.frameBufferID) {
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, frameBuffer._frameBuffer);
+            this.gl.viewport(0, 0, frameBuffer._size.width, frameBuffer._size.height); // if we should clear the buffer content
+
+            if (frameBuffer._shouldClear && !cancelClear) {
+              this.clear();
+            }
+          }
+        } else if (this.state.frameBufferID !== null) {
+          this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+          this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+        }
+
+        this.state.frameBufferID = bufferId;
+      }
+      /*** DEPTH ***/
+
+      /***
+       Called to set whether the renderer will handle depth test or not
+       Depth test is enabled by default
+         params:
+       @setDepth (boolean): if we should enable or disable the depth test
+       ***/
+
+    }, {
+      key: "setDepth",
+      value: function setDepth(_setDepth) {
+        if (_setDepth && !this.state.depthTest) {
+          this.state.depthTest = _setDepth; // enable depth test
+
+          this.gl.enable(this.gl.DEPTH_TEST);
+        } else if (!_setDepth && this.state.depthTest) {
+          this.state.depthTest = _setDepth; // disable depth test
+
+          this.gl.disable(this.gl.DEPTH_TEST);
+        }
+      }
+      /*** BLEND FUNC ***/
+
+      /***
+       Called to set the blending function (transparency)
+       ***/
+
+    }, {
+      key: "setBlendFunc",
+      value: function setBlendFunc() {
+        // allows transparency
+        // based on how three.js solves this
+        this.gl.enable(this.gl.BLEND);
+
+        if (this.premultipliedAlpha) {
+          this.gl.blendFuncSeparate(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA, this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA);
+        } else {
+          this.gl.blendFuncSeparate(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA, this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA);
+        }
+      }
+      /*** FACE CULLING ***/
+
+      /***
+       Called to set whether we should cull an object face or not
+         params:
+       @cullFace (boolean): what face we should cull
+       ***/
+
+    }, {
+      key: "setFaceCulling",
+      value: function setFaceCulling(cullFace) {
+        if (this.state.cullFace !== cullFace) {
+          this.state.cullFace = cullFace;
+
+          if (cullFace === "none") {
+            this.gl.disable(this.gl.CULL_FACE);
+          } else {
+            // default to back face culling
+            var faceCulling = cullFace === "front" ? this.gl.FRONT : this.gl.BACK;
+            this.gl.enable(this.gl.CULL_FACE);
+            this.gl.cullFace(faceCulling);
+          }
+        }
+      }
+      /***
+       Tell WebGL to use the specified program if it's not already in use
+         params:
+       @program (object): a program object
+       ***/
+
+    }, {
+      key: "useProgram",
+      value: function useProgram(program) {
+        if (this.state.currentProgramID === null || this.state.currentProgramID !== program.id) {
+          this.gl.useProgram(program.program);
+          this.state.currentProgramID = program.id;
+        }
+      }
+      /*** PLANES ***/
+
+      /***
+       Removes a Plane element (that has already been disposed) from the scene and the planes array
+         params:
+       @plane (Plane object): the plane to remove
+       ***/
+
+    }, {
+      key: "removePlane",
+      value: function removePlane(plane) {
+        if (!this.gl) return; // remove from our planes array
+
+        this.planes = this.planes.filter(function (element) {
+          return element.uuid !== plane.uuid;
+        }); // remove from scene stacks
+
+        this.scene.removePlane(plane);
+        plane = null; // clear the buffer to clean scene
+
+        if (this.gl) this.clear(); // we've removed an object, keep Curtains class in sync with our renderer
+
+        this.onSceneChange();
+      }
+      /*** POST PROCESSING ***/
+
+      /***
+       Completely remove a RenderTarget element
+         params:
+       @renderTarget (RenderTarget object): the render target to remove
+       ***/
+
+    }, {
+      key: "removeRenderTarget",
+      value: function removeRenderTarget(renderTarget) {
+        if (!this.gl) return; // loop through all planes that might use that render target and reset it
+
+        for (var i = 0; i < this.planes.length; i++) {
+          if (this.planes[i].target && this.planes[i].target.uuid === renderTarget.uuid) {
+            this.planes[i].target = null;
+          }
+        }
+
+        this.renderTargets = this.renderTargets.filter(function (element) {
+          return element.uuid !== renderTarget.uuid;
+        }); // update render target indexes
+
+        for (var _i8 = 0; _i8 < this.renderTargets.length; _i8++) {
+          this.renderTargets[_i8].index = _i8;
+        }
+
+        renderTarget = null; // clear the buffer to clean scene
+
+        if (this.gl) this.clear(); // we've removed an object, keep Curtains class in sync with our renderer
+
+        this.onSceneChange();
+      }
+      /*** SHADER PASSES ***/
+
+      /***
+       Removes a ShaderPass element (that has already been disposed) from the scene and the shaderPasses array
+         params:
+       @shaderPass (ShaderPass object): the shader pass to remove
+       ***/
+
+    }, {
+      key: "removeShaderPass",
+      value: function removeShaderPass(shaderPass) {
+        if (!this.gl) return; // remove from shaderPasses our array
+
+        this.shaderPasses = this.shaderPasses.filter(function (element) {
+          return element.uuid !== shaderPass.uuid;
+        }); // remove from scene stacks
+
+        this.scene.removeShaderPass(shaderPass);
+        shaderPass = null; // clear the buffer to clean scene
+
+        if (this.gl) this.clear(); // we've removed an object, keep Curtains class in sync with our renderer
+
+        this.onSceneChange();
+      }
+      /***
+       Enables the render loop
+       ***/
+
+    }, {
+      key: "enableDrawing",
+      value: function enableDrawing() {
+        this.state.drawingEnabled = true;
+      }
+      /***
+       Disables the render loop
+       ***/
+
+    }, {
+      key: "disableDrawing",
+      value: function disableDrawing() {
+        this.state.drawingEnabled = false;
+      }
+      /***
+       Forces the rendering of the next frame, even if disabled
+       ***/
+
+    }, {
+      key: "needRender",
+      value: function needRender() {
+        this.state.forceRender = true;
+      }
+      /***
+       Called at each draw call to render our scene and its content
+       Also execute our nextRender callback queue
+       ***/
+
+    }, {
+      key: "render",
+      value: function render() {
+        if (!this.gl) return; // clear scene first
+
+        this.clear(); // draw our scene content
+
+        this.scene.draw();
+      }
+      /*** DISPOSING ***/
+
+      /***
+       Delete all cached programs
+       ***/
+
+    }, {
+      key: "deletePrograms",
+      value: function deletePrograms() {
+        // delete all programs from manager
+        for (var i = 0; i < this.cache.programs.length; i++) {
+          var program = this.cache.programs[i];
+          this.gl.deleteProgram(program.program);
+        }
+      }
+      /***
+       Dispose our WebGL context and all its objects
+       ***/
+
+    }, {
+      key: "dispose",
+      value: function dispose() {
+        var _this6 = this;
+
+        if (!this.gl) return;
+        this.state.isActive = false; // be sure to delete all planes
+
+        while (this.planes.length > 0) {
+          this.removePlane(this.planes[0]);
+        } // we need to delete the shader passes also
+
+
+        while (this.shaderPasses.length > 0) {
+          this.removeShaderPass(this.shaderPasses[0]);
+        } // finally we need to delete the render targets
+
+
+        while (this.renderTargets.length > 0) {
+          this.removeRenderTarget(this.renderTargets[0]);
+        } // wait for all planes to be deleted before stopping everything
+
+
+        var disposeQueue = this.nextRender.add(function () {
+          if (_this6.planes.length === 0 && _this6.shaderPasses.length === 0 && _this6.renderTargets.length === 0) {
+            // clear from callback queue
+            disposeQueue.keep = false;
+
+            _this6.deletePrograms(); // clear the buffer to clean scene
+
+
+            _this6.clear();
+
+            _this6.canvas.removeEventListener("webgllost", _this6._contextLostHandler, false);
+
+            _this6.canvas.removeEventListener("webglrestored", _this6._contextRestoredHandler, false); // lose context
+
+
+            if (_this6.gl && _this6.extensions['WEBGL_lose_context']) {
+              _this6.extensions['WEBGL_lose_context'].loseContext();
+            } // clear canvas state
+
+
+            _this6.canvas.width = _this6.canvas.width;
+            _this6.gl = null; // remove canvas from DOM
+
+            _this6.container.removeChild(_this6.canvas);
+
+            _this6.container = null;
+            _this6.canvas = null;
+            _this6.onDisposed && _this6.onDisposed();
+          }
+        }, true);
+      }
+    }]);
+
+    return Renderer;
+  }();
+  /***
+   Here we create a ScrollManager class object
+   This keeps track of our scroll position, scroll deltas and triggers an onScroll callback
+   Could either listen to the native scroll event or be hooked to any scroll (natural or virtual) scroll event
+     params:
+   @xOffset (float): scroll along X axis
+   @yOffset (float): scroll along Y axis
+   @lastXDelta (float): last scroll delta along X axis
+   @lastYDelta (float): last scroll delta along Y axis
+     @shouldWatch (bool): if the scroll manager should listen to the scroll event or not. Default to true.
+     @onScroll (function): callback to execute each time the scroll values changed
+     returns:
+   @this: our ScrollManager class object
+   ***/
+
+
+  var ScrollManager = /*#__PURE__*/function () {
+    function ScrollManager() {
+      var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref2$xOffset = _ref2.xOffset,
+          xOffset = _ref2$xOffset === void 0 ? 0 : _ref2$xOffset,
+          _ref2$yOffset = _ref2.yOffset,
+          yOffset = _ref2$yOffset === void 0 ? 0 : _ref2$yOffset,
+          _ref2$lastXDelta = _ref2.lastXDelta,
+          lastXDelta = _ref2$lastXDelta === void 0 ? 0 : _ref2$lastXDelta,
+          _ref2$lastYDelta = _ref2.lastYDelta,
+          lastYDelta = _ref2$lastYDelta === void 0 ? 0 : _ref2$lastYDelta,
+          _ref2$shouldWatch = _ref2.shouldWatch,
+          shouldWatch = _ref2$shouldWatch === void 0 ? true : _ref2$shouldWatch,
+          _ref2$onScroll = _ref2.onScroll,
+          onScroll = _ref2$onScroll === void 0 ? function () {} : _ref2$onScroll;
+
+      _classCallCheck(this, ScrollManager);
+
+      this.xOffset = xOffset;
+      this.yOffset = yOffset;
+      this.lastXDelta = lastXDelta;
+      this.lastYDelta = lastYDelta;
+      this.shouldWatch = shouldWatch;
+      this.onScroll = onScroll; // keep a ref to our scroll event
+
+      this.handler = this.scroll.bind(this, true);
+
+      if (this.shouldWatch) {
+        window.addEventListener("scroll", this.handler, {
+          passive: true
+        });
+      }
+    }
+    /***
+     Called by the scroll event listener
+     ***/
+
+
+    _createClass(ScrollManager, [{
+      key: "scroll",
+      value: function scroll() {
+        this.updateScrollValues(window.pageXOffset, window.pageYOffset);
+      }
+      /***
+       Updates the scroll manager X and Y scroll values as well as last X and Y deltas
+       Internally called by the scroll handler
+       Could be called externally as well if the user wants to handle the scroll by himself
+         params:
+       @x (float): scroll value along X axis
+       @y (float): scroll value along Y axis
+       ***/
+
+    }, {
+      key: "updateScrollValues",
+      value: function updateScrollValues(x, y) {
+        // get our scroll delta values
+        var lastScrollXValue = this.xOffset;
+        this.xOffset = x;
+        this.lastXDelta = lastScrollXValue - this.xOffset;
+        var lastScrollYValue = this.yOffset;
+        this.yOffset = y;
+        this.lastYDelta = lastScrollYValue - this.yOffset;
+
+        if (this.onScroll) {
+          this.onScroll(this.lastXDelta, this.lastYDelta);
+        }
+      }
+      /***
+       Dispose our scroll manager (just remove our event listner if it had been added previously)
+       ***/
+
+    }, {
+      key: "dispose",
+      value: function dispose() {
+        if (this.shouldWatch) {
+          window.removeEventListener("scroll", this.handler, {
+            passive: true
+          });
+        }
+      }
+    }]);
+
+    return ScrollManager;
+  }();
+  /***
+   Here we create our Curtains object
+       params:
+   @container (HTML element or string, optional): the container HTML element or ID that will hold our canvas. Could be set later if not passed as parameter here
+     (WebGL context parameters)
+   @alpha (bool, optional): whether the WebGL context should handle transparency. Default to true.
+   @premultipliedAlpha (bool, optional): whether the WebGL context should handle premultiplied alpha. Default to false.
+   @antialias (bool, optional): whether the WebGL context should use the default antialiasing. When using render targets, WebGL disables antialiasing, so you can safely set this to false to improve the performance. Default to true.
+   @depth (bool, optional): whether the WebGL context should handle depth. Default to true.
+   @failIfMajorPerformanceCaveat (bool, optional): whether the WebGL context creation should fail in case of major performance caveat. Default to true.
+   @preserveDrawingBuffer (bool, optional): whether the WebGL context should preserve the drawing buffer. Default to false.
+   @stencil (bool, optional): whether the WebGL context should handle stencil. Default to false.
+     @autoResize (bool, optional): Whether the library should listen to the window resize event and actually resize the scene. Set it to false if you want to handle this by yourself using the resize() method. Default to true.
+   @autoRender (bool, optional): Whether the library should create a request animation frame loop to render the scene. Set it to false if you want to handle this by yourself using the render() method. Default to true.
+   @watchScroll (bool, optional): Whether the library should listen to the window scroll event. Set it to false if you want to handle this by yourself. Default to true.
+     @pixelRatio (float, optional): Defines the pixel ratio value. Use it to limit it on init to increase performance. Default to window.devicePixelRatio.
+   @renderingScale (float, optional): Use it to downscale your rendering canvas. May improve performance but will decrease quality. Default to 1 (minimum: 0.25, maximum: 1).
+     @production (bool, optional): Whether the library should throw useful console warnings and errors and check shaders and programs compilation status. Default to false.
+     returns :
+   @this: our Renderer
+   ***/
+
+
+  var Curtains = /*#__PURE__*/function () {
+    function Curtains() {
+      var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          container = _ref3.container,
+          _ref3$alpha = _ref3.alpha,
+          alpha = _ref3$alpha === void 0 ? true : _ref3$alpha,
+          _ref3$premultipliedAl = _ref3.premultipliedAlpha,
+          premultipliedAlpha = _ref3$premultipliedAl === void 0 ? false : _ref3$premultipliedAl,
+          _ref3$antialias = _ref3.antialias,
+          antialias = _ref3$antialias === void 0 ? true : _ref3$antialias,
+          _ref3$depth = _ref3.depth,
+          depth = _ref3$depth === void 0 ? true : _ref3$depth,
+          _ref3$failIfMajorPerf = _ref3.failIfMajorPerformanceCaveat,
+          failIfMajorPerformanceCaveat = _ref3$failIfMajorPerf === void 0 ? true : _ref3$failIfMajorPerf,
+          _ref3$preserveDrawing = _ref3.preserveDrawingBuffer,
+          preserveDrawingBuffer = _ref3$preserveDrawing === void 0 ? false : _ref3$preserveDrawing,
+          _ref3$stencil = _ref3.stencil,
+          stencil = _ref3$stencil === void 0 ? false : _ref3$stencil,
+          _ref3$autoResize = _ref3.autoResize,
+          autoResize = _ref3$autoResize === void 0 ? true : _ref3$autoResize,
+          _ref3$autoRender = _ref3.autoRender,
+          autoRender = _ref3$autoRender === void 0 ? true : _ref3$autoRender,
+          _ref3$watchScroll = _ref3.watchScroll,
+          watchScroll = _ref3$watchScroll === void 0 ? true : _ref3$watchScroll,
+          _ref3$pixelRatio = _ref3.pixelRatio,
+          pixelRatio = _ref3$pixelRatio === void 0 ? window.devicePixelRatio || 1 : _ref3$pixelRatio,
+          _ref3$renderingScale = _ref3.renderingScale,
+          renderingScale = _ref3$renderingScale === void 0 ? 1 : _ref3$renderingScale,
+          _ref3$production = _ref3.production,
+          production = _ref3$production === void 0 ? false : _ref3$production;
+
+      _classCallCheck(this, Curtains);
+
+      this.type = "Curtains"; // if we should use auto resize (default to true)
+
+      this._autoResize = autoResize; // if we should use auto render (default to true)
+
+      this._autoRender = autoRender; // if we should watch the scroll (default to true)
+
+      this._watchScroll = watchScroll; // pixel ratio and rendering scale
+
+      this.pixelRatio = pixelRatio; // rendering scale
+
+      renderingScale = isNaN(renderingScale) ? 1 : parseFloat(renderingScale);
+      this._renderingScale = Math.max(0.25, Math.min(1, renderingScale)); // webgl context parameters
+
+      this.premultipliedAlpha = premultipliedAlpha;
+      this.alpha = alpha;
+      this.antialias = antialias;
+      this.depth = depth;
+      this.failIfMajorPerformanceCaveat = failIfMajorPerformanceCaveat;
+      this.preserveDrawingBuffer = preserveDrawingBuffer;
+      this.stencil = stencil;
+      this.production = production;
+      this.errors = false; // if a container has been provided, proceed to init
+
+      if (container) {
+        this.setContainer(container);
+      } else if (!this.production) {
+        throwWarning(this.type + ": no container provided in the initial parameters. Use setContainer() method to set one later and initialize the WebGL context");
+      }
+    }
+    /***
+     Set up our Curtains container and start initializing everything
+     Called on Curtains instancing if a params container has been provided, could be call afterwards else
+     Useful with JS frameworks to init our Curtains class globally and then set the container in a canvas component afterwards to fully instantiate everything
+       params:
+     @container (HTML element or string): the container HTML element or ID that will hold our canvas
+     ***/
+
+
+    _createClass(Curtains, [{
+      key: "setContainer",
+      value: function setContainer(container) {
+        if (!container) {
+          var _container = document.createElement("div");
+
+          _container.setAttribute("id", "curtains-canvas");
+
+          document.body.appendChild(_container);
+          this.container = _container;
+          if (!this.production) throwWarning('Curtains: no valid container HTML element or ID provided, created a div with "curtains-canvas" ID instead');
+        } else {
+          if (typeof container === "string") {
+            container = document.getElementById(container);
+
+            if (!container) {
+              var _container2 = document.createElement("div");
+
+              _container2.setAttribute("id", "curtains-canvas");
+
+              document.body.appendChild(_container2);
+              this.container = _container2;
+              if (!this.production) throwWarning('Curtains: no valid container HTML element or ID provided, created a div with "curtains-canvas" ID instead');
+            } else {
+              this.container = container;
+            }
+          } else if (container instanceof Element) {
+            this.container = container;
+          }
+        }
+
+        this._initCurtains();
+      }
+      /***
+       Initialize everything that the class will need: WebGL renderer, scroll manager, sizes, listeners
+       Then starts our animation frame loop if needed
+       ***/
+
+    }, {
+      key: "_initCurtains",
+      value: function _initCurtains() {
+        this.planes = [];
+        this.renderTargets = [];
+        this.shaderPasses = []; // init webgl context
+
+        this._initRenderer();
+
+        if (!this.gl) return; // scroll
+
+        this._initScroll(); // sizes
+
+
+        this._setSize(); // event listeners
+
+
+        this._addListeners(); // we are ready to go
+
+
+        this.container.appendChild(this.canvas); // watermark
+
+        console.log("curtains.js - v7.1"); // start rendering
+
+        this._animationFrameID = null;
+
+        if (this._autoRender) {
+          this._animate();
+        }
+      }
+      /*** WEBGL CONTEXT ***/
+
+      /***
+       Initialize the Renderer class object
+       ***/
+
+    }, {
+      key: "_initRenderer",
+      value: function _initRenderer() {
+        var _this7 = this;
+
+        this.renderer = new Renderer({
+          alpha: this.alpha,
+          antialias: this.antialias,
+          premulitpliedAlpha: this.premultipliedAlpha,
+          depth: this.depth,
+          failIfMajorPerformanceCaveat: this.failIfMajorPerformanceCaveat,
+          preserveDrawingBuffer: this.preserveDrawingBuffer,
+          stencil: this.stencil,
+          container: this.container,
+          pixelRatio: this.pixelRatio,
+          renderingScale: this._renderingScale,
+          production: this.production,
+          onError: function onError() {
+            return _this7._onRendererError();
+          },
+          onContextLost: function onContextLost() {
+            return _this7._onRendererContextLost();
+          },
+          onContextRestored: function onContextRestored() {
+            return _this7._onRendererContextRestored();
+          },
+          onDisposed: function onDisposed() {
+            return _this7._onRendererDisposed();
+          },
+          // keep sync between renderer planes, shader passes and render targets arrays and the Curtains ones
+          onSceneChange: function onSceneChange() {
+            return _this7._keepSync();
+          }
+        });
+        this.gl = this.renderer.gl;
+        this.canvas = this.renderer.canvas;
+      }
+      /***
+       Force our renderer to restore the WebGL context
+       ***/
+
+    }, {
+      key: "restoreContext",
+      value: function restoreContext() {
+        this.renderer.restoreContext();
+      }
+      /***
+       This just handles our drawing animation frame
+       ***/
+
+    }, {
+      key: "_animate",
+      value: function _animate() {
+        this.render();
+        this._animationFrameID = window.requestAnimationFrame(this._animate.bind(this));
+      }
+      /*** RENDERING ***/
+
+      /***
+       Enables rendering
+       ***/
+
+    }, {
+      key: "enableDrawing",
+      value: function enableDrawing() {
+        this.renderer.enableDrawing();
+      }
+      /***
+       Disables rendering
+       ***/
+
+    }, {
+      key: "disableDrawing",
+      value: function disableDrawing() {
+        this.renderer.disableDrawing();
+      }
+      /***
+       Forces the rendering of the next frame, even if disabled
+       ***/
+
+    }, {
+      key: "needRender",
+      value: function needRender() {
+        this.renderer.needRender();
+      }
+      /***
+       Executes a callback on next frame
+         params:
+       @callback (function): callback to execute on next frame
+       ***/
+
+    }, {
+      key: "nextRender",
+      value: function nextRender(callback) {
+        this.renderer.nextRender.add(callback);
+      }
+      /***
+       Tells our renderer to render the scene if the drawing is enabled
+       ***/
+
+    }, {
+      key: "render",
+      value: function render() {
+        // always execute callback queue
+        this.renderer.nextRender.execute(); // If forceRender is true, force rendering this frame even if drawing is not enabled.
+        // If not, only render if enabled.
+
+        if (!this.renderer.state.drawingEnabled && !this.renderer.state.forceRender) {
+          return;
+        } // reset forceRender
+
+
+        if (this.renderer.state.forceRender) {
+          this.renderer.state.forceRender = false;
+        } // Curtains onRender callback
+
+
+        if (this._onRenderCallback) {
+          this._onRenderCallback();
+        }
+
+        this.renderer.render();
+      }
+      /*** LISTENERS ***/
+
+      /***
+       Adds our resize event listener if needed
+       ***/
+
+    }, {
+      key: "_addListeners",
+      value: function _addListeners() {
+        // handling window resize event
+        this._resizeHandler = null;
+
+        if (this._autoResize) {
+          this._resizeHandler = this.resize.bind(this, true);
+          window.addEventListener("resize", this._resizeHandler, false);
+        }
+      }
+      /*** SIZING ***/
+
+      /***
+       Set the pixel ratio property and update everything by calling the resize() method
+       ***/
+
+    }, {
+      key: "setPixelRatio",
+      value: function setPixelRatio(pixelRatio, triggerCallback) {
+        this.pixelRatio = parseFloat(Math.max(pixelRatio, 1)) || 1;
+        this.renderer.setPixelRatio(pixelRatio); // apply new pixel ratio to all our elements but don't trigger onAfterResize callback
+
+        this.resize(triggerCallback);
+      }
+      /***
+       Set our renderer container and canvas sizes and update the scroll values
+       ***/
+
+    }, {
+      key: "_setSize",
+      value: function _setSize() {
+        this.renderer.setSize(); // update scroll values ass well
+
+        if (this._scrollManager.shouldWatch) {
+          this._scrollManager.xOffset = window.pageXOffset;
+          this._scrollManager.yOffset = window.pageYOffset;
+        }
+      }
+      /***
+       Useful to get our container bounding rectangle without triggering a reflow/layout
+         returns :
+       @boundingRectangle (object): an object containing our container bounding rectangle (width, height, top and left properties)
+       ***/
+
+    }, {
+      key: "getBoundingRect",
+      value: function getBoundingRect() {
+        return this.renderer._boundingRect;
+      }
+      /***
+       Resize our container and the renderer
+         params:
+       @triggerCallback (bool): Whether we should trigger onAfterResize callback
+       ***/
+
+    }, {
+      key: "resize",
+      value: function resize(triggerCallback) {
+        var _this8 = this;
+
+        if (!this.gl) return;
+
+        this._setSize();
+
+        this.renderer.resize();
+        this.nextRender(function () {
+          if (_this8._onAfterResizeCallback && triggerCallback) {
+            _this8._onAfterResizeCallback();
+          }
+        });
+      }
+      /*** SCROLL ***/
+
+      /***
+       Init our ScrollManager class object
+       ***/
+
+    }, {
+      key: "_initScroll",
+      value: function _initScroll() {
+        var _this9 = this;
+
+        this._scrollManager = new ScrollManager({
+          // init values
+          xOffset: window.pageXOffset,
+          yOffset: window.pageYOffset,
+          lastXDelta: 0,
+          lastYDelta: 0,
+          shouldWatch: this._watchScroll,
+          onScroll: function onScroll(lastXDelta, lastYDelta) {
+            return _this9._updateScroll(lastXDelta, lastYDelta);
+          }
+        });
+      }
+      /***
+       Handles the different values associated with a scroll event (scroll and delta values)
+       If no plane watch the scroll then those values won't be retrieved to avoid unnecessary reflow calls
+       If at least a plane is watching, update all watching planes positions based on the scroll values
+       And force render for at least one frame to actually update the scene
+       ***/
+
+    }, {
+      key: "_updateScroll",
+      value: function _updateScroll(lastXDelta, lastYDelta) {
+        for (var i = 0; i < this.planes.length; i++) {
+          // if our plane is watching the scroll, update its position
+          if (this.planes[i].watchScroll) {
+            this.planes[i].updateScrollPosition(lastXDelta, lastYDelta);
+          }
+        } // be sure we'll update the scene even if drawing is disabled
+
+
+        this.renderer.needRender();
+        this._onScrollCallback && this._onScrollCallback();
+      }
+      /***
+       Updates the scroll manager X and Y scroll values as well as last X and Y deltas
+       Internally called by the scroll handler if at least one plane is watching the scroll
+       Could be called externally as well if the user wants to handle the scroll by himself
+         params:
+       @x (float): scroll value along X axis
+       @y (float): scroll value along Y axis
+       ***/
+
+    }, {
+      key: "updateScrollValues",
+      value: function updateScrollValues(x, y) {
+        this._scrollManager.updateScrollValues(x, y);
+      }
+      /***
+       Returns last delta scroll values
+         returns:
+       @delta (object): an object containing X and Y last delta values
+       ***/
+
+    }, {
+      key: "getScrollDeltas",
+      value: function getScrollDeltas() {
+        return {
+          x: this._scrollManager.lastXDelta,
+          y: this._scrollManager.lastYDelta
+        };
+      }
+      /***
+       Returns last window scroll values
+         returns:
+       @scrollValues (object): an object containing X and Y last scroll values
+       ***/
+
+    }, {
+      key: "getScrollValues",
+      value: function getScrollValues() {
+        return {
+          x: this._scrollManager.xOffset,
+          y: this._scrollManager.yOffset
+        };
+      }
+      /*** ADDING / REMOVING OBJECTS TO THE RENDERER ***/
+
+      /***
+       Always keep sync between renderer and Curtains scene objects when adding/removing objects
+       ***/
+
+    }, {
+      key: "_keepSync",
+      value: function _keepSync() {
+        this.planes = this.renderer.planes;
+        this.shaderPasses = this.renderer.shaderPasses;
+        this.renderTargets = this.renderer.renderTargets;
+      }
+      /*** UTILS ***/
+
+      /***
+       Linear interpolation helper defined in utils
+       ***/
+
+    }, {
+      key: "lerp",
+      value: function lerp(start, end, amount) {
+        return _lerp(start, end, amount);
+      }
+      /*** EVENTS ***/
+
+      /***
+       This is called each time our container has been resized
+         params :
+       @callback (function) : a function to execute
+         returns :
+       @this: our Curtains element to handle chaining
+       ***/
+
+    }, {
+      key: "onAfterResize",
+      value: function onAfterResize(callback) {
+        if (callback) {
+          this._onAfterResizeCallback = callback;
+        }
+
+        return this;
+      }
+      /***
+       This is called when an error has been detected
+         params:
+       @callback (function): a function to execute
+         returns:
+       @this: our Curtains element to handle chaining
+       ***/
+
+    }, {
+      key: "onError",
+      value: function onError(callback) {
+        if (callback) {
+          this._onErrorCallback = callback;
+        }
+
+        return this;
+      }
+      /***
+       This triggers the onError callback and is called by the renderer when an error has been detected
+       ***/
+
+    }, {
+      key: "_onRendererError",
+      value: function _onRendererError() {
+        var _this10 = this;
+
+        // be sure that the callback has been registered and only call the global error callback once
+        setTimeout(function () {
+          if (_this10._onErrorCallback && !_this10.errors) {
+            _this10._onErrorCallback();
+          }
+
+          _this10.errors = true;
+        }, 0);
+      }
+      /***
+       This is called once our context has been lost
+         params:
+       @callback (function): a function to execute
+         returns:
+       @this: our Curtains element to handle chaining
+       ***/
+
+    }, {
+      key: "onContextLost",
+      value: function onContextLost(callback) {
+        if (callback) {
+          this._onContextLostCallback = callback;
+        }
+
+        return this;
+      }
+      /***
+       This triggers the onContextLost callback and is called by the renderer when the context has been lost
+       ***/
+
+    }, {
+      key: "_onRendererContextLost",
+      value: function _onRendererContextLost() {
+        this._onContextLostCallback && this._onContextLostCallback();
+      }
+      /***
+       This is called once our context has been restored
+         params:
+       @callback (function): a function to execute
+         returns:
+       @this: our Curtains element to handle chaining
+       ***/
+
+    }, {
+      key: "onContextRestored",
+      value: function onContextRestored(callback) {
+        if (callback) {
+          this._onContextRestoredCallback = callback;
+        }
+
+        return this;
+      }
+      /***
+       This triggers the onContextRestored callback and is called by the renderer when the context has been restored
+       ***/
+
+    }, {
+      key: "_onRendererContextRestored",
+      value: function _onRendererContextRestored() {
+        this._onContextRestoredCallback && this._onContextRestoredCallback();
+      }
+      /***
+       This is called once at each request animation frame call
+         params:
+       @callback (function): a function to execute
+         returns:
+       @this: our Curtains element to handle chaining
+       ***/
+
+    }, {
+      key: "onRender",
+      value: function onRender(callback) {
+        if (callback) {
+          this._onRenderCallback = callback;
+        }
+
+        return this;
+      }
+      /***
+       This is called each time window is scrolled and if our scrollManager is active
+         params :
+       @callback (function) : a function to execute
+         returns :
+       @this: our Curtains element to handle chaining
+       ***/
+
+    }, {
+      key: "onScroll",
+      value: function onScroll(callback) {
+        if (callback) {
+          this._onScrollCallback = callback;
+        }
+
+        return this;
+      }
+      /*** DESTROYING ***/
+
+      /***
+       Dispose everything
+       ***/
+
+    }, {
+      key: "dispose",
+      value: function dispose() {
+        this.renderer.dispose();
+      }
+      /***
+       This is called when the renderer has finished disposing all the WebGL stuff
+       ***/
+
+    }, {
+      key: "_onRendererDisposed",
+      value: function _onRendererDisposed() {
+        // cancel animation frame
+        this._animationFrameID && window.cancelAnimationFrame(this._animationFrameID); // remove event listeners
+
+        this._resizeHandler && window.removeEventListener("resize", this._resizeHandler, false);
+        this._scrollManager && this._scrollManager.dispose();
+      }
+    }]);
+
+    return Curtains;
+  }();
+  /***
+   Uniforms class manages uniforms setting and updating
+     params:
+   @renderer (Renderer class object): our renderer class object
+   @program (object): our mesh's Program (see Program class object)
+   @shared (bool): whether the program is shared or not
+     @uniforms (object): our uniforms object:
+   - name (string): uniform name to use in your shaders
+   - type (uniform type): uniform type. Will try to detect it if not set (see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/uniform)
+   - value (float / int / Vec2 / Vec3 / Mat4 / array): initial value of the uniform
+     returns:
+   @this: our Uniforms manager
+  ***/
+
+
+  var Uniforms = /*#__PURE__*/function () {
+    function Uniforms(renderer, program, shared, uniforms) {
+      _classCallCheck(this, Uniforms);
+
+      this.type = "Uniforms";
+
+      if (!renderer || renderer.type !== "Renderer") {
+        throwError(this.type + ": Renderer not passed as first argument", renderer);
+      } else if (!renderer.gl) {
+        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
+      }
+
+      this.renderer = renderer;
+      this.gl = renderer.gl;
+      this.program = program;
+      this.shared = shared;
+      this.uniforms = {};
+
+      if (uniforms) {
+        for (var key in uniforms) {
+          var uniform = uniforms[key]; // fill our uniform object
+
+          this.uniforms[key] = {
+            name: uniform.name,
+            type: uniform.type,
+            value: uniform.value,
+            lastValue: uniform.value,
+            update: null
+          };
+        }
+      }
+    }
+    /***
+     Set uniforms WebGL function based on their types
+       params :
+     @uniform (object): the uniform
+     ***/
+
+
+    _createClass(Uniforms, [{
+      key: "handleUniformSetting",
+      value: function handleUniformSetting(uniform) {
+        switch (uniform.type) {
+          case "1i":
+            uniform.update = this.setUniform1i.bind(this);
+            break;
+
+          case "1iv":
+            uniform.update = this.setUniform1iv.bind(this);
+            break;
+
+          case "1f":
+            uniform.update = this.setUniform1f.bind(this);
+            break;
+
+          case "1fv":
+            uniform.update = this.setUniform1fv.bind(this);
+            break;
+
+          case "2i":
+            uniform.update = this.setUniform2i.bind(this);
+            break;
+
+          case "2iv":
+            uniform.update = this.setUniform2iv.bind(this);
+            break;
+
+          case "2f":
+            uniform.update = this.setUniform2f.bind(this);
+            break;
+
+          case "2fv":
+            uniform.update = this.setUniform2fv.bind(this);
+            break;
+
+          case "3i":
+            uniform.update = this.setUniform3i.bind(this);
+            break;
+
+          case "3iv":
+            uniform.update = this.setUniform3iv.bind(this);
+            break;
+
+          case "3f":
+            uniform.update = this.setUniform3f.bind(this);
+            break;
+
+          case "3fv":
+            uniform.update = this.setUniform3fv.bind(this);
+            break;
+
+          case "4i":
+            uniform.update = this.setUniform4i.bind(this);
+            break;
+
+          case "4iv":
+            uniform.update = this.setUniform4iv.bind(this);
+            break;
+
+          case "4f":
+            uniform.update = this.setUniform4f.bind(this);
+            break;
+
+          case "4fv":
+            uniform.update = this.setUniform4fv.bind(this);
+            break;
+
+          case "mat2":
+            uniform.update = this.setUniformMatrix2fv.bind(this);
+            break;
+
+          case "mat3":
+            uniform.update = this.setUniformMatrix3fv.bind(this);
+            break;
+
+          case "mat4":
+            uniform.update = this.setUniformMatrix4fv.bind(this);
+            break;
+
+          default:
+            if (!this.renderer.production) throwWarning(this.type + ": This uniform type is not handled : ", uniform.type);
+        }
+      }
+      /***
+       Auto detect the format of the uniform (check if its a float, an integer, a Vector, a Matrix, an array...)
+         params :
+       @uniform (object): the uniform
+       ***/
+
+    }, {
+      key: "setInternalFormat",
+      value: function setInternalFormat(uniform) {
+        if (uniform.value.type === "Vec2") {
+          uniform._internalFormat = "Vec2";
+        } else if (uniform.value.type === "Vec3") {
+          uniform._internalFormat = "Vec3";
+        } else if (uniform.value.type === "Mat4") {
+          uniform._internalFormat = "Mat4";
+        } else if (uniform.value.type === "Quat") {
+          uniform._internalFormat = "Quat";
+        } else if (Array.isArray(uniform.value)) {
+          uniform._internalFormat = "array";
+        } else if (uniform.value.constructor === Float32Array) {
+          uniform._internalFormat = "mat";
+        } else {
+          uniform._internalFormat = "float";
+        }
+      }
+      /***
+       This inits our uniforms
+       Sets its internal format and type if not provided then upload the uniform
+       ***/
+
+    }, {
+      key: "setUniforms",
+      value: function setUniforms() {
+        // set our uniforms if we got some
+        if (this.uniforms) {
+          for (var key in this.uniforms) {
+            var uniform = this.uniforms[key]; // set our uniform location
+
+            uniform.location = this.gl.getUniformLocation(this.program, uniform.name); // handle Vec2, Vec3, Mat4, floats, arrays, etc
+
+            if (!uniform._internalFormat) {
+              this.setInternalFormat(uniform);
+            }
+
+            if (!uniform.type) {
+              if (uniform._internalFormat === "Vec2") {
+                uniform.type = "2f";
+              } else if (uniform._internalFormat === "Vec3") {
+                uniform.type = "3f";
+              } else if (uniform._internalFormat === "Mat4") {
+                uniform.type = "mat4";
+              } else if (uniform._internalFormat === "array") {
+                if (uniform.value.length === 4) {
+                  uniform.type = "4f";
+                  if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a 4f (array of 4 floats) uniform type");
+                } else if (uniform.value.length === 3) {
+                  uniform.type = "3f";
+                  if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a 3f (array of 3 floats) uniform type");
+                } else if (uniform.value.length === 2) {
+                  uniform.type = "2f";
+                  if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a 2f (array of 2 floats) uniform type");
+                }
+              } else if (uniform._internalFormat === "mat") {
+                if (uniform.value.length === 16) {
+                  uniform.type = "mat4";
+                  if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a mat4 (4x4 matrix array) uniform type");
+                } else if (uniform.value.length === 9) {
+                  uniform.type = "mat3";
+                  if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a mat3 (3x3 matrix array) uniform type");
+                } else if (uniform.value.length === 4) {
+                  uniform.type = "mat2";
+                  if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a mat2 (2x2 matrix array) uniform type");
+                }
+              } else {
+                uniform.type = "1f";
+                if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a 1f (float) uniform type");
+              }
+            } // set the uniforms update functions
+
+
+            this.handleUniformSetting(uniform); // update the uniform
+
+            uniform.update && uniform.update(uniform);
+          }
+        }
+      }
+      /***
+       This updates all uniforms of an object that were set by the user
+       It is called at each draw call
+       ***/
+
+    }, {
+      key: "updateUniforms",
+      value: function updateUniforms() {
+        if (this.uniforms) {
+          for (var key in this.uniforms) {
+            var uniform = this.uniforms[key];
+            var shouldUpdate = false;
+
+            if (!this.shared) {
+              if (!uniform.value.length && uniform.value !== uniform.lastValue) {
+                shouldUpdate = true;
+                uniform.lastValue = uniform.value;
+              } else if (uniform._internalFormat === "Vec2" && !uniform.value.equals(uniform.lastValue)) {
+                shouldUpdate = true;
+                uniform.lastValue.copy(uniform.value);
+              } else if (uniform._internalFormat === "Vec3" && !uniform.value.equals(uniform.lastValue)) {
+                shouldUpdate = true;
+                uniform.lastValue.copy(uniform.value);
+              } else if (uniform._internalFormat === "Quat" && !uniform.value.equals(uniform.lastValue)) {
+                shouldUpdate = true;
+                uniform.lastValue.copy(uniform.value);
+              } else if (JSON.stringify(uniform.value) !== JSON.stringify(uniform.lastValue)) {
+                // compare two arrays
+                shouldUpdate = true; // copy array
+
+                uniform.lastValue = Array.from(uniform.value);
+              }
+            } else {
+              shouldUpdate = true;
+            }
+
+            if (shouldUpdate) {
+              // update our uniforms
+              uniform.update && uniform.update(uniform);
+            }
+          }
+        }
+      }
+      /***
+       Use appropriate WebGL uniform setting function based on the uniform type
+         params :
+       @uniform (object): the uniform
+       ***/
+
+    }, {
+      key: "setUniform1i",
+      value: function setUniform1i(uniform) {
+        this.gl.uniform1i(uniform.location, uniform.value);
+      }
+    }, {
+      key: "setUniform1iv",
+      value: function setUniform1iv(uniform) {
+        this.gl.uniform1iv(uniform.location, uniform.value);
+      }
+    }, {
+      key: "setUniform1f",
+      value: function setUniform1f(uniform) {
+        this.gl.uniform1f(uniform.location, uniform.value);
+      }
+    }, {
+      key: "setUniform1fv",
+      value: function setUniform1fv(uniform) {
+        this.gl.uniform1fv(uniform.location, uniform.value);
+      }
+    }, {
+      key: "setUniform2i",
+      value: function setUniform2i(uniform) {
+        uniform._internalFormat === "Vec2" ? this.gl.uniform2i(uniform.location, uniform.value.x, uniform.value.y) : this.gl.uniform2i(uniform.location, uniform.value[0], uniform.value[1]);
+      }
+    }, {
+      key: "setUniform2iv",
+      value: function setUniform2iv(uniform) {
+        uniform._internalFormat === "Vec2" ? this.gl.uniform2iv(uniform.location, [uniform.value.x, uniform.value.y]) : this.gl.uniform2iv(uniform.location, uniform.value);
+      }
+    }, {
+      key: "setUniform2f",
+      value: function setUniform2f(uniform) {
+        uniform._internalFormat === "Vec2" ? this.gl.uniform2f(uniform.location, uniform.value.x, uniform.value.y) : this.gl.uniform2f(uniform.location, uniform.value[0], uniform.value[1]);
+      }
+    }, {
+      key: "setUniform2fv",
+      value: function setUniform2fv(uniform) {
+        uniform._internalFormat === "Vec2" ? this.gl.uniform2fv(uniform.location, [uniform.value.x, uniform.value.y]) : this.gl.uniform2fv(uniform.location, uniform.value);
+      }
+    }, {
+      key: "setUniform3i",
+      value: function setUniform3i(uniform) {
+        uniform._internalFormat === "Vec3" ? this.gl.uniform3i(uniform.location, uniform.value.x, uniform.value.y, uniform.value.z) : this.gl.uniform3i(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2]);
+      }
+    }, {
+      key: "setUniform3iv",
+      value: function setUniform3iv(uniform) {
+        uniform._internalFormat === "Vec3" ? this.gl.uniform3iv(uniform.location, [uniform.value.x, uniform.value.y, uniform.value.z]) : this.gl.uniform3iv(uniform.location, uniform.value);
+      }
+    }, {
+      key: "setUniform3f",
+      value: function setUniform3f(uniform) {
+        uniform._internalFormat === "Vec3" ? this.gl.uniform3f(uniform.location, uniform.value.x, uniform.value.y, uniform.value.z) : this.gl.uniform3f(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2]);
+      }
+    }, {
+      key: "setUniform3fv",
+      value: function setUniform3fv(uniform) {
+        uniform._internalFormat === "Vec3" ? this.gl.uniform3fv(uniform.location, [uniform.value.x, uniform.value.y, uniform.value.z]) : this.gl.uniform3fv(uniform.location, uniform.value);
+      }
+    }, {
+      key: "setUniform4i",
+      value: function setUniform4i(uniform) {
+        uniform._internalFormat === "Quat" ? this.gl.uniform4i(uniform.location, uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]) : this.gl.uniform4i(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]);
+      }
+    }, {
+      key: "setUniform4iv",
+      value: function setUniform4iv(uniform) {
+        uniform._internalFormat === "Quat" ? this.gl.uniform4iv(uniform.location, [uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]]) : this.gl.uniform4iv(uniform.location, uniform.value);
+      }
+    }, {
+      key: "setUniform4f",
+      value: function setUniform4f(uniform) {
+        uniform._internalFormat === "Quat" ? this.gl.uniform4f(uniform.location, uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]) : this.gl.uniform4f(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]);
+      }
+    }, {
+      key: "setUniform4fv",
+      value: function setUniform4fv(uniform) {
+        uniform._internalFormat === "Quat" ? this.gl.uniform4fv(uniform.location, [uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]]) : this.gl.uniform4fv(uniform.location, uniform.value);
+      }
+    }, {
+      key: "setUniformMatrix2fv",
+      value: function setUniformMatrix2fv(uniform) {
+        this.gl.uniformMatrix2fv(uniform.location, false, uniform.value);
+      }
+    }, {
+      key: "setUniformMatrix3fv",
+      value: function setUniformMatrix3fv(uniform) {
+        this.gl.uniformMatrix3fv(uniform.location, false, uniform.value);
+      }
+    }, {
+      key: "setUniformMatrix4fv",
+      value: function setUniformMatrix4fv(uniform) {
+        uniform._internalFormat === "Mat4" ? this.gl.uniformMatrix4fv(uniform.location, false, uniform.value.elements) : this.gl.uniformMatrix4fv(uniform.location, false, uniform.value);
+      }
+    }]);
+
+    return Uniforms;
+  }();
+  /***
+   Program class that creates, compiles and links the shaders
+   Use a cache system to get already compiled shaders and save some CPU
+   Also responsible for the creation, setting and updating of the uniforms (see Uniforms class object)
+     params:
+   @renderer (Renderer class object): our renderer class object
+     @parent (Plane/ShaderPass class object): the mesh that will use that program
+   @vertexShader (string): vertex shader as a string
+   @fragmentShader (string): fragment shader as a string
+     returns:
+   @this: our newly created Program
+   ***/
+
+
+  var Program = /*#__PURE__*/function () {
+    function Program(renderer) {
+      var _ref4 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          parent = _ref4.parent,
+          vertexShader = _ref4.vertexShader,
+          fragmentShader = _ref4.fragmentShader;
+
+      _classCallCheck(this, Program);
+
+      this.type = "Program";
+
+      if (!renderer || renderer.type !== "Renderer") {
+        throwError(this.type + ": Renderer not passed as first argument", renderer);
+      } else if (!renderer.gl) {
+        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
+      }
+
+      this.renderer = renderer;
+      this.gl = this.renderer.gl;
+      this.parent = parent;
+      this.vsCode = vertexShader;
+      this.fsCode = fragmentShader;
+      this.compiled = true;
+      this.setupProgram();
+    }
+    /***
+     Compile our WebGL shaders based on our written shaders
+       params:
+     @shaderCode (string): shader code
+     @shaderType (shaderType): WebGL shader type (vertex or fragment)
+       returns:
+     @shader (compiled shader): our compiled shader
+     ***/
+
+
+    _createClass(Program, [{
+      key: "createShader",
+      value: function createShader(shaderCode, shaderType) {
+        var shader = this.gl.createShader(shaderType);
+        this.gl.shaderSource(shader, shaderCode);
+        this.gl.compileShader(shader); // check shader compilation status only when not in production mode
+
+        if (!this.renderer.production) {
+          if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
+            // shader debugging log as seen in THREE.js WebGLProgram source code
+            var shaderTypeString = shaderType === this.gl.VERTEX_SHADER ? "vertex shader" : "fragment shader";
+            var shaderSource = this.gl.getShaderSource(shader);
+            var shaderLines = shaderSource.split('\n');
+
+            for (var i = 0; i < shaderLines.length; i++) {
+              shaderLines[i] = i + 1 + ': ' + shaderLines[i];
+            }
+
+            shaderLines = shaderLines.join("\n");
+            throwWarning(this.type + ": Errors occurred while compiling the", shaderTypeString, ":\n", this.gl.getShaderInfoLog(shader));
+            throwError(shaderLines);
+            this.compiled = false;
+            return null;
+          }
+        }
+
+        return shader;
+      }
+      /***
+       Compiles and creates new shaders
+       ***/
+
+    }, {
+      key: "useNewShaders",
+      value: function useNewShaders() {
+        this.vertexShader = this.createShader(this.vsCode, this.gl.VERTEX_SHADER);
+        this.fragmentShader = this.createShader(this.fsCode, this.gl.FRAGMENT_SHADER);
+
+        if (!this.vertexShader || !this.fragmentShader) {
+          if (!this.renderer.production) throwWarning(this.type + ": Unable to find or compile the vertex or fragment shader");
+        }
+      }
+    }, {
+      key: "setupProgram",
+
+      /***
+       Checks whether the program has already been registered before creating it
+       If yes, use the compiled program if the program should be shared, or just use the compiled shaders to create a new one else with createProgram()
+       If not, compile the shaders and call createProgram()
+       ***/
+      value: function setupProgram() {
+        var existingProgram = this.renderer.cache.getProgramFromShaders(this.vsCode, this.fsCode); // we found an existing program
+
+        if (existingProgram) {
+          // if we've decided to share existing programs, just return the existing one
+          if (this.parent.shareProgram) {
+            //return existingProgram;
+            this.shared = true;
+            this.vertexShader = existingProgram.vertexShader;
+            this.fragmentShader = existingProgram.fragmentShader;
+            this.program = existingProgram.program;
+            this.id = existingProgram.id;
+            this.activeTextures = existingProgram.activeTextures;
+          } else {
+            // we need to create a new program but we don't have to re compile the shaders
+            this.vertexShader = existingProgram.vertexShader;
+            this.fragmentShader = existingProgram.fragmentShader; // copy active textures as well
+
+            this.activeTextures = existingProgram.activeTextures;
+            this.createProgram();
+          }
+        } else {
+          // compile the new shaders and create a new program
+          this.useNewShaders();
+
+          if (this.compiled) {
+            this.createProgram();
+          }
+        }
+      }
+      /***
+       Used internally to set up program based on the created shaders and attach them to the program
+       Sets a list of active textures that are actually used by the shaders to avoid binding unused textures during draw calls
+       Add the program to the cache
+       ***/
+
+    }, {
+      key: "createProgram",
+      value: function createProgram() {
+        // set program id and type
+        this.id = this.renderer.cache.programs.length;
+        this.shared = this.parent.shareProgram; // we need to create a new shader program
+
+        this.program = this.gl.createProgram(); // if shaders are valid, go on
+
+        this.gl.attachShader(this.program, this.vertexShader);
+        this.gl.attachShader(this.program, this.fragmentShader);
+        this.gl.linkProgram(this.program); // free the shaders handles
+
+        this.gl.deleteShader(this.vertexShader);
+        this.gl.deleteShader(this.fragmentShader); // TODO getProgramParameter even in production to avoid errors?
+        // check the shader program creation status only when not in production mode
+
+        if (!this.renderer.production) {
+          if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) {
+            throwWarning(this.type + ": Unable to initialize the shader program.");
+            this.compiled = false;
+            return;
+          }
+        } // store active textures (those that are used in the shaders) to avoid binding unused textures
+
+
+        if (!this.activeTextures) {
+          this.activeTextures = []; // check for program active textures
+
+          var numUniforms = this.gl.getProgramParameter(this.program, this.gl.ACTIVE_UNIFORMS);
+
+          for (var i = 0; i < numUniforms; i++) {
+            var activeUniform = this.gl.getActiveUniform(this.program, i); // if it's a texture add it to our activeTextures array
+
+            if (activeUniform.type === this.gl.SAMPLER_2D) {
+              this.activeTextures.push(activeUniform.name);
+            }
+          }
+        } // add it to our program manager programs list
+
+
+        this.renderer.cache.addProgram(this);
+      }
+      /*** UNIFORMS ***/
+
+      /***
+       Creates and attach the uniform handlers to our program
+         params:
+       @uniforms (object): an object describing our uniforms (see Uniforms class object)
+       ***/
+
+    }, {
+      key: "createUniforms",
+      value: function createUniforms(uniforms) {
+        this.uniformsManager = new Uniforms(this.renderer, this.program, this.shared, uniforms); // set them right away
+
+        this.setUniforms();
+      }
+      /***
+       Sets our uniforms (used on init and on context restoration)
+       ***/
+
+    }, {
+      key: "setUniforms",
+      value: function setUniforms() {
+        // use this program
+        this.renderer.useProgram(this);
+        this.uniformsManager.setUniforms();
+      }
+      /***
+       Updates our uniforms at each draw calls
+       ***/
+
+    }, {
+      key: "updateUniforms",
+      value: function updateUniforms() {
+        // use this program
+        this.renderer.useProgram(this);
+        this.uniformsManager.updateUniforms();
+      }
+    }]);
+
+    return Program;
+  }();
+  /***
+   Geometry class handles attributes, VertexArrayObjects (if available) and vertices/UVs set up
+     params:
+   @renderer (Renderer class object): our renderer class object
+     @program (object): our mesh's Program (see Program class object)
+   @width (int): number of vertices along width
+   @height (int): number of vertices along height
+   @id (int): an integer based on geometry's width and height and used to avoid redundant buffer binding calls
+     returns:
+   @this: our newly created Geometry
+   ***/
+
+
+  var Geometry = /*#__PURE__*/function () {
+    function Geometry(renderer) {
+      var _ref5 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          _ref5$program = _ref5.program,
+          program = _ref5$program === void 0 ? null : _ref5$program,
+          _ref5$width = _ref5.width,
+          width = _ref5$width === void 0 ? 1 : _ref5$width,
+          _ref5$height = _ref5.height,
+          height = _ref5$height === void 0 ? 1 : _ref5$height;
+
+      _classCallCheck(this, Geometry);
+
+      this.type = "Geometry";
+
+      if (!renderer || renderer.type !== "Renderer") {
+        throwError(this.type + ": Renderer not passed as first argument", renderer);
+      } else if (!renderer.gl) {
+        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
+      }
+
+      this.renderer = renderer;
+      this.gl = this.renderer.gl; // unique plane buffers id based on width and height
+      // used to get a geometry from cache
+
+      this.definition = {
+        id: width * height + width,
+        width: width,
+        height: height
+      };
+      this.setDefaultAttributes();
+      this.setVerticesUVs();
+    }
+    /*** CONTEXT RESTORATION ***/
+
+    /***
+     Used internally to handle context restoration after the program has been successfully compiled again
+     Reset the default attributes, the vertices and UVs and the program
+     ***/
+
+
+    _createClass(Geometry, [{
+      key: "restoreContext",
+      value: function restoreContext(program) {
+        this.program = null;
+        this.setDefaultAttributes();
+        this.setVerticesUVs();
+        this.setProgram(program);
+      }
+      /*** SET DEFAULT ATTRIBUTES ***/
+
+      /***
+       Our geometry default attributes that will handle the buffers
+       We're just using vertices positions and texture coordinates
+       ***/
+
+    }, {
+      key: "setDefaultAttributes",
+      value: function setDefaultAttributes() {
+        // our plane default attributes
+        // if we'd want to introduce custom attributes we'd merge them with those
+        this.attributes = {
+          vertexPosition: {
+            name: "aVertexPosition",
+            size: 3
+          },
+          textureCoord: {
+            name: "aTextureCoord",
+            size: 3
+          }
+        };
+      }
+      /***
+       Set our vertices and texture coordinates array
+       Get them from the cache if possible
+       ***/
+
+    }, {
+      key: "setVerticesUVs",
+      value: function setVerticesUVs() {
+        // we need to create our geometry and material objects
+        var cachedGeometry = this.renderer.cache.getGeometryFromID(this.definition.id);
+
+        if (cachedGeometry) {
+          this.attributes.vertexPosition.array = cachedGeometry.vertices;
+          this.attributes.textureCoord.array = cachedGeometry.uvs;
+        } else {
+          this.computeVerticesUVs(); // TODO better caching? We could pass all attributes to cache and handle arrays in there
+
+          this.renderer.cache.addGeometry(this.definition.id, this.attributes.vertexPosition.array, this.attributes.textureCoord.array);
+        }
+      }
+      /***
+       Called on init and on context restoration to set up the attribute buffers
+       Use VertexArrayObjects whenever possible
+       ***/
+
+    }, {
+      key: "setProgram",
+      value: function setProgram(program) {
+        this.program = program.program;
+        this.initAttributes(); // use vertex array objects if available
+
+        if (this.renderer._isWebGL2) {
+          this._vao = this.gl.createVertexArray();
+          this.gl.bindVertexArray(this._vao);
+        } else if (this.renderer.extensions['OES_vertex_array_object']) {
+          this._vao = this.renderer.extensions['OES_vertex_array_object'].createVertexArrayOES();
+          this.renderer.extensions['OES_vertex_array_object'].bindVertexArrayOES(this._vao);
+        }
+
+        this.initializeBuffers();
+      }
+      /***
+       This creates our mesh attributes and buffers by looping over it
+       ***/
+
+    }, {
+      key: "initAttributes",
+      value: function initAttributes() {
+        // loop through our attributes and create buffers and attributes locations
+        for (var key in this.attributes) {
+          this.attributes[key].location = this.gl.getAttribLocation(this.program, this.attributes[key].name);
+          this.attributes[key].buffer = this.gl.createBuffer();
+          this.attributes[key].numberOfItems = this.definition.width * this.definition.height * this.attributes[key].size * 2;
+        }
+      }
+      /***
+       This method is used internally to create our vertices coordinates and texture UVs
+       we first create our UVs on a grid from [0, 0, 0] to [1, 1, 0]
+       then we use the UVs to create our vertices coords
+       ***/
+
+    }, {
+      key: "computeVerticesUVs",
+      value: function computeVerticesUVs() {
+        // geometry vertices and UVs
+        this.attributes.vertexPosition.array = [];
+        this.attributes.textureCoord.array = [];
+        var vertices = this.attributes.vertexPosition.array;
+        var uvs = this.attributes.textureCoord.array;
+
+        for (var y = 0; y < this.definition.height; y++) {
+          var v = y / this.definition.height;
+
+          for (var x = 0; x < this.definition.width; x++) {
+            var u = x / this.definition.width; // uvs and vertices
+            // our uvs are ranging from 0 to 1, our vertices range from -1 to 1
+            // first triangle
+
+            uvs.push(u);
+            uvs.push(v);
+            uvs.push(0);
+            vertices.push((u - 0.5) * 2);
+            vertices.push((v - 0.5) * 2);
+            vertices.push(0);
+            uvs.push(u + 1 / this.definition.width);
+            uvs.push(v);
+            uvs.push(0);
+            vertices.push((u + 1 / this.definition.width - 0.5) * 2);
+            vertices.push((v - 0.5) * 2);
+            vertices.push(0);
+            uvs.push(u);
+            uvs.push(v + 1 / this.definition.height);
+            uvs.push(0);
+            vertices.push((u - 0.5) * 2);
+            vertices.push((v + 1 / this.definition.height - 0.5) * 2);
+            vertices.push(0); // second triangle
+
+            uvs.push(u);
+            uvs.push(v + 1 / this.definition.height);
+            uvs.push(0);
+            vertices.push((u - 0.5) * 2);
+            vertices.push((v + 1 / this.definition.height - 0.5) * 2);
+            vertices.push(0);
+            uvs.push(u + 1 / this.definition.width);
+            uvs.push(v);
+            uvs.push(0);
+            vertices.push((u + 1 / this.definition.width - 0.5) * 2);
+            vertices.push((v - 0.5) * 2);
+            vertices.push(0);
+            uvs.push(u + 1 / this.definition.width);
+            uvs.push(v + 1 / this.definition.height);
+            uvs.push(0);
+            vertices.push((u + 1 / this.definition.width - 0.5) * 2);
+            vertices.push((v + 1 / this.definition.height - 0.5) * 2);
+            vertices.push(0);
+          }
+        }
+      }
+      /***
+       This method enables and binds our attributes buffers
+       ***/
+
+    }, {
+      key: "initializeBuffers",
+      value: function initializeBuffers() {
+        if (!this.attributes) return; // loop through our attributes
+
+        for (var key in this.attributes) {
+          // bind attribute buffer
+          this.gl.enableVertexAttribArray(this.attributes[key].location);
+          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
+          this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.attributes[key].array), this.gl.STATIC_DRAW); // set where the attribute gets its data
+
+          this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
+        }
+      }
+      /***
+       Used inside our draw call to set the correct plane buffers before drawing it
+       ***/
+
+    }, {
+      key: "bindBuffers",
+      value: function bindBuffers() {
+        if (this._vao) {
+          if (this.renderer._isWebGL2) {
+            this.gl.bindVertexArray(this._vao);
+          } else {
+            this.renderer.extensions['OES_vertex_array_object'].bindVertexArrayOES(this._vao);
+          }
+        } else {
+          // loop through our attributes to bind the buffers and set the attribute pointer
+          for (var key in this.attributes) {
+            this.gl.enableVertexAttribArray(this.attributes[key].location);
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
+            this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
+          }
+        }
+      }
+      /***
+       Draw a geometry
+       ***/
+
+    }, {
+      key: "draw",
+      value: function draw() {
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, this.attributes.vertexPosition.numberOfItems);
+      }
+      /***
+       Dispose a geometry (ie delete its vertex array objects and buffers)
+       ***/
+
+    }, {
+      key: "dispose",
+      value: function dispose() {
+        // delete buffers
+        // each time we check for existing properties to avoid errors
+        if (this._vao) {
+          if (this.renderer._isWebGL2) {
+            this.gl.deleteVertexArray(this._vao);
+          } else {
+            this.renderer.extensions['OES_vertex_array_object'].deleteVertexArrayOES(this._vao);
+          }
+        }
+
+        for (var key in this.attributes) {
+          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
+          this.gl.bufferData(this.gl.ARRAY_BUFFER, 1, this.gl.STATIC_DRAW);
+          this.gl.deleteBuffer(this.attributes[key].buffer);
+        }
+
+        this.attributes = null;
+      }
+    }]);
+
+    return Geometry;
+  }();
+  /***
    Here we create a Mat4 class object
    This is a really basic Matrix4 class used for matrix calculations
    Highly based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js and http://glmatrix.net/docs/mat4.js.html
@@ -1098,25 +3549,25 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
   var Texture = /*#__PURE__*/function () {
     function Texture(renderer) {
-      var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          _ref$isFBOTexture = _ref.isFBOTexture,
-          isFBOTexture = _ref$isFBOTexture === void 0 ? false : _ref$isFBOTexture,
-          _ref$fromTexture = _ref.fromTexture,
-          fromTexture = _ref$fromTexture === void 0 ? false : _ref$fromTexture,
-          loader = _ref.loader,
-          sampler = _ref.sampler,
-          _ref$floatingPoint = _ref.floatingPoint,
-          floatingPoint = _ref$floatingPoint === void 0 ? "none" : _ref$floatingPoint,
-          _ref$premultiplyAlpha = _ref.premultiplyAlpha,
-          premultiplyAlpha = _ref$premultiplyAlpha === void 0 ? false : _ref$premultiplyAlpha,
-          _ref$anisotropy = _ref.anisotropy,
-          anisotropy = _ref$anisotropy === void 0 ? 1 : _ref$anisotropy,
-          _ref$generateMipmap = _ref.generateMipmap,
-          generateMipmap = _ref$generateMipmap === void 0 ? null : _ref$generateMipmap,
-          wrapS = _ref.wrapS,
-          wrapT = _ref.wrapT,
-          minFilter = _ref.minFilter,
-          magFilter = _ref.magFilter;
+      var _ref6 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          _ref6$isFBOTexture = _ref6.isFBOTexture,
+          isFBOTexture = _ref6$isFBOTexture === void 0 ? false : _ref6$isFBOTexture,
+          _ref6$fromTexture = _ref6.fromTexture,
+          fromTexture = _ref6$fromTexture === void 0 ? false : _ref6$fromTexture,
+          loader = _ref6.loader,
+          sampler = _ref6.sampler,
+          _ref6$floatingPoint = _ref6.floatingPoint,
+          floatingPoint = _ref6$floatingPoint === void 0 ? "none" : _ref6$floatingPoint,
+          _ref6$premultiplyAlph = _ref6.premultiplyAlpha,
+          premultiplyAlpha = _ref6$premultiplyAlph === void 0 ? false : _ref6$premultiplyAlph,
+          _ref6$anisotropy = _ref6.anisotropy,
+          anisotropy = _ref6$anisotropy === void 0 ? 1 : _ref6$anisotropy,
+          _ref6$generateMipmap = _ref6.generateMipmap,
+          generateMipmap = _ref6$generateMipmap === void 0 ? null : _ref6$generateMipmap,
+          wrapS = _ref6.wrapS,
+          wrapT = _ref6.wrapT,
+          minFilter = _ref6.minFilter,
+          magFilter = _ref6.magFilter;
 
       _classCallCheck(this, Texture);
 
@@ -1273,7 +3724,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_restoreContext",
       value: function _restoreContext() {
-        var _this2 = this;
+        var _this11 = this;
 
         // avoid binding that texture before reseting it
         this._canDraw = false;
@@ -1308,8 +3759,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } else {
           // wait for the original texure to be ready before attempting to restore the copy
           var queue = this.renderer.nextRender.add(function () {
-            if (_this2._copiedFrom._canDraw) {
-              _this2._restoreFromTexture(); // remove from callback queue
+            if (_this11._copiedFrom._canDraw) {
+              _this11._restoreFromTexture(); // remove from callback queue
 
 
               queue.keep = false;
@@ -1354,7 +3805,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_setParent",
       value: function _setParent() {
-        var _this3 = this;
+        var _this12 = this;
 
         // prepare texture sampler
         this._sampler.name = this._samplerName || "uSampler" + this.index; // we will always declare a texture matrix
@@ -1376,7 +3827,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           if (this._copyOnInit) {
             // copy the original texture on next render
             this.renderer.nextRender.add(function () {
-              return _this3.copy(_this3._copiedFrom);
+              return _this12.copy(_this12._copiedFrom);
             }); // we're done!
 
             return;
@@ -1518,13 +3969,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "setSource",
       value: function setSource(source) {
-        var _this4 = this;
+        var _this13 = this;
 
         // fire callback during load (useful for a loader)
         if (!this._sourceLoaded) {
           // texture source loaded callback
           this.renderer.nextRender.add(function () {
-            return _this4._onSourceLoadedCallback && _this4._onSourceLoadedCallback();
+            return _this13._onSourceLoadedCallback && _this13._onSourceLoadedCallback();
           });
         } // check for cache
 
@@ -1536,7 +3987,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           if (!this._uploaded) {
             // GPU uploading callback
             this.renderer.nextRender.add(function () {
-              return _this4._onSourceUploadedCallback && _this4._onSourceUploadedCallback();
+              return _this13._onSourceUploadedCallback && _this13._onSourceUploadedCallback();
             });
             this._uploaded = true;
           }
@@ -1847,11 +4298,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_videoFrameCallback",
       value: function _videoFrameCallback() {
-        var _this5 = this;
+        var _this14 = this;
 
         this._willUpdate = true;
         this.source.requestVideoFrameCallback(function () {
-          return _this5._videoFrameCallback();
+          return _this14._videoFrameCallback();
         });
       }
       /***
@@ -1863,7 +4314,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_upload",
       value: function _upload() {
-        var _this6 = this;
+        var _this15 = this;
 
         // set parameters that need to be set before texture uploading
         this._updateGlobalTexParameters();
@@ -1878,7 +4329,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (!this._uploaded) {
           // GPU uploading callback
           this.renderer.nextRender.add(function () {
-            return _this6._onSourceUploadedCallback && _this6._onSourceUploadedCallback();
+            return _this15._onSourceUploadedCallback && _this15._onSourceUploadedCallback();
           });
           this._uploaded = true;
         }
@@ -2184,1136 +4635,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     return Texture;
   }();
-  /***
-   Here we create a RenderTarget class object
-     params :
-   @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
-     @shaderPass (ShaderPass class object): shader pass that will use that render target. Default to null
-   @depth (bool, optional): whether to create a depth buffer (handle depth inside your render target). Default to false.
-   @clear (bool, optional): whether the content of the render target should be cleared before being drawn. Should be set to false to handle ping-pong shading. Default to true.
-     @minWidth (float, optional): minimum width of the render target
-   @minHeight (float, optional): minimum height of the render target
-     @texturesOptions (object, optional): options and parameters to apply to the render target texture. See the Texture class object.
-     returns :
-   @this: our RenderTarget class object
-   ***/
-
-
-  var RenderTarget = /*#__PURE__*/function () {
-    function RenderTarget(renderer) {
-      var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          shaderPass = _ref2.shaderPass,
-          _ref2$depth = _ref2.depth,
-          depth = _ref2$depth === void 0 ? false : _ref2$depth,
-          _ref2$clear = _ref2.clear,
-          clear = _ref2$clear === void 0 ? true : _ref2$clear,
-          _ref2$minWidth = _ref2.minWidth,
-          minWidth = _ref2$minWidth === void 0 ? 1024 : _ref2$minWidth,
-          _ref2$minHeight = _ref2.minHeight,
-          minHeight = _ref2$minHeight === void 0 ? 1024 : _ref2$minHeight,
-          _ref2$texturesOptions = _ref2.texturesOptions,
-          texturesOptions = _ref2$texturesOptions === void 0 ? {} : _ref2$texturesOptions;
-
-      _classCallCheck(this, RenderTarget);
-
-      this.type = "RenderTarget"; // we could pass our curtains object OR our curtains renderer object
-
-      renderer = renderer && renderer.renderer || renderer;
-
-      if (!renderer || renderer.type !== "Renderer") {
-        throwError(this.type + ": Renderer not passed as first argument", renderer);
-      } else if (!renderer.gl) {
-        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
-      }
-
-      this.renderer = renderer;
-      this.gl = this.renderer.gl;
-      this.index = this.renderer.renderTargets.length;
-      this._shaderPass = shaderPass; // whether to create a render buffer
-
-      this._depth = depth;
-      this._shouldClear = clear;
-      this._minSize = {
-        width: minWidth * this.renderer.pixelRatio,
-        height: minHeight * this.renderer.pixelRatio
-      }; // default textures options depends on the type of Mesh and WebGL context
-
-      texturesOptions = Object.assign({
-        // set default sampler to "uRenderTexture" and isFBOTexture to true
-        sampler: "uRenderTexture",
-        isFBOTexture: true,
-        premultiplyAlpha: false,
-        anisotropy: 1,
-        generateMipmap: false,
-        floatingPoint: "none",
-        wrapS: this.gl.CLAMP_TO_EDGE,
-        wrapT: this.gl.CLAMP_TO_EDGE,
-        minFilter: this.gl.LINEAR,
-        magFilter: this.gl.LINEAR
-      }, texturesOptions);
-      this._texturesOptions = texturesOptions;
-      this.userData = {};
-      this.uuid = generateUUID();
-      this.renderer.renderTargets.push(this); // we've added a new object, keep Curtains class in sync with our renderer
-
-      this.renderer.onSceneChange();
-
-      this._initRenderTarget();
-    }
-    /***
-     Init our RenderTarget by setting its size, creating a textures array and then calling _createFrameBuffer()
-     ***/
-
-
-    _createClass(RenderTarget, [{
-      key: "_initRenderTarget",
-      value: function _initRenderTarget() {
-        this._setSize(); // create our render texture
-
-
-        this.textures = []; // create our frame buffer
-
-        this._createFrameBuffer();
-      }
-      /*** RESTORING CONTEXT ***/
-
-      /***
-       Restore a render target
-       Basically just re init it
-       ***/
-
-    }, {
-      key: "_restoreContext",
-      value: function _restoreContext() {
-        // reset size
-        this._setSize(); // re create our frame buffer and restore its texture
-
-
-        this._createFrameBuffer();
-      }
-      /***
-       Sets our RenderTarget size based on its parent plane size
-       ***/
-
-    }, {
-      key: "_setSize",
-      value: function _setSize() {
-        if (this._shaderPass && this._shaderPass._isScenePass) {
-          this._size = {
-            width: this.renderer._boundingRect.width,
-            height: this.renderer._boundingRect.height
-          };
-        } else {
-          this._size = {
-            width: Math.max(this._minSize.width, this.renderer._boundingRect.width),
-            height: Math.max(this._minSize.height, this.renderer._boundingRect.height)
-          };
-        }
-      }
-      /***
-       Resizes our RenderTarget (only resize it if it's a ShaderPass scene pass FBO)
-       ***/
-
-    }, {
-      key: "resize",
-      value: function resize() {
-        // resize render target only if its a child of a shader pass
-        if (this._shaderPass) {
-          this._setSize();
-
-          this.textures[0].resize(); // cancel clear on resize
-
-          this.renderer.bindFrameBuffer(this, true);
-
-          if (this._depth) {
-            this._bindDepthBuffer();
-          }
-
-          this.renderer.bindFrameBuffer(null);
-        }
-      }
-      /***
-       Binds our depth buffer
-       ***/
-
-    }, {
-      key: "_bindDepthBuffer",
-      value: function _bindDepthBuffer() {
-        // render to our target texture by binding the framebuffer
-        if (this._depthBuffer) {
-          this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, this._depthBuffer); // allocate renderbuffer
-
-          this.gl.renderbufferStorage(this.gl.RENDERBUFFER, this.gl.DEPTH_COMPONENT16, this._size.width, this._size.height); // attach renderbuffer
-
-          this.gl.framebufferRenderbuffer(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, this.gl.RENDERBUFFER, this._depthBuffer);
-        }
-      }
-      /***
-       Here we create our frame buffer object
-       We're also adding a render buffer object to handle depth if needed
-       ***/
-
-    }, {
-      key: "_createFrameBuffer",
-      value: function _createFrameBuffer() {
-        this._frameBuffer = this.gl.createFramebuffer(); // cancel clear on init
-
-        this.renderer.bindFrameBuffer(this, true); // if textures array is not empty it means we're restoring the context
-
-        if (this.textures.length) {
-          this.textures[0]._parent = this;
-
-          this.textures[0]._restoreContext();
-        } else {
-          // create a texture
-          var texture = new Texture(this.renderer, this._texturesOptions); // adds the render target as parent and adds the texture to our textures array as well
-
-          texture.addParent(this);
-        } // attach the texture as the first color attachment
-        // this.textures[0]._sampler.texture contains our WebGLTexture object
-
-
-        this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, this.gl.TEXTURE_2D, this.textures[0]._sampler.texture, 0); // create a depth renderbuffer
-
-        if (this._depth) {
-          this._depthBuffer = this.gl.createRenderbuffer();
-
-          this._bindDepthBuffer();
-        }
-
-        this.renderer.bindFrameBuffer(null);
-      }
-      /*** GET THE RENDER TARGET TEXTURE ***/
-
-      /***
-       Returns the render target's texture
-         returns :
-       @texture (Texture class object): our RenderTarget's texture
-       ***/
-
-    }, {
-      key: "getTexture",
-      value: function getTexture() {
-        return this.textures[0];
-      }
-      /*** DESTROYING ***/
-
-      /***
-       Remove an element by calling the appropriate renderer method
-       ***/
-
-    }, {
-      key: "remove",
-      value: function remove() {
-        // check if it is attached to a shader pass
-        if (this._shaderPass) {
-          if (!this.renderer.production) {
-            throwWarning(this.type + ": You're trying to remove a RenderTarget attached to a ShaderPass. You should remove that ShaderPass instead:", this._shaderPass);
-          }
-
-          return;
-        }
-
-        this._dispose();
-
-        this.renderer.removeRenderTarget(this);
-      }
-      /***
-       Delete a RenderTarget buffers and its associated texture
-       ***/
-
-    }, {
-      key: "_dispose",
-      value: function _dispose() {
-        if (this._frameBuffer) {
-          this.gl.deleteFramebuffer(this._frameBuffer);
-          this._frameBuffer = null;
-        }
-
-        if (this._depthBuffer) {
-          this.gl.deleteRenderbuffer(this._depthBuffer);
-          this._depthBuffer = null;
-        }
-
-        this.textures[0]._dispose();
-
-        this.textures = [];
-      }
-    }]);
-
-    return RenderTarget;
-  }();
-  /***
-   Uniforms class manages uniforms setting and updating
-     params:
-   @renderer (Renderer class object): our renderer class object
-   @program (object): our mesh's Program (see Program class object)
-   @shared (bool): whether the program is shared or not
-     @uniforms (object): our uniforms object:
-   - name (string): uniform name to use in your shaders
-   - type (uniform type): uniform type. Will try to detect it if not set (see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/uniform)
-   - value (float / int / Vec2 / Vec3 / Mat4 / array): initial value of the uniform
-     returns:
-   @this: our Uniforms manager
-  ***/
-
-
-  var Uniforms = /*#__PURE__*/function () {
-    function Uniforms(renderer, program, shared, uniforms) {
-      _classCallCheck(this, Uniforms);
-
-      this.type = "Uniforms";
-
-      if (!renderer || renderer.type !== "Renderer") {
-        throwError(this.type + ": Renderer not passed as first argument", renderer);
-      } else if (!renderer.gl) {
-        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
-      }
-
-      this.renderer = renderer;
-      this.gl = renderer.gl;
-      this.program = program;
-      this.shared = shared;
-      this.uniforms = {};
-
-      if (uniforms) {
-        for (var key in uniforms) {
-          var uniform = uniforms[key]; // fill our uniform object
-
-          this.uniforms[key] = {
-            name: uniform.name,
-            type: uniform.type,
-            value: uniform.value,
-            lastValue: uniform.value,
-            update: null
-          };
-        }
-      }
-    }
-    /***
-     Set uniforms WebGL function based on their types
-       params :
-     @uniform (object): the uniform
-     ***/
-
-
-    _createClass(Uniforms, [{
-      key: "handleUniformSetting",
-      value: function handleUniformSetting(uniform) {
-        switch (uniform.type) {
-          case "1i":
-            uniform.update = this.setUniform1i.bind(this);
-            break;
-
-          case "1iv":
-            uniform.update = this.setUniform1iv.bind(this);
-            break;
-
-          case "1f":
-            uniform.update = this.setUniform1f.bind(this);
-            break;
-
-          case "1fv":
-            uniform.update = this.setUniform1fv.bind(this);
-            break;
-
-          case "2i":
-            uniform.update = this.setUniform2i.bind(this);
-            break;
-
-          case "2iv":
-            uniform.update = this.setUniform2iv.bind(this);
-            break;
-
-          case "2f":
-            uniform.update = this.setUniform2f.bind(this);
-            break;
-
-          case "2fv":
-            uniform.update = this.setUniform2fv.bind(this);
-            break;
-
-          case "3i":
-            uniform.update = this.setUniform3i.bind(this);
-            break;
-
-          case "3iv":
-            uniform.update = this.setUniform3iv.bind(this);
-            break;
-
-          case "3f":
-            uniform.update = this.setUniform3f.bind(this);
-            break;
-
-          case "3fv":
-            uniform.update = this.setUniform3fv.bind(this);
-            break;
-
-          case "4i":
-            uniform.update = this.setUniform4i.bind(this);
-            break;
-
-          case "4iv":
-            uniform.update = this.setUniform4iv.bind(this);
-            break;
-
-          case "4f":
-            uniform.update = this.setUniform4f.bind(this);
-            break;
-
-          case "4fv":
-            uniform.update = this.setUniform4fv.bind(this);
-            break;
-
-          case "mat2":
-            uniform.update = this.setUniformMatrix2fv.bind(this);
-            break;
-
-          case "mat3":
-            uniform.update = this.setUniformMatrix3fv.bind(this);
-            break;
-
-          case "mat4":
-            uniform.update = this.setUniformMatrix4fv.bind(this);
-            break;
-
-          default:
-            if (!this.renderer.production) throwWarning(this.type + ": This uniform type is not handled : ", uniform.type);
-        }
-      }
-      /***
-       Auto detect the format of the uniform (check if its a float, an integer, a Vector, a Matrix, an array...)
-         params :
-       @uniform (object): the uniform
-       ***/
-
-    }, {
-      key: "setInternalFormat",
-      value: function setInternalFormat(uniform) {
-        if (uniform.value.type === "Vec2") {
-          uniform._internalFormat = "Vec2";
-        } else if (uniform.value.type === "Vec3") {
-          uniform._internalFormat = "Vec3";
-        } else if (uniform.value.type === "Mat4") {
-          uniform._internalFormat = "Mat4";
-        } else if (uniform.value.type === "Quat") {
-          uniform._internalFormat = "Quat";
-        } else if (Array.isArray(uniform.value)) {
-          uniform._internalFormat = "array";
-        } else if (uniform.value.constructor === Float32Array) {
-          uniform._internalFormat = "mat";
-        } else {
-          uniform._internalFormat = "float";
-        }
-      }
-      /***
-       This inits our uniforms
-       Sets its internal format and type if not provided then upload the uniform
-       ***/
-
-    }, {
-      key: "setUniforms",
-      value: function setUniforms() {
-        // set our uniforms if we got some
-        if (this.uniforms) {
-          for (var key in this.uniforms) {
-            var uniform = this.uniforms[key]; // set our uniform location
-
-            uniform.location = this.gl.getUniformLocation(this.program, uniform.name); // handle Vec2, Vec3, Mat4, floats, arrays, etc
-
-            if (!uniform._internalFormat) {
-              this.setInternalFormat(uniform);
-            }
-
-            if (!uniform.type) {
-              if (uniform._internalFormat === "Vec2") {
-                uniform.type = "2f";
-              } else if (uniform._internalFormat === "Vec3") {
-                uniform.type = "3f";
-              } else if (uniform._internalFormat === "Mat4") {
-                uniform.type = "mat4";
-              } else if (uniform._internalFormat === "array") {
-                if (uniform.value.length === 4) {
-                  uniform.type = "4f";
-                  if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a 4f (array of 4 floats) uniform type");
-                } else if (uniform.value.length === 3) {
-                  uniform.type = "3f";
-                  if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a 3f (array of 3 floats) uniform type");
-                } else if (uniform.value.length === 2) {
-                  uniform.type = "2f";
-                  if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a 2f (array of 2 floats) uniform type");
-                }
-              } else if (uniform._internalFormat === "mat") {
-                if (uniform.value.length === 16) {
-                  uniform.type = "mat4";
-                  if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a mat4 (4x4 matrix array) uniform type");
-                } else if (uniform.value.length === 9) {
-                  uniform.type = "mat3";
-                  if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a mat3 (3x3 matrix array) uniform type");
-                } else if (uniform.value.length === 4) {
-                  uniform.type = "mat2";
-                  if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a mat2 (2x2 matrix array) uniform type");
-                }
-              } else {
-                uniform.type = "1f";
-                if (!this.renderer.production) throwWarning(this.type + ": No uniform type declared for " + uniform.name + ", applied a 1f (float) uniform type");
-              }
-            } // set the uniforms update functions
-
-
-            this.handleUniformSetting(uniform); // update the uniform
-
-            uniform.update && uniform.update(uniform);
-          }
-        }
-      }
-      /***
-       This updates all uniforms of an object that were set by the user
-       It is called at each draw call
-       ***/
-
-    }, {
-      key: "updateUniforms",
-      value: function updateUniforms() {
-        if (this.uniforms) {
-          for (var key in this.uniforms) {
-            var uniform = this.uniforms[key];
-            var shouldUpdate = false;
-
-            if (!this.shared) {
-              if (!uniform.value.length && uniform.value !== uniform.lastValue) {
-                shouldUpdate = true;
-                uniform.lastValue = uniform.value;
-              } else if (uniform._internalFormat === "Vec2" && !uniform.value.equals(uniform.lastValue)) {
-                shouldUpdate = true;
-                uniform.lastValue.copy(uniform.value);
-              } else if (uniform._internalFormat === "Vec3" && !uniform.value.equals(uniform.lastValue)) {
-                shouldUpdate = true;
-                uniform.lastValue.copy(uniform.value);
-              } else if (uniform._internalFormat === "Quat" && !uniform.value.equals(uniform.lastValue)) {
-                shouldUpdate = true;
-                uniform.lastValue.copy(uniform.value);
-              } else if (JSON.stringify(uniform.value) !== JSON.stringify(uniform.lastValue)) {
-                // compare two arrays
-                shouldUpdate = true; // copy array
-
-                uniform.lastValue = Array.from(uniform.value);
-              }
-            } else {
-              shouldUpdate = true;
-            }
-
-            if (shouldUpdate) {
-              // update our uniforms
-              uniform.update && uniform.update(uniform);
-            }
-          }
-        }
-      }
-      /***
-       Use appropriate WebGL uniform setting function based on the uniform type
-         params :
-       @uniform (object): the uniform
-       ***/
-
-    }, {
-      key: "setUniform1i",
-      value: function setUniform1i(uniform) {
-        this.gl.uniform1i(uniform.location, uniform.value);
-      }
-    }, {
-      key: "setUniform1iv",
-      value: function setUniform1iv(uniform) {
-        this.gl.uniform1iv(uniform.location, uniform.value);
-      }
-    }, {
-      key: "setUniform1f",
-      value: function setUniform1f(uniform) {
-        this.gl.uniform1f(uniform.location, uniform.value);
-      }
-    }, {
-      key: "setUniform1fv",
-      value: function setUniform1fv(uniform) {
-        this.gl.uniform1fv(uniform.location, uniform.value);
-      }
-    }, {
-      key: "setUniform2i",
-      value: function setUniform2i(uniform) {
-        uniform._internalFormat === "Vec2" ? this.gl.uniform2i(uniform.location, uniform.value.x, uniform.value.y) : this.gl.uniform2i(uniform.location, uniform.value[0], uniform.value[1]);
-      }
-    }, {
-      key: "setUniform2iv",
-      value: function setUniform2iv(uniform) {
-        uniform._internalFormat === "Vec2" ? this.gl.uniform2iv(uniform.location, [uniform.value.x, uniform.value.y]) : this.gl.uniform2iv(uniform.location, uniform.value);
-      }
-    }, {
-      key: "setUniform2f",
-      value: function setUniform2f(uniform) {
-        uniform._internalFormat === "Vec2" ? this.gl.uniform2f(uniform.location, uniform.value.x, uniform.value.y) : this.gl.uniform2f(uniform.location, uniform.value[0], uniform.value[1]);
-      }
-    }, {
-      key: "setUniform2fv",
-      value: function setUniform2fv(uniform) {
-        uniform._internalFormat === "Vec2" ? this.gl.uniform2fv(uniform.location, [uniform.value.x, uniform.value.y]) : this.gl.uniform2fv(uniform.location, uniform.value);
-      }
-    }, {
-      key: "setUniform3i",
-      value: function setUniform3i(uniform) {
-        uniform._internalFormat === "Vec3" ? this.gl.uniform3i(uniform.location, uniform.value.x, uniform.value.y, uniform.value.z) : this.gl.uniform3i(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2]);
-      }
-    }, {
-      key: "setUniform3iv",
-      value: function setUniform3iv(uniform) {
-        uniform._internalFormat === "Vec3" ? this.gl.uniform3iv(uniform.location, [uniform.value.x, uniform.value.y, uniform.value.z]) : this.gl.uniform3iv(uniform.location, uniform.value);
-      }
-    }, {
-      key: "setUniform3f",
-      value: function setUniform3f(uniform) {
-        uniform._internalFormat === "Vec3" ? this.gl.uniform3f(uniform.location, uniform.value.x, uniform.value.y, uniform.value.z) : this.gl.uniform3f(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2]);
-      }
-    }, {
-      key: "setUniform3fv",
-      value: function setUniform3fv(uniform) {
-        uniform._internalFormat === "Vec3" ? this.gl.uniform3fv(uniform.location, [uniform.value.x, uniform.value.y, uniform.value.z]) : this.gl.uniform3fv(uniform.location, uniform.value);
-      }
-    }, {
-      key: "setUniform4i",
-      value: function setUniform4i(uniform) {
-        uniform._internalFormat === "Quat" ? this.gl.uniform4i(uniform.location, uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]) : this.gl.uniform4i(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]);
-      }
-    }, {
-      key: "setUniform4iv",
-      value: function setUniform4iv(uniform) {
-        uniform._internalFormat === "Quat" ? this.gl.uniform4iv(uniform.location, [uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]]) : this.gl.uniform4iv(uniform.location, uniform.value);
-      }
-    }, {
-      key: "setUniform4f",
-      value: function setUniform4f(uniform) {
-        uniform._internalFormat === "Quat" ? this.gl.uniform4f(uniform.location, uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]) : this.gl.uniform4f(uniform.location, uniform.value[0], uniform.value[1], uniform.value[2], uniform.value[3]);
-      }
-    }, {
-      key: "setUniform4fv",
-      value: function setUniform4fv(uniform) {
-        uniform._internalFormat === "Quat" ? this.gl.uniform4fv(uniform.location, [uniform.value.elements[0], uniform.value.elements[1], uniform.value.elements[2], uniform.value[3]]) : this.gl.uniform4fv(uniform.location, uniform.value);
-      }
-    }, {
-      key: "setUniformMatrix2fv",
-      value: function setUniformMatrix2fv(uniform) {
-        this.gl.uniformMatrix2fv(uniform.location, false, uniform.value);
-      }
-    }, {
-      key: "setUniformMatrix3fv",
-      value: function setUniformMatrix3fv(uniform) {
-        this.gl.uniformMatrix3fv(uniform.location, false, uniform.value);
-      }
-    }, {
-      key: "setUniformMatrix4fv",
-      value: function setUniformMatrix4fv(uniform) {
-        uniform._internalFormat === "Mat4" ? this.gl.uniformMatrix4fv(uniform.location, false, uniform.value.elements) : this.gl.uniformMatrix4fv(uniform.location, false, uniform.value);
-      }
-    }]);
-
-    return Uniforms;
-  }();
-  /***
-   Program class that creates, compiles and links the shaders
-   Use a cache system to get already compiled shaders and save some CPU
-   Also responsible for the creation, setting and updating of the uniforms (see Uniforms class object)
-     params:
-   @renderer (Renderer class object): our renderer class object
-     @parent (Plane/ShaderPass class object): the mesh that will use that program
-   @vertexShader (string): vertex shader as a string
-   @fragmentShader (string): fragment shader as a string
-     returns:
-   @this: our newly created Program
-   ***/
-
-
-  var Program = /*#__PURE__*/function () {
-    function Program(renderer) {
-      var _ref3 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          parent = _ref3.parent,
-          vertexShader = _ref3.vertexShader,
-          fragmentShader = _ref3.fragmentShader;
-
-      _classCallCheck(this, Program);
-
-      this.type = "Program";
-
-      if (!renderer || renderer.type !== "Renderer") {
-        throwError(this.type + ": Renderer not passed as first argument", renderer);
-      } else if (!renderer.gl) {
-        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
-      }
-
-      this.renderer = renderer;
-      this.gl = this.renderer.gl;
-      this.parent = parent;
-      this.vsCode = vertexShader;
-      this.fsCode = fragmentShader;
-      this.compiled = true;
-      this.setupProgram();
-    }
-    /***
-     Compile our WebGL shaders based on our written shaders
-       params:
-     @shaderCode (string): shader code
-     @shaderType (shaderType): WebGL shader type (vertex or fragment)
-       returns:
-     @shader (compiled shader): our compiled shader
-     ***/
-
-
-    _createClass(Program, [{
-      key: "createShader",
-      value: function createShader(shaderCode, shaderType) {
-        var shader = this.gl.createShader(shaderType);
-        this.gl.shaderSource(shader, shaderCode);
-        this.gl.compileShader(shader); // check shader compilation status only when not in production mode
-
-        if (!this.renderer.production) {
-          if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-            // shader debugging log as seen in THREE.js WebGLProgram source code
-            var shaderTypeString = shaderType === this.gl.VERTEX_SHADER ? "vertex shader" : "fragment shader";
-            var shaderSource = this.gl.getShaderSource(shader);
-            var shaderLines = shaderSource.split('\n');
-
-            for (var i = 0; i < shaderLines.length; i++) {
-              shaderLines[i] = i + 1 + ': ' + shaderLines[i];
-            }
-
-            shaderLines = shaderLines.join("\n");
-            throwWarning(this.type + ": Errors occurred while compiling the", shaderTypeString, ":\n", this.gl.getShaderInfoLog(shader));
-            throwError(shaderLines);
-            this.compiled = false;
-            return null;
-          }
-        }
-
-        return shader;
-      }
-      /***
-       Compiles and creates new shaders
-       ***/
-
-    }, {
-      key: "useNewShaders",
-      value: function useNewShaders() {
-        this.vertexShader = this.createShader(this.vsCode, this.gl.VERTEX_SHADER);
-        this.fragmentShader = this.createShader(this.fsCode, this.gl.FRAGMENT_SHADER);
-
-        if (!this.vertexShader || !this.fragmentShader) {
-          if (!this.renderer.production) throwWarning(this.type + ": Unable to find or compile the vertex or fragment shader");
-        }
-      }
-    }, {
-      key: "setupProgram",
-
-      /***
-       Checks whether the program has already been registered before creating it
-       If yes, use the compiled program if the program should be shared, or just use the compiled shaders to create a new one else with createProgram()
-       If not, compile the shaders and call createProgram()
-       ***/
-      value: function setupProgram() {
-        var existingProgram = this.renderer.cache.getProgramFromShaders(this.vsCode, this.fsCode); // we found an existing program
-
-        if (existingProgram) {
-          // if we've decided to share existing programs, just return the existing one
-          if (this.parent.shareProgram) {
-            //return existingProgram;
-            this.shared = true;
-            this.vertexShader = existingProgram.vertexShader;
-            this.fragmentShader = existingProgram.fragmentShader;
-            this.program = existingProgram.program;
-            this.id = existingProgram.id;
-            this.activeTextures = existingProgram.activeTextures;
-          } else {
-            // we need to create a new program but we don't have to re compile the shaders
-            this.vertexShader = existingProgram.vertexShader;
-            this.fragmentShader = existingProgram.fragmentShader; // copy active textures as well
-
-            this.activeTextures = existingProgram.activeTextures;
-            this.createProgram();
-          }
-        } else {
-          // compile the new shaders and create a new program
-          this.useNewShaders();
-
-          if (this.compiled) {
-            this.createProgram();
-          }
-        }
-      }
-      /***
-       Used internally to set up program based on the created shaders and attach them to the program
-       Sets a list of active textures that are actually used by the shaders to avoid binding unused textures during draw calls
-       Add the program to the cache
-       ***/
-
-    }, {
-      key: "createProgram",
-      value: function createProgram() {
-        // set program id and type
-        this.id = this.renderer.cache.programs.length;
-        this.shared = this.parent.shareProgram; // we need to create a new shader program
-
-        this.program = this.gl.createProgram(); // if shaders are valid, go on
-
-        this.gl.attachShader(this.program, this.vertexShader);
-        this.gl.attachShader(this.program, this.fragmentShader);
-        this.gl.linkProgram(this.program); // free the shaders handles
-
-        this.gl.deleteShader(this.vertexShader);
-        this.gl.deleteShader(this.fragmentShader); // TODO getProgramParameter even in production to avoid errors?
-        // check the shader program creation status only when not in production mode
-
-        if (!this.renderer.production) {
-          if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) {
-            throwWarning(this.type + ": Unable to initialize the shader program.");
-            this.compiled = false;
-            return;
-          }
-        } // store active textures (those that are used in the shaders) to avoid binding unused textures
-
-
-        if (!this.activeTextures) {
-          this.activeTextures = []; // check for program active textures
-
-          var numUniforms = this.gl.getProgramParameter(this.program, this.gl.ACTIVE_UNIFORMS);
-
-          for (var i = 0; i < numUniforms; i++) {
-            var activeUniform = this.gl.getActiveUniform(this.program, i); // if it's a texture add it to our activeTextures array
-
-            if (activeUniform.type === this.gl.SAMPLER_2D) {
-              this.activeTextures.push(activeUniform.name);
-            }
-          }
-        } // add it to our program manager programs list
-
-
-        this.renderer.cache.addProgram(this);
-      }
-      /*** UNIFORMS ***/
-
-      /***
-       Creates and attach the uniform handlers to our program
-         params:
-       @uniforms (object): an object describing our uniforms (see Uniforms class object)
-       ***/
-
-    }, {
-      key: "createUniforms",
-      value: function createUniforms(uniforms) {
-        this.uniformsManager = new Uniforms(this.renderer, this.program, this.shared, uniforms); // set them right away
-
-        this.setUniforms();
-      }
-      /***
-       Sets our uniforms (used on init and on context restoration)
-       ***/
-
-    }, {
-      key: "setUniforms",
-      value: function setUniforms() {
-        // use this program
-        this.renderer.useProgram(this);
-        this.uniformsManager.setUniforms();
-      }
-      /***
-       Updates our uniforms at each draw calls
-       ***/
-
-    }, {
-      key: "updateUniforms",
-      value: function updateUniforms() {
-        // use this program
-        this.renderer.useProgram(this);
-        this.uniformsManager.updateUniforms();
-      }
-    }]);
-
-    return Program;
-  }();
-  /***
-   Geometry class handles attributes, VertexArrayObjects (if available) and vertices/UVs set up
-     params:
-   @renderer (Renderer class object): our renderer class object
-     @program (object): our mesh's Program (see Program class object)
-   @width (int): number of vertices along width
-   @height (int): number of vertices along height
-   @id (int): an integer based on geometry's width and height and used to avoid redundant buffer binding calls
-     returns:
-   @this: our newly created Geometry
-   ***/
-
-
-  var Geometry = /*#__PURE__*/function () {
-    function Geometry(renderer) {
-      var _ref4 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          _ref4$program = _ref4.program,
-          program = _ref4$program === void 0 ? null : _ref4$program,
-          _ref4$width = _ref4.width,
-          width = _ref4$width === void 0 ? 1 : _ref4$width,
-          _ref4$height = _ref4.height,
-          height = _ref4$height === void 0 ? 1 : _ref4$height;
-
-      _classCallCheck(this, Geometry);
-
-      this.type = "Geometry";
-
-      if (!renderer || renderer.type !== "Renderer") {
-        throwError(this.type + ": Renderer not passed as first argument", renderer);
-      } else if (!renderer.gl) {
-        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
-      }
-
-      this.renderer = renderer;
-      this.gl = this.renderer.gl; // unique plane buffers id based on width and height
-      // used to get a geometry from cache
-
-      this.definition = {
-        id: width * height + width,
-        width: width,
-        height: height
-      };
-      this.setDefaultAttributes();
-      this.setVerticesUVs();
-    }
-    /*** CONTEXT RESTORATION ***/
-
-    /***
-     Used internally to handle context restoration after the program has been successfully compiled again
-     Reset the default attributes, the vertices and UVs and the program
-     ***/
-
-
-    _createClass(Geometry, [{
-      key: "restoreContext",
-      value: function restoreContext(program) {
-        this.program = null;
-        this.setDefaultAttributes();
-        this.setVerticesUVs();
-        this.setProgram(program);
-      }
-      /*** SET DEFAULT ATTRIBUTES ***/
-
-      /***
-       Our geometry default attributes that will handle the buffers
-       We're just using vertices positions and texture coordinates
-       ***/
-
-    }, {
-      key: "setDefaultAttributes",
-      value: function setDefaultAttributes() {
-        // our plane default attributes
-        // if we'd want to introduce custom attributes we'd merge them with those
-        this.attributes = {
-          vertexPosition: {
-            name: "aVertexPosition",
-            size: 3
-          },
-          textureCoord: {
-            name: "aTextureCoord",
-            size: 3
-          }
-        };
-      }
-      /***
-       Set our vertices and texture coordinates array
-       Get them from the cache if possible
-       ***/
-
-    }, {
-      key: "setVerticesUVs",
-      value: function setVerticesUVs() {
-        // we need to create our geometry and material objects
-        var cachedGeometry = this.renderer.cache.getGeometryFromID(this.definition.id);
-
-        if (cachedGeometry) {
-          this.attributes.vertexPosition.array = cachedGeometry.vertices;
-          this.attributes.textureCoord.array = cachedGeometry.uvs;
-        } else {
-          this.computeVerticesUVs(); // TODO better caching? We could pass all attributes to cache and handle arrays in there
-
-          this.renderer.cache.addGeometry(this.definition.id, this.attributes.vertexPosition.array, this.attributes.textureCoord.array);
-        }
-      }
-      /***
-       Called on init and on context restoration to set up the attribute buffers
-       Use VertexArrayObjects whenever possible
-       ***/
-
-    }, {
-      key: "setProgram",
-      value: function setProgram(program) {
-        this.program = program.program;
-        this.initAttributes(); // use vertex array objects if available
-
-        if (this.renderer._isWebGL2) {
-          this._vao = this.gl.createVertexArray();
-          this.gl.bindVertexArray(this._vao);
-        } else if (this.renderer.extensions['OES_vertex_array_object']) {
-          this._vao = this.renderer.extensions['OES_vertex_array_object'].createVertexArrayOES();
-          this.renderer.extensions['OES_vertex_array_object'].bindVertexArrayOES(this._vao);
-        }
-
-        this.initializeBuffers();
-      }
-      /***
-       This creates our mesh attributes and buffers by looping over it
-       ***/
-
-    }, {
-      key: "initAttributes",
-      value: function initAttributes() {
-        // loop through our attributes and create buffers and attributes locations
-        for (var key in this.attributes) {
-          this.attributes[key].location = this.gl.getAttribLocation(this.program, this.attributes[key].name);
-          this.attributes[key].buffer = this.gl.createBuffer();
-          this.attributes[key].numberOfItems = this.definition.width * this.definition.height * this.attributes[key].size * 2;
-        }
-      }
-      /***
-       This method is used internally to create our vertices coordinates and texture UVs
-       we first create our UVs on a grid from [0, 0, 0] to [1, 1, 0]
-       then we use the UVs to create our vertices coords
-       ***/
-
-    }, {
-      key: "computeVerticesUVs",
-      value: function computeVerticesUVs() {
-        // geometry vertices and UVs
-        this.attributes.vertexPosition.array = [];
-        this.attributes.textureCoord.array = [];
-        var vertices = this.attributes.vertexPosition.array;
-        var uvs = this.attributes.textureCoord.array;
-
-        for (var y = 0; y < this.definition.height; y++) {
-          var v = y / this.definition.height;
-
-          for (var x = 0; x < this.definition.width; x++) {
-            var u = x / this.definition.width; // uvs and vertices
-            // our uvs are ranging from 0 to 1, our vertices range from -1 to 1
-            // first triangle
-
-            uvs.push(u);
-            uvs.push(v);
-            uvs.push(0);
-            vertices.push((u - 0.5) * 2);
-            vertices.push((v - 0.5) * 2);
-            vertices.push(0);
-            uvs.push(u + 1 / this.definition.width);
-            uvs.push(v);
-            uvs.push(0);
-            vertices.push((u + 1 / this.definition.width - 0.5) * 2);
-            vertices.push((v - 0.5) * 2);
-            vertices.push(0);
-            uvs.push(u);
-            uvs.push(v + 1 / this.definition.height);
-            uvs.push(0);
-            vertices.push((u - 0.5) * 2);
-            vertices.push((v + 1 / this.definition.height - 0.5) * 2);
-            vertices.push(0); // second triangle
-
-            uvs.push(u);
-            uvs.push(v + 1 / this.definition.height);
-            uvs.push(0);
-            vertices.push((u - 0.5) * 2);
-            vertices.push((v + 1 / this.definition.height - 0.5) * 2);
-            vertices.push(0);
-            uvs.push(u + 1 / this.definition.width);
-            uvs.push(v);
-            uvs.push(0);
-            vertices.push((u + 1 / this.definition.width - 0.5) * 2);
-            vertices.push((v - 0.5) * 2);
-            vertices.push(0);
-            uvs.push(u + 1 / this.definition.width);
-            uvs.push(v + 1 / this.definition.height);
-            uvs.push(0);
-            vertices.push((u + 1 / this.definition.width - 0.5) * 2);
-            vertices.push((v + 1 / this.definition.height - 0.5) * 2);
-            vertices.push(0);
-          }
-        }
-      }
-      /***
-       This method enables and binds our attributes buffers
-       ***/
-
-    }, {
-      key: "initializeBuffers",
-      value: function initializeBuffers() {
-        if (!this.attributes) return; // loop through our attributes
-
-        for (var key in this.attributes) {
-          // bind attribute buffer
-          this.gl.enableVertexAttribArray(this.attributes[key].location);
-          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
-          this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.attributes[key].array), this.gl.STATIC_DRAW); // set where the attribute gets its data
-
-          this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
-        }
-      }
-      /***
-       Used inside our draw call to set the correct plane buffers before drawing it
-       ***/
-
-    }, {
-      key: "bindBuffers",
-      value: function bindBuffers() {
-        if (this._vao) {
-          if (this.renderer._isWebGL2) {
-            this.gl.bindVertexArray(this._vao);
-          } else {
-            this.renderer.extensions['OES_vertex_array_object'].bindVertexArrayOES(this._vao);
-          }
-        } else {
-          // loop through our attributes to bind the buffers and set the attribute pointer
-          for (var key in this.attributes) {
-            this.gl.enableVertexAttribArray(this.attributes[key].location);
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
-            this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
-          }
-        }
-      }
-      /***
-       Draw a geometry
-       ***/
-
-    }, {
-      key: "draw",
-      value: function draw() {
-        this.gl.drawArrays(this.gl.TRIANGLES, 0, this.attributes.vertexPosition.numberOfItems);
-      }
-      /***
-       Dispose a geometry (ie delete its vertex array objects and buffers)
-       ***/
-
-    }, {
-      key: "dispose",
-      value: function dispose() {
-        // delete buffers
-        // each time we check for existing properties to avoid errors
-        if (this._vao) {
-          if (this.renderer._isWebGL2) {
-            this.gl.deleteVertexArray(this._vao);
-          } else {
-            this.renderer.extensions['OES_vertex_array_object'].deleteVertexArrayOES(this._vao);
-          }
-        }
-
-        for (var key in this.attributes) {
-          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
-          this.gl.bufferData(this.gl.ARRAY_BUFFER, 1, this.gl.STATIC_DRAW);
-          this.gl.deleteBuffer(this.attributes[key].buffer);
-        }
-
-        this.attributes = null;
-      }
-    }]);
-
-    return Geometry;
-  }();
   /*** TEXTURE LOADER CLASS ***/
 
   /***
@@ -3403,7 +4724,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_sourceLoaded",
       value: function _sourceLoaded(source, texture, callback) {
-        var _this7 = this;
+        var _this16 = this;
 
         // execute only once
         if (!texture._sourceLoaded) {
@@ -3414,7 +4735,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             // increment plane texture loader
             this._increment && this._increment();
             this.renderer.nextRender.add(function () {
-              return _this7._parent._onLoadingCallback && _this7._parent._onLoadingCallback(texture);
+              return _this16._parent._onLoadingCallback && _this16._parent._onLoadingCallback(texture);
             });
           }
         } // execute callback
@@ -3844,34 +5165,34 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _super = _createSuper(PlaneTextureLoader);
 
     function PlaneTextureLoader(renderer, parent) {
-      var _this8;
+      var _this17;
 
-      var _ref5 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-          _ref5$sourcesLoaded = _ref5.sourcesLoaded,
-          sourcesLoaded = _ref5$sourcesLoaded === void 0 ? 0 : _ref5$sourcesLoaded,
-          _ref5$sourcesToLoad = _ref5.sourcesToLoad,
-          sourcesToLoad = _ref5$sourcesToLoad === void 0 ? 0 : _ref5$sourcesToLoad,
-          _ref5$complete = _ref5.complete,
-          complete = _ref5$complete === void 0 ? false : _ref5$complete,
-          _ref5$onComplete = _ref5.onComplete,
-          onComplete = _ref5$onComplete === void 0 ? function () {} : _ref5$onComplete;
+      var _ref7 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+          _ref7$sourcesLoaded = _ref7.sourcesLoaded,
+          sourcesLoaded = _ref7$sourcesLoaded === void 0 ? 0 : _ref7$sourcesLoaded,
+          _ref7$sourcesToLoad = _ref7.sourcesToLoad,
+          sourcesToLoad = _ref7$sourcesToLoad === void 0 ? 0 : _ref7$sourcesToLoad,
+          _ref7$complete = _ref7.complete,
+          complete = _ref7$complete === void 0 ? false : _ref7$complete,
+          _ref7$onComplete = _ref7.onComplete,
+          onComplete = _ref7$onComplete === void 0 ? function () {} : _ref7$onComplete;
 
       _classCallCheck(this, PlaneTextureLoader);
 
-      _this8 = _super.call(this, renderer, parent.crossOrigin);
-      _this8.type = "PlaneTextureLoader";
-      _this8._parent = parent;
+      _this17 = _super.call(this, renderer, parent.crossOrigin);
+      _this17.type = "PlaneTextureLoader";
+      _this17._parent = parent;
 
-      if (_this8._parent.type !== "Plane" && _this8._parent.type !== "ShaderPass") {
-        throwWarning(_this8.type + ": Wrong parent type assigned to this loader");
-        _this8._parent = null;
+      if (_this17._parent.type !== "Plane" && _this17._parent.type !== "ShaderPass") {
+        throwWarning(_this17.type + ": Wrong parent type assigned to this loader");
+        _this17._parent = null;
       }
 
-      _this8.sourcesLoaded = sourcesLoaded;
-      _this8.sourcesToLoad = sourcesToLoad;
-      _this8.complete = complete;
-      _this8.onComplete = onComplete;
-      return _this8;
+      _this17.sourcesLoaded = sourcesLoaded;
+      _this17.sourcesToLoad = sourcesToLoad;
+      _this17.complete = complete;
+      _this17.onComplete = onComplete;
+      return _this17;
     }
     /*** TRACK LOADING ***/
 
@@ -3885,14 +5206,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     _createClass(PlaneTextureLoader, [{
       key: "_setLoaderSize",
       value: function _setLoaderSize(size) {
-        var _this9 = this;
+        var _this18 = this;
 
         this.sourcesToLoad = size;
 
         if (this.sourcesToLoad === 0) {
           this.complete = true;
           this.renderer.nextRender.add(function () {
-            return _this9.onComplete && _this9.onComplete();
+            return _this18.onComplete && _this18.onComplete();
           });
         }
       }
@@ -3903,14 +5224,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_increment",
       value: function _increment() {
-        var _this10 = this;
+        var _this19 = this;
 
         this.sourcesLoaded++;
 
         if (this.sourcesLoaded >= this.sourcesToLoad && !this.complete) {
           this.complete = true;
           this.renderer.nextRender.add(function () {
-            return _this10.onComplete && _this10.onComplete();
+            return _this19.onComplete && _this19.onComplete();
           });
         }
       }
@@ -4012,31 +5333,31 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
   var Mesh = /*#__PURE__*/function () {
     function Mesh(renderer) {
-      var _this11 = this;
+      var _this20 = this;
 
       var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "Mesh";
 
-      var _ref6 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-          _ref6$shareProgram = _ref6.shareProgram,
-          shareProgram = _ref6$shareProgram === void 0 ? false : _ref6$shareProgram,
-          vertexShaderID = _ref6.vertexShaderID,
-          fragmentShaderID = _ref6.fragmentShaderID,
-          vertexShader = _ref6.vertexShader,
-          fragmentShader = _ref6.fragmentShader,
-          _ref6$uniforms = _ref6.uniforms,
-          uniforms = _ref6$uniforms === void 0 ? {} : _ref6$uniforms,
-          _ref6$widthSegments = _ref6.widthSegments,
-          widthSegments = _ref6$widthSegments === void 0 ? 1 : _ref6$widthSegments,
-          _ref6$heightSegments = _ref6.heightSegments,
-          heightSegments = _ref6$heightSegments === void 0 ? 1 : _ref6$heightSegments,
-          _ref6$depthTest = _ref6.depthTest,
-          depthTest = _ref6$depthTest === void 0 ? true : _ref6$depthTest,
-          _ref6$cullFace = _ref6.cullFace,
-          cullFace = _ref6$cullFace === void 0 ? "back" : _ref6$cullFace,
-          _ref6$texturesOptions = _ref6.texturesOptions,
-          texturesOptions = _ref6$texturesOptions === void 0 ? {} : _ref6$texturesOptions,
-          _ref6$crossOrigin = _ref6.crossOrigin,
-          crossOrigin = _ref6$crossOrigin === void 0 ? "anonymous" : _ref6$crossOrigin;
+      var _ref8 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+          _ref8$shareProgram = _ref8.shareProgram,
+          shareProgram = _ref8$shareProgram === void 0 ? false : _ref8$shareProgram,
+          vertexShaderID = _ref8.vertexShaderID,
+          fragmentShaderID = _ref8.fragmentShaderID,
+          vertexShader = _ref8.vertexShader,
+          fragmentShader = _ref8.fragmentShader,
+          _ref8$uniforms = _ref8.uniforms,
+          uniforms = _ref8$uniforms === void 0 ? {} : _ref8$uniforms,
+          _ref8$widthSegments = _ref8.widthSegments,
+          widthSegments = _ref8$widthSegments === void 0 ? 1 : _ref8$widthSegments,
+          _ref8$heightSegments = _ref8.heightSegments,
+          heightSegments = _ref8$heightSegments === void 0 ? 1 : _ref8$heightSegments,
+          _ref8$depthTest = _ref8.depthTest,
+          depthTest = _ref8$depthTest === void 0 ? true : _ref8$depthTest,
+          _ref8$cullFace = _ref8.cullFace,
+          cullFace = _ref8$cullFace === void 0 ? "back" : _ref8$cullFace,
+          _ref8$texturesOptions = _ref8.texturesOptions,
+          texturesOptions = _ref8$texturesOptions === void 0 ? {} : _ref8$texturesOptions,
+          _ref8$crossOrigin = _ref8.crossOrigin,
+          crossOrigin = _ref8$crossOrigin === void 0 ? "anonymous" : _ref8$crossOrigin;
 
       _classCallCheck(this, Mesh);
 
@@ -4048,8 +5369,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         throwError(this.type + ": Curtains not passed as first argument or Curtains Renderer is missing", renderer); // no renderer, we can't use the renderer nextRender method
 
         setTimeout(function () {
-          if (_this11._onErrorCallback) {
-            _this11._onErrorCallback();
+          if (_this20._onErrorCallback) {
+            _this20._onErrorCallback();
           }
         }, 0);
       }
@@ -4061,8 +5382,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (!this.renderer.production) throwError(this.type + ": Unable to create a " + this.type + " because the Renderer WebGl context is not defined"); // we should assume there's still no renderer here, so no nextRender method
 
         setTimeout(function () {
-          if (_this11._onErrorCallback) {
-            _this11._onErrorCallback();
+          if (_this20._onErrorCallback) {
+            _this20._onErrorCallback();
           }
         }, 0);
       }
@@ -4149,7 +5470,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderer.onSceneChange();
       } else {
         this.renderer.nextRender.add(function () {
-          return _this11._onErrorCallback && _this11._onErrorCallback();
+          return _this20._onErrorCallback && _this20._onErrorCallback();
         });
       }
     }
@@ -4157,7 +5478,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     _createClass(Mesh, [{
       key: "_initMesh",
       value: function _initMesh() {
-        var _this12 = this;
+        var _this21 = this;
 
         this.uuid = generateUUID(); // our Loader Class that will handle all medias loading process
 
@@ -4167,9 +5488,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           // will change if there's any texture to load on init
           complete: false,
           onComplete: function onComplete() {
-            _this12._onReadyCallback && _this12._onReadyCallback();
+            _this21._onReadyCallback && _this21._onReadyCallback();
 
-            _this12.renderer.needRender();
+            _this21.renderer.needRender();
           }
         });
         this.images = [];
@@ -4302,7 +5623,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "loadSource",
       value: function loadSource(source) {
-        var _this13 = this;
+        var _this22 = this;
 
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
@@ -4310,8 +5631,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.loader.loadSource(source, Object.assign(this._texturesOptions, textureOptions), function (texture) {
           successCallback && successCallback(texture);
         }, function (source, error) {
-          if (!_this13.renderer.production) {
-            throwWarning(_this13.type + ": this HTML tag could not be converted into a texture:", source.tagName);
+          if (!_this22.renderer.production) {
+            throwWarning(_this22.type + ": this HTML tag could not be converted into a texture:", source.tagName);
           }
 
           errorCallback && errorCallback(source, error);
@@ -4329,7 +5650,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "loadImage",
       value: function loadImage(source) {
-        var _this14 = this;
+        var _this23 = this;
 
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
@@ -4337,8 +5658,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.loader.loadImage(source, Object.assign(this._texturesOptions, textureOptions), function (texture) {
           successCallback && successCallback(texture);
         }, function (source, error) {
-          if (!_this14.renderer.production) {
-            throwWarning(_this14.type + ": There has been an error:\n", error, "\nwhile loading this image:\n", source);
+          if (!_this23.renderer.production) {
+            throwWarning(_this23.type + ": There has been an error:\n", error, "\nwhile loading this image:\n", source);
           }
 
           errorCallback && errorCallback(source, error);
@@ -4356,7 +5677,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "loadVideo",
       value: function loadVideo(source) {
-        var _this15 = this;
+        var _this24 = this;
 
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
@@ -4364,8 +5685,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.loader.loadVideo(source, Object.assign(this._texturesOptions, textureOptions), function (texture) {
           successCallback && successCallback(texture);
         }, function (source, error) {
-          if (!_this15.renderer.production) {
-            throwWarning(_this15.type + ": There has been an error:\n", error, "\nwhile loading this video:\n", source);
+          if (!_this24.renderer.production) {
+            throwWarning(_this24.type + ": There has been an error:\n", error, "\nwhile loading this video:\n", source);
           }
 
           errorCallback && errorCallback(source, error);
@@ -4458,7 +5779,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "playVideos",
       value: function playVideos() {
-        var _this16 = this;
+        var _this25 = this;
 
         for (var i = 0; i < this.textures.length; i++) {
           var texture = this.textures[i];
@@ -4469,7 +5790,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
             if (playPromise !== undefined) {
               playPromise["catch"](function (error) {
-                if (!_this16.renderer.production) throwWarning(_this16.type + ": Could not play the video : ", error);
+                if (!_this25.renderer.production) throwWarning(_this25.type + ": Could not play the video : ", error);
               });
             }
           }
@@ -4656,6 +5977,215 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     return Mesh;
   }();
+  /***
+   Here we create our DOMGLObject object
+   We will extend our Mesh class object by adding HTML sizes helpers (bounding boxes getter/setter and mouse to mesh positioning)
+   params:
+   @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
+   @plane (html element): the html element that we will use for our DOMMesh object
+   @type (string): Object type (should be either "Plane" or "ShaderPass")
+   @Meshparams (object): see Mesh class object
+   returns:
+   @this: our BasePlane element
+   ***/
+  // TODO raycasting inside mouseToPlaneCoords for Plane objects when transformed
+
+
+  var DOMMesh = /*#__PURE__*/function (_Mesh) {
+    _inherits(DOMMesh, _Mesh);
+
+    var _super2 = _createSuper(DOMMesh);
+
+    function DOMMesh(renderer, htmlElement) {
+      var _this26;
+
+      var type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "DOMMesh";
+
+      var _ref9 = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {},
+          shareProgram = _ref9.shareProgram,
+          widthSegments = _ref9.widthSegments,
+          heightSegments = _ref9.heightSegments,
+          depthTest = _ref9.depthTest,
+          cullFace = _ref9.cullFace,
+          uniforms = _ref9.uniforms,
+          vertexShaderID = _ref9.vertexShaderID,
+          fragmentShaderID = _ref9.fragmentShaderID,
+          vertexShader = _ref9.vertexShader,
+          fragmentShader = _ref9.fragmentShader,
+          texturesOptions = _ref9.texturesOptions,
+          crossOrigin = _ref9.crossOrigin;
+
+      _classCallCheck(this, DOMMesh);
+
+      // handling HTML shaders scripts
+      vertexShaderID = vertexShaderID || htmlElement && htmlElement.getAttribute("data-vs-id");
+      fragmentShaderID = fragmentShaderID || htmlElement && htmlElement.getAttribute("data-fs-id");
+      _this26 = _super2.call(this, renderer, type, {
+        shareProgram: shareProgram,
+        widthSegments: widthSegments,
+        heightSegments: heightSegments,
+        depthTest: depthTest,
+        cullFace: cullFace,
+        uniforms: uniforms,
+        vertexShaderID: vertexShaderID,
+        fragmentShaderID: fragmentShaderID,
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader,
+        texturesOptions: texturesOptions,
+        crossOrigin: crossOrigin
+      }); // our HTML element
+
+      _this26.htmlElement = htmlElement;
+
+      if (!_this26.htmlElement || _this26.htmlElement.length === 0) {
+        if (!_this26.renderer.production) throwWarning(_this26.type + ": The HTML element you specified does not currently exists in the DOM");
+      } // set plane sizes
+
+
+      _this26._setDocumentSizes();
+
+      return _this26;
+    }
+    /*** PLANE SIZES ***/
+
+    /***
+     Set our plane dimensions and positions relative to document
+     Triggers reflow!
+     ***/
+
+
+    _createClass(DOMMesh, [{
+      key: "_setDocumentSizes",
+      value: function _setDocumentSizes() {
+        // set our basic initial infos
+        var planeBoundingRect = this.htmlElement.getBoundingClientRect();
+        if (!this._boundingRect) this._boundingRect = {}; // set plane dimensions in document space
+
+        this._boundingRect.document = {
+          width: planeBoundingRect.width * this.renderer.pixelRatio,
+          height: planeBoundingRect.height * this.renderer.pixelRatio,
+          top: planeBoundingRect.top * this.renderer.pixelRatio,
+          left: planeBoundingRect.left * this.renderer.pixelRatio
+        };
+      }
+    }, {
+      key: "getBoundingRect",
+
+      /*** BOUNDING BOXES GETTERS ***/
+
+      /***
+       Useful to get our plane HTML element bounding rectangle without triggering a reflow/layout
+       returns :
+       @boundingRectangle (obj): an object containing our plane HTML element bounding rectangle (width, height, top, bottom, right and left properties)
+       ***/
+      value: function getBoundingRect() {
+        return {
+          width: this._boundingRect.document.width,
+          height: this._boundingRect.document.height,
+          top: this._boundingRect.document.top,
+          left: this._boundingRect.document.left,
+          // right = left + width, bottom = top + height
+          right: this._boundingRect.document.left + this._boundingRect.document.width,
+          bottom: this._boundingRect.document.top + this._boundingRect.document.height
+        };
+      }
+      /***
+       Handles each plane resizing
+       used internally when our container is resized
+       TODO will soon be DEPRECATED!
+       ***/
+
+    }, {
+      key: "planeResize",
+      value: function planeResize() {
+        if (!this.renderer.production) {
+          throwWarning(this.type + ": planeResize() is deprecated, use resize() instead.");
+        }
+
+        this.resize();
+      }
+      /***
+       Handles each plane resizing
+       used internally when our container is resized
+       ***/
+
+    }, {
+      key: "resize",
+      value: function resize() {
+        var _this27 = this;
+
+        // reset plane dimensions
+        this._setDocumentSizes(); // if this is a Plane object we need to update its perspective and positions
+
+
+        if (this.type === "Plane") {
+          // reset perspective
+          this.setPerspective(this.camera.fov, this.camera.near, this.camera.far); // apply new position
+
+          this._applyWorldPositions();
+        } // resize all textures
+
+
+        for (var i = 0; i < this.textures.length; i++) {
+          this.textures[i].resize();
+        } // handle our after resize event
+
+
+        this.renderer.nextRender.add(function () {
+          return _this27._onAfterResizeCallback && _this27._onAfterResizeCallback();
+        });
+      }
+      /*** INTERACTION ***/
+
+      /***
+       This function takes the mouse position relative to the document and returns it relative to our plane
+       It ranges from -1 to 1 on both axis
+       params :
+       @mouseCoordinates (Vec2 object): coordinates of the mouse
+       returns :
+       @mousePosition (Vec2 object): the mouse position relative to our plane in WebGL space coordinates
+       ***/
+
+    }, {
+      key: "mouseToPlaneCoords",
+      value: function mouseToPlaneCoords(mouseCoordinates) {
+        // remember our ShaderPass objects don't have a scale property
+        var scale = this.scale ? this.scale : new Vec2(1, 1); // we need to adjust our plane document bounding rect to it's webgl scale
+
+        var scaleAdjustment = new Vec2((this._boundingRect.document.width - this._boundingRect.document.width * scale.x) / 2, (this._boundingRect.document.height - this._boundingRect.document.height * scale.y) / 2); // also we need to divide by pixel ratio
+
+        var planeBoundingRect = {
+          width: this._boundingRect.document.width * scale.x / this.renderer.pixelRatio,
+          height: this._boundingRect.document.height * scale.y / this.renderer.pixelRatio,
+          top: (this._boundingRect.document.top + scaleAdjustment.y) / this.renderer.pixelRatio,
+          left: (this._boundingRect.document.left + scaleAdjustment.x) / this.renderer.pixelRatio
+        }; // mouse position conversion from document to plane space
+
+        return new Vec2((mouseCoordinates.x - planeBoundingRect.left) / planeBoundingRect.width * 2 - 1, 1 - (mouseCoordinates.y - planeBoundingRect.top) / planeBoundingRect.height * 2);
+      }
+      /*** EVENTS ***/
+
+      /***
+       This is called each time a plane has been resized
+       params :
+       @callback (function) : a function to execute
+       returns :
+       @this: our plane to handle chaining
+       ***/
+
+    }, {
+      key: "onAfterResize",
+      value: function onAfterResize(callback) {
+        if (callback) {
+          this._onAfterResizeCallback = callback;
+        }
+
+        return this;
+      }
+    }]);
+
+    return DOMMesh;
+  }(Mesh);
   /***
    Here we create a Vec3 class object
    This is a really basic Vector3 class used for vector calculations
@@ -4996,671 +6526,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return Vec3;
   }();
   /***
-   Here we create a Quat class object
-   This is a really basic Quaternion class used for rotation calculations
-   Highly based on https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js
-     params :
-   @elements (Float32Array of length 4): our quaternion array. Default to identity quaternion.
-     returns :
-   @this: our Quat class object
-   ***/
-  // TODO lot of (unused at the time) methods are missing
-
-
-  var Quat = /*#__PURE__*/function () {
-    function Quat() {
-      var elements = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : new Float32Array([0, 0, 0, 1]);
-      var axisOrder = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "XYZ";
-
-      _classCallCheck(this, Quat);
-
-      this.type = "Quat";
-      this.elements = elements; // rotation axis order
-
-      this.axisOrder = axisOrder;
-    }
-    /***
-     Sets the quaternion values from an array
-       params:
-     @array (array): an array of at least 4 elements
-       returns:
-     @this (Quat class object): this quaternion after being set
-     ***/
-
-
-    _createClass(Quat, [{
-      key: "setFromArray",
-      value: function setFromArray(array) {
-        this.elements[0] = array[0];
-        this.elements[1] = array[1];
-        this.elements[2] = array[2];
-        this.elements[3] = array[3];
-        return this;
-      }
-      /***
-       Sets the quaternion axis order
-         params:
-       @axisOrder (string): an array of at least 4 elements
-         returns:
-       @this (Quat class object): this quaternion after axis order has been set
-       ***/
-
-    }, {
-      key: "setAxisOrder",
-      value: function setAxisOrder(axisOrder) {
-        // force uppercase for strict equality tests
-        axisOrder = axisOrder.toUpperCase();
-
-        switch (axisOrder) {
-          case "XYZ":
-          case "YXZ":
-          case "ZXY":
-          case "ZYX":
-          case "YZX":
-          case "XZY":
-            this.axisOrder = axisOrder;
-            break;
-
-          default:
-            // apply a default axis order
-            this.axisOrder = "XYZ";
-        }
-
-        return this;
-      }
-      /***
-       Copy a quaternion into this quaternion
-         params:
-       @vector (Quat): quaternion to copy
-         returns:
-       @this (Quat): this quaternion after copy
-       ***/
-
-    }, {
-      key: "copy",
-      value: function copy(quaternion) {
-        this.elements = quaternion.elements;
-        this.axisOrder = quaternion.axisOrder;
-        return this;
-      }
-      /***
-       Checks if 2 quaternions are equal
-         returns:
-       @isEqual (bool): whether the quaternions are equals or not
-       ***/
-
-    }, {
-      key: "equals",
-      value: function equals(quaternion) {
-        return this.elements[0] === quaternion.elements[0] && this.elements[1] === quaternion.elements[1] && this.elements[2] === quaternion.elements[2] && this.elements[3] === quaternion.elements[3] && this.axisOrder === quaternion.axisOrder;
-      }
-      /***
-       Sets a rotation quaternion using Euler angles and its axis order
-         params:
-       @vector (Vec3 class object): rotation vector to set our quaternion from
-         returns :
-       @this (Quat class object): quaternion after having applied the rotation
-       ***/
-
-    }, {
-      key: "setFromVec3",
-      value: function setFromVec3(vector) {
-        var ax = vector.x * 0.5;
-        var ay = vector.y * 0.5;
-        var az = vector.z * 0.5;
-        var cosx = Math.cos(ax);
-        var cosy = Math.cos(ay);
-        var cosz = Math.cos(az);
-        var sinx = Math.sin(ax);
-        var siny = Math.sin(ay);
-        var sinz = Math.sin(az); // XYZ order
-
-        if (this.axisOrder === "XYZ") {
-          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
-          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
-          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
-          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
-        } else if (this.axisOrder === "YXZ") {
-          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
-          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
-          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
-          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
-        } else if (this.axisOrder === "ZXY") {
-          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
-          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
-          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
-          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
-        } else if (this.axisOrder === "ZYX") {
-          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
-          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
-          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
-          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
-        } else if (this.axisOrder === "YZX") {
-          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
-          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
-          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
-          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
-        } else if (this.axisOrder === "XZY") {
-          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
-          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
-          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
-          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
-        }
-
-        return this;
-      }
-    }]);
-
-    return Quat;
-  }();
-  /***
-   Here we create our DOMGLObject object
-   We will extend our Mesh class object by adding HTML sizes helpers (bounding boxes getter/setter and mouse to mesh positioning)
-     params:
-   @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
-   @plane (html element): the html element that we will use for our DOMMesh object
-   @type (string): Object type (should be either "Plane" or "ShaderPass")
-     @Meshparams (object): see Mesh class object
-     returns:
-   @this: our BasePlane element
-   ***/
-  // TODO raycasting inside mouseToPlaneCoords for Plane objects when transformed
-
-
-  var DOMMesh = /*#__PURE__*/function (_Mesh) {
-    _inherits(DOMMesh, _Mesh);
-
-    var _super2 = _createSuper(DOMMesh);
-
-    function DOMMesh(renderer, htmlElement) {
-      var _this17;
-
-      var type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "DOMMesh";
-
-      var _ref7 = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {},
-          shareProgram = _ref7.shareProgram,
-          widthSegments = _ref7.widthSegments,
-          heightSegments = _ref7.heightSegments,
-          depthTest = _ref7.depthTest,
-          cullFace = _ref7.cullFace,
-          uniforms = _ref7.uniforms,
-          vertexShaderID = _ref7.vertexShaderID,
-          fragmentShaderID = _ref7.fragmentShaderID,
-          vertexShader = _ref7.vertexShader,
-          fragmentShader = _ref7.fragmentShader,
-          texturesOptions = _ref7.texturesOptions,
-          crossOrigin = _ref7.crossOrigin;
-
-      _classCallCheck(this, DOMMesh);
-
-      // handling HTML shaders scripts
-      vertexShaderID = vertexShaderID || htmlElement && htmlElement.getAttribute("data-vs-id");
-      fragmentShaderID = fragmentShaderID || htmlElement && htmlElement.getAttribute("data-fs-id");
-      _this17 = _super2.call(this, renderer, type, {
-        shareProgram: shareProgram,
-        widthSegments: widthSegments,
-        heightSegments: heightSegments,
-        depthTest: depthTest,
-        cullFace: cullFace,
-        uniforms: uniforms,
-        vertexShaderID: vertexShaderID,
-        fragmentShaderID: fragmentShaderID,
-        vertexShader: vertexShader,
-        fragmentShader: fragmentShader,
-        texturesOptions: texturesOptions,
-        crossOrigin: crossOrigin
-      }); // our HTML element
-
-      _this17.htmlElement = htmlElement;
-
-      if (!_this17.htmlElement || _this17.htmlElement.length === 0) {
-        if (!_this17.renderer.production) throwWarning(_this17.type + ": The HTML element you specified does not currently exists in the DOM");
-      } // set plane sizes
-
-
-      _this17._setDocumentSizes();
-
-      return _this17;
-    }
-    /*** PLANE SIZES ***/
-
-    /***
-     Set our plane dimensions and positions relative to document
-     Triggers reflow!
-     ***/
-
-
-    _createClass(DOMMesh, [{
-      key: "_setDocumentSizes",
-      value: function _setDocumentSizes() {
-        // set our basic initial infos
-        var planeBoundingRect = this.htmlElement.getBoundingClientRect();
-        if (!this._boundingRect) this._boundingRect = {}; // set plane dimensions in document space
-
-        this._boundingRect.document = {
-          width: planeBoundingRect.width * this.renderer.pixelRatio,
-          height: planeBoundingRect.height * this.renderer.pixelRatio,
-          top: planeBoundingRect.top * this.renderer.pixelRatio,
-          left: planeBoundingRect.left * this.renderer.pixelRatio
-        };
-      }
-    }, {
-      key: "getBoundingRect",
-
-      /*** BOUNDING BOXES GETTERS ***/
-
-      /***
-       Useful to get our plane HTML element bounding rectangle without triggering a reflow/layout
-         returns :
-       @boundingRectangle (obj): an object containing our plane HTML element bounding rectangle (width, height, top, bottom, right and left properties)
-       ***/
-      value: function getBoundingRect() {
-        return {
-          width: this._boundingRect.document.width,
-          height: this._boundingRect.document.height,
-          top: this._boundingRect.document.top,
-          left: this._boundingRect.document.left,
-          // right = left + width, bottom = top + height
-          right: this._boundingRect.document.left + this._boundingRect.document.width,
-          bottom: this._boundingRect.document.top + this._boundingRect.document.height
-        };
-      }
-      /***
-       Handles each plane resizing
-       used internally when our container is resized
-       TODO will soon be DEPRECATED!
-       ***/
-
-    }, {
-      key: "planeResize",
-      value: function planeResize() {
-        if (!this.renderer.production) {
-          throwWarning(this.type + ": planeResize() is deprecated, use resize() instead.");
-        }
-
-        this.resize();
-      }
-      /***
-       Handles each plane resizing
-       used internally when our container is resized
-       ***/
-
-    }, {
-      key: "resize",
-      value: function resize() {
-        var _this18 = this;
-
-        // reset plane dimensions
-        this._setDocumentSizes(); // if this is a Plane object we need to update its perspective and positions
-
-
-        if (this.type === "Plane") {
-          // reset perspective
-          this.setPerspective(this.camera.fov, this.camera.near, this.camera.far); // apply new position
-
-          this._applyWorldPositions();
-        } // resize all textures
-
-
-        for (var i = 0; i < this.textures.length; i++) {
-          this.textures[i].resize();
-        } // handle our after resize event
-
-
-        this.renderer.nextRender.add(function () {
-          return _this18._onAfterResizeCallback && _this18._onAfterResizeCallback();
-        });
-      }
-      /*** INTERACTION ***/
-
-      /***
-       This function takes the mouse position relative to the document and returns it relative to our plane
-       It ranges from -1 to 1 on both axis
-         params :
-       @mouseCoordinates (Vec2 object): coordinates of the mouse
-         returns :
-       @mousePosition (Vec2 object): the mouse position relative to our plane in WebGL space coordinates
-       ***/
-
-    }, {
-      key: "mouseToPlaneCoords",
-      value: function mouseToPlaneCoords(mouseCoordinates) {
-        var identityQuat = new Quat().setAxisOrder(this.quaternion.axisOrder);
-
-        if (identityQuat.equals(this.quaternion)) {
-          // remember our ShaderPass objects don't have a scale property
-          var scale = this.scale ? this.scale : new Vec2(1, 1); // we need to adjust our plane document bounding rect to it's webgl scale
-
-          var scaleAdjustment = new Vec2((this._boundingRect.document.width - this._boundingRect.document.width * scale.x) / 2, (this._boundingRect.document.height - this._boundingRect.document.height * scale.y) / 2); // also we need to divide by pixel ratio
-
-          var planeBoundingRect = {
-            width: this._boundingRect.document.width * scale.x / this.renderer.pixelRatio,
-            height: this._boundingRect.document.height * scale.y / this.renderer.pixelRatio,
-            top: (this._boundingRect.document.top + scaleAdjustment.y) / this.renderer.pixelRatio,
-            left: (this._boundingRect.document.left + scaleAdjustment.x) / this.renderer.pixelRatio
-          }; // mouse position conversion from document to plane space
-
-          return new Vec2((mouseCoordinates.x - planeBoundingRect.left) / planeBoundingRect.width * 2 - 1, 1 - (mouseCoordinates.y - planeBoundingRect.top) / planeBoundingRect.height * 2);
-        } else {
-          // remember our ShaderPass objects don't have a scale property
-
-          /*const scale = this.scale ? this.scale : new Vec2(1, 1);
-            // we need to adjust our plane document bounding rect to it's webgl scale
-          const scaleAdjustment = new Vec2(
-              (this._boundingRect.document.width - this._boundingRect.document.width * scale.x) / 2,
-              (this._boundingRect.document.height - this._boundingRect.document.height * scale.y) / 2,
-          );
-            // also we need to divide by pixel ratio
-          const planeBoundingRect = {
-              width: (this._boundingRect.document.width * scale.x) / this.renderer.pixelRatio,
-              height: (this._boundingRect.document.height * scale.y) / this.renderer.pixelRatio,
-              top: (this._boundingRect.document.top + scaleAdjustment.y) / this.renderer.pixelRatio,
-              left: (this._boundingRect.document.left + scaleAdjustment.x) / this.renderer.pixelRatio,
-          };
-            // mouse position conversion from document to plane space
-          const mouse = new Vec3(
-              (((mouseCoordinates.x - planeBoundingRect.left) / planeBoundingRect.width) * 2) - 1,
-              1 - (((mouseCoordinates.y - planeBoundingRect.top) / planeBoundingRect.height) * 2),
-              this._translation.z
-          );
-                const inverseQuaternion = new Quat().setAxisOrder(this.quaternion.axisOrder).setFromVec3(new Vec3(-this.rotation.x, -this.rotation.y, -this.rotation.z));
-            mouse.applyQuat(inverseQuaternion);*/
-          //mouse.applyMat4(this._matrices.mvMatrix.matrix);
-          var rendererBBox = this.renderer._boundingRect;
-          var mouseWorldPos = new Vec2(2 * (mouseCoordinates.x / (rendererBBox.width / this.renderer.pixelRatio)) - 1, 1 - 2 * mouseCoordinates.y / (rendererBBox.height / this.renderer.pixelRatio));
-          var viewFrustum = new Mat4([1 / Math.tan(this.camera.fov), 0, 0, 0, 0, this.camera.width / this.camera.height / Math.tan(this.camera.fov), 0, 0, 0, 0, (this.camera.far + this.camera.near) / (this.camera.far - this.camera.near), 1, 0, 0, -2 * this.camera.far * this.camera.near / (this.camera.far - this.camera.near), 0]);
-          /*let mouseWorldPos = new Vec3(
-              (2 * mouseCoordinates.x) / (rendererBBox.width / this.renderer.pixelRatio) - 1,
-              1 - (2 * mouseCoordinates.y) / (rendererBBox.height / this.renderer.pixelRatio),
-              1
-          );*/
-          //let tmp = mouseWorldPos.applyMat4(viewFrustum.getInverse().multiply(this.camera.projectionMatrix)).normalize();
-          //console.log(tmp);
-
-          /*
-          // 2 ways to get the same result!
-            // first
-          const eyeSpacePoint = mouseWorldPos.applyMat4(this.camera.projectionMatrix.getInverse());
-          const worldSpacePoint1 = eyeSpacePoint.applyMat4(cameraMatrix.getInverse());
-            // second
-          const worldToClipMatrix = new Mat4().copy(this.camera.projectionMatrix).multiply(cameraMatrix);
-          const clipToWorldMatrix = worldToClipMatrix.getInverse();
-          const worldSpacePoint2 = mouseWorldPos.applyMat4(clipToWorldMatrix);
-          */
-          //let rayStart = this.camera.position.clone();
-          //let rayStart = new Vec3(mouseWorldPos.x, mouseWorldPos.y, this.camera.position.z - this.camera.near).unproject(this.camera);
-
-          var rayStart = new Vec3(mouseWorldPos.x, mouseWorldPos.y, 100).unproject(this.camera); //let rayEnd = new Vec3(mouseWorldPos.x, mouseWorldPos.y, this.camera.position.z - this.camera.far).unproject(this.camera);
-          //let rayEnd = new Vec3(mouseWorldPos.x, mouseWorldPos.y, this._translation.z).unproject(this.camera);
-
-          var rayEnd = new Vec3(mouseWorldPos.x, mouseWorldPos.y, -100).unproject(this.camera);
-          var rayDir = rayEnd.sub(rayStart).normalize();
-          var transformedRayStart = rayStart.clone().applyMat4(this._matrices.mvMatrix.matrix.getInverse());
-          var transformedRayEnd = rayEnd.clone().applyMat4(this._matrices.mvMatrix.matrix.getInverse());
-          var transformedRayDir = transformedRayEnd.sub(transformedRayStart).normalize(); //rayStart = rayStart.applyMat4(this._matrices.mvMatrix.matrix.getInverse());
-          //rayDir = rayDir.applyMat4(this._matrices.mvMatrix.matrix.getInverse());
-          //console.log(rayEnd.sub(this.camera.position).normalize(), this.camera.position.sub(rayEnd).normalize());
-
-          var planeNormals = new Vec3(0, 0, 1).applyQuat(this.quaternion);
-          var planeOrigin = new Vec3().applyMat4(this._matrices.mvMatrix.matrix); //const planeOrigin = new Vec3(mouseWorldPos.x, mouseWorldPos.y, 0).applyMat4(this._matrices.mvMatrix.matrix);
-          //const planeWorldOrigin = planeOrigin.clone().unproject(this.camera);
-          //const planeOrigin = new Vec3().unproject(this.camera).applyMat4(this._matrices.mvMatrix.matrix);
-          // from https://people.cs.clemson.edu/~dhouse/courses/405/notes/raycast.pdf
-
-          var denominator = planeNormals.dot(rayDir);
-
-          if (Math.abs(denominator) <= 0.000001) {
-            return new Vec2(Infinity, Infinity);
-          }
-
-          var t = Math.abs(-1 * planeNormals.dot(rayStart.clone().sub(planeOrigin)) / denominator); //console.log("distance", planeNormals.dot(rayStart.clone().sub(planeOrigin)));
-          //console.log("distance", denominator);
-
-          var point = rayStart.add(rayDir.multiplyScalar(t));
-          var tDenominator = planeNormals.dot(transformedRayDir);
-
-          if (Math.abs(tDenominator) <= 0.000001) {
-            return new Vec2(Infinity, Infinity);
-          }
-
-          var tT = Math.abs(-1 * planeNormals.dot(transformedRayStart.clone().sub(planeOrigin)) / denominator); //console.log("distance", planeNormals.dot(rayStart.clone().sub(planeOrigin)));
-
-          var tPoint = transformedRayStart.add(transformedRayDir.multiplyScalar(tT));
-          return new Vec2(tPoint.x, tPoint.y);
-        }
-      }
-      /*** EVENTS ***/
-
-      /***
-       This is called each time a plane has been resized
-         params :
-       @callback (function) : a function to execute
-         returns :
-       @this: our plane to handle chaining
-       ***/
-
-    }, {
-      key: "onAfterResize",
-      value: function onAfterResize(callback) {
-        if (callback) {
-          this._onAfterResizeCallback = callback;
-        }
-
-        return this;
-      }
-    }]);
-
-    return DOMMesh;
-  }(Mesh);
-  /*** SHADERPASS CLASS ***/
-
-  /***
-   Here we create our ShaderPass object
-   We will extend our DOMMesh class that handles all the WebGL part and basic HTML sizings
-   ShaderPass class will add the frame buffer by creating a new RenderTarget class object
-     params :
-   @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
-     @Meshparams (object): see Mesh class object
-     @depth (boolean, optionnal): whether the shader pass render target should use a depth buffer (see RenderTarget class object). Default to false.
-   @clear (boolean, optional): whether the shader pass render target content should be cleared before being drawn (see RenderTarget class object). Default to true.
-   @renderTarget (RenderTarget class object, optional): an already existing render target to use. Default to null.
-     returns :
-   @this: our ShaderPass element
-   ***/
-
-
-  var ShaderPass = /*#__PURE__*/function (_DOMMesh) {
-    _inherits(ShaderPass, _DOMMesh);
-
-    var _super3 = _createSuper(ShaderPass);
-
-    function ShaderPass(renderer, _ref8) {
-      var _this19;
-
-      var shareProgram = _ref8.shareProgram,
-          widthSegments = _ref8.widthSegments,
-          heightSegments = _ref8.heightSegments,
-          depthTest = _ref8.depthTest,
-          cullFace = _ref8.cullFace,
-          uniforms = _ref8.uniforms,
-          vertexShaderID = _ref8.vertexShaderID,
-          fragmentShaderID = _ref8.fragmentShaderID,
-          vertexShader = _ref8.vertexShader,
-          fragmentShader = _ref8.fragmentShader,
-          texturesOptions = _ref8.texturesOptions,
-          crossOrigin = _ref8.crossOrigin,
-          _ref8$depth = _ref8.depth,
-          depth = _ref8$depth === void 0 ? false : _ref8$depth,
-          _ref8$clear = _ref8.clear,
-          clear = _ref8$clear === void 0 ? true : _ref8$clear,
-          renderTarget = _ref8.renderTarget;
-
-      _classCallCheck(this, ShaderPass);
-
-      // force plane defintion to 1x1
-      widthSegments = 1;
-      heightSegments = 1; // always cull back face
-
-      cullFace = "back"; // never share a program between shader passes
-
-      shareProgram = false; // use the renderer container as our HTML element to create a DOMMesh object
-
-      _this19 = _super3.call(this, renderer, renderer.container, "ShaderPass", {
-        shareProgram: shareProgram,
-        widthSegments: widthSegments,
-        heightSegments: heightSegments,
-        depthTest: depthTest,
-        cullFace: cullFace,
-        uniforms: uniforms,
-        vertexShaderID: vertexShaderID,
-        fragmentShaderID: fragmentShaderID,
-        vertexShader: vertexShader,
-        fragmentShader: fragmentShader,
-        texturesOptions: texturesOptions,
-        crossOrigin: crossOrigin
-      }); // default to scene pass
-
-      _this19._isScenePass = true;
-      _this19.index = _this19.renderer.shaderPasses.length;
-      _this19._depth = depth;
-      _this19._shouldClear = clear;
-      _this19.target = renderTarget;
-
-      if (_this19.target) {
-        // if there's a target defined it's not a scene pass
-        _this19._isScenePass = false; // inherit clear param
-
-        _this19._shouldClear = _this19.target._shouldClear;
-      } // if the program is valid, go on
-
-
-      if (_this19._program.compiled) {
-        _this19._initShaderPass(); // add shader pass to our renderer shaderPasses array
-
-
-        _this19.renderer.shaderPasses.push(_assertThisInitialized(_this19)); // wait one tick before adding our shader pass to the scene to avoid flickering black screen for one frame
-
-
-        _this19.renderer.nextRender.add(function () {
-          _this19.renderer.scene.addShaderPass(_assertThisInitialized(_this19));
-        });
-      }
-
-      return _this19;
-    }
-    /*** RESTORING CONTEXT ***/
-
-    /***
-     Used internally to handle context restoration after the program has been successfully compiled again
-     ***/
-
-
-    _createClass(ShaderPass, [{
-      key: "_programRestored",
-      value: function _programRestored() {
-        // we just need to re add the shader pass to the scene stack
-        if (this._isScenePass) {
-          this.renderer.scene.stacks.scenePasses.push(this.index);
-        } else {
-          this.renderer.scene.stacks.renderPasses.push(this.index);
-        } // restore the textures
-
-
-        for (var i = 0; i < this.textures.length; i++) {
-          this.textures[i]._parent = this;
-
-          this.textures[i]._restoreContext();
-        }
-
-        this._canDraw = true;
-      }
-      /***
-       Here we init additionnal shader pass planes properties
-       This mainly consists in creating our render texture and add a frame buffer object
-       ***/
-
-    }, {
-      key: "_initShaderPass",
-      value: function _initShaderPass() {
-        // create our frame buffer
-        if (!this.target) {
-          this._createFrameBuffer();
-        } else {
-          // set the render target
-          this.setRenderTarget(this.target);
-          this.target._shaderPass = this;
-        } // create a texture from the render target texture
-
-
-        var texture = new Texture(this.renderer, {
-          sampler: "uRenderTexture",
-          isFBOTexture: true,
-          fromTexture: this.target.getTexture()
-        });
-        texture.addParent(this); // onReady callback
-
-        this.loader._setLoaderSize(0);
-
-        this._canDraw = true; // be sure we'll update the scene even if drawing is disabled
-
-        this.renderer.needRender();
-      }
-      /***
-       Here we create our frame buffer object
-       We're also adding a render buffer object to handle depth inside our shader pass
-       ***/
-
-    }, {
-      key: "_createFrameBuffer",
-      value: function _createFrameBuffer() {
-        var target = new RenderTarget(this.renderer, {
-          shaderPass: this,
-          clear: this._shouldClear,
-          depth: this._depth,
-          texturesOptions: this._texturesOptions
-        });
-        this.setRenderTarget(target);
-      }
-      /*** DRAWING ***/
-
-      /***
-       Specific instructions for the Shader pass class to execute before drawing it
-       ***/
-
-    }, {
-      key: "_startDrawing",
-      value: function _startDrawing() {
-        // check if our plane is ready to draw
-        if (this._canDraw) {
-          // even if our plane should not be drawn we still execute its onRender callback and update its uniforms
-          if (this._onRenderCallback) {
-            this._onRenderCallback();
-          } // to improve webgl pipeline performance, we might want to update each texture that needs an update here
-          // see https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#texImagetexSubImage_uploads_particularly_with_videos_can_cause_pipeline_flushes
-
-
-          if (this._isScenePass) {
-            // if this is a scene pass, check if theres one more coming next and eventually bind it
-            if (this.renderer.state.scenePassIndex + 1 < this.renderer.scene.stacks.scenePasses.length) {
-              this.renderer.bindFrameBuffer(this.renderer.shaderPasses[this.renderer.scene.stacks.scenePasses[this.renderer.state.scenePassIndex + 1]].target);
-              this.renderer.state.scenePassIndex++;
-            } else {
-              this.renderer.bindFrameBuffer(null);
-            }
-          } else if (this.renderer.state.scenePassIndex === null) {
-            // we are rendering a bunch of planes inside a render target, unbind it
-            this.renderer.bindFrameBuffer(null);
-          } // now check if we really need to draw it and its textures
-
-
-          this._draw();
-        }
-      }
-    }]);
-
-    return ShaderPass;
-  }(DOMMesh);
-  /***
    Here we create our Camera object
    Creates a perspective camera and its projection matrix (which is used by Plane's class objects)
    Uses a dirty _shouldUpdate flag used to determine if we should update the matrix
@@ -5678,17 +6543,17 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
   var Camera = /*#__PURE__*/function () {
     function Camera() {
-      var _ref9 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          _ref9$fov = _ref9.fov,
-          fov = _ref9$fov === void 0 ? 50 : _ref9$fov,
-          _ref9$near = _ref9.near,
-          near = _ref9$near === void 0 ? 0.1 : _ref9$near,
-          _ref9$far = _ref9.far,
-          far = _ref9$far === void 0 ? 150 : _ref9$far,
-          width = _ref9.width,
-          height = _ref9.height,
-          _ref9$pixelRatio = _ref9.pixelRatio,
-          pixelRatio = _ref9$pixelRatio === void 0 ? 1 : _ref9$pixelRatio;
+      var _ref10 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref10$fov = _ref10.fov,
+          fov = _ref10$fov === void 0 ? 50 : _ref10$fov,
+          _ref10$near = _ref10.near,
+          near = _ref10$near === void 0 ? 0.1 : _ref10$near,
+          _ref10$far = _ref10.far,
+          far = _ref10$far === void 0 ? 150 : _ref10$far,
+          width = _ref10.width,
+          height = _ref10.height,
+          _ref10$pixelRatio = _ref10.pixelRatio,
+          pixelRatio = _ref10$pixelRatio === void 0 ? 1 : _ref10$pixelRatio;
 
       _classCallCheck(this, Camera);
 
@@ -5885,6 +6750,164 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return Camera;
   }();
   /***
+   Here we create a Quat class object
+   This is a really basic Quaternion class used for rotation calculations
+   Highly based on https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js
+     params :
+   @elements (Float32Array of length 4): our quaternion array. Default to identity quaternion.
+     returns :
+   @this: our Quat class object
+   ***/
+  // TODO lot of (unused at the time) methods are missing
+
+
+  var Quat = /*#__PURE__*/function () {
+    function Quat() {
+      var elements = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : new Float32Array([0, 0, 0, 1]);
+      var axisOrder = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "XYZ";
+
+      _classCallCheck(this, Quat);
+
+      this.type = "Quat";
+      this.elements = elements; // rotation axis order
+
+      this.axisOrder = axisOrder;
+    }
+    /***
+     Sets the quaternion values from an array
+       params:
+     @array (array): an array of at least 4 elements
+       returns:
+     @this (Quat class object): this quaternion after being set
+     ***/
+
+
+    _createClass(Quat, [{
+      key: "setFromArray",
+      value: function setFromArray(array) {
+        this.elements[0] = array[0];
+        this.elements[1] = array[1];
+        this.elements[2] = array[2];
+        this.elements[3] = array[3];
+        return this;
+      }
+      /***
+       Sets the quaternion axis order
+         params:
+       @axisOrder (string): an array of at least 4 elements
+         returns:
+       @this (Quat class object): this quaternion after axis order has been set
+       ***/
+
+    }, {
+      key: "setAxisOrder",
+      value: function setAxisOrder(axisOrder) {
+        // force uppercase for strict equality tests
+        axisOrder = axisOrder.toUpperCase();
+
+        switch (axisOrder) {
+          case "XYZ":
+          case "YXZ":
+          case "ZXY":
+          case "ZYX":
+          case "YZX":
+          case "XZY":
+            this.axisOrder = axisOrder;
+            break;
+
+          default:
+            // apply a default axis order
+            this.axisOrder = "XYZ";
+        }
+
+        return this;
+      }
+      /***
+       Copy a quaternion into this quaternion
+         params:
+       @vector (Quat): quaternion to copy
+         returns:
+       @this (Quat): this quaternion after copy
+       ***/
+
+    }, {
+      key: "copy",
+      value: function copy(quaternion) {
+        this.elements = quaternion.elements;
+        this.axisOrder = quaternion.axisOrder;
+        return this;
+      }
+      /***
+       Checks if 2 quaternions are equal
+         returns:
+       @isEqual (bool): whether the quaternions are equals or not
+       ***/
+
+    }, {
+      key: "equals",
+      value: function equals(quaternion) {
+        return this.elements[0] === quaternion.elements[0] && this.elements[1] === quaternion.elements[1] && this.elements[2] === quaternion.elements[2] && this.elements[3] === quaternion.elements[3] && this.axisOrder === quaternion.axisOrder;
+      }
+      /***
+       Sets a rotation quaternion using Euler angles and its axis order
+         params:
+       @vector (Vec3 class object): rotation vector to set our quaternion from
+         returns :
+       @this (Quat class object): quaternion after having applied the rotation
+       ***/
+
+    }, {
+      key: "setFromVec3",
+      value: function setFromVec3(vector) {
+        var ax = vector.x * 0.5;
+        var ay = vector.y * 0.5;
+        var az = vector.z * 0.5;
+        var cosx = Math.cos(ax);
+        var cosy = Math.cos(ay);
+        var cosz = Math.cos(az);
+        var sinx = Math.sin(ax);
+        var siny = Math.sin(ay);
+        var sinz = Math.sin(az); // XYZ order
+
+        if (this.axisOrder === "XYZ") {
+          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
+        } else if (this.axisOrder === "YXZ") {
+          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
+        } else if (this.axisOrder === "ZXY") {
+          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
+        } else if (this.axisOrder === "ZYX") {
+          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
+        } else if (this.axisOrder === "YZX") {
+          this.elements[0] = sinx * cosy * cosz + cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz + sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz - sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz - sinx * siny * sinz;
+        } else if (this.axisOrder === "XZY") {
+          this.elements[0] = sinx * cosy * cosz - cosx * siny * sinz;
+          this.elements[1] = cosx * siny * cosz - sinx * cosy * sinz;
+          this.elements[2] = cosx * cosy * sinz + sinx * siny * cosz;
+          this.elements[3] = cosx * cosy * cosz + sinx * siny * sinz;
+        }
+
+        return this;
+      }
+    }]);
+
+    return Quat;
+  }();
+  /***
    Here we create our Plane object
    We will extend our DOMMesh class that handles all the WebGL part and basic HTML sizings
      Plane class will add:
@@ -5906,50 +6929,50 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    ***/
 
 
-  var Plane = /*#__PURE__*/function (_DOMMesh2) {
-    _inherits(Plane, _DOMMesh2);
+  var Plane = /*#__PURE__*/function (_DOMMesh) {
+    _inherits(Plane, _DOMMesh);
 
-    var _super4 = _createSuper(Plane);
+    var _super3 = _createSuper(Plane);
 
     function Plane(renderer, htmlElement) {
-      var _this20;
+      var _this28;
 
-      var _ref10 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-          shareProgram = _ref10.shareProgram,
-          widthSegments = _ref10.widthSegments,
-          heightSegments = _ref10.heightSegments,
-          depthTest = _ref10.depthTest,
-          cullFace = _ref10.cullFace,
-          uniforms = _ref10.uniforms,
-          vertexShaderID = _ref10.vertexShaderID,
-          fragmentShaderID = _ref10.fragmentShaderID,
-          vertexShader = _ref10.vertexShader,
-          fragmentShader = _ref10.fragmentShader,
-          texturesOptions = _ref10.texturesOptions,
-          crossOrigin = _ref10.crossOrigin,
-          _ref10$alwaysDraw = _ref10.alwaysDraw,
-          alwaysDraw = _ref10$alwaysDraw === void 0 ? false : _ref10$alwaysDraw,
-          _ref10$visible = _ref10.visible,
-          visible = _ref10$visible === void 0 ? true : _ref10$visible,
-          _ref10$transparent = _ref10.transparent,
-          transparent = _ref10$transparent === void 0 ? false : _ref10$transparent,
-          _ref10$drawCheckMargi = _ref10.drawCheckMargins,
-          drawCheckMargins = _ref10$drawCheckMargi === void 0 ? {
+      var _ref11 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+          shareProgram = _ref11.shareProgram,
+          widthSegments = _ref11.widthSegments,
+          heightSegments = _ref11.heightSegments,
+          depthTest = _ref11.depthTest,
+          cullFace = _ref11.cullFace,
+          uniforms = _ref11.uniforms,
+          vertexShaderID = _ref11.vertexShaderID,
+          fragmentShaderID = _ref11.fragmentShaderID,
+          vertexShader = _ref11.vertexShader,
+          fragmentShader = _ref11.fragmentShader,
+          texturesOptions = _ref11.texturesOptions,
+          crossOrigin = _ref11.crossOrigin,
+          _ref11$alwaysDraw = _ref11.alwaysDraw,
+          alwaysDraw = _ref11$alwaysDraw === void 0 ? false : _ref11$alwaysDraw,
+          _ref11$visible = _ref11.visible,
+          visible = _ref11$visible === void 0 ? true : _ref11$visible,
+          _ref11$transparent = _ref11.transparent,
+          transparent = _ref11$transparent === void 0 ? false : _ref11$transparent,
+          _ref11$drawCheckMargi = _ref11.drawCheckMargins,
+          drawCheckMargins = _ref11$drawCheckMargi === void 0 ? {
         top: 0,
         right: 0,
         bottom: 0,
         left: 0
-      } : _ref10$drawCheckMargi,
-          _ref10$autoloadSource = _ref10.autoloadSources,
-          autoloadSources = _ref10$autoloadSource === void 0 ? true : _ref10$autoloadSource,
-          _ref10$watchScroll = _ref10.watchScroll,
-          watchScroll = _ref10$watchScroll === void 0 ? true : _ref10$watchScroll,
-          _ref10$fov = _ref10.fov,
-          fov = _ref10$fov === void 0 ? 50 : _ref10$fov;
+      } : _ref11$drawCheckMargi,
+          _ref11$autoloadSource = _ref11.autoloadSources,
+          autoloadSources = _ref11$autoloadSource === void 0 ? true : _ref11$autoloadSource,
+          _ref11$watchScroll = _ref11.watchScroll,
+          watchScroll = _ref11$watchScroll === void 0 ? true : _ref11$watchScroll,
+          _ref11$fov = _ref11.fov,
+          fov = _ref11$fov === void 0 ? 50 : _ref11$fov;
 
       _classCallCheck(this, Plane);
 
-      _this20 = _super4.call(this, renderer, htmlElement, "Plane", {
+      _this28 = _super3.call(this, renderer, htmlElement, "Plane", {
         shareProgram: shareProgram,
         widthSegments: widthSegments,
         heightSegments: heightSegments,
@@ -5963,45 +6986,45 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         texturesOptions: texturesOptions,
         crossOrigin: crossOrigin
       });
-      _this20.index = _this20.renderer.planes.length; // used for FBOs
+      _this28.index = _this28.renderer.planes.length; // used for FBOs
 
-      _this20.target = null; // use frustum culling or not
+      _this28.target = null; // use frustum culling or not
 
-      _this20.alwaysDraw = alwaysDraw; // should draw is set to true by default, we'll check it later
+      _this28.alwaysDraw = alwaysDraw; // should draw is set to true by default, we'll check it later
 
-      _this20._shouldDraw = true;
-      _this20.visible = visible; // if the plane has transparency
+      _this28._shouldDraw = true;
+      _this28.visible = visible; // if the plane has transparency
 
-      _this20._transparent = transparent; // draw check margins in pixels
+      _this28._transparent = transparent; // draw check margins in pixels
       // positive numbers means it can be displayed even when outside the viewport
       // negative numbers means it can be hidden even when inside the viewport
 
-      _this20.drawCheckMargins = drawCheckMargins; // if we decide to load all sources on init or let the user do it manually
+      _this28.drawCheckMargins = drawCheckMargins; // if we decide to load all sources on init or let the user do it manually
 
-      _this20.autoloadSources = autoloadSources; // if we should watch scroll
+      _this28.autoloadSources = autoloadSources; // if we should watch scroll
 
-      _this20.watchScroll = watchScroll; // define if we should update the plane's matrices when called in the draw loop
+      _this28.watchScroll = watchScroll; // define if we should update the plane's matrices when called in the draw loop
 
-      _this20._updateMVMatrix = false; // init camera
+      _this28._updateMVMatrix = false; // init camera
 
-      _this20.camera = new Camera({
+      _this28.camera = new Camera({
         fov: fov,
-        width: _this20.renderer._boundingRect.width,
-        height: _this20.renderer._boundingRect.height,
-        pixelRatio: _this20.renderer.pixelRatio
+        width: _this28.renderer._boundingRect.width,
+        height: _this28.renderer._boundingRect.height,
+        pixelRatio: _this28.renderer.pixelRatio
       }); // if program is valid, go on
 
-      if (_this20._program.compiled) {
+      if (_this28._program.compiled) {
         // init our plane
-        _this20._initPlane(); // add our plane to the scene stack and the renderer array
+        _this28._initPlane(); // add our plane to the scene stack and the renderer array
 
 
-        _this20.renderer.scene.addPlane(_assertThisInitialized(_this20));
+        _this28.renderer.scene.addPlane(_assertThisInitialized(_this28));
 
-        _this20.renderer.planes.push(_assertThisInitialized(_this20));
+        _this28.renderer.planes.push(_assertThisInitialized(_this28));
       }
 
-      return _this20;
+      return _this28;
     }
     /*** RESTORING CONTEXT ***/
 
@@ -6529,9 +7552,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           }
         } else {
           // all 4 corners are culled! artificially apply wrong coords to force plane culling
-          for (var _i2 = 0; _i2 < corners.length; _i2++) {
-            mvpCorners[_i2][0] = 10000;
-            mvpCorners[_i2][1] = 10000;
+          for (var _i9 = 0; _i9 < corners.length; _i9++) {
+            mvpCorners[_i9][0] = 10000;
+            mvpCorners[_i9][1] = 10000;
           }
         }
 
@@ -6579,8 +7602,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var minY = Infinity;
         var maxY = -Infinity;
 
-        for (var _i3 = 0; _i3 < mvpCorners.length; _i3++) {
-          var corner = mvpCorners[_i3];
+        for (var _i10 = 0; _i10 < mvpCorners.length; _i10++) {
+          var corner = mvpCorners[_i10];
 
           if (corner.x < minX) {
             minX = corner.x;
@@ -6681,7 +7704,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_shouldDrawCheck",
       value: function _shouldDrawCheck() {
-        var _this21 = this;
+        var _this29 = this;
 
         // get plane bounding rect
         var actualPlaneBounds = this._getWebGLDrawRect(); // if we decide to draw the plane only when visible inside the canvas
@@ -6693,14 +7716,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             this._shouldDraw = false; // callback for leaving view
 
             this.renderer.nextRender.add(function () {
-              return _this21._onLeaveViewCallback && _this21._onLeaveViewCallback();
+              return _this29._onLeaveViewCallback && _this29._onLeaveViewCallback();
             });
           }
         } else {
           if (!this._shouldDraw) {
             // callback for entering view
             this.renderer.nextRender.add(function () {
-              return _this21._onReEnterViewCallback && _this21._onReEnterViewCallback();
+              return _this29._onReEnterViewCallback && _this29._onReEnterViewCallback();
             });
           }
 
@@ -6814,8 +7837,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
           var videosArray = [];
 
-          for (var _i4 = 0; _i4 < this.htmlElement.getElementsByTagName("video").length; _i4++) {
-            videosArray.push(this.htmlElement.getElementsByTagName("video")[_i4]);
+          for (var _i11 = 0; _i11 < this.htmlElement.getElementsByTagName("video").length; _i11++) {
+            videosArray.push(this.htmlElement.getElementsByTagName("video")[_i11]);
           }
 
           if (videosArray.length > 0) {
@@ -6825,8 +7848,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
           var canvasesArray = [];
 
-          for (var _i5 = 0; _i5 < this.htmlElement.getElementsByTagName("canvas").length; _i5++) {
-            canvasesArray.push(this.htmlElement.getElementsByTagName("canvas")[_i5]);
+          for (var _i12 = 0; _i12 < this.htmlElement.getElementsByTagName("canvas").length; _i12++) {
+            canvasesArray.push(this.htmlElement.getElementsByTagName("canvas")[_i12]);
           }
 
           if (canvasesArray.length > 0) {
@@ -6918,1749 +7941,472 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return Plane;
   }(DOMMesh);
   /***
-   Here we create a CallbackQueueManager class object
-   This allows to store callbacks in a queue array with a timeout of 0 to be executed on next render call
-     returns:
-   @this: our CallbackQueueManager class object
-   ***/
-
-
-  var CallbackQueueManager = /*#__PURE__*/function () {
-    function CallbackQueueManager() {
-      _classCallCheck(this, CallbackQueueManager);
-
-      this.clear();
-    }
-    /***
-     Clears our queue array (used on init)
-     ***/
-
-
-    _createClass(CallbackQueueManager, [{
-      key: "clear",
-      value: function clear() {
-        this.queue = [];
-      }
-      /***
-       Adds a callback to our queue list with a timeout of 0
-         params:
-       @callback (function): the callback to execute on next render call
-       @keep (bool): whether to keep calling that callback on each rendering call or not (act as a setInterval). Default to false
-         returns:
-       @queueItem: the queue item. Allows to keep a track of it and set its keep property to false when needed
-       ***/
-
-    }, {
-      key: "add",
-      value: function add(callback) {
-        var _this22 = this;
-
-        var keep = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-        var queueItem = {
-          callback: callback,
-          keep: keep,
-          timeout: null // keep a reference to the timeout so we can safely delete if afterwards
-
-        };
-        queueItem.timeout = setTimeout(function () {
-          _this22.queue.push(queueItem);
-        }, 0);
-        return queueItem;
-      }
-      /***
-       Executes all callbacks in the queue and remove the ones that have their keep property set to false.
-       Called at the beginning of each render call
-       ***/
-
-    }, {
-      key: "execute",
-      value: function execute() {
-        var _this23 = this;
-
-        // execute queue callbacks list
-        this.queue.map(function (entry) {
-          if (entry.callback) {
-            entry.callback();
-          } // clear our timeout
-
-
-          clearTimeout(_this23.queue.timeout);
-        }); // remove all items that have their keep property set to false
-
-        this.queue = this.queue.filter(function (entry) {
-          return entry.keep;
-        });
-      }
-    }]);
-
-    return CallbackQueueManager;
-  }();
-  /***
-   Here we create our Renderer object
-   It will create our WebGL context and handle everything that relates to it
-   Will create a container, append a canvas, handle WebGL extensions, context lost/restoration events
-   Will create a Scene class object that will keep tracks of all added objects
-   Will also handle all global WebGL commands, like clearing scene, binding frame buffers, setting depth, blend func, etc.
-   Will use a state object to handle all those commands and keep a track of what is being drawned to avoid redundant WebGL calls.
-     params:
-   @Curtainsparams see Curtains class object
-     @onError (function): called when there has been an error while initiating the WebGL context
-   @onContextLost (function): called when the WebGL context is lost
-   @onContextRestored (function): called when the WebGL context is restored
-   @onSceneChange (function): called every time an object has been added/removed from the scene
+   Here we create a RenderTarget class object
+     params :
+   @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
+     @shaderPass (ShaderPass class object): shader pass that will use that render target. Default to null
+   @depth (bool, optional): whether to create a depth buffer (handle depth inside your render target). Default to false.
+   @clear (bool, optional): whether the content of the render target should be cleared before being drawn. Should be set to false to handle ping-pong shading. Default to true.
+     @minWidth (float, optional): minimum width of the render target
+   @minHeight (float, optional): minimum height of the render target
+     @texturesOptions (object, optional): options and parameters to apply to the render target texture. See the Texture class object.
      returns :
-   @this: our Renderer
-  ***/
-  // TODO deprecate all add* objects method and get rid of imports. BIG breaking change!
-
-
-  var Renderer = /*#__PURE__*/function () {
-    function Renderer(_ref11) {
-      var alpha = _ref11.alpha,
-          antialias = _ref11.antialias,
-          premultipliedAlpha = _ref11.premultipliedAlpha,
-          depth = _ref11.depth,
-          failIfMajorPerformanceCaveat = _ref11.failIfMajorPerformanceCaveat,
-          preserveDrawingBuffer = _ref11.preserveDrawingBuffer,
-          stencil = _ref11.stencil,
-          container = _ref11.container,
-          pixelRatio = _ref11.pixelRatio,
-          renderingScale = _ref11.renderingScale,
-          production = _ref11.production,
-          onError = _ref11.onError,
-          onContextLost = _ref11.onContextLost,
-          onContextRestored = _ref11.onContextRestored,
-          onDisposed = _ref11.onDisposed,
-          onSceneChange = _ref11.onSceneChange;
-
-      _classCallCheck(this, Renderer);
-
-      this.type = "Renderer"; // context attributes
-
-      this.alpha = alpha;
-      this.antialias = antialias;
-      this.premultipliedAlpha = premultipliedAlpha;
-      this.depth = depth;
-      this.failIfMajorPerformanceCaveat = failIfMajorPerformanceCaveat;
-      this.preserveDrawingBuffer = preserveDrawingBuffer;
-      this.stencil = stencil;
-      this.container = container;
-      this.pixelRatio = pixelRatio;
-      this._renderingScale = renderingScale;
-      this.production = production; // callbacks
-
-      this.onError = onError;
-      this.onContextLost = onContextLost;
-      this.onContextRestored = onContextRestored;
-      this.onDisposed = onDisposed; // keep sync between Curtains objects arrays and renderer objects arrays
-
-      this.onSceneChange = onSceneChange; // managing our webgl draw states
-
-      this.initState(); // create the canvas
-
-      this.canvas = document.createElement("canvas"); // set our webgl context
-
-      var glAttributes = {
-        alpha: this.alpha,
-        premultipliedAlpha: this.premultipliedAlpha,
-        antialias: this.antialias,
-        depth: this.depth,
-        failIfMajorPerformanceCaveat: this.failIfMajorPerformanceCaveat,
-        preserveDrawingBuffer: this.preserveDrawingBuffer,
-        stencil: this.stencil
-      }; // try webgl2 context first
-
-      this.gl = this.canvas.getContext("webgl2", glAttributes);
-      this._isWebGL2 = !!this.gl; // fallback to webgl1
-
-      if (!this.gl) {
-        this.gl = this.canvas.getContext("webgl", glAttributes) || this.canvas.getContext("experimental-webgl", glAttributes);
-      } // WebGL context could not be created
-
-
-      if (!this.gl) {
-        if (!this.production) throwWarning(this.type + ": WebGL context could not be created");
-        this.state.isActive = false;
-
-        if (this.onError) {
-          this.onError();
-        }
-
-        return;
-      }
-
-      this.initRenderer();
-    }
-    /***
-     Set/reset our context state object
-     ***/
-
-
-    _createClass(Renderer, [{
-      key: "initState",
-      value: function initState() {
-        this.state = {
-          // if we are currently rendering
-          isActive: true,
-          isContextLost: true,
-          drawingEnabled: true,
-          forceRender: false,
-          // current program ID
-          currentProgramID: null,
-          // if we're using depth test or not
-          setDepth: null,
-          // face culling
-          cullFace: null,
-          // current frame buffer ID
-          frameBufferID: null,
-          // current scene pass ID
-          scenePassIndex: null,
-          // textures
-          activeTexture: null,
-          unpackAlignment: null,
-          flipY: null,
-          premultiplyAlpha: null
-        };
-      }
-      /***
-       Add a callback queueing manager (execute functions on the next render call, see CallbackQueueManager class object)
-       ***/
-
-    }, {
-      key: "initCallbackQueueManager",
-      value: function initCallbackQueueManager() {
-        this.nextRender = new CallbackQueueManager();
-      }
-      /***
-       Init our renderer
-       ***/
-
-    }, {
-      key: "initRenderer",
-      value: function initRenderer() {
-        this.planes = [];
-        this.renderTargets = [];
-        this.shaderPasses = []; // context is not lost
-
-        this.state.isContextLost = false; // callback queue
-
-        this.initCallbackQueueManager(); // set blend func
-
-        this.setBlendFunc(); // enable depth by default
-
-        this.setDepth(true); // texture cache
-
-        this.cache = new CacheManager(); // init our scene
-
-        this.scene = new Scene(this); // get webgl extensions
-
-        this.getExtensions(); // handling context
-
-        this._contextLostHandler = this.contextLost.bind(this);
-        this.canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
-        this._contextRestoredHandler = this.contextRestored.bind(this);
-        this.canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
-      }
-      /***
-       Get all available WebGL extensions based on WebGL used version
-       Called on init and on context restoration
-       ***/
-
-    }, {
-      key: "getExtensions",
-      value: function getExtensions() {
-        this.extensions = [];
-
-        if (this._isWebGL2) {
-          this.extensions['EXT_color_buffer_float'] = this.gl.getExtension('EXT_color_buffer_float');
-          this.extensions['OES_texture_float_linear'] = this.gl.getExtension('OES_texture_float_linear');
-          this.extensions['EXT_texture_filter_anisotropic'] = this.gl.getExtension('EXT_texture_filter_anisotropic');
-          this.extensions['WEBGL_lose_context'] = this.gl.getExtension('WEBGL_lose_context');
-        } else {
-          this.extensions['OES_vertex_array_object'] = this.gl.getExtension('OES_vertex_array_object');
-          this.extensions['OES_texture_float'] = this.gl.getExtension('OES_texture_float');
-          this.extensions['OES_texture_float_linear'] = this.gl.getExtension('OES_texture_float_linear');
-          this.extensions['OES_texture_half_float'] = this.gl.getExtension('OES_texture_half_float');
-          this.extensions['OES_texture_half_float_linear'] = this.gl.getExtension('OES_texture_half_float_linear');
-          this.extensions['EXT_texture_filter_anisotropic'] = this.gl.getExtension('EXT_texture_filter_anisotropic');
-          this.extensions['OES_element_index_uint'] = this.gl.getExtension('OES_element_index_uint');
-          this.extensions['OES_standard_derivatives'] = this.gl.getExtension('OES_standard_derivatives');
-          this.extensions['EXT_sRGB'] = this.gl.getExtension('EXT_sRGB');
-          this.extensions['WEBGL_depth_texture'] = this.gl.getExtension('WEBGL_depth_texture');
-          this.extensions['WEBGL_draw_buffers'] = this.gl.getExtension('WEBGL_draw_buffers');
-          this.extensions['WEBGL_lose_context'] = this.gl.getExtension('WEBGL_lose_context');
-        }
-      }
-      /*** HANDLING CONTEXT LOST/RESTORE ***/
-
-      /***
-       Called when the WebGL context is lost
-       ***/
-
-    }, {
-      key: "contextLost",
-      value: function contextLost(event) {
-        var _this24 = this;
-
-        this.state.isContextLost = true; // do not try to restore the context if we're disposing everything!
-
-        if (!this.state.isActive) return;
-        event.preventDefault();
-        this.nextRender.add(function () {
-          return _this24.onContextLost && _this24.onContextLost();
-        });
-      }
-      /***
-       Call this method to restore your context
-       ***/
-
-    }, {
-      key: "restoreContext",
-      value: function restoreContext() {
-        // do not try to restore the context if we're disposing everything!
-        if (!this.state.isActive) return;
-        this.initState();
-
-        if (this.gl && this.extensions['WEBGL_lose_context']) {
-          this.extensions['WEBGL_lose_context'].restoreContext();
-        } else {
-          if (!this.gl && !this.production) {
-            throwWarning(this.type + ": Could not restore the context because the context is not defined");
-          } else if (!this.extensions['WEBGL_lose_context'] && !this.production) {
-            throwWarning(this.type + ": Could not restore the context because the restore context extension is not defined");
-          }
-
-          if (this.onError) {
-            this.onError();
-          }
-        }
-      }
-      /***
-       Check that all objects and textures have been restored
-         returns:
-       @isRestored (bool): whether everything has been restored or not
-       ***/
-
-    }, {
-      key: "isContextexFullyRestored",
-      value: function isContextexFullyRestored() {
-        var isRestored = true;
-
-        for (var i = 0; i < this.renderTargets.length; i++) {
-          if (!this.renderTargets[i].textures[0]._canDraw) {
-            isRestored = false;
-          }
-
-          break;
-        }
-
-        if (isRestored) {
-          for (var _i6 = 0; _i6 < this.planes.length; _i6++) {
-            if (!this.planes[_i6]._canDraw) {
-              isRestored = false;
-              break;
-            } else {
-              for (var j = 0; j < this.planes[_i6].textures.length; j++) {
-                if (!this.planes[_i6].textures[j]._canDraw) {
-                  isRestored = false;
-                  break;
-                }
-              }
-            }
-          }
-        }
-
-        if (isRestored) {
-          for (var _i7 = 0; _i7 < this.shaderPasses.length; _i7++) {
-            if (!this.shaderPasses[_i7]._canDraw) {
-              isRestored = false;
-              break;
-            } else {
-              for (var _j = 0; _j < this.shaderPasses[_i7].textures.length; _j++) {
-                if (!this.shaderPasses[_i7].textures[_j]._canDraw) {
-                  isRestored = false;
-                  break;
-                }
-              }
-            }
-          }
-        }
-
-        return isRestored;
-      }
-      /***
-       Called when the WebGL context is restored
-       ***/
-
-    }, {
-      key: "contextRestored",
-      value: function contextRestored() {
-        var _this25 = this;
-
-        this.getExtensions(); // set blend func
-
-        this.setBlendFunc(); // enable depth by default
-
-        this.setDepth(true); // clear texture and programs cache
-
-        this.cache.clear(); // reset draw stacks
-
-        this.scene.initStacks(); // we need to reset everything : planes programs, shaders, buffers and textures !
-
-        for (var i = 0; i < this.renderTargets.length; i++) {
-          this.renderTargets[i]._restoreContext();
-        }
-
-        for (var _i8 = 0; _i8 < this.planes.length; _i8++) {
-          this.planes[_i8]._restoreContext();
-        } // same goes for shader passes
-
-
-        for (var _i9 = 0; _i9 < this.shaderPasses.length; _i9++) {
-          this.shaderPasses[_i9]._restoreContext();
-        } // callback if everything is restored
-
-
-        var isRestoredQueue = this.nextRender.add(function () {
-          var isRestored = _this25.isContextexFullyRestored();
-
-          if (isRestored) {
-            isRestoredQueue.keep = false; // start drawing again
-
-            _this25.state.isContextLost = false;
-
-            if (_this25.onContextRestored) {
-              _this25.onContextRestored();
-            } // we've changed the objects, keep Curtains class in sync with our renderer
-
-
-            _this25.onSceneChange(); // force next frame render whatever our drawing flag value
-
-
-            _this25.needRender();
-          }
-        }, true);
-      }
-      /*** SIZING ***/
-
-      /***
-       Updates pixelRatio property
-       ***/
-
-    }, {
-      key: "setPixelRatio",
-      value: function setPixelRatio(pixelRatio) {
-        this.pixelRatio = pixelRatio;
-      }
-      /***
-       Set/reset container sizes and WebGL viewport sizes
-       ***/
-
-    }, {
-      key: "setSize",
-      value: function setSize() {
-        if (!this.gl) return; // get our container bounding client rectangle
-
-        var containerBoundingRect = this.container.getBoundingClientRect(); // use the bounding rect values
-
-        this._boundingRect = {
-          width: containerBoundingRect.width * this.pixelRatio,
-          height: containerBoundingRect.height * this.pixelRatio,
-          top: containerBoundingRect.top * this.pixelRatio,
-          left: containerBoundingRect.left * this.pixelRatio
-        }; // iOS Safari > 8+ has a known bug due to navigation bar appearing/disappearing
-        // this causes wrong bounding client rect calculations, especially negative top value when it shouldn't
-        // to fix this we'll use a dirty but useful workaround
-        // first we check if we're on iOS Safari
-
-        var isSafari = !!navigator.userAgent.match(/Version\/[\d\.]+.*Safari/);
-        var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-        if (isSafari && iOS) {
-          // if we are on iOS Safari we'll need a custom function to retrieve our container absolute top position
-          var getTopOffset = function getTopOffset(el) {
-            var topOffset = 0;
-
-            while (el && !isNaN(el.offsetTop)) {
-              topOffset += el.offsetTop - el.scrollTop;
-              el = el.offsetParent;
-            }
-
-            return topOffset;
-          }; // use it to update our top value
-
-
-          this._boundingRect.top = getTopOffset(this.container) * this.pixelRatio;
-        }
-
-        this.canvas.style.width = Math.floor(this._boundingRect.width / this.pixelRatio) + "px";
-        this.canvas.style.height = Math.floor(this._boundingRect.height / this.pixelRatio) + "px";
-        this.canvas.width = Math.floor(this._boundingRect.width * this._renderingScale);
-        this.canvas.height = Math.floor(this._boundingRect.height * this._renderingScale);
-        this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
-      }
-      /***
-       Resize all our elements: planes, shader passes and render targets
-       Their textures will be resized as well
-       ***/
-
-    }, {
-      key: "resize",
-      value: function resize() {
-        // resize the planes only if they are fully initiated
-        for (var i = 0; i < this.planes.length; i++) {
-          if (this.planes[i]._canDraw) {
-            this.planes[i].resize();
-          }
-        } // resize the shader passes only if they are fully initiated
-
-
-        for (var _i10 = 0; _i10 < this.shaderPasses.length; _i10++) {
-          if (this.shaderPasses[_i10]._canDraw) {
-            this.shaderPasses[_i10].resize();
-          }
-        } // resize the render targets
-
-
-        for (var _i11 = 0; _i11 < this.renderTargets.length; _i11++) {
-          this.renderTargets[_i11].resize();
-        } // be sure we'll update the scene even if drawing is disabled
-
-
-        this.needRender();
-      }
-      /*** CLEAR SCENE ***/
-
-      /***
-       Clear our WebGL scene colors and depth
-       ***/
-
-    }, {
-      key: "clear",
-      value: function clear() {
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-      }
-      /*** FRAME BUFFER OBJECTS ***/
-
-      /***
-       Called to bind or unbind a FBO
-         params:
-       @frameBuffer (frameBuffer): if frameBuffer is not null, bind it, unbind it otherwise
-       @cancelClear (bool / undefined): if we should cancel clearing the frame buffer (typically on init & resize)
-       ***/
-
-    }, {
-      key: "bindFrameBuffer",
-      value: function bindFrameBuffer(frameBuffer, cancelClear) {
-        var bufferId = null;
-
-        if (frameBuffer) {
-          bufferId = frameBuffer.index; // new frame buffer, bind it
-
-          if (bufferId !== this.state.frameBufferID) {
-            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, frameBuffer._frameBuffer);
-            this.gl.viewport(0, 0, frameBuffer._size.width, frameBuffer._size.height); // if we should clear the buffer content
-
-            if (frameBuffer._shouldClear && !cancelClear) {
-              this.clear();
-            }
-          }
-        } else if (this.state.frameBufferID !== null) {
-          this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
-          this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
-        }
-
-        this.state.frameBufferID = bufferId;
-      }
-      /*** DEPTH ***/
-
-      /***
-       Called to set whether the renderer will handle depth test or not
-       Depth test is enabled by default
-         params:
-       @setDepth (boolean): if we should enable or disable the depth test
-       ***/
-
-    }, {
-      key: "setDepth",
-      value: function setDepth(_setDepth) {
-        if (_setDepth && !this.state.depthTest) {
-          this.state.depthTest = _setDepth; // enable depth test
-
-          this.gl.enable(this.gl.DEPTH_TEST);
-        } else if (!_setDepth && this.state.depthTest) {
-          this.state.depthTest = _setDepth; // disable depth test
-
-          this.gl.disable(this.gl.DEPTH_TEST);
-        }
-      }
-      /*** BLEND FUNC ***/
-
-      /***
-       Called to set the blending function (transparency)
-       ***/
-
-    }, {
-      key: "setBlendFunc",
-      value: function setBlendFunc() {
-        // allows transparency
-        // based on how three.js solves this
-        this.gl.enable(this.gl.BLEND);
-
-        if (this.premultipliedAlpha) {
-          this.gl.blendFuncSeparate(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA, this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA);
-        } else {
-          this.gl.blendFuncSeparate(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA, this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA);
-        }
-      }
-      /*** FACE CULLING ***/
-
-      /***
-       Called to set whether we should cull an object face or not
-         params:
-       @cullFace (boolean): what face we should cull
-       ***/
-
-    }, {
-      key: "setFaceCulling",
-      value: function setFaceCulling(cullFace) {
-        if (this.state.cullFace !== cullFace) {
-          this.state.cullFace = cullFace;
-
-          if (cullFace === "none") {
-            this.gl.disable(this.gl.CULL_FACE);
-          } else {
-            // default to back face culling
-            var faceCulling = cullFace === "front" ? this.gl.FRONT : this.gl.BACK;
-            this.gl.enable(this.gl.CULL_FACE);
-            this.gl.cullFace(faceCulling);
-          }
-        }
-      }
-      /***
-       Tell WebGL to use the specified program if it's not already in use
-         params:
-       @program (object): a program object
-       ***/
-
-    }, {
-      key: "useProgram",
-      value: function useProgram(program) {
-        if (this.state.currentProgramID === null || this.state.currentProgramID !== program.id) {
-          this.gl.useProgram(program.program);
-          this.state.currentProgramID = program.id;
-        }
-      }
-      /*** PLANES ***/
-
-      /***
-       Create a Plane element and load its images
-         params:
-       @planesHtmlElement (html element): the html element that we will use for our plane
-       @params (obj): plane params:
-       - vertexShaderID (string, optionnal): the vertex shader ID. If not specified, will look for a data attribute data-vs-id on the plane HTML element. Will throw an error if nothing specified
-       - fragmentShaderID (string, optionnal): the fragment shader ID. If not specified, will look for a data attribute data-fs-id on the plane HTML element. Will throw an error if nothing specified
-       - widthSegments (optionnal): plane definition along the X axis (1 by default)
-       - heightSegments (optionnal): plane definition along the Y axis (1 by default)
-       - alwaysDraw (boolean, optionnal): define if the plane should always be drawn or it should be drawn only if its within the canvas (false by default)
-       - autoloadSources (boolean, optionnal): define if the sources should be load on init automatically (true by default)
-       - crossOrigin (string, optionnal): define the crossOrigin process to load images if any
-       - fov (int, optionnal): define the perspective field of view (default to 75)
-       - uniforms (obj, otpionnal): the uniforms that will be passed to the shaders (if no uniforms specified there wont be any interaction with the plane)
-         returns :
-       @plane: our newly created plane object
-       ***/
-
-    }, {
-      key: "addPlane",
-      value: function addPlane(planeHtmlElement, params) {
-        // if the WebGL context couldn't be created, return null
-        if (!this.gl) {
-          if (!this.production) throwWarning(this.type + ": Unable to create a Plane because the WebGl context is not defined");
-          return false;
-        } else {
-          if (!planeHtmlElement || planeHtmlElement.length === 0) {
-            if (!this.production) throwWarning(this.type + ": The HTML element you specified does not currently exists in the DOM");
-            return false;
-          } // init the plane
-
-
-          var plane = new Plane(this, planeHtmlElement, params);
-
-          if (!plane._program.compiled) {
-            plane = false;
-          }
-
-          return plane;
-        }
-      }
-      /***
-       Removes a Plane element (that has already been disposed) from the scene and the planes array
-         params:
-       @plane (Plane object): the plane to remove
-       ***/
-
-    }, {
-      key: "removePlane",
-      value: function removePlane(plane) {
-        if (!this.gl) return; // remove from our planes array
-
-        this.planes = this.planes.filter(function (element) {
-          return element.uuid !== plane.uuid;
-        }); // remove from scene stacks
-
-        this.scene.removePlane(plane);
-        plane = null; // clear the buffer to clean scene
-
-        if (this.gl) this.clear(); // we've removed an object, keep Curtains class in sync with our renderer
-
-        this.onSceneChange();
-      }
-      /*** POST PROCESSING ***/
-
-      /*** RENDER TARGETS ***/
-
-      /***
-       Create a new RenderTarget element
-         params:
-       @params (obj): plane params:
-       - depth (bool, optionnal): if the render target should use a depth buffer in order to preserve depth (default to false)
-         returns :
-       @renderTarget: our newly created RenderTarget object
-       ***/
-
-    }, {
-      key: "addRenderTarget",
-      value: function addRenderTarget(params) {
-        // if the WebGL context couldn't be created, return null
-        if (!this.gl) {
-          if (!this.production) throwWarning(this.type + ": Unable to create a RenderTarget because the WebGl context is not defined");
-          return false;
-        } else {
-          // init the render target
-          return new RenderTarget(this, params);
-        }
-      }
-      /***
-       Completely remove a RenderTarget element
-         params:
-       @renderTarget (RenderTarget object): the render target to remove
-       ***/
-
-    }, {
-      key: "removeRenderTarget",
-      value: function removeRenderTarget(renderTarget) {
-        if (!this.gl) return; // loop through all planes that might use that render target and reset it
-
-        for (var i = 0; i < this.planes.length; i++) {
-          if (this.planes[i].target && this.planes[i].target.uuid === renderTarget.uuid) {
-            this.planes[i].target = null;
-          }
-        }
-
-        this.renderTargets = this.renderTargets.filter(function (element) {
-          return element.uuid !== renderTarget.uuid;
-        }); // update render target indexes
-
-        for (var _i12 = 0; _i12 < this.renderTargets.length; _i12++) {
-          this.renderTargets[_i12].index = _i12;
-        }
-
-        renderTarget = null; // clear the buffer to clean scene
-
-        if (this.gl) this.clear(); // we've removed an object, keep Curtains class in sync with our renderer
-
-        this.onSceneChange();
-      }
-      /*** SHADER PASSES ***/
-
-      /***
-       Create a new ShaderPass element
-         params:
-       @params (obj): plane params:
-       - vertexShaderID (string, optionnal): the vertex shader ID. If not specified, will look for a data attribute data-vs-id on the plane HTML element. Will throw an error if nothing specified
-       - fragmentShaderID (string, optionnal): the fragment shader ID. If not specified, will look for a data attribute data-fs-id on the plane HTML element. Will throw an error if nothing specified
-       - crossOrigin (string, optionnal): define the crossOrigin process to load images if any
-       - uniforms (obj, otpionnal): the uniforms that will be passed to the shaders (if no uniforms specified there wont be any interaction with the plane)
-         returns :
-       @shaderPass: our newly created ShaderPass object
-       ***/
-
-    }, {
-      key: "addShaderPass",
-      value: function addShaderPass(params) {
-        // if the WebGL context couldn't be created, return null
-        if (!this.gl) {
-          if (!this.production) throwWarning(this.type + ": Unable to create a ShaderPass because the WebGl context is not defined");
-          return false;
-        } else {
-          // init the shader pass
-          var shaderPass = new ShaderPass(this, params);
-
-          if (!shaderPass._program.compiled) {
-            shaderPass = false;
-          }
-
-          return shaderPass;
-        }
-      }
-      /***
-       Removes a ShaderPass element (that has already been disposed) from the scene and the shaderPasses array
-         params:
-       @shaderPass (ShaderPass object): the shader pass to remove
-       ***/
-
-    }, {
-      key: "removeShaderPass",
-      value: function removeShaderPass(shaderPass) {
-        if (!this.gl) return; // remove from shaderPasses our array
-
-        this.shaderPasses = this.shaderPasses.filter(function (element) {
-          return element.uuid !== shaderPass.uuid;
-        }); // remove from scene stacks
-
-        this.scene.removeShaderPass(shaderPass);
-        shaderPass = null; // clear the buffer to clean scene
-
-        if (this.gl) this.clear(); // we've removed an object, keep Curtains class in sync with our renderer
-
-        this.onSceneChange();
-      }
-      /***
-       Enables the render loop
-       ***/
-
-    }, {
-      key: "enableDrawing",
-      value: function enableDrawing() {
-        this.state.drawingEnabled = true;
-      }
-      /***
-       Disables the render loop
-       ***/
-
-    }, {
-      key: "disableDrawing",
-      value: function disableDrawing() {
-        this.state.drawingEnabled = false;
-      }
-      /***
-       Forces the rendering of the next frame, even if disabled
-       ***/
-
-    }, {
-      key: "needRender",
-      value: function needRender() {
-        this.state.forceRender = true;
-      }
-      /***
-       Called at each draw call to render our scene and its content
-       Also execute our nextRender callback queue
-       ***/
-
-    }, {
-      key: "render",
-      value: function render() {
-        if (!this.gl) return; // clear scene first
-
-        this.clear(); // draw our scene content
-
-        this.scene.draw();
-      }
-      /*** DISPOSING ***/
-
-      /***
-       Delete all cached programs
-       ***/
-
-    }, {
-      key: "deletePrograms",
-      value: function deletePrograms() {
-        // delete all programs from manager
-        for (var i = 0; i < this.cache.programs.length; i++) {
-          var program = this.cache.programs[i];
-          this.gl.deleteProgram(program.program);
-        }
-      }
-      /***
-       Dispose our WebGL context and all its objects
-       ***/
-
-    }, {
-      key: "dispose",
-      value: function dispose() {
-        var _this26 = this;
-
-        if (!this.gl) return;
-        this.state.isActive = false; // be sure to delete all planes
-
-        while (this.planes.length > 0) {
-          this.removePlane(this.planes[0]);
-        } // we need to delete the shader passes also
-
-
-        while (this.shaderPasses.length > 0) {
-          this.removeShaderPass(this.shaderPasses[0]);
-        } // finally we need to delete the render targets
-
-
-        while (this.renderTargets.length > 0) {
-          this.removeRenderTarget(this.renderTargets[0]);
-        } // wait for all planes to be deleted before stopping everything
-
-
-        var disposeQueue = this.nextRender.add(function () {
-          if (_this26.planes.length === 0 && _this26.shaderPasses.length === 0 && _this26.renderTargets.length === 0) {
-            // clear from callback queue
-            disposeQueue.keep = false;
-
-            _this26.deletePrograms(); // clear the buffer to clean scene
-
-
-            _this26.clear();
-
-            _this26.canvas.removeEventListener("webgllost", _this26._contextLostHandler, false);
-
-            _this26.canvas.removeEventListener("webglrestored", _this26._contextRestoredHandler, false); // lose context
-
-
-            if (_this26.gl && _this26.extensions['WEBGL_lose_context']) {
-              _this26.extensions['WEBGL_lose_context'].loseContext();
-            } // clear canvas state
-
-
-            _this26.canvas.width = _this26.canvas.width;
-            _this26.gl = null; // remove canvas from DOM
-
-            _this26.container.removeChild(_this26.canvas);
-
-            _this26.container = null;
-            _this26.canvas = null;
-            _this26.onDisposed && _this26.onDisposed();
-          }
-        }, true);
-      }
-    }]);
-
-    return Renderer;
-  }();
-  /***
-   Here we create a ScrollManager class object
-   This keeps track of our scroll position, scroll deltas and triggers an onScroll callback
-   Could either listen to the native scroll event or be hooked to any scroll (natural or virtual) scroll event
-     params:
-   @xOffset (float): scroll along X axis
-   @yOffset (float): scroll along Y axis
-   @lastXDelta (float): last scroll delta along X axis
-   @lastYDelta (float): last scroll delta along Y axis
-     @shouldWatch (bool): if the scroll manager should listen to the scroll event or not. Default to true.
-     @onScroll (function): callback to execute each time the scroll values changed
-     returns:
-   @this: our ScrollManager class object
+   @this: our RenderTarget class object
    ***/
 
 
-  var ScrollManager = /*#__PURE__*/function () {
-    function ScrollManager() {
-      var _ref12 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          _ref12$xOffset = _ref12.xOffset,
-          xOffset = _ref12$xOffset === void 0 ? 0 : _ref12$xOffset,
-          _ref12$yOffset = _ref12.yOffset,
-          yOffset = _ref12$yOffset === void 0 ? 0 : _ref12$yOffset,
-          _ref12$lastXDelta = _ref12.lastXDelta,
-          lastXDelta = _ref12$lastXDelta === void 0 ? 0 : _ref12$lastXDelta,
-          _ref12$lastYDelta = _ref12.lastYDelta,
-          lastYDelta = _ref12$lastYDelta === void 0 ? 0 : _ref12$lastYDelta,
-          _ref12$shouldWatch = _ref12.shouldWatch,
-          shouldWatch = _ref12$shouldWatch === void 0 ? true : _ref12$shouldWatch,
-          _ref12$onScroll = _ref12.onScroll,
-          onScroll = _ref12$onScroll === void 0 ? function () {} : _ref12$onScroll;
+  var RenderTarget = /*#__PURE__*/function () {
+    function RenderTarget(renderer) {
+      var _ref12 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          shaderPass = _ref12.shaderPass,
+          _ref12$depth = _ref12.depth,
+          depth = _ref12$depth === void 0 ? false : _ref12$depth,
+          _ref12$clear = _ref12.clear,
+          clear = _ref12$clear === void 0 ? true : _ref12$clear,
+          _ref12$minWidth = _ref12.minWidth,
+          minWidth = _ref12$minWidth === void 0 ? 1024 : _ref12$minWidth,
+          _ref12$minHeight = _ref12.minHeight,
+          minHeight = _ref12$minHeight === void 0 ? 1024 : _ref12$minHeight,
+          _ref12$texturesOption = _ref12.texturesOptions,
+          texturesOptions = _ref12$texturesOption === void 0 ? {} : _ref12$texturesOption;
 
-      _classCallCheck(this, ScrollManager);
+      _classCallCheck(this, RenderTarget);
 
-      this.xOffset = xOffset;
-      this.yOffset = yOffset;
-      this.lastXDelta = lastXDelta;
-      this.lastYDelta = lastYDelta;
-      this.shouldWatch = shouldWatch;
-      this.onScroll = onScroll; // keep a ref to our scroll event
+      this.type = "RenderTarget"; // we could pass our curtains object OR our curtains renderer object
 
-      this.handler = this.scroll.bind(this, true);
+      renderer = renderer && renderer.renderer || renderer;
 
-      if (this.shouldWatch) {
-        window.addEventListener("scroll", this.handler, {
-          passive: true
-        });
+      if (!renderer || renderer.type !== "Renderer") {
+        throwError(this.type + ": Renderer not passed as first argument", renderer);
+      } else if (!renderer.gl) {
+        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
       }
+
+      this.renderer = renderer;
+      this.gl = this.renderer.gl;
+      this.index = this.renderer.renderTargets.length;
+      this._shaderPass = shaderPass; // whether to create a render buffer
+
+      this._depth = depth;
+      this._shouldClear = clear;
+      this._minSize = {
+        width: minWidth * this.renderer.pixelRatio,
+        height: minHeight * this.renderer.pixelRatio
+      }; // default textures options depends on the type of Mesh and WebGL context
+
+      texturesOptions = Object.assign({
+        // set default sampler to "uRenderTexture" and isFBOTexture to true
+        sampler: "uRenderTexture",
+        isFBOTexture: true,
+        premultiplyAlpha: false,
+        anisotropy: 1,
+        generateMipmap: false,
+        floatingPoint: "none",
+        wrapS: this.gl.CLAMP_TO_EDGE,
+        wrapT: this.gl.CLAMP_TO_EDGE,
+        minFilter: this.gl.LINEAR,
+        magFilter: this.gl.LINEAR
+      }, texturesOptions);
+      this._texturesOptions = texturesOptions;
+      this.userData = {};
+      this.uuid = generateUUID();
+      this.renderer.renderTargets.push(this); // we've added a new object, keep Curtains class in sync with our renderer
+
+      this.renderer.onSceneChange();
+
+      this._initRenderTarget();
     }
     /***
-     Called by the scroll event listener
+     Init our RenderTarget by setting its size, creating a textures array and then calling _createFrameBuffer()
      ***/
 
 
-    _createClass(ScrollManager, [{
-      key: "scroll",
-      value: function scroll() {
-        this.updateScrollValues(window.pageXOffset, window.pageYOffset);
+    _createClass(RenderTarget, [{
+      key: "_initRenderTarget",
+      value: function _initRenderTarget() {
+        this._setSize(); // create our render texture
+
+
+        this.textures = []; // create our frame buffer
+
+        this._createFrameBuffer();
       }
+      /*** RESTORING CONTEXT ***/
+
       /***
-       Updates the scroll manager X and Y scroll values as well as last X and Y deltas
-       Internally called by the scroll handler
-       Could be called externally as well if the user wants to handle the scroll by himself
-         params:
-       @x (float): scroll value along X axis
-       @y (float): scroll value along Y axis
+       Restore a render target
+       Basically just re init it
        ***/
 
     }, {
-      key: "updateScrollValues",
-      value: function updateScrollValues(x, y) {
-        // get our scroll delta values
-        var lastScrollXValue = this.xOffset;
-        this.xOffset = x;
-        this.lastXDelta = lastScrollXValue - this.xOffset;
-        var lastScrollYValue = this.yOffset;
-        this.yOffset = y;
-        this.lastYDelta = lastScrollYValue - this.yOffset;
+      key: "_restoreContext",
+      value: function _restoreContext() {
+        // reset size
+        this._setSize(); // re create our frame buffer and restore its texture
 
-        if (this.onScroll) {
-          this.onScroll(this.lastXDelta, this.lastYDelta);
-        }
+
+        this._createFrameBuffer();
       }
       /***
-       Dispose our scroll manager (just remove our event listner if it had been added previously)
-       ***/
-
-    }, {
-      key: "dispose",
-      value: function dispose() {
-        if (this.shouldWatch) {
-          window.removeEventListener("scroll", this.handler, {
-            passive: true
-          });
-        }
-      }
-    }]);
-
-    return ScrollManager;
-  }();
-  /***
-   Here we create our Curtains object
-       params:
-   @container (HTML element or string, optional): the container HTML element or ID that will hold our canvas. Could be set later if not passed as parameter here
-     (WebGL context parameters)
-   @alpha (bool, optional): whether the WebGL context should handle transparency. Default to true.
-   @premultipliedAlpha (bool, optional): whether the WebGL context should handle premultiplied alpha. Default to false.
-   @antialias (bool, optional): whether the WebGL context should use the default antialiasing. When using render targets, WebGL disables antialiasing, so you can safely set this to false to improve the performance. Default to true.
-   @depth (bool, optional): whether the WebGL context should handle depth. Default to true.
-   @failIfMajorPerformanceCaveat (bool, optional): whether the WebGL context creation should fail in case of major performance caveat. Default to true.
-   @preserveDrawingBuffer (bool, optional): whether the WebGL context should preserve the drawing buffer. Default to false.
-   @stencil (bool, optional): whether the WebGL context should handle stencil. Default to false.
-     @autoResize (bool, optional): Whether the library should listen to the window resize event and actually resize the scene. Set it to false if you want to handle this by yourself using the resize() method. Default to true.
-   @autoRender (bool, optional): Whether the library should create a request animation frame loop to render the scene. Set it to false if you want to handle this by yourself using the render() method. Default to true.
-   @watchScroll (bool, optional): Whether the library should listen to the window scroll event. Set it to false if you want to handle this by yourself. Default to true.
-     @pixelRatio (float, optional): Defines the pixel ratio value. Use it to limit it on init to increase performance. Default to window.devicePixelRatio.
-   @renderingScale (float, optional): Use it to downscale your rendering canvas. May improve performance but will decrease quality. Default to 1 (minimum: 0.25, maximum: 1).
-     @production (bool, optional): Whether the library should throw useful console warnings and errors and check shaders and programs compilation status. Default to false.
-     returns :
-   @this: our Renderer
-   ***/
-
-
-  var Curtains = /*#__PURE__*/function () {
-    function Curtains() {
-      var _ref13 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          container = _ref13.container,
-          _ref13$alpha = _ref13.alpha,
-          alpha = _ref13$alpha === void 0 ? true : _ref13$alpha,
-          _ref13$premultipliedA = _ref13.premultipliedAlpha,
-          premultipliedAlpha = _ref13$premultipliedA === void 0 ? false : _ref13$premultipliedA,
-          _ref13$antialias = _ref13.antialias,
-          antialias = _ref13$antialias === void 0 ? true : _ref13$antialias,
-          _ref13$depth = _ref13.depth,
-          depth = _ref13$depth === void 0 ? true : _ref13$depth,
-          _ref13$failIfMajorPer = _ref13.failIfMajorPerformanceCaveat,
-          failIfMajorPerformanceCaveat = _ref13$failIfMajorPer === void 0 ? true : _ref13$failIfMajorPer,
-          _ref13$preserveDrawin = _ref13.preserveDrawingBuffer,
-          preserveDrawingBuffer = _ref13$preserveDrawin === void 0 ? false : _ref13$preserveDrawin,
-          _ref13$stencil = _ref13.stencil,
-          stencil = _ref13$stencil === void 0 ? false : _ref13$stencil,
-          _ref13$autoResize = _ref13.autoResize,
-          autoResize = _ref13$autoResize === void 0 ? true : _ref13$autoResize,
-          _ref13$autoRender = _ref13.autoRender,
-          autoRender = _ref13$autoRender === void 0 ? true : _ref13$autoRender,
-          _ref13$watchScroll = _ref13.watchScroll,
-          watchScroll = _ref13$watchScroll === void 0 ? true : _ref13$watchScroll,
-          _ref13$pixelRatio = _ref13.pixelRatio,
-          pixelRatio = _ref13$pixelRatio === void 0 ? window.devicePixelRatio || 1 : _ref13$pixelRatio,
-          _ref13$renderingScale = _ref13.renderingScale,
-          renderingScale = _ref13$renderingScale === void 0 ? 1 : _ref13$renderingScale,
-          _ref13$production = _ref13.production,
-          production = _ref13$production === void 0 ? false : _ref13$production;
-
-      _classCallCheck(this, Curtains);
-
-      this.type = "Curtains"; // if we should use auto resize (default to true)
-
-      this._autoResize = autoResize; // if we should use auto render (default to true)
-
-      this._autoRender = autoRender; // if we should watch the scroll (default to true)
-
-      this._watchScroll = watchScroll; // pixel ratio and rendering scale
-
-      this.pixelRatio = pixelRatio; // rendering scale
-
-      renderingScale = isNaN(renderingScale) ? 1 : parseFloat(renderingScale);
-      this._renderingScale = Math.max(0.25, Math.min(1, renderingScale)); // webgl context parameters
-
-      this.premultipliedAlpha = premultipliedAlpha;
-      this.alpha = alpha;
-      this.antialias = antialias;
-      this.depth = depth;
-      this.failIfMajorPerformanceCaveat = failIfMajorPerformanceCaveat;
-      this.preserveDrawingBuffer = preserveDrawingBuffer;
-      this.stencil = stencil;
-      this.production = production;
-      this.errors = false; // if a container has been provided, proceed to init
-
-      if (container) {
-        this.setContainer(container);
-      } else if (!this.production) {
-        throwWarning(this.type + ": no container provided in the initial parameters. Use setContainer() method to set one later and initialize the WebGL context");
-      }
-    }
-    /***
-     Set up our Curtains container and start initializing everything
-     Called on Curtains instancing if a params container has been provided, could be call afterwards else
-     Useful with JS frameworks to init our Curtains class globally and then set the container in a canvas component afterwards to fully instantiate everything
-       params:
-     @container (HTML element or string): the container HTML element or ID that will hold our canvas
-     ***/
-
-
-    _createClass(Curtains, [{
-      key: "setContainer",
-      value: function setContainer(container) {
-        if (!container) {
-          var _container = document.createElement("div");
-
-          _container.setAttribute("id", "curtains-canvas");
-
-          document.body.appendChild(_container);
-          this.container = _container;
-          if (!this.production) throwWarning('Curtains: no valid container HTML element or ID provided, created a div with "curtains-canvas" ID instead');
-        } else {
-          if (typeof container === "string") {
-            container = document.getElementById(container);
-
-            if (!container) {
-              var _container2 = document.createElement("div");
-
-              _container2.setAttribute("id", "curtains-canvas");
-
-              document.body.appendChild(_container2);
-              this.container = _container2;
-              if (!this.production) throwWarning('Curtains: no valid container HTML element or ID provided, created a div with "curtains-canvas" ID instead');
-            } else {
-              this.container = container;
-            }
-          } else if (container instanceof Element) {
-            this.container = container;
-          }
-        }
-
-        this._initCurtains();
-      }
-      /***
-       Initialize everything that the class will need: WebGL renderer, scroll manager, sizes, listeners
-       Then starts our animation frame loop if needed
-       ***/
-
-    }, {
-      key: "_initCurtains",
-      value: function _initCurtains() {
-        this.planes = [];
-        this.renderTargets = [];
-        this.shaderPasses = []; // init webgl context
-
-        this._initRenderer();
-
-        if (!this.gl) return; // scroll
-
-        this._initScroll(); // sizes
-
-
-        this._setSize(); // event listeners
-
-
-        this._addListeners(); // we are ready to go
-
-
-        this.container.appendChild(this.canvas); // watermark
-
-        console.log("curtains.js - v7.1"); // start rendering
-
-        this._animationFrameID = null;
-
-        if (this._autoRender) {
-          this._animate();
-        }
-      }
-      /*** WEBGL CONTEXT ***/
-
-      /***
-       Initialize the Renderer class object
-       ***/
-
-    }, {
-      key: "_initRenderer",
-      value: function _initRenderer() {
-        var _this27 = this;
-
-        this.renderer = new Renderer({
-          alpha: this.alpha,
-          antialias: this.antialias,
-          premulitpliedAlpha: this.premultipliedAlpha,
-          depth: this.depth,
-          failIfMajorPerformanceCaveat: this.failIfMajorPerformanceCaveat,
-          preserveDrawingBuffer: this.preserveDrawingBuffer,
-          stencil: this.stencil,
-          container: this.container,
-          pixelRatio: this.pixelRatio,
-          renderingScale: this._renderingScale,
-          production: this.production,
-          onError: function onError() {
-            return _this27._onRendererError();
-          },
-          onContextLost: function onContextLost() {
-            return _this27._onRendererContextLost();
-          },
-          onContextRestored: function onContextRestored() {
-            return _this27._onRendererContextRestored();
-          },
-          onDisposed: function onDisposed() {
-            return _this27._onRendererDisposed();
-          },
-          // keep sync between renderer planes, shader passes and render targets arrays and the Curtains ones
-          onSceneChange: function onSceneChange() {
-            return _this27._keepSync();
-          }
-        });
-        this.gl = this.renderer.gl;
-        this.canvas = this.renderer.canvas;
-      }
-      /***
-       Force our renderer to restore the WebGL context
-       ***/
-
-    }, {
-      key: "restoreContext",
-      value: function restoreContext() {
-        this.renderer.restoreContext();
-      }
-      /***
-       This just handles our drawing animation frame
-       ***/
-
-    }, {
-      key: "_animate",
-      value: function _animate() {
-        this.render();
-        this._animationFrameID = window.requestAnimationFrame(this._animate.bind(this));
-      }
-      /*** RENDERING ***/
-
-      /***
-       Enables rendering
-       ***/
-
-    }, {
-      key: "enableDrawing",
-      value: function enableDrawing() {
-        this.renderer.enableDrawing();
-      }
-      /***
-       Disables rendering
-       ***/
-
-    }, {
-      key: "disableDrawing",
-      value: function disableDrawing() {
-        this.renderer.disableDrawing();
-      }
-      /***
-       Forces the rendering of the next frame, even if disabled
-       ***/
-
-    }, {
-      key: "needRender",
-      value: function needRender() {
-        this.renderer.needRender();
-      }
-      /***
-       Executes a callback on next frame
-         params:
-       @callback (function): callback to execute on next frame
-       ***/
-
-    }, {
-      key: "nextRender",
-      value: function nextRender(callback) {
-        this.renderer.nextRender.add(callback);
-      }
-      /***
-       Tells our renderer to render the scene if the drawing is enabled
-       ***/
-
-    }, {
-      key: "render",
-      value: function render() {
-        // always execute callback queue
-        this.renderer.nextRender.execute(); // If forceRender is true, force rendering this frame even if drawing is not enabled.
-        // If not, only render if enabled.
-
-        if (!this.renderer.state.drawingEnabled && !this.renderer.state.forceRender) {
-          return;
-        } // reset forceRender
-
-
-        if (this.renderer.state.forceRender) {
-          this.renderer.state.forceRender = false;
-        } // Curtains onRender callback
-
-
-        if (this._onRenderCallback) {
-          this._onRenderCallback();
-        }
-
-        this.renderer.render();
-      }
-      /*** LISTENERS ***/
-
-      /***
-       Adds our resize event listener if needed
-       ***/
-
-    }, {
-      key: "_addListeners",
-      value: function _addListeners() {
-        // handling window resize event
-        this._resizeHandler = null;
-
-        if (this._autoResize) {
-          this._resizeHandler = this.resize.bind(this, true);
-          window.addEventListener("resize", this._resizeHandler, false);
-        }
-      }
-      /*** SIZING ***/
-
-      /***
-       Set the pixel ratio property and update everything by calling the resize() method
-       ***/
-
-    }, {
-      key: "setPixelRatio",
-      value: function setPixelRatio(pixelRatio, triggerCallback) {
-        this.pixelRatio = parseFloat(Math.max(pixelRatio, 1)) || 1;
-        this.renderer.setPixelRatio(pixelRatio); // apply new pixel ratio to all our elements but don't trigger onAfterResize callback
-
-        this.resize(triggerCallback);
-      }
-      /***
-       Set our renderer container and canvas sizes and update the scroll values
+       Sets our RenderTarget size based on its parent plane size
        ***/
 
     }, {
       key: "_setSize",
       value: function _setSize() {
-        this.renderer.setSize(); // update scroll values ass well
-
-        if (this._scrollManager.shouldWatch) {
-          this._scrollManager.xOffset = window.pageXOffset;
-          this._scrollManager.yOffset = window.pageYOffset;
+        if (this._shaderPass && this._shaderPass._isScenePass) {
+          this._size = {
+            width: this.renderer._boundingRect.width,
+            height: this.renderer._boundingRect.height
+          };
+        } else {
+          this._size = {
+            width: Math.max(this._minSize.width, this.renderer._boundingRect.width),
+            height: Math.max(this._minSize.height, this.renderer._boundingRect.height)
+          };
         }
       }
       /***
-       Useful to get our container bounding rectangle without triggering a reflow/layout
-         returns :
-       @boundingRectangle (object): an object containing our container bounding rectangle (width, height, top and left properties)
-       ***/
-
-    }, {
-      key: "getBoundingRect",
-      value: function getBoundingRect() {
-        return this.renderer._boundingRect;
-      }
-      /***
-       Resize our container and the renderer
-         params:
-       @triggerCallback (bool): Whether we should trigger onAfterResize callback
+       Resizes our RenderTarget (only resize it if it's a ShaderPass scene pass FBO)
        ***/
 
     }, {
       key: "resize",
-      value: function resize(triggerCallback) {
-        var _this28 = this;
+      value: function resize() {
+        // resize render target only if its a child of a shader pass
+        if (this._shaderPass) {
+          this._setSize();
 
-        if (!this.gl) return;
+          this.textures[0].resize(); // cancel clear on resize
 
-        this._setSize();
+          this.renderer.bindFrameBuffer(this, true);
 
-        this.renderer.resize();
-        this.nextRender(function () {
-          if (_this28._onAfterResizeCallback && triggerCallback) {
-            _this28._onAfterResizeCallback();
+          if (this._depth) {
+            this._bindDepthBuffer();
           }
-        });
-      }
-      /*** SCROLL ***/
 
+          this.renderer.bindFrameBuffer(null);
+        }
+      }
       /***
-       Init our ScrollManager class object
+       Binds our depth buffer
        ***/
 
     }, {
-      key: "_initScroll",
-      value: function _initScroll() {
-        var _this29 = this;
+      key: "_bindDepthBuffer",
+      value: function _bindDepthBuffer() {
+        // render to our target texture by binding the framebuffer
+        if (this._depthBuffer) {
+          this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, this._depthBuffer); // allocate renderbuffer
 
-        this._scrollManager = new ScrollManager({
-          // init values
-          xOffset: window.pageXOffset,
-          yOffset: window.pageYOffset,
-          lastXDelta: 0,
-          lastYDelta: 0,
-          shouldWatch: this._watchScroll,
-          onScroll: function onScroll(lastXDelta, lastYDelta) {
-            return _this29._updateScroll(lastXDelta, lastYDelta);
-          }
-        });
+          this.gl.renderbufferStorage(this.gl.RENDERBUFFER, this.gl.DEPTH_COMPONENT16, this._size.width, this._size.height); // attach renderbuffer
+
+          this.gl.framebufferRenderbuffer(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, this.gl.RENDERBUFFER, this._depthBuffer);
+        }
       }
       /***
-       Handles the different values associated with a scroll event (scroll and delta values)
-       If no plane watch the scroll then those values won't be retrieved to avoid unnecessary reflow calls
-       If at least a plane is watching, update all watching planes positions based on the scroll values
-       And force render for at least one frame to actually update the scene
+       Here we create our frame buffer object
+       We're also adding a render buffer object to handle depth if needed
        ***/
 
     }, {
-      key: "_updateScroll",
-      value: function _updateScroll(lastXDelta, lastYDelta) {
-        for (var i = 0; i < this.planes.length; i++) {
-          // if our plane is watching the scroll, update its position
-          if (this.planes[i].watchScroll) {
-            this.planes[i].updateScrollPosition(lastXDelta, lastYDelta);
-          }
-        } // be sure we'll update the scene even if drawing is disabled
+      key: "_createFrameBuffer",
+      value: function _createFrameBuffer() {
+        this._frameBuffer = this.gl.createFramebuffer(); // cancel clear on init
+
+        this.renderer.bindFrameBuffer(this, true); // if textures array is not empty it means we're restoring the context
+
+        if (this.textures.length) {
+          this.textures[0]._parent = this;
+
+          this.textures[0]._restoreContext();
+        } else {
+          // create a texture
+          var texture = new Texture(this.renderer, this._texturesOptions); // adds the render target as parent and adds the texture to our textures array as well
+
+          texture.addParent(this);
+        } // attach the texture as the first color attachment
+        // this.textures[0]._sampler.texture contains our WebGLTexture object
 
 
-        this.renderer.needRender();
-        this._onScrollCallback && this._onScrollCallback();
+        this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, this.gl.TEXTURE_2D, this.textures[0]._sampler.texture, 0); // create a depth renderbuffer
+
+        if (this._depth) {
+          this._depthBuffer = this.gl.createRenderbuffer();
+
+          this._bindDepthBuffer();
+        }
+
+        this.renderer.bindFrameBuffer(null);
       }
-      /***
-       Updates the scroll manager X and Y scroll values as well as last X and Y deltas
-       Internally called by the scroll handler if at least one plane is watching the scroll
-       Could be called externally as well if the user wants to handle the scroll by himself
-         params:
-       @x (float): scroll value along X axis
-       @y (float): scroll value along Y axis
-       ***/
-
-    }, {
-      key: "updateScrollValues",
-      value: function updateScrollValues(x, y) {
-        this._scrollManager.updateScrollValues(x, y);
-      }
-      /***
-       Returns last delta scroll values
-         returns:
-       @delta (object): an object containing X and Y last delta values
-       ***/
-
-    }, {
-      key: "getScrollDeltas",
-      value: function getScrollDeltas() {
-        return {
-          x: this._scrollManager.lastXDelta,
-          y: this._scrollManager.lastYDelta
-        };
-      }
-      /***
-       Returns last window scroll values
-         returns:
-       @scrollValues (object): an object containing X and Y last scroll values
-       ***/
-
-    }, {
-      key: "getScrollValues",
-      value: function getScrollValues() {
-        return {
-          x: this._scrollManager.xOffset,
-          y: this._scrollManager.yOffset
-        };
-      }
-      /*** ADDING / REMOVING OBJECTS TO THE RENDERER ***/
+      /*** GET THE RENDER TARGET TEXTURE ***/
 
       /***
-       Always keep sync between renderer and Curtains scene objects when adding/removing objects
-       ***/
-
-    }, {
-      key: "_keepSync",
-      value: function _keepSync() {
-        this.planes = this.renderer.planes;
-        this.shaderPasses = this.renderer.shaderPasses;
-        this.renderTargets = this.renderer.renderTargets;
-      }
-      /***
-       See Renderer Class addPlane() method
-       DEPRECATED SOON!
-       ***/
-
-    }, {
-      key: "addPlane",
-      value: function addPlane(planeHtmlElement, params) {
-        throwWarning("Curtains: addPlane() is deprecated. To create a plane, use new Plane() with the following arguments:\ncurtains:", this, "\nhtmlElement:", planeHtmlElement, "\nparameters:", params);
-        return this.renderer.addPlane(planeHtmlElement, params);
-      }
-      /***
-       See Renderer Class removePlane() method
-       DEPRECATED SOON!
-       ***/
-
-    }, {
-      key: "removePlane",
-      value: function removePlane(plane) {
-        throwWarning("Curtains: removePlane() is deprecated. To remove this plane ", plane, ", use its remove() method");
-        plane.remove();
-      }
-      /*** RENDER TARGETS ***/
-
-      /***
-       See Renderer Class addRenderTarget() method
-       DEPRECATED SOON!
-       ***/
-
-    }, {
-      key: "addRenderTarget",
-      value: function addRenderTarget(params) {
-        throwWarning("Curtains: addRenderTarget() is deprecated. To create a render target, use new RenderTarget() with the following arguments:\ncurtains:", this, "\nparameters:", params);
-        return this.renderer.addRenderTarget(params);
-      }
-      /***
-       See Renderer Class removeRenderTarget() method
-       DEPRECATED SOON!
-       ***/
-
-    }, {
-      key: "removeRenderTarget",
-      value: function removeRenderTarget(renderTarget) {
-        throwWarning("Curtains: removeRenderTarget() is deprecated. To remove this render target ", renderTarget, ", use its remove() method");
-        renderTarget.remove();
-      }
-      /*** SHADER PASSES ***/
-
-      /***
-       See Renderer Class addShaderPass() method
-       DEPRECATED SOON!
-       ***/
-
-    }, {
-      key: "addShaderPass",
-      value: function addShaderPass(params) {
-        throwWarning("Curtains: addShaderPass() is deprecated. To create a shader pass, use new ShaderPass() with the following arguments:\ncurtains:", this, "\nparameters:", params);
-        return this.renderer.addShaderPass(params);
-      }
-      /***
-       See Renderer Class removeShaderPass() method
-       DEPRECATED SOON!
-       ***/
-
-    }, {
-      key: "removeShaderPass",
-      value: function removeShaderPass(shaderPass) {
-        throwWarning("Curtains: removeShaderPass() is deprecated. To remove this shader pass ", shaderPass, ", use its remove() method");
-        shaderPass.remove();
-      }
-      /*** UTILS ***/
-
-      /***
-       Linear interpolation helper defined in utils
-       ***/
-
-    }, {
-      key: "lerp",
-      value: function lerp(start, end, amount) {
-        return _lerp(start, end, amount);
-      }
-      /*** EVENTS ***/
-
-      /***
-       This is called each time our container has been resized
-         params :
-       @callback (function) : a function to execute
+       Returns the render target's texture
          returns :
-       @this: our Curtains element to handle chaining
+       @texture (Texture class object): our RenderTarget's texture
        ***/
 
     }, {
-      key: "onAfterResize",
-      value: function onAfterResize(callback) {
-        if (callback) {
-          this._onAfterResizeCallback = callback;
-        }
-
-        return this;
-      }
-      /***
-       This is called when an error has been detected
-         params:
-       @callback (function): a function to execute
-         returns:
-       @this: our Curtains element to handle chaining
-       ***/
-
-    }, {
-      key: "onError",
-      value: function onError(callback) {
-        if (callback) {
-          this._onErrorCallback = callback;
-        }
-
-        return this;
-      }
-      /***
-       This triggers the onError callback and is called by the renderer when an error has been detected
-       ***/
-
-    }, {
-      key: "_onRendererError",
-      value: function _onRendererError() {
-        var _this30 = this;
-
-        // be sure that the callback has been registered and only call the global error callback once
-        setTimeout(function () {
-          if (_this30._onErrorCallback && !_this30.errors) {
-            _this30._onErrorCallback();
-          }
-
-          _this30.errors = true;
-        }, 0);
-      }
-      /***
-       This is called once our context has been lost
-         params:
-       @callback (function): a function to execute
-         returns:
-       @this: our Curtains element to handle chaining
-       ***/
-
-    }, {
-      key: "onContextLost",
-      value: function onContextLost(callback) {
-        if (callback) {
-          this._onContextLostCallback = callback;
-        }
-
-        return this;
-      }
-      /***
-       This triggers the onContextLost callback and is called by the renderer when the context has been lost
-       ***/
-
-    }, {
-      key: "_onRendererContextLost",
-      value: function _onRendererContextLost() {
-        this._onContextLostCallback && this._onContextLostCallback();
-      }
-      /***
-       This is called once our context has been restored
-         params:
-       @callback (function): a function to execute
-         returns:
-       @this: our Curtains element to handle chaining
-       ***/
-
-    }, {
-      key: "onContextRestored",
-      value: function onContextRestored(callback) {
-        if (callback) {
-          this._onContextRestoredCallback = callback;
-        }
-
-        return this;
-      }
-      /***
-       This triggers the onContextRestored callback and is called by the renderer when the context has been restored
-       ***/
-
-    }, {
-      key: "_onRendererContextRestored",
-      value: function _onRendererContextRestored() {
-        this._onContextRestoredCallback && this._onContextRestoredCallback();
-      }
-      /***
-       This is called once at each request animation frame call
-         params:
-       @callback (function): a function to execute
-         returns:
-       @this: our Curtains element to handle chaining
-       ***/
-
-    }, {
-      key: "onRender",
-      value: function onRender(callback) {
-        if (callback) {
-          this._onRenderCallback = callback;
-        }
-
-        return this;
-      }
-      /***
-       This is called each time window is scrolled and if our scrollManager is active
-         params :
-       @callback (function) : a function to execute
-         returns :
-       @this: our Curtains element to handle chaining
-       ***/
-
-    }, {
-      key: "onScroll",
-      value: function onScroll(callback) {
-        if (callback) {
-          this._onScrollCallback = callback;
-        }
-
-        return this;
+      key: "getTexture",
+      value: function getTexture() {
+        return this.textures[0];
       }
       /*** DESTROYING ***/
 
       /***
-       Dispose everything
+       Remove an element by calling the appropriate renderer method
        ***/
 
     }, {
-      key: "dispose",
-      value: function dispose() {
-        this.renderer.dispose();
+      key: "remove",
+      value: function remove() {
+        // check if it is attached to a shader pass
+        if (this._shaderPass) {
+          if (!this.renderer.production) {
+            throwWarning(this.type + ": You're trying to remove a RenderTarget attached to a ShaderPass. You should remove that ShaderPass instead:", this._shaderPass);
+          }
+
+          return;
+        }
+
+        this._dispose();
+
+        this.renderer.removeRenderTarget(this);
       }
       /***
-       This is called when the renderer has finished disposing all the WebGL stuff
+       Delete a RenderTarget buffers and its associated texture
        ***/
 
     }, {
-      key: "_onRendererDisposed",
-      value: function _onRendererDisposed() {
-        // cancel animation frame
-        this._animationFrameID && window.cancelAnimationFrame(this._animationFrameID); // remove event listeners
+      key: "_dispose",
+      value: function _dispose() {
+        if (this._frameBuffer) {
+          this.gl.deleteFramebuffer(this._frameBuffer);
+          this._frameBuffer = null;
+        }
 
-        this._resizeHandler && window.removeEventListener("resize", this._resizeHandler, false);
-        this._scrollManager && this._scrollManager.dispose();
+        if (this._depthBuffer) {
+          this.gl.deleteRenderbuffer(this._depthBuffer);
+          this._depthBuffer = null;
+        }
+
+        this.textures[0]._dispose();
+
+        this.textures = [];
       }
     }]);
 
-    return Curtains;
+    return RenderTarget;
   }();
+  /*** SHADERPASS CLASS ***/
+
+  /***
+   Here we create our ShaderPass object
+   We will extend our DOMMesh class that handles all the WebGL part and basic HTML sizings
+   ShaderPass class will add the frame buffer by creating a new RenderTarget class object
+     params :
+   @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
+     @Meshparams (object): see Mesh class object
+     @depth (boolean, optionnal): whether the shader pass render target should use a depth buffer (see RenderTarget class object). Default to false.
+   @clear (boolean, optional): whether the shader pass render target content should be cleared before being drawn (see RenderTarget class object). Default to true.
+   @renderTarget (RenderTarget class object, optional): an already existing render target to use. Default to null.
+     returns :
+   @this: our ShaderPass element
+   ***/
+
+
+  var ShaderPass = /*#__PURE__*/function (_DOMMesh2) {
+    _inherits(ShaderPass, _DOMMesh2);
+
+    var _super4 = _createSuper(ShaderPass);
+
+    function ShaderPass(renderer, _ref13) {
+      var _this30;
+
+      var shareProgram = _ref13.shareProgram,
+          widthSegments = _ref13.widthSegments,
+          heightSegments = _ref13.heightSegments,
+          depthTest = _ref13.depthTest,
+          cullFace = _ref13.cullFace,
+          uniforms = _ref13.uniforms,
+          vertexShaderID = _ref13.vertexShaderID,
+          fragmentShaderID = _ref13.fragmentShaderID,
+          vertexShader = _ref13.vertexShader,
+          fragmentShader = _ref13.fragmentShader,
+          texturesOptions = _ref13.texturesOptions,
+          crossOrigin = _ref13.crossOrigin,
+          _ref13$depth = _ref13.depth,
+          depth = _ref13$depth === void 0 ? false : _ref13$depth,
+          _ref13$clear = _ref13.clear,
+          clear = _ref13$clear === void 0 ? true : _ref13$clear,
+          renderTarget = _ref13.renderTarget;
+
+      _classCallCheck(this, ShaderPass);
+
+      // force plane defintion to 1x1
+      widthSegments = 1;
+      heightSegments = 1; // always cull back face
+
+      cullFace = "back"; // never share a program between shader passes
+
+      shareProgram = false; // use the renderer container as our HTML element to create a DOMMesh object
+
+      _this30 = _super4.call(this, renderer, renderer.container, "ShaderPass", {
+        shareProgram: shareProgram,
+        widthSegments: widthSegments,
+        heightSegments: heightSegments,
+        depthTest: depthTest,
+        cullFace: cullFace,
+        uniforms: uniforms,
+        vertexShaderID: vertexShaderID,
+        fragmentShaderID: fragmentShaderID,
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader,
+        texturesOptions: texturesOptions,
+        crossOrigin: crossOrigin
+      }); // default to scene pass
+
+      _this30._isScenePass = true;
+      _this30.index = _this30.renderer.shaderPasses.length;
+      _this30._depth = depth;
+      _this30._shouldClear = clear;
+      _this30.target = renderTarget;
+
+      if (_this30.target) {
+        // if there's a target defined it's not a scene pass
+        _this30._isScenePass = false; // inherit clear param
+
+        _this30._shouldClear = _this30.target._shouldClear;
+      } // if the program is valid, go on
+
+
+      if (_this30._program.compiled) {
+        _this30._initShaderPass(); // add shader pass to our renderer shaderPasses array
+
+
+        _this30.renderer.shaderPasses.push(_assertThisInitialized(_this30)); // wait one tick before adding our shader pass to the scene to avoid flickering black screen for one frame
+
+
+        _this30.renderer.nextRender.add(function () {
+          _this30.renderer.scene.addShaderPass(_assertThisInitialized(_this30));
+        });
+      }
+
+      return _this30;
+    }
+    /*** RESTORING CONTEXT ***/
+
+    /***
+     Used internally to handle context restoration after the program has been successfully compiled again
+     ***/
+
+
+    _createClass(ShaderPass, [{
+      key: "_programRestored",
+      value: function _programRestored() {
+        // we just need to re add the shader pass to the scene stack
+        if (this._isScenePass) {
+          this.renderer.scene.stacks.scenePasses.push(this.index);
+        } else {
+          this.renderer.scene.stacks.renderPasses.push(this.index);
+        } // restore the textures
+
+
+        for (var i = 0; i < this.textures.length; i++) {
+          this.textures[i]._parent = this;
+
+          this.textures[i]._restoreContext();
+        }
+
+        this._canDraw = true;
+      }
+      /***
+       Here we init additionnal shader pass planes properties
+       This mainly consists in creating our render texture and add a frame buffer object
+       ***/
+
+    }, {
+      key: "_initShaderPass",
+      value: function _initShaderPass() {
+        // create our frame buffer
+        if (!this.target) {
+          this._createFrameBuffer();
+        } else {
+          // set the render target
+          this.setRenderTarget(this.target);
+          this.target._shaderPass = this;
+        } // create a texture from the render target texture
+
+
+        var texture = new Texture(this.renderer, {
+          sampler: "uRenderTexture",
+          isFBOTexture: true,
+          fromTexture: this.target.getTexture()
+        });
+        texture.addParent(this); // onReady callback
+
+        this.loader._setLoaderSize(0);
+
+        this._canDraw = true; // be sure we'll update the scene even if drawing is disabled
+
+        this.renderer.needRender();
+      }
+      /***
+       Here we create our frame buffer object
+       We're also adding a render buffer object to handle depth inside our shader pass
+       ***/
+
+    }, {
+      key: "_createFrameBuffer",
+      value: function _createFrameBuffer() {
+        var target = new RenderTarget(this.renderer, {
+          shaderPass: this,
+          clear: this._shouldClear,
+          depth: this._depth,
+          texturesOptions: this._texturesOptions
+        });
+        this.setRenderTarget(target);
+      }
+      /*** DRAWING ***/
+
+      /***
+       Specific instructions for the Shader pass class to execute before drawing it
+       ***/
+
+    }, {
+      key: "_startDrawing",
+      value: function _startDrawing() {
+        // check if our plane is ready to draw
+        if (this._canDraw) {
+          // even if our plane should not be drawn we still execute its onRender callback and update its uniforms
+          if (this._onRenderCallback) {
+            this._onRenderCallback();
+          } // to improve webgl pipeline performance, we might want to update each texture that needs an update here
+          // see https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#texImagetexSubImage_uploads_particularly_with_videos_can_cause_pipeline_flushes
+
+
+          if (this._isScenePass) {
+            // if this is a scene pass, check if theres one more coming next and eventually bind it
+            if (this.renderer.state.scenePassIndex + 1 < this.renderer.scene.stacks.scenePasses.length) {
+              this.renderer.bindFrameBuffer(this.renderer.shaderPasses[this.renderer.scene.stacks.scenePasses[this.renderer.state.scenePassIndex + 1]].target);
+              this.renderer.state.scenePassIndex++;
+            } else {
+              this.renderer.bindFrameBuffer(null);
+            }
+          } else if (this.renderer.state.scenePassIndex === null) {
+            // we are rendering a bunch of planes inside a render target, unbind it
+            this.renderer.bindFrameBuffer(null);
+          } // now check if we really need to draw it and its textures
+
+
+          this._draw();
+        }
+      }
+    }]);
+
+    return ShaderPass;
+  }(DOMMesh);
   /*** FBO PING PONG PLANE CLASS ***/
 
   /***
