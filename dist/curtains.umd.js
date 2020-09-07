@@ -643,7 +643,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      returns :
    @this: our Renderer
   ***/
-  // TODO deprecate all add* objects method and get rid of imports. BIG breaking change!
 
 
   var Renderer = /*#__PURE__*/function () {
