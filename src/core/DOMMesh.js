@@ -5,11 +5,13 @@ import {throwWarning} from '../utils/utils.js';
 /***
  Here we create our DOMGLObject object
  We will extend our Mesh class object by adding HTML sizes helpers (bounding boxes getter/setter and mouse to mesh positioning)
+
  params:
  @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
  @plane (html element): the html element that we will use for our DOMMesh object
  @type (string): Object type (should be either "Plane" or "ShaderPass")
  @Meshparams (object): see Mesh class object
+ 
  returns:
  @this: our BasePlane element
  ***/
@@ -89,6 +91,7 @@ export class DOMMesh extends Mesh {
 
     /***
      Useful to get our plane HTML element bounding rectangle without triggering a reflow/layout
+
      returns :
      @boundingRectangle (obj): an object containing our plane HTML element bounding rectangle (width, height, top, bottom, right and left properties)
      ***/
@@ -152,8 +155,10 @@ export class DOMMesh extends Mesh {
     /***
      This function takes the mouse position relative to the document and returns it relative to our plane
      It ranges from -1 to 1 on both axis
+
      params :
      @mouseCoordinates (Vec2 object): coordinates of the mouse
+
      returns :
      @mousePosition (Vec2 object): the mouse position relative to our plane in WebGL space coordinates
      ***/
@@ -188,8 +193,10 @@ export class DOMMesh extends Mesh {
 
     /***
      This is called each time a plane has been resized
+
      params :
      @callback (function) : a function to execute
+
      returns :
      @this: our plane to handle chaining
      ***/
