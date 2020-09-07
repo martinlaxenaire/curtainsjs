@@ -24,8 +24,6 @@ import {throwWarning} from '../utils/utils.js';
  @this: our Renderer
 ***/
 
-// TODO deprecate all add* objects method and get rid of imports. BIG breaking change!
-
 export class Renderer {
     constructor({
         // inherited from Curtains class object
