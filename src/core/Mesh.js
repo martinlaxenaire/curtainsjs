@@ -4,12 +4,6 @@ import {Texture} from './Texture.js';
 import {PlaneTextureLoader} from '../loaders/PlaneTextureLoader.js';
 import {generateUUID, throwError, throwWarning} from '../utils/utils.js';
 
-// shaders
-import planeVS from '../shaders/plane.vertex.glsl.js';
-import planeFS from '../shaders/plane.fragment.glsl.js';
-import shaderPassVS from '../shaders/shaderpass.vertex.glsl.js';
-import shaderPassFS from '../shaders/shaderpass.fragment.glsl.js';
-
 /***
  Here we create our Mesh object
  We will create an object containing the program that handles shaders and uniforms, a geometry that handles attributes
@@ -122,27 +116,12 @@ export class Mesh {
         this.crossOrigin = crossOrigin;
 
         // handling shaders
-        if(!vertexShader) {
-            if(!vertexShaderID || !document.getElementById(vertexShaderID)) {
-                if(!this.renderer.production && this.type === "Plane") {
-                    throwWarning("Plane: No vertex shader provided, will use a default one");
-                }
-                vertexShader = this.type === "Plane" ? planeVS : shaderPassVS;
-            }
-            else {
-                vertexShader = document.getElementById(vertexShaderID).innerHTML;
-            }
+        if(!vertexShader && vertexShaderID && document.getElementById(vertexShaderID)) {
+            vertexShader = document.getElementById(vertexShaderID).innerHTML;
         }
 
-        if(!fragmentShader) {
-            if(!fragmentShaderID || !document.getElementById(fragmentShaderID)) {
-                if(!this.renderer.production) throwWarning(this.type + ": No fragment shader provided, will use a default one");
-
-                fragmentShader = this.type === "Plane" ? planeFS : shaderPassFS;
-            }
-            else {
-                fragmentShader = document.getElementById(fragmentShaderID).innerHTML;
-            }
+        if(!fragmentShader && fragmentShaderID && document.getElementById(fragmentShaderID)) {
+            fragmentShader = document.getElementById(fragmentShaderID).innerHTML;
         }
 
         // init sizes and loader

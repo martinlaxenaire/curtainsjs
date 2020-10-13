@@ -2500,6 +2500,21 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     return Uniforms;
   }();
+
+  var precisionMedium = "\nprecision mediump float;\n";
+  var precisionMedium$1 = precisionMedium.replace(/\n/g, '');
+  var defaultAttributes = "\nattribute vec3 aVertexPosition;\nattribute vec2 aTextureCoord;\n";
+  var defaultAttributes$1 = defaultAttributes.replace(/\n/g, '');
+  var defaultVaryings = "\nvarying vec3 vVertexPosition;\nvarying vec2 vTextureCoord;\n";
+  var defaultVaryings$1 = defaultVaryings.replace(/\n/g, '');
+  var planeVS = precisionMedium$1 + defaultAttributes$1 + defaultVaryings$1 + "\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\n\nvoid main() {\n    vTextureCoord = aTextureCoord;\n    vVertexPosition = aVertexPosition;\n    \n    gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);\n}\n";
+  var planeVS$1 = planeVS.replace(/\n/g, '');
+  var planeFS = precisionMedium$1 + defaultVaryings$1 + "\nvoid main() {\n    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n}\n";
+  var planeFS$1 = planeFS.replace(/\n/g, '');
+  var shaderPassVS = precisionMedium$1 + defaultAttributes$1 + defaultVaryings$1 + "\nvoid main() {\n    vTextureCoord = aTextureCoord;\n    vVertexPosition = aVertexPosition;\n    \n    gl_Position = vec4(aVertexPosition, 1.0);\n}\n";
+  var shaderPassVS$1 = shaderPassVS.replace(/\n/g, '');
+  var shaderPassFS = precisionMedium$1 + defaultVaryings$1 + "\nuniform sampler2D uRenderTexture;\n\nvoid main() {\n    gl_FragColor = texture2D(uRenderTexture, vTextureCoord);\n}\n";
+  var shaderPassFS$1 = shaderPassFS.replace(/\n/g, '');
   /***
    Program class that creates, compiles and links the shaders
    Use a cache system to get already compiled shaders and save some CPU
@@ -2512,7 +2527,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      returns:
    @this: our newly created Program
    ***/
-
 
   var Program = /*#__PURE__*/function () {
     function Program(renderer) {
@@ -2534,8 +2548,30 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       this.renderer = renderer;
       this.gl = this.renderer.gl;
       this.parent = parent;
-      this.vsCode = vertexShader;
-      this.fsCode = fragmentShader;
+      this.defaultVsCode = this.parent.type === "Plane" ? planeVS$1 : shaderPassVS$1;
+      this.defaultFsCode = this.parent.type === "Plane" ? planeFS$1 : shaderPassFS$1; // use the vertex shader specified or fallback to a default one
+
+      if (!vertexShader) {
+        if (!this.renderer.production && this.parent.type === "Plane") {
+          throwWarning(this.parent.type + ": No vertex shader provided, will use a default one");
+        }
+
+        this.vsCode = this.defaultVsCode;
+      } else {
+        this.vsCode = vertexShader;
+      } // use the fragment shader specified or fallback to a default one
+
+
+      if (!fragmentShader) {
+        if (!this.renderer.production) {
+          throwWarning(this.parent.type + ": No fragment shader provided, will use a default one");
+        }
+
+        this.fsCode = this.defaultFsCode;
+      } else {
+        this.fsCode = fragmentShader;
+      }
+
       this.compiled = true;
       this.setupProgram();
     }
@@ -2570,8 +2606,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             shaderLines = shaderLines.join("\n");
             throwWarning(this.type + ": Errors occurred while compiling the", shaderTypeString, ":\n", this.gl.getShaderInfoLog(shader));
             throwError(shaderLines);
-            this.compiled = false;
-            return null;
+            throwWarning(this.type + ": Will use a default", shaderTypeString); // use the library default shaders instead
+
+            return this.createShader(shaderType === this.gl.VERTEX_SHADER ? this.defaultVsCode : this.defaultFsCode, shaderType);
           }
         }
 
@@ -2646,20 +2683,24 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.gl.attachShader(this.program, this.vertexShader);
         this.gl.attachShader(this.program, this.fragmentShader);
-        this.gl.linkProgram(this.program); // free the shaders handles
-
-        this.gl.deleteShader(this.vertexShader);
-        this.gl.deleteShader(this.fragmentShader); // TODO getProgramParameter even in production to avoid errors?
+        this.gl.linkProgram(this.program); // TODO getProgramParameter even in production to avoid errors?
         // check the shader program creation status only when not in production mode
 
         if (!this.renderer.production) {
           if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) {
-            throwWarning(this.type + ": Unable to initialize the shader program.");
-            this.compiled = false;
+            throwWarning(this.type + ": Unable to initialize the shader program: " + this.gl.getProgramInfoLog(this.program)); // use default shaders, recompile and recreate program
+
+            throwWarning(this.type + ": Will use default vertex and fragment shaders");
+            this.vertexShader = this.createShader(this.defaultVsCode, this.gl.VERTEX_SHADER);
+            this.fragmentShader = this.createShader(this.defaultFsCode, this.gl.FRAGMENT_SHADER);
+            this.createProgram();
             return;
           }
-        } // store active textures (those that are used in the shaders) to avoid binding unused textures
+        } // free the shaders handles
 
+
+        this.gl.deleteShader(this.vertexShader);
+        this.gl.deleteShader(this.fragmentShader); // store active textures (those that are used in the shaders) to avoid binding unused textures
 
         if (!this.activeTextures) {
           this.activeTextures = []; // check for program active textures
@@ -5292,21 +5333,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     return PlaneTextureLoader;
   }(TextureLoader);
-
-  var precisionMedium = "\nprecision mediump float;\n";
-  var precisionMedium$1 = precisionMedium.replace(/\n/g, '');
-  var defaultAttributes = "\nattribute vec3 aVertexPosition;\nattribute vec2 aTextureCoord;\n";
-  var defaultAttributes$1 = defaultAttributes.replace(/\n/g, '');
-  var defaultVaryings = "\nvarying vec3 vVertexPosition;\nvarying vec2 vTextureCoord;\n";
-  var defaultVaryings$1 = defaultVaryings.replace(/\n/g, '');
-  var planeVS = precisionMedium$1 + defaultAttributes$1 + defaultVaryings$1 + "\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\n\nvoid main() {\n    vTextureCoord = aTextureCoord;\n    vVertexPosition = aVertexPosition;\n    \n    gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);\n}\n";
-  var planeVS$1 = planeVS.replace(/\n/g, '');
-  var planeFS = precisionMedium$1 + defaultVaryings$1 + "\nvoid main() {\n    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n}\n";
-  var planeFS$1 = planeFS.replace(/\n/g, '');
-  var shaderPassVS = precisionMedium$1 + defaultAttributes$1 + defaultVaryings$1 + "\nvoid main() {\n    vTextureCoord = aTextureCoord;\n    vVertexPosition = aVertexPosition;\n    \n    gl_Position = vec4(aVertexPosition, 1.0);\n}\n";
-  var shaderPassVS$1 = shaderPassVS.replace(/\n/g, '');
-  var shaderPassFS = precisionMedium$1 + defaultVaryings$1 + "\nuniform sampler2D uRenderTexture;\n\nvoid main() {\n    gl_FragColor = texture2D(uRenderTexture, vTextureCoord);\n}\n";
-  var shaderPassFS$1 = shaderPassFS.replace(/\n/g, '');
   /***
    Here we create our Mesh object
    We will create an object containing the program that handles shaders and uniforms, a geometry that handles attributes
@@ -5329,6 +5355,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      returns:
    @this: our Mesh element
    ***/
+
 
   var Mesh = /*#__PURE__*/function () {
     function Mesh(renderer) {
@@ -5415,25 +5442,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       this._texturesOptions = texturesOptions;
       this.crossOrigin = crossOrigin; // handling shaders
 
-      if (!vertexShader) {
-        if (!vertexShaderID || !document.getElementById(vertexShaderID)) {
-          if (!this.renderer.production && this.type === "Plane") {
-            throwWarning("Plane: No vertex shader provided, will use a default one");
-          }
-
-          vertexShader = this.type === "Plane" ? planeVS$1 : shaderPassVS$1;
-        } else {
-          vertexShader = document.getElementById(vertexShaderID).innerHTML;
-        }
+      if (!vertexShader && vertexShaderID && document.getElementById(vertexShaderID)) {
+        vertexShader = document.getElementById(vertexShaderID).innerHTML;
       }
 
-      if (!fragmentShader) {
-        if (!fragmentShaderID || !document.getElementById(fragmentShaderID)) {
-          if (!this.renderer.production) throwWarning(this.type + ": No fragment shader provided, will use a default one");
-          fragmentShader = this.type === "Plane" ? planeFS$1 : shaderPassFS$1;
-        } else {
-          fragmentShader = document.getElementById(fragmentShaderID).innerHTML;
-        }
+      if (!fragmentShader && fragmentShaderID && document.getElementById(fragmentShaderID)) {
+        fragmentShader = document.getElementById(fragmentShaderID).innerHTML;
       } // init sizes and loader
 
 
@@ -5979,11 +5993,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   /***
    Here we create our DOMGLObject object
    We will extend our Mesh class object by adding HTML sizes helpers (bounding boxes getter/setter and mouse to mesh positioning)
-   params:
+     params:
    @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
    @plane (html element): the html element that we will use for our DOMMesh object
    @type (string): Object type (should be either "Plane" or "ShaderPass")
    @Meshparams (object): see Mesh class object
+   
    returns:
    @this: our BasePlane element
    ***/
@@ -6074,7 +6089,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Useful to get our plane HTML element bounding rectangle without triggering a reflow/layout
-       returns :
+         returns :
        @boundingRectangle (obj): an object containing our plane HTML element bounding rectangle (width, height, top, bottom, right and left properties)
        ***/
       value: function getBoundingRect() {
@@ -6139,9 +6154,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This function takes the mouse position relative to the document and returns it relative to our plane
        It ranges from -1 to 1 on both axis
-       params :
+         params :
        @mouseCoordinates (Vec2 object): coordinates of the mouse
-       returns :
+         returns :
        @mousePosition (Vec2 object): the mouse position relative to our plane in WebGL space coordinates
        ***/
 
@@ -6166,9 +6181,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        This is called each time a plane has been resized
-       params :
+         params :
        @callback (function) : a function to execute
-       returns :
+         returns :
        @this: our plane to handle chaining
        ***/
 

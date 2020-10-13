@@ -1,6 +1,12 @@
 import {Uniforms} from './Uniforms.js';
 import {throwError, throwWarning} from '../utils/utils.js';
 
+// default shaders
+import planeVS from '../shaders/plane.vertex.glsl.js';
+import planeFS from '../shaders/plane.fragment.glsl.js';
+import shaderPassVS from '../shaders/shaderpass.vertex.glsl.js';
+import shaderPassFS from '../shaders/shaderpass.fragment.glsl.js';
+
 
 /***
  Program class that creates, compiles and links the shaders
@@ -34,8 +40,33 @@ export class Program {
         this.gl = this.renderer.gl;
 
         this.parent = parent;
-        this.vsCode = vertexShader;
-        this.fsCode = fragmentShader;
+
+        this.defaultVsCode = this.parent.type === "Plane" ? planeVS : shaderPassVS;
+        this.defaultFsCode = this.parent.type === "Plane" ? planeFS : shaderPassFS;
+
+        // use the vertex shader specified or fallback to a default one
+        if(!vertexShader) {
+            if(!this.renderer.production && this.parent.type === "Plane") {
+                throwWarning(this.parent.type + ": No vertex shader provided, will use a default one");
+            }
+
+            this.vsCode = this.defaultVsCode;
+        }
+        else {
+            this.vsCode = vertexShader;
+        }
+
+        // use the fragment shader specified or fallback to a default one
+        if(!fragmentShader) {
+            if(!this.renderer.production) {
+                throwWarning(this.parent.type + ": No fragment shader provided, will use a default one");
+            }
+
+            this.fsCode = this.defaultFsCode;
+        }
+        else {
+            this.fsCode = fragmentShader;
+        }
 
         this.compiled = true;
 
@@ -66,7 +97,7 @@ export class Program {
                 const shaderSource = this.gl.getShaderSource(shader);
                 let shaderLines = shaderSource.split('\n');
 
-                for(let i = 0; i < shaderLines.length; i ++) {
+                for(let i = 0; i < shaderLines.length; i++) {
                     shaderLines[i] = (i + 1) + ': ' + shaderLines[i];
                 }
                 shaderLines = shaderLines.join("\n");
@@ -74,9 +105,10 @@ export class Program {
                 throwWarning(this.type + ": Errors occurred while compiling the", shaderTypeString, ":\n", this.gl.getShaderInfoLog(shader));
                 throwError(shaderLines);
 
-                this.compiled = false;
+                throwWarning(this.type + ": Will use a default", shaderTypeString);
 
-                return null;
+                // use the library default shaders instead
+                return this.createShader(shaderType === this.gl.VERTEX_SHADER ? this.defaultVsCode : this.defaultFsCode, shaderType);
             }
         }
 
@@ -154,21 +186,25 @@ export class Program {
         this.gl.attachShader(this.program, this.fragmentShader);
         this.gl.linkProgram(this.program);
 
-        // free the shaders handles
-        this.gl.deleteShader(this.vertexShader);
-        this.gl.deleteShader(this.fragmentShader);
-
         // TODO getProgramParameter even in production to avoid errors?
         // check the shader program creation status only when not in production mode
         if(!this.renderer.production) {
             if(!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) {
-                throwWarning(this.type + ": Unable to initialize the shader program.");
+                throwWarning(this.type + ": Unable to initialize the shader program: " + this.gl.getProgramInfoLog(this.program));
 
-                this.compiled = false;
+                // use default shaders, recompile and recreate program
+                throwWarning(this.type + ": Will use default vertex and fragment shaders");
+                this.vertexShader = this.createShader(this.defaultVsCode, this.gl.VERTEX_SHADER);
+                this.fragmentShader = this.createShader(this.defaultFsCode, this.gl.FRAGMENT_SHADER);
+                this.createProgram();
 
                 return;
             }
         }
+
+        // free the shaders handles
+        this.gl.deleteShader(this.vertexShader);
+        this.gl.deleteShader(this.fragmentShader);
 
         // store active textures (those that are used in the shaders) to avoid binding unused textures
         if(!this.activeTextures) {
