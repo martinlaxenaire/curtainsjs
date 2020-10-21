@@ -1,5 +1,6 @@
 import {Mat4} from '../math/Mat4.js';
 import {Vec2} from '../math/Vec2.js';
+import {Vec3} from '../math/Vec3.js';
 import {generateUUID, throwError, throwWarning, isPowerOf2} from '../utils/utils.js';
 
 /***
@@ -981,9 +982,10 @@ export class Texture {
      ***/
     _updateTextureMatrix(sizes) {
         // calculate scale to apply to the matrix
-        let textureScale = new Vec2(
+        let textureScale = new Vec3(
             sizes.parentWidth / (sizes.parentWidth - sizes.xOffset),
             sizes.parentHeight / (sizes.parentHeight - sizes.yOffset),
+            1
         );
 
         // apply texture scale

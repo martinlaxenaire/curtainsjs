@@ -41,7 +41,7 @@ export class ShaderPass extends DOMMesh {
         depth = false,
         clear = true,
         renderTarget,
-    }) {
+    } = {}) {
         // force plane defintion to 1x1
         widthSegments = 1;
         heightSegments = 1;
