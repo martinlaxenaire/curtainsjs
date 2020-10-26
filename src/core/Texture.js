@@ -114,6 +114,12 @@ export class Texture {
             matrix: new Mat4()
         };
 
+        // actual size will be set later on
+        this._size = {
+            width: 0,
+            height: 0,
+        };
+
         this.scale = new Vec2(1, 1);
 
         // source loading and GPU uploading flags
@@ -994,10 +1000,10 @@ export class Texture {
 
         // translate texture to center it
         const textureTranslation = new Mat4([
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            (1 - textureScale.x) / 2, (1 - textureScale.y) / 2, 0.0, 1.0
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            (1 - textureScale.x) / 2, (1 - textureScale.y) / 2, 0, 1
         ]);
 
         // scale texture

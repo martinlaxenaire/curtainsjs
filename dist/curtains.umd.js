@@ -3999,6 +3999,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       this._textureMatrix = {
         matrix: new Mat4()
+      }; // actual size will be set later on
+
+      this._size = {
+        width: 0,
+        height: 0
       };
       this.scale = new Vec2(1, 1); // source loading and GPU uploading flags
 
@@ -4849,7 +4854,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         textureScale.x /= this.scale.x;
         textureScale.y /= this.scale.y; // translate texture to center it
 
-        var textureTranslation = new Mat4([1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, (1 - textureScale.x) / 2, (1 - textureScale.y) / 2, 0.0, 1.0]); // scale texture
+        var textureTranslation = new Mat4([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (1 - textureScale.x) / 2, (1 - textureScale.y) / 2, 0, 1]); // scale texture
 
         this._textureMatrix.matrix = textureTranslation.scale(textureScale); // update the texture matrix uniform
 
@@ -7819,8 +7824,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "moveToFront",
       value: function moveToFront() {
-        // disable the depth test
-        this.enableDepthTest(false);
         this.renderer.scene.movePlaneToFront(this);
       }
       /*** SOURCES ***/
@@ -8509,9 +8512,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         texturesOptions: texturesOptions
       }); // create a texture where we'll draw
 
-      _this31.createTexture({
-        sampler: sampler,
-        fromTexture: _this31.readPass.getTexture()
+      var texture = _this31.createTexture({
+        sampler: sampler
+      }); // copy readPass texture on next render (this will prevent framebuffer feedback loop)
+
+
+      _this31.renderer.nextRender.add(function () {
+        texture.copy(_this31.readPass.getTexture());
       }); // override onRender and onAfterRender callbacks
 
 
