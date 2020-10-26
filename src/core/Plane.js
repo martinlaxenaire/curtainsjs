@@ -954,9 +954,6 @@ export class Plane extends DOMMesh {
      This function puts the plane at the end of the draw stack, allowing it to overlap any other plane
      ***/
     moveToFront() {
-        // disable the depth test
-        this.enableDepthTest(false);
-
         this.renderer.scene.movePlaneToFront(this);
     }
 
