@@ -84,9 +84,13 @@ export class PingPongPlane extends Plane {
         });
 
         // create a texture where we'll draw
-        this.createTexture({
+        const texture = this.createTexture({
             sampler: sampler,
-            fromTexture: this.readPass.getTexture()
+        });
+
+        // copy readPass texture on next render (this will prevent framebuffer feedback loop)
+        this.renderer.nextRender.add(() => {
+            texture.copy(this.readPass.getTexture());
         });
 
         // override onRender and onAfterRender callbacks

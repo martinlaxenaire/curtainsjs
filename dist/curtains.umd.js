@@ -7824,8 +7824,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "moveToFront",
       value: function moveToFront() {
-        // disable the depth test
-        this.enableDepthTest(false);
         this.renderer.scene.movePlaneToFront(this);
       }
       /*** SOURCES ***/
@@ -8514,9 +8512,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         texturesOptions: texturesOptions
       }); // create a texture where we'll draw
 
-      _this31.createTexture({
-        sampler: sampler,
-        fromTexture: _this31.readPass.getTexture()
+      var texture = _this31.createTexture({
+        sampler: sampler
+      }); // copy readPass texture on next render (this will prevent framebuffer feedback loop)
+
+
+      _this31.renderer.nextRender.add(function () {
+        texture.copy(_this31.readPass.getTexture());
       }); // override onRender and onAfterRender callbacks
 
 
