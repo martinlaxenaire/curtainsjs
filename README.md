@@ -65,6 +65,10 @@ const plane = new Curtains.Plane(curtains, document.querySelector("#plane"));
 
 </div>
 
+<h3>Usage with React</h3>
+
+Note that if you are using React, you might want to try <a href="https://github.com/martinlaxenaire/react-curtains">react-curtains</a>, curtains.js official React package.
+
 <h2>Documentation</h2>
 
 The library is split into classes modules. Most of them are used internally by the library but there are however a few classes meant to be used directly, exported in the [src/index.mjs](src/index.mjs) file.
