@@ -33,6 +33,6 @@
   },
   "scripts": {
     "build": "rollup -c",
-    "prepublish": "npm run build"
+    "prepare": "npm run build"
   }
 }
