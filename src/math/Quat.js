@@ -90,6 +90,17 @@ export class Quat {
 
 
     /***
+     Clone a quaternion
+
+     returns:
+     @clonedQuaternion (Quat): cloned quaternion
+     ***/
+    clone() {
+        return new Quat().copy(this);
+    }
+
+
+    /***
      Checks if 2 quaternions are equal
 
      returns:
