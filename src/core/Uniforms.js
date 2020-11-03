@@ -15,7 +15,7 @@ import {throwError, throwWarning} from '../utils/utils.js';
 
  returns:
  @this: our Uniforms manager
-***/
+ ***/
 
 export class Uniforms {
     constructor(renderer, program, shared, uniforms) {
@@ -41,8 +41,8 @@ export class Uniforms {
                 this.uniforms[key] = {
                     name: uniform.name,
                     type: uniform.type,
-                    value: uniform.value,
-                    lastValue: uniform.value,
+                    // clone value if possible, use original value else
+                    value: uniform.value.clone && typeof uniform.value.clone === "function" ? uniform.value.clone() : uniform.value,
                     update: null,
                 };
             }
@@ -127,6 +127,7 @@ export class Uniforms {
 
     /***
      Auto detect the format of the uniform (check if its a float, an integer, a Vector, a Matrix, an array...)
+     Also set a lastValue property that we'll use to compare to our value property and update the uniform if it changed
 
      params :
      @uniform (object): the uniform
@@ -134,24 +135,31 @@ export class Uniforms {
     setInternalFormat(uniform) {
         if(uniform.value.type === "Vec2") {
             uniform._internalFormat = "Vec2";
+            uniform.lastValue = uniform.value.clone();
         }
         else if(uniform.value.type === "Vec3") {
             uniform._internalFormat = "Vec3";
+            uniform.lastValue = uniform.value.clone();
         }
         else if(uniform.value.type === "Mat4") {
             uniform._internalFormat = "Mat4";
+            uniform.lastValue = uniform.value.clone();
         }
         else if(uniform.value.type === "Quat") {
             uniform._internalFormat = "Quat";
+            uniform.lastValue = uniform.value.clone();
         }
         else if(Array.isArray(uniform.value)) {
             uniform._internalFormat = "array";
+            uniform.lastValue = Array.from(uniform.value);
         }
         else if(uniform.value.constructor === Float32Array) {
             uniform._internalFormat = "mat";
+            uniform.lastValue = uniform.value;
         }
         else {
             uniform._internalFormat = "float";
+            uniform.lastValue = uniform.value;
         }
     }
 
@@ -245,21 +253,29 @@ export class Uniforms {
                 let shouldUpdate = false;
 
                 if(!this.shared) {
-                    if(!uniform.value.length && uniform.value !== uniform.lastValue) {
-                        shouldUpdate = true;
-                        uniform.lastValue = uniform.value;
+                    if(uniform._internalFormat === "Vec2") {
+                        if(!uniform.value.equals(uniform.lastValue)) {
+                            shouldUpdate = true;
+                            uniform.lastValue.copy(uniform.value);
+                        }
                     }
-                    else if(uniform._internalFormat === "Vec2" && !uniform.value.equals(uniform.lastValue)) {
-                        shouldUpdate = true;
-                        uniform.lastValue.copy(uniform.value);
+                    else if(uniform._internalFormat === "Vec3") {
+                        if(!uniform.value.equals(uniform.lastValue)) {
+                            shouldUpdate = true;
+                            uniform.lastValue.copy(uniform.value);
+                        }
                     }
-                    else if(uniform._internalFormat === "Vec3" && !uniform.value.equals(uniform.lastValue)) {
-                        shouldUpdate = true;
-                        uniform.lastValue.copy(uniform.value);
+                    else if(uniform._internalFormat === "Quat") {
+                        if(!uniform.value.equals(uniform.lastValue)) {
+                            shouldUpdate = true;
+                            uniform.lastValue.copy(uniform.value);
+                        }
                     }
-                    else if(uniform._internalFormat === "Quat" && !uniform.value.equals(uniform.lastValue)) {
-                        shouldUpdate = true;
-                        uniform.lastValue.copy(uniform.value);
+                    else if(!uniform.value.length) {
+                        if(uniform.value !== uniform.lastValue) {
+                            shouldUpdate = true;
+                            uniform.lastValue = uniform.value;
+                        }
                     }
                     else if(JSON.stringify(uniform.value) !== JSON.stringify(uniform.lastValue)) { // compare two arrays
                         shouldUpdate = true;

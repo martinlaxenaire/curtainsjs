@@ -1635,7 +1635,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.container.appendChild(this.canvas); // watermark
 
-        console.log("curtains.js - v7.1"); // start rendering
+        console.log("curtains.js - v7.2"); // start rendering
 
         this._animationFrameID = null;
 
@@ -2140,7 +2140,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    - value (float / int / Vec2 / Vec3 / Mat4 / array): initial value of the uniform
      returns:
    @this: our Uniforms manager
-  ***/
+   ***/
 
 
   var Uniforms = /*#__PURE__*/function () {
@@ -2168,8 +2168,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this.uniforms[key] = {
             name: uniform.name,
             type: uniform.type,
-            value: uniform.value,
-            lastValue: uniform.value,
+            // clone value if possible, use original value else
+            value: uniform.value.clone && typeof uniform.value.clone === "function" ? uniform.value.clone() : uniform.value,
             update: null
           };
         }
@@ -2268,6 +2268,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Auto detect the format of the uniform (check if its a float, an integer, a Vector, a Matrix, an array...)
+       Also set a lastValue property that we'll use to compare to our value property and update the uniform if it changed
          params :
        @uniform (object): the uniform
        ***/
@@ -2277,18 +2278,25 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function setInternalFormat(uniform) {
         if (uniform.value.type === "Vec2") {
           uniform._internalFormat = "Vec2";
+          uniform.lastValue = uniform.value.clone();
         } else if (uniform.value.type === "Vec3") {
           uniform._internalFormat = "Vec3";
+          uniform.lastValue = uniform.value.clone();
         } else if (uniform.value.type === "Mat4") {
           uniform._internalFormat = "Mat4";
+          uniform.lastValue = uniform.value.clone();
         } else if (uniform.value.type === "Quat") {
           uniform._internalFormat = "Quat";
+          uniform.lastValue = uniform.value.clone();
         } else if (Array.isArray(uniform.value)) {
           uniform._internalFormat = "array";
+          uniform.lastValue = Array.from(uniform.value);
         } else if (uniform.value.constructor === Float32Array) {
           uniform._internalFormat = "mat";
+          uniform.lastValue = uniform.value;
         } else {
           uniform._internalFormat = "float";
+          uniform.lastValue = uniform.value;
         }
       }
       /***
@@ -2366,18 +2374,26 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             var shouldUpdate = false;
 
             if (!this.shared) {
-              if (!uniform.value.length && uniform.value !== uniform.lastValue) {
-                shouldUpdate = true;
-                uniform.lastValue = uniform.value;
-              } else if (uniform._internalFormat === "Vec2" && !uniform.value.equals(uniform.lastValue)) {
-                shouldUpdate = true;
-                uniform.lastValue.copy(uniform.value);
-              } else if (uniform._internalFormat === "Vec3" && !uniform.value.equals(uniform.lastValue)) {
-                shouldUpdate = true;
-                uniform.lastValue.copy(uniform.value);
-              } else if (uniform._internalFormat === "Quat" && !uniform.value.equals(uniform.lastValue)) {
-                shouldUpdate = true;
-                uniform.lastValue.copy(uniform.value);
+              if (uniform._internalFormat === "Vec2") {
+                if (!uniform.value.equals(uniform.lastValue)) {
+                  shouldUpdate = true;
+                  uniform.lastValue.copy(uniform.value);
+                }
+              } else if (uniform._internalFormat === "Vec3") {
+                if (!uniform.value.equals(uniform.lastValue)) {
+                  shouldUpdate = true;
+                  uniform.lastValue.copy(uniform.value);
+                }
+              } else if (uniform._internalFormat === "Quat") {
+                if (!uniform.value.equals(uniform.lastValue)) {
+                  shouldUpdate = true;
+                  uniform.lastValue.copy(uniform.value);
+                }
+              } else if (!uniform.value.length) {
+                if (uniform.value !== uniform.lastValue) {
+                  shouldUpdate = true;
+                  uniform.lastValue = uniform.value;
+                }
               } else if (JSON.stringify(uniform.value) !== JSON.stringify(uniform.lastValue)) {
                 // compare two arrays
                 shouldUpdate = true; // copy array
@@ -3108,6 +3124,17 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.elements[14] = array[14];
         this.elements[15] = array[15];
         return this;
+      }
+      /***
+       Clone a matrix
+         returns:
+       @clonedMatrix (Mat4 object): cloned matrix
+       ***/
+
+    }, {
+      key: "clone",
+      value: function clone() {
+        return new Mat4().copy(this);
       }
       /***
        Simple matrix multiplication helper
@@ -4064,7 +4091,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
 
         if (this.sourceType === "empty") {
-          // draw a black plane before the real texture's content has been loaded
+          // avoid flipY on non DOM elements
+          this._globalParameters.flipY = false;
+
+          this._updateGlobalTexParameters(); // draw a black plane before the real texture's content has been loaded
+
+
           this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this._globalParameters.internalFormat, 1, 1, 0, this._globalParameters.format, this._globalParameters.type, new Uint8Array([0, 0, 0, 255]));
           this._canDraw = true;
         }
@@ -4411,7 +4443,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         // binding the texture is enough
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
-        this.resize(); // upload our webgl texture only if it is an image
+        this.resize(); // force flipY now that we have a source
+
+        this._globalParameters.flipY = true; // upload our webgl texture only if it is an image
         // canvas and video textures will be updated anyway in the rendering loop
         // thanks to the shouldUpdate and _willUpdate flags
 
@@ -6855,6 +6889,17 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.elements = quaternion.elements;
         this.axisOrder = quaternion.axisOrder;
         return this;
+      }
+      /***
+       Clone a quaternion
+         returns:
+       @clonedQuaternion (Quat): cloned quaternion
+       ***/
+
+    }, {
+      key: "clone",
+      value: function clone() {
+        return new Quat().copy(this);
       }
       /***
        Checks if 2 quaternions are equal

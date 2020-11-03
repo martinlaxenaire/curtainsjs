@@ -184,6 +184,10 @@ export class Texture {
         this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
 
         if(this.sourceType === "empty") {
+            // avoid flipY on non DOM elements
+            this._globalParameters.flipY = false;
+            this._updateGlobalTexParameters();
+
             // draw a black plane before the real texture's content has been loaded
             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this._globalParameters.internalFormat, 1, 1, 0, this._globalParameters.format, this._globalParameters.type, new Uint8Array([0, 0, 0, 255]));
 
@@ -541,6 +545,9 @@ export class Texture {
         this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
 
         this.resize();
+
+        // force flipY now that we have a source
+        this._globalParameters.flipY = true;
 
         // upload our webgl texture only if it is an image
         // canvas and video textures will be updated anyway in the rendering loop

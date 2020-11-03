@@ -73,6 +73,17 @@ export class Mat4 {
         return this;
     }
 
+
+    /***
+     Clone a matrix
+
+     returns:
+     @clonedMatrix (Mat4 object): cloned matrix
+     ***/
+    clone() {
+        return new Mat4().copy(this);
+    }
+
     /***
      Simple matrix multiplication helper
 
