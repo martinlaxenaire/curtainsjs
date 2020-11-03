@@ -300,3 +300,7 @@ window.addEventListener("load", () => {
     }
 </script> 
 ```
+
+<h2>Changelog</h2>
+
+Complete [changelog](CHANGELOG.md) starting from version 7.1.0
