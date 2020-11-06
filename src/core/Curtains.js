@@ -254,6 +254,17 @@ export class Curtains {
 
 
     /***
+     Check whether the created context is WebGL2
+
+     return:
+     @isWebGL2 (bool): whether the created WebGL context is 2.0 or not
+     ***/
+    isWebGL2() {
+        return this.gl ? this.renderer._isWebGL2 : false;
+    }
+
+
+    /***
      Tells our renderer to render the scene if the drawing is enabled
      ***/
     render() {
