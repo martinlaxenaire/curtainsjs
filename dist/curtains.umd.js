@@ -88,10 +88,18 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   /***
    Here we create our Scene object
    The Scene will stack all the objects that will be drawn (planes and shader passes) in different arrays, and call them in the right order to be drawn.
-     Based on the concept exposed here https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html
+     Based on the concept exposed here https://webgl2fundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html
    The idea is to optimize the order of the rendered object so that the WebGL calls are kept to a strict minimum
-     Planes will be placed in two groups: opaque (drawn first) and transparent (drawn last) objects
-   We will also group them by their program IDs (planes that shares their programs are stacked together)
+     Here's the whole draw process order:
+   - first we draw the ping pong planes
+   - if needed, we bind the first scene pass frame buffer
+   - draw all the planes that are rendered onto a render target (render pass)
+   - draw the planes from the first render target created, ordered by their renderOrder then indexes (first added first drawn) order
+   - draw the planes from the second render target created, etc.
+   - draw the render passes content (depth buffer is cleared after each pass)
+   - draw the transparent planes ordered by renderOrder, Z positions, program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
+   - draw the opaque planes ordered by renderOrder, program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
+   - draw the scene passes content
      params:
    @renderer (Renderer class object): our renderer class object
      returns :
@@ -124,16 +132,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "initStacks",
       value: function initStacks() {
         this.stacks = {
-          "opaque": {
-            length: 0,
-            programs: [],
-            order: []
-          },
-          "transparent": {
-            length: 0,
-            programs: [],
-            order: []
-          },
+          // planes
+          "pingPong": [],
+          "renderTargets": [],
+          "opaque": [],
+          "transparent": [],
+          // post processing
           "renderPasses": [],
           "scenePasses": []
         };
@@ -148,16 +152,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "resetPlaneStacks",
       value: function resetPlaneStacks() {
         // clear the plane stacks
-        this.stacks.opaque = {
-          length: 0,
-          programs: [],
-          order: []
-        };
-        this.stacks.transparent = {
-          length: 0,
-          programs: [],
-          order: []
-        }; // rebuild them with the new plane indexes
+        this.stacks.pingPong = [];
+        this.stacks.renderTargets = [];
+        this.stacks.opaque = [];
+        this.stacks.transparent = []; // rebuild them with the new plane indexes
 
         for (var i = 0; i < this.renderer.planes.length; i++) {
           this.addPlane(this.renderer.planes[i]);
@@ -179,9 +177,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this.renderer.shaderPasses[i].index = i;
 
           if (this.renderer.shaderPasses[i]._isScenePass) {
-            this.stacks.scenePasses.push(this.renderer.shaderPasses[i].index);
+            this.stacks.scenePasses.push(this.renderer.shaderPasses[i]);
           } else {
-            this.stacks.renderPasses.push(this.renderer.shaderPasses[i].index);
+            this.stacks.renderPasses.push(this.renderer.shaderPasses[i]);
           }
         } // reset the scenePassIndex if needed
 
@@ -193,21 +191,115 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** ADDING PLANES ***/
 
       /***
-       Add a new entry to our opaque and transparent programs arrays
+       Add a plane to our renderTargets stack
+         params:
+       @plane (Plane object): plane to add to our stack
        ***/
 
     }, {
-      key: "initProgramStack",
-      value: function initProgramStack(programID) {
-        this.stacks["opaque"]["programs"]["program-" + programID] = [];
-        this.stacks["transparent"]["programs"]["program-" + programID] = [];
+      key: "addToRenderTargetsStack",
+      value: function addToRenderTargetsStack(plane) {
+        // find all planes that are rendered onto a render target
+        var renderTargetsPlanes = this.renderer.planes.filter(function (el) {
+          return el.target && el.uuid !== plane.uuid;
+        }); // is there any plane that is already rendered onto that plane's render target?
+
+        var siblingPlaneIndex = -1;
+
+        if (plane.target._depth) {
+          // findLastIndex
+          for (var i = renderTargetsPlanes.length - 1; i >= 0; i--) {
+            if (renderTargetsPlanes[i].target.uuid === plane.target.uuid) {
+              siblingPlaneIndex = i + 1;
+              break;
+            }
+          }
+        } else {
+          // findIndex
+          siblingPlaneIndex = renderTargetsPlanes.findIndex(function (el) {
+            return el.target.uuid === plane.target.uuid;
+          });
+        } // if findIndex returned -1, just push the plane
+
+
+        siblingPlaneIndex = Math.max(0, siblingPlaneIndex);
+        renderTargetsPlanes.splice(siblingPlaneIndex, 0, plane); // sort by index (order of addition) then render order, depending on whether the render target handle depth or not
+
+        if (plane.target._depth) {
+          renderTargetsPlanes.sort(function (a, b) {
+            return a.index - b.index;
+          });
+          renderTargetsPlanes.sort(function (a, b) {
+            return b.renderOrder - a.renderOrder;
+          });
+        } else {
+          renderTargetsPlanes.sort(function (a, b) {
+            return b.index - a.index;
+          });
+          renderTargetsPlanes.sort(function (a, b) {
+            return a.renderOrder - b.renderOrder;
+          });
+        } // sort by render targets order
+
+
+        renderTargetsPlanes.sort(function (a, b) {
+          return a.target.index - b.target.index;
+        });
+        this.stacks.renderTargets = renderTargetsPlanes;
       }
       /***
-       This function will stack planes by opaqueness/transparency, program ID and then indexes
-       Stack order drawing process:
-       - draw opaque then transparent planes
-       - for each of those two stacks, iterate through the existing programs (following the "order" array) and draw their respective planes
-       This is done to improve speed, notably when using shared programs, and reduce GL calls
+       Rebuilds our regular stack (transparent or opaque) with our plane added, ordered by program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
+         params:
+       @plane (Plane object): plane to add to our stack
+         returns:
+       @planeStack (array): our transparent or opaque stack ready to be applied custom sorting filter
+       ***/
+
+    }, {
+      key: "addToRegularPlaneStack",
+      value: function addToRegularPlaneStack(plane) {
+        // get all planes that have same transparency
+        var planeStack = this.renderer.planes.filter(function (el) {
+          return !el.target && el._transparent === plane._transparent && el.uuid !== plane.uuid;
+        }); // find first one that match this geometry
+
+        var siblingPlaneIndex = -1;
+
+        if (plane.shareProgram) {
+          // if plane shares its program, find if there's already a plane with that program with a findLastIndex function
+          for (var i = planeStack.length - 1; i >= 0; i--) {
+            if (planeStack[i]._program.id === plane._program.id) {
+              siblingPlaneIndex = i + 1;
+              break;
+            }
+          }
+        } else {
+          // else find if there's already a plane with the same geometry with a findLastIndex function
+          for (var _i = planeStack.length - 1; _i >= 0; _i--) {
+            if (planeStack[_i]._geometry.definition.id === plane._geometry.definition.id) {
+              siblingPlaneIndex = _i + 1;
+              break;
+            }
+          }
+        } // if findIndex returned -1 (no matching geometry or program)
+
+
+        siblingPlaneIndex = Math.max(0, siblingPlaneIndex); // add it to our stack plane array
+
+        planeStack.splice(siblingPlaneIndex, 0, plane); // sort by indexes
+
+        planeStack.sort(function (a, b) {
+          return a.index - b.index;
+        });
+        return planeStack;
+      }
+      /***
+       This function will add a plane into one of our 4 stacks : pingPong, renderTargets, transparent and opaque
+       - pingPong is just a simple array (ordered by order of creation)
+       - renderTargets array is ordered by render target creation order, planes renderOrder value and then planes indexes (order of creation)
+       - transparent array is ordered by renderOrder, Z positions, program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
+       - opaque array is ordered by renderOrder, program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
+         This is done to improve speed, notably when using shared programs, and reduce GL calls
          params:
        @plane (Plane object): plane to add to our scene
        ***/
@@ -215,30 +307,35 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "addPlane",
       value: function addPlane(plane) {
-        if (!this.stacks["opaque"]["programs"]["program-" + plane._program.id]) {
-          this.initProgramStack(plane._program.id);
-        }
-
-        var stackType = plane._transparent ? "transparent" : "opaque";
-        var stack = this.stacks[stackType];
-
-        if (stackType === "transparent") {
-          stack["programs"]["program-" + plane._program.id].unshift(plane.index); // push to the order array only if it's not already in there
-
-
-          if (!stack["order"].includes(plane._program.id)) {
-            stack["order"].unshift(plane._program.id);
-          }
+        if (plane.type === "PingPongPlane") {
+          this.stacks.pingPong.push(plane.index);
+        } else if (plane.target) {
+          this.addToRenderTargetsStack(plane);
         } else {
-          stack["programs"]["program-" + plane._program.id].push(plane.index); // push to the order array only if it's not already in there
+          if (plane._transparent) {
+            // rebuild a stack of all transparent planes
+            var planeStack = this.addToRegularPlaneStack(plane); // sort by their depth position
+
+            planeStack.sort(function (a, b) {
+              return b.relativeTranslation.z - a.relativeTranslation.z;
+            }); // then sort by their render order
+
+            planeStack.sort(function (a, b) {
+              return b.renderOrder - a.renderOrder;
+            });
+            this.stacks.transparent = planeStack;
+          } else {
+            // rebuild a stack of all opaque planes
+            var _planeStack = this.addToRegularPlaneStack(plane); // then sort by their render order
 
 
-          if (!stack["order"].includes(plane._program.id)) {
-            stack["order"].push(plane._program.id);
+            _planeStack.sort(function (a, b) {
+              return b.renderOrder - a.renderOrder;
+            });
+
+            this.stacks.opaque = _planeStack;
           }
         }
-
-        stack.length++;
       }
       /***
        This function will remove a plane from our scene. This just reset the plane stacks for now.
@@ -250,33 +347,109 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "removePlane",
       value: function removePlane(plane) {
-        this.resetPlaneStacks();
+        if (plane.type === "PingPongPlane") {
+          this.stacks.pingPong = this.stacks.pingPong.filter(function (el) {
+            return el.uuid !== plane.uuid;
+          });
+        } else if (plane.target) {
+          this.stacks.renderTargets = this.stacks.renderTargets.filter(function (el) {
+            return el.uuid !== plane.uuid;
+          });
+        } else {
+          if (plane._transparent) {
+            this.stacks.transparent = this.stacks.transparent.filter(function (el) {
+              return el.uuid !== plane.uuid;
+            });
+          } else {
+            this.stacks.opaque = this.stacks.opaque.filter(function (el) {
+              return el.uuid !== plane.uuid;
+            });
+          }
+        }
       }
       /***
-       Changing the position of a plane inside the correct plane stack to render it on top of the others
+       Changing the position of a plane inside the correct plane stack to render it on above or behind the other planes
+         params:
+       @plane (Plane object): the plane that had its renderOrder property updated
        ***/
 
     }, {
-      key: "movePlaneToFront",
-      value: function movePlaneToFront(plane) {
-        var drawType = plane._transparent ? "transparent" : "opaque";
-        var stack = this.stacks[drawType]["programs"]["program-" + plane._program.id];
-        stack = stack.filter(function (index) {
-          return index !== plane.index;
-        });
-
-        if (drawType === "transparent") {
-          stack.unshift(plane.index);
-        } else {
-          stack.push(plane.index);
+      key: "setPlaneRenderOrder",
+      value: function setPlaneRenderOrder(plane) {
+        if (plane.type === "ShaderPass") {
+          this.sortShaderPassStack(plane._isScenePass ? this.stacks.scenePasses : this.stacks.renderPasses);
+        } else if (plane.type === "PingPongPlane") {
+          // this does not makes any sense for ping pong planes
+          return;
         }
 
-        this.stacks[drawType]["programs"]["program-" + plane._program.id] = stack; // update order array
+        if (plane.target) {
+          // sort by index (order of addition) then render order, depending on whether the render target handle depth or not
+          if (plane.target._depth) {
+            this.stacks.renderTargets.sort(function (a, b) {
+              return a.index - b.index;
+            });
+            this.stacks.renderTargets.sort(function (a, b) {
+              return b.renderOrder - a.renderOrder;
+            });
+          } else {
+            this.stacks.renderTargets.sort(function (a, b) {
+              return b.index - a.index;
+            });
+            this.stacks.renderTargets.sort(function (a, b) {
+              return a.renderOrder - b.renderOrder;
+            });
+          } // then sort by render targets order
 
-        this.stacks[drawType]["order"] = this.stacks[drawType]["order"].filter(function (programID) {
-          return programID !== plane._program.id;
-        });
-        this.stacks[drawType]["order"].push(plane._program.id);
+
+          this.stacks.renderTargets.sort(function (a, b) {
+            return a.target.index - b.target.index;
+          });
+        } else {
+          var planeStack = plane._transparent ? this.stacks.transparent : this.stacks.opaque; // if the first drawn scene pass does not handle depth, we'll have to sort them in the inverse order
+
+          var scenePassWithoutDepth = this.stacks.scenePasses.filter(function (pass, index) {
+            return pass._isScenePass && !pass._depth && index === 0;
+          });
+
+          if (scenePassWithoutDepth) {
+            // inverted sorting
+            // sort by indexes
+            planeStack.sort(function (a, b) {
+              return b.index - a.index;
+            });
+
+            if (plane._transparent) {
+              // if plane is transparent, sort by their depth position
+              planeStack.sort(function (a, b) {
+                return a.relativeTranslation.z - b.relativeTranslation.z;
+              });
+            } // then sort by render order
+
+
+            planeStack.sort(function (a, b) {
+              return a.renderOrder - b.renderOrder;
+            });
+          } else {
+            // regular sorting
+            // sort by indexes
+            planeStack.sort(function (a, b) {
+              return a.index - b.index;
+            });
+
+            if (plane._transparent) {
+              // if plane is transparent, sort by their depth position
+              planeStack.sort(function (a, b) {
+                return b.relativeTranslation.z - a.relativeTranslation.z;
+              });
+            } // then sort by render order
+
+
+            planeStack.sort(function (a, b) {
+              return b.renderOrder - a.renderOrder;
+            });
+          }
+        }
       }
       /*** ADDING POST PROCESSING ***/
 
@@ -290,9 +463,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "addShaderPass",
       value: function addShaderPass(shaderPass) {
         if (!shaderPass._isScenePass) {
-          this.stacks.renderPasses.push(shaderPass.index);
+          this.stacks.renderPasses.push(shaderPass);
+          this.sortShaderPassStack(this.stacks.renderPasses);
         } else {
-          this.stacks.scenePasses.push(shaderPass.index);
+          this.stacks.scenePasses.push(shaderPass);
+          this.sortShaderPassStack(this.stacks.scenePasses);
         }
       }
       /***
@@ -307,29 +482,24 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function removeShaderPass(shaderPass) {
         this.resetShaderPassStacks();
       }
-      /*** DRAWING SCENE ***/
-
       /***
-       Loop through one of our stack (opaque or transparent objects) and draw its planes
+       Sorts the shader pass stack by index then by renderOrder property
+         params:
+       @passStack (array): which shader pass stack (scenePasses or renderPasses) to sort
        ***/
 
     }, {
-      key: "drawStack",
-      value: function drawStack(stackType) {
-        for (var i = 0; i < this.stacks[stackType]["order"].length; i++) {
-          var programID = this.stacks[stackType]["order"][i];
-          var program = this.stacks[stackType]["programs"]["program-" + programID];
-
-          for (var j = 0; j < program.length; j++) {
-            var plane = this.renderer.planes[program[j]]; // be sure the plane exists
-
-            if (plane) {
-              // draw the plane
-              plane._startDrawing();
-            }
-          }
-        }
+      key: "sortShaderPassStack",
+      value: function sortShaderPassStack(passStack) {
+        passStack.sort(function (a, b) {
+          return a.index - b.index;
+        });
+        passStack.sort(function (a, b) {
+          return a.renderOrder - b.renderOrder;
+        });
       }
+      /*** DRAWING SCENE ***/
+
       /***
        Enable the first Shader pass scene pass
        ***/
@@ -339,31 +509,70 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function enableShaderPass() {
         if (this.stacks.scenePasses.length && this.stacks.renderPasses.length === 0 && this.renderer.planes.length) {
           this.renderer.state.scenePassIndex = 0;
-          this.renderer.bindFrameBuffer(this.renderer.shaderPasses[this.stacks.scenePasses[0]].target);
+          this.renderer.bindFrameBuffer(this.stacks.scenePasses[0].target);
         }
       }
       /***
-       Draw the shader passes
+       Draw the render passes
        ***/
 
     }, {
-      key: "drawShaderPasses",
-      value: function drawShaderPasses() {
+      key: "drawRenderPasses",
+      value: function drawRenderPasses() {
         // if we got one or multiple scene passes after the render passes, bind the first scene pass here
         if (this.stacks.scenePasses.length && this.stacks.renderPasses.length && this.renderer.planes.length) {
           this.renderer.state.scenePassIndex = 0;
-          this.renderer.bindFrameBuffer(this.renderer.shaderPasses[this.stacks.scenePasses[0]].target);
-        } // first the render passes
-
+          this.renderer.bindFrameBuffer(this.stacks.scenePasses[0].target);
+        }
 
         for (var i = 0; i < this.stacks.renderPasses.length; i++) {
-          this.renderer.shaderPasses[this.stacks.renderPasses[i]]._startDrawing();
-        } // then the scene passes
+          this.stacks.renderPasses[i]._startDrawing(); // we need to clear our depth buffer to display previously drawn render passes
 
 
-        if (this.stacks.scenePasses.length > 0) {
-          for (var _i = 0; _i < this.stacks.scenePasses.length; _i++) {
-            this.renderer.shaderPasses[this.stacks.scenePasses[_i]]._startDrawing();
+          this.renderer.clearDepth();
+        }
+      }
+      /***
+       Draw the scene passes
+       ***/
+
+    }, {
+      key: "drawScenePasses",
+      value: function drawScenePasses() {
+        // then the scene passes
+        for (var i = 0; i < this.stacks.scenePasses.length; i++) {
+          this.stacks.scenePasses[i]._startDrawing();
+        }
+      }
+      /***
+       Loop through the special ping pong planes stack and draw its planes
+       ***/
+
+    }, {
+      key: "drawPingPongStack",
+      value: function drawPingPongStack() {
+        for (var i = 0; i < this.stacks.pingPong.length; i++) {
+          var plane = this.renderer.planes[this.stacks.pingPong[i]]; // be sure the plane exists
+
+          if (plane) {
+            // draw the plane
+            plane._startDrawing();
+          }
+        }
+      }
+      /***
+       Loop through one of our stack (renderTargets, opaque or transparent objects) and draw its planes
+       ***/
+
+    }, {
+      key: "drawStack",
+      value: function drawStack(stackType) {
+        for (var i = 0; i < this.stacks[stackType].length; i++) {
+          var plane = this.stacks[stackType][i]; // be sure the plane exists
+
+          if (plane) {
+            // draw the plane
+            plane._startDrawing();
           }
         }
       }
@@ -374,20 +583,20 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "draw",
       value: function draw() {
-        // enable first frame buffer for shader passes if needed
-        this.enableShaderPass(); // loop on our stacked planes
+        // always draw our ping pong planes first!
+        this.drawPingPongStack(); // enable first frame buffer for shader passes if needed
 
-        this.drawStack("opaque"); // draw transparent planes if needed
+        this.enableShaderPass(); // our planes that are drawn onto a render target
 
-        if (this.stacks["transparent"].length) {
-          // clear our depth buffer to display transparent objects
-          this.gl.clearDepth(1.0);
-          this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
-          this.drawStack("transparent");
-        } // now render the shader passes
+        this.drawStack("renderTargets"); // then draw the content of our render targets render passes
 
+        this.drawRenderPasses(); // draw the transparent planes
 
-        this.drawShaderPasses();
+        this.drawStack("transparent"); // then the opaque ones
+
+        this.drawStack("opaque"); // now draw the render targets scene passes
+
+        this.drawScenePasses();
       }
     }]);
 
@@ -642,7 +851,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    @onSceneChange (function): called every time an object has been added/removed from the scene
      returns :
    @this: our Renderer
-  ***/
+   ***/
 
 
   var Renderer = /*#__PURE__*/function () {
@@ -738,6 +947,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           forceRender: false,
           // current program ID
           currentProgramID: null,
+          // current geometry drawn
+          currentGeometryID: null,
+          // whether we should force buffer bindings update
+          forceBufferUpdate: false,
           // if we're using depth test or not
           setDepth: null,
           // face culling
@@ -1071,6 +1284,24 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function clear() {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
       }
+      /***
+       Clear our WebGL scene depth
+       ***/
+
+    }, {
+      key: "clearDepth",
+      value: function clearDepth() {
+        this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
+      }
+      /***
+       Clear our WebGL scene colors and depth
+       ***/
+
+    }, {
+      key: "clearColor",
+      value: function clearColor() {
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+      }
       /*** FRAME BUFFER OBJECTS ***/
 
       /***
@@ -1217,7 +1448,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "removeRenderTarget",
       value: function removeRenderTarget(renderTarget) {
-        if (!this.gl) return; // loop through all planes that might use that render target and reset it
+        if (!this.gl) return;
+        var hasPlane = this.planes.find(function (plane) {
+          return plane.type !== "PingPongPlane" && plane.target && plane.target.uuid === renderTarget.uuid;
+        }); // loop through all planes that might use that render target and reset it
 
         for (var i = 0; i < this.planes.length; i++) {
           if (this.planes[i].target && this.planes[i].target.uuid === renderTarget.uuid) {
@@ -1235,7 +1469,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         renderTarget = null; // clear the buffer to clean scene
 
-        if (this.gl) this.clear(); // we've removed an object, keep Curtains class in sync with our renderer
+        if (this.gl) this.clear(); // we had at least a plane that was rendered in this render targets stack
+        // re init stacks
+
+        if (hasPlane) {
+          this.scene.resetPlaneStacks();
+        } // we've removed an object, keep Curtains class in sync with our renderer
+
 
         this.onSceneChange();
       }
@@ -1300,7 +1540,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function render() {
         if (!this.gl) return; // clear scene first
 
-        this.clear(); // draw our scene content
+        this.clear(); // reset attributes buffer state
+
+        this.state.currentGeometryID = null; // draw our scene content
 
         this.scene.draw();
       }
@@ -1635,7 +1877,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.container.appendChild(this.canvas); // watermark
 
-        console.log("curtains.js - v7.2"); // start rendering
+        console.log("curtains.js - v7.3"); // start rendering
 
         this._animationFrameID = null;
 
@@ -1744,6 +1986,44 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "nextRender",
       value: function nextRender(callback) {
         this.renderer.nextRender.add(callback);
+      }
+      /***
+       Clear our WebGL renderer colors and depth buffers
+       ***/
+
+    }, {
+      key: "clear",
+      value: function clear() {
+        this.renderer && this.renderer.clear();
+      }
+      /***
+       Clear our WebGL renderer depth buffer
+       ***/
+
+    }, {
+      key: "clearDepth",
+      value: function clearDepth() {
+        this.renderer && this.renderer.clearDepth();
+      }
+      /***
+       Clear our WebGL renderer color buffer
+       ***/
+
+    }, {
+      key: "clearColor",
+      value: function clearColor() {
+        this.renderer && this.renderer.clearColor();
+      }
+      /***
+       Check whether the created context is WebGL2
+         return:
+       @isWebGL2 (bool): whether the created WebGL context is 2.0 or not
+       ***/
+
+    }, {
+      key: "isWebGL2",
+      value: function isWebGL2() {
+        return this.gl ? this.renderer._isWebGL2 : false;
       }
       /***
        Tells our renderer to render the scene if the drawing is enabled
@@ -2994,7 +3274,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.attributes[key].array), this.gl.STATIC_DRAW); // set where the attribute gets its data
 
           this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
-        }
+        } // update current buffers ID
+
+
+        this.renderer.state.currentGeometryID = this.definition.id;
       }
       /***
        Used inside our draw call to set the correct plane buffers before drawing it
@@ -3016,7 +3299,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
             this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
           }
-        }
+        } // update current buffers ID
+
+
+        this.renderer.state.currentGeometryID = this.definition.id;
       }
       /***
        Draw a geometry
@@ -3050,7 +3336,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this.gl.deleteBuffer(this.attributes[key].buffer);
         }
 
-        this.attributes = null;
+        this.attributes = null; // update current buffers ID
+
+        this.renderer.state.currentGeometryID = null;
       }
     }]);
 
@@ -4032,7 +4320,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         width: 0,
         height: 0
       };
-      this.scale = new Vec2(1, 1); // source loading and GPU uploading flags
+      this.scale = new Vec2(1, 1);
+      this.offset = new Vec2(); // source loading and GPU uploading flags
 
       this._loader = loader;
       this._sourceLoaded = false;
@@ -4097,7 +4386,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this._updateGlobalTexParameters(); // draw a black plane before the real texture's content has been loaded
 
 
-          this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this._globalParameters.internalFormat, 1, 1, 0, this._globalParameters.format, this._globalParameters.type, new Uint8Array([0, 0, 0, 255]));
+          this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, 1, 1, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
           this._canDraw = true;
         }
       }
@@ -4195,7 +4484,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "addParent",
       value: function addParent(parent) {
-        if (!parent || parent.type !== "Plane" && parent.type !== "ShaderPass" && parent.type !== "RenderTarget") {
+        if (!parent || parent.type !== "Plane" && parent.type !== "PingPongPlane" && parent.type !== "ShaderPass" && parent.type !== "RenderTarget") {
           if (!this.renderer.production) {
             throwWarning(this.type + ": cannot add texture as a child of ", parent, " because it is not a valid parent");
           }
@@ -4241,10 +4530,20 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this._setTextureUniforms();
 
           if (this._copyOnInit) {
-            // copy the original texture on next render
-            this.renderer.nextRender.add(function () {
-              return _this12.copy(_this12._copiedFrom);
-            }); // we're done!
+            // avoid lazy initialization bugs that affect mostly PingPongPlanes
+            if (!this._copiedFrom._sampler.texture) {
+              this._sampler.texture = this.gl.createTexture();
+              this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
+            } // wait for original texture to be ready before copying it
+
+
+            var waitForOriginalTexture = this.renderer.nextRender.add(function () {
+              if (_this12._copiedFrom._canDraw) {
+                _this12.copy(_this12._copiedFrom);
+
+                waitForOriginalTexture.keep = false;
+              }
+            }, true); // we're done!
 
             return;
           }
@@ -4318,22 +4617,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This copies an already existing Texture object to our texture
-       DEPRECATED
-         params:
-       @texture (Texture): texture to set from
-       ***/
-
-    }, {
-      key: "setFromTexture",
-      value: function setFromTexture(texture) {
-        if (!this.renderer.production) {
-          throwWarning(this.type + ": setFromTexture() is deprecated, use copy() instead");
-        }
-
-        this.copy(texture);
-      }
-      /***
-       This copies an already existing Texture object to our texture
          params:
        @texture (Texture): texture to set from
        ***/
@@ -4348,14 +4631,24 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
           return;
         } // copy states
-        //this._globalParameters = texture._globalParameters;
 
 
+        this._globalParameters = texture._globalParameters;
         this.parameters = texture.parameters;
         this._state = texture._state; // copy source
 
-        this._size = texture._size;
-        this._sourceLoaded = texture._sourceLoaded;
+        this._size = texture._size; // trigger loaded callback if needed
+
+        if (!this._sourceLoaded && texture._sourceLoaded) {
+          this._onSourceLoadedCallback && this._onSourceLoadedCallback();
+        }
+
+        this._sourceLoaded = texture._sourceLoaded; // trigger uploaded callback if needed
+
+        if (!this._uploaded && texture._uploaded) {
+          this._onSourceUploadedCallback && this._onSourceUploadedCallback();
+        }
+
         this._uploaded = texture._uploaded;
         this.sourceType = texture.sourceType;
         this.source = texture.source;
@@ -4828,6 +5121,24 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this.resize();
         }
       }
+    }, {
+      key: "setOffset",
+      value: function setOffset(offset) {
+        if (!offset.type || offset.type !== "Vec2") {
+          if (!this.renderer.production) {
+            throwWarning(this.type + ": Cannot set offset because the parameter passed is not of Vec2 type:", scale);
+          }
+
+          return;
+        }
+
+        offset.sanitizeNaNValuesWith(this.offset);
+
+        if (!offset.equals(this.offset)) {
+          this.offset.copy(offset);
+          this.resize();
+        }
+      }
       /***
        Gets our texture and parent sizes and tells our texture matrix to update based on those values
        ***/
@@ -4888,10 +5199,19 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         textureScale.x /= this.scale.x;
         textureScale.y /= this.scale.y; // translate texture to center it
 
-        var textureTranslation = new Mat4([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (1 - textureScale.x) / 2, (1 - textureScale.y) / 2, 0, 1]); // scale texture
+        var textureTranslation = new Mat4([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (1 - textureScale.x) / 2 + this.offset.x, (1 - textureScale.y) / 2 + this.offset.y, 0, 1]); // scale texture
 
         this._textureMatrix.matrix = textureTranslation.scale(textureScale); // update the texture matrix uniform
 
+        this._updateMatrixUniform();
+      }
+      /***
+       This updates our textures matrix GL uniform
+       ***/
+
+    }, {
+      key: "_updateMatrixUniform",
+      value: function _updateMatrixUniform() {
         this.renderer.useProgram(this._parent._program);
         this.gl.uniformMatrix4fv(this._textureMatrix.location, false, this._textureMatrix.matrix.elements);
       }
@@ -4960,7 +5280,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             this._willUpdate = false;
           }
 
-          this._forceUpdate = false;
+          this._forceUpdate = false; // if parent program uniform is shared, update the texture matrix uniform
+
+          if (this._parent && this._parent.shareProgram) {
+            this._updateMatrixUniform();
+          }
         } // set parameters that need to be set after texture uploading
 
 
@@ -5601,7 +5925,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       _this17.type = "PlaneTextureLoader";
       _this17._parent = parent;
 
-      if (_this17._parent.type !== "Plane" && _this17._parent.type !== "ShaderPass") {
+      if (_this17._parent.type !== "Plane" && _this17._parent.type !== "PingPongPlane" && _this17._parent.type !== "ShaderPass") {
         throwWarning(_this17.type + ": Wrong parent type assigned to this loader");
         _this17._parent = null;
       }
@@ -5726,6 +6050,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    @uniforms (object, optional): the uniforms that will be passed to the shaders.
    @widthSegments (int, optional): mesh definition along the X axis (1 by default)
    @heightSegments (int, optional): mesh definition along the Y axis (1 by default)
+   @renderOrder (int, optional): mesh render order in the scene draw stacks (0 by default)
    @depthTest (bool, optional): if the mesh should enable or disable the depth test. Default to true.
    @cullFace (string, optional): which face of the mesh should be culled. Could either be "back", "front" or "none". Default to "back".
    @texturesOptions (object, optional): options and parameters to apply to the textures loaded by the mesh's loader. See the Texture class object.
@@ -5754,6 +6079,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           widthSegments = _ref8$widthSegments === void 0 ? 1 : _ref8$widthSegments,
           _ref8$heightSegments = _ref8.heightSegments,
           heightSegments = _ref8$heightSegments === void 0 ? 1 : _ref8$heightSegments,
+          renderOrder = _ref8.renderOrder,
           _ref8$depthTest = _ref8.depthTest,
           depthTest = _ref8$depthTest === void 0 ? true : _ref8$depthTest,
           _ref8$cullFace = _ref8.cullFace,
@@ -5792,7 +6118,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }, 0);
       }
 
-      this._canDraw = false; // whether to share programs or not (could enhance performance if a lot of planes use the same shaders)
+      this._canDraw = false;
+      this.renderOrder = renderOrder; // whether to share programs or not (could enhance performance if a lot of planes use the same shaders)
 
       this.shareProgram = shareProgram; // depth test
 
@@ -5943,7 +6270,34 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           return;
         }
 
+        if (this.type === "Plane") {
+          // remove from scene stacks
+          this.renderer.scene.removePlane(this);
+        }
+
         this.target = renderTarget;
+
+        if (this.type === "Plane") {
+          // add to scene stacks again
+          this.renderer.scene.addPlane(this);
+        }
+      }
+      /***
+       Set the mesh render order to draw it above or behind other meshes
+         params :
+       @renderOrder (int): new render order to apply: higher number means a mesh is drawn on top of others
+       ***/
+
+    }, {
+      key: "setRenderOrder",
+      value: function setRenderOrder() {
+        var renderOrder = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+        renderOrder = isNaN(renderOrder) ? this.renderOrder : parseInt(renderOrder);
+
+        if (renderOrder !== this.renderOrder) {
+          this.renderOrder = renderOrder;
+          this.renderer.scene.setPlaneRenderOrder(this);
+        }
       }
       /*** IMAGES, VIDEOS AND CANVASES LOADING ***/
 
@@ -6202,10 +6556,16 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderer.setFaceCulling(this.cullFace); // update all uniforms set up by the user
 
         this._program.updateUniforms(); // bind plane attributes buffers
+        // TODO ideally we should only bind the attributes buffers if the geometry changed
+        // however it is leading to some bugs on macOS & iOS and should therefore be tested extensively
+        // for now we'll disable this feature even tho it is ready to be used
+        //if(this.renderer.state.currentGeometryID !== this._geometry.definition.id || this.renderer.state.forceBufferUpdate) {
 
 
-        this._geometry.bindBuffers(); // draw all our plane textures
+        this._geometry.bindBuffers();
 
+        this.renderer.state.forceBufferUpdate = false; //}
+        // draw all our plane textures
 
         for (var i = 0; i < this.textures.length; i++) {
           // draw (bind and maybe update) our texture
@@ -6213,7 +6573,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } // the draw call!
 
 
-        this._geometry.draw(); // reset active texture TODO useless?
+        this._geometry.draw(); // reset active texture
 
 
         this.renderer.state.activeTexture = null; // callback after draw
@@ -6397,6 +6757,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           shareProgram = _ref9.shareProgram,
           widthSegments = _ref9.widthSegments,
           heightSegments = _ref9.heightSegments,
+          renderOrder = _ref9.renderOrder,
           depthTest = _ref9.depthTest,
           cullFace = _ref9.cullFace,
           uniforms = _ref9.uniforms,
@@ -6416,6 +6777,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         shareProgram: shareProgram,
         widthSegments: widthSegments,
         heightSegments: heightSegments,
+        renderOrder: renderOrder,
         depthTest: depthTest,
         cullFace: cullFace,
         uniforms: uniforms,
@@ -6480,21 +6842,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           right: this._boundingRect.document.left + this._boundingRect.document.width,
           bottom: this._boundingRect.document.top + this._boundingRect.document.height
         };
-      }
-      /***
-       Handles each plane resizing
-       used internally when our container is resized
-       TODO will soon be DEPRECATED!
-       ***/
-
-    }, {
-      key: "planeResize",
-      value: function planeResize() {
-        if (!this.renderer.production) {
-          throwWarning(this.type + ": planeResize() is deprecated, use resize() instead.");
-        }
-
-        this.resize();
       }
       /***
        Handles each plane resizing
@@ -7005,6 +7352,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           shareProgram = _ref11.shareProgram,
           widthSegments = _ref11.widthSegments,
           heightSegments = _ref11.heightSegments,
+          _ref11$renderOrder = _ref11.renderOrder,
+          renderOrder = _ref11$renderOrder === void 0 ? 0 : _ref11$renderOrder,
           depthTest = _ref11.depthTest,
           cullFace = _ref11.cullFace,
           uniforms = _ref11.uniforms,
@@ -7040,6 +7389,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         shareProgram: shareProgram,
         widthSegments: widthSegments,
         heightSegments: heightSegments,
+        renderOrder: renderOrder,
         depthTest: depthTest,
         cullFace: cullFace,
         uniforms: uniforms,
@@ -7178,6 +7528,20 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this.updatePosition();
         } else if (!htmlElement && !this.renderer.production) {
           throwWarning(this.type + ": You are trying to reset a plane with a HTML element that does not exist. The old HTML element will be kept instead.");
+        }
+      }
+      /***
+       This function removes the plane current render target
+       ***/
+
+    }, {
+      key: "removeRenderTarget",
+      value: function removeRenderTarget() {
+        if (this.target) {
+          // reset our planes stacks
+          this.renderer.scene.removePlane(this);
+          this.target = null;
+          this.renderer.scene.addPlane(this);
         }
       }
       /***
@@ -7864,12 +8228,17 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This function puts the plane at the end of the draw stack, allowing it to overlap any other plane
+       TODO deprecated and should be removed!
        ***/
 
     }, {
       key: "moveToFront",
       value: function moveToFront() {
-        this.renderer.scene.movePlaneToFront(this);
+        if (!this.renderer.production) {
+          throwWarning(this.type + ": moveToFront() is deprecated, please use setRenderOrder() instead");
+        }
+
+        this.setRenderOrder();
       }
       /*** SOURCES ***/
 
@@ -8290,6 +8659,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           shareProgram = _ref13.shareProgram,
           widthSegments = _ref13.widthSegments,
           heightSegments = _ref13.heightSegments,
+          renderOrder = _ref13.renderOrder,
           depthTest = _ref13.depthTest,
           cullFace = _ref13.cullFace,
           uniforms = _ref13.uniforms,
@@ -8319,6 +8689,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         shareProgram: shareProgram,
         widthSegments: widthSegments,
         heightSegments: heightSegments,
+        renderOrder: renderOrder,
         depthTest: depthTest,
         cullFace: cullFace,
         uniforms: uniforms,
@@ -8332,6 +8703,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       _this30._isScenePass = true;
       _this30.index = _this30.renderer.shaderPasses.length;
+      _this30.renderOrder = 0;
       _this30._depth = depth;
       _this30._shouldClear = clear;
       _this30.target = renderTarget;
@@ -8452,7 +8824,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           if (this._isScenePass) {
             // if this is a scene pass, check if theres one more coming next and eventually bind it
             if (this.renderer.state.scenePassIndex + 1 < this.renderer.scene.stacks.scenePasses.length) {
-              this.renderer.bindFrameBuffer(this.renderer.shaderPasses[this.renderer.scene.stacks.scenePasses[this.renderer.state.scenePassIndex + 1]].target);
+              this.renderer.bindFrameBuffer(this.renderer.scene.stacks.scenePasses[this.renderer.state.scenePassIndex + 1].target);
               this.renderer.state.scenePassIndex++;
             } else {
               this.renderer.bindFrameBuffer(null);
@@ -8460,8 +8832,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           } else if (this.renderer.state.scenePassIndex === null) {
             // we are rendering a bunch of planes inside a render target, unbind it
             this.renderer.bindFrameBuffer(null);
-          } // now check if we really need to draw it and its textures
+          } // force attribute buffer bindings update
 
+
+          this.renderer.state.forceBufferUpdate = true; // now check if we really need to draw it and its textures
 
           this._draw();
         }
@@ -8501,6 +8875,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           shareProgram = _ref14.shareProgram,
           widthSegments = _ref14.widthSegments,
           heightSegments = _ref14.heightSegments,
+          renderOrder = _ref14.renderOrder,
           depthTest = _ref14.depthTest,
           cullFace = _ref14.cullFace,
           uniforms = _ref14.uniforms,
@@ -8528,6 +8903,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         shareProgram: shareProgram,
         widthSegments: widthSegments,
         heightSegments: heightSegments,
+        renderOrder: renderOrder,
         depthTest: depthTest,
         cullFace: cullFace,
         uniforms: uniforms,
@@ -8544,7 +8920,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         autoloadSources: autoloadSources,
         watchScroll: watchScroll,
         fov: fov
-      }); // create 2 render targets
+      }); // remove from stack, update type to PingPongPlane and then stack again
+
+      _this31.renderer.scene.removePlane(_assertThisInitialized(_this31));
+
+      _this31.type = "PingPongPlane";
+
+      _this31.renderer.scene.addPlane(_assertThisInitialized(_this31)); // create 2 render targets
+
 
       _this31.readPass = new RenderTarget(curtains, {
         depth: false,
@@ -8558,12 +8941,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }); // create a texture where we'll draw
 
       var texture = _this31.createTexture({
-        sampler: sampler
-      }); // copy readPass texture on next render (this will prevent framebuffer feedback loop)
-
-
-      _this31.renderer.nextRender.add(function () {
-        texture.copy(_this31.readPass.getTexture());
+        sampler: sampler,
+        fromTexture: _this31.readPass.getTexture()
       }); // override onRender and onAfterRender callbacks
 
 
@@ -8663,6 +9042,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _this32 = this;
 
     var _ref15 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        renderOrder = _ref15.renderOrder,
         depthTest = _ref15.depthTest,
         texturesOptions = _ref15.texturesOptions,
         crossOrigin = _ref15.crossOrigin,
@@ -8684,6 +9064,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     };
     this.pass = new ShaderPass(curtains, {
       // Mesh params
+      renderOrder: renderOrder,
       depthTest: depthTest,
       fragmentShader: fragmentShader,
       uniforms: uniforms,

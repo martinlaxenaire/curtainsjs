@@ -21,6 +21,7 @@ import {generateUUID, throwError, throwWarning} from '../utils/utils.js';
  @uniforms (object, optional): the uniforms that will be passed to the shaders.
  @widthSegments (int, optional): mesh definition along the X axis (1 by default)
  @heightSegments (int, optional): mesh definition along the Y axis (1 by default)
+ @renderOrder (int, optional): mesh render order in the scene draw stacks (0 by default)
  @depthTest (bool, optional): if the mesh should enable or disable the depth test. Default to true.
  @cullFace (string, optional): which face of the mesh should be culled. Could either be "back", "front" or "none". Default to "back".
  @texturesOptions (object, optional): options and parameters to apply to the textures loaded by the mesh's loader. See the Texture class object.
@@ -42,6 +43,9 @@ export class Mesh {
         // geometry
         widthSegments = 1,
         heightSegments = 1,
+
+        // render order
+        renderOrder,
 
         // drawing
         depthTest = true,
@@ -80,6 +84,7 @@ export class Mesh {
         }
 
         this._canDraw = false;
+        this.renderOrder = renderOrder;
 
         // whether to share programs or not (could enhance performance if a lot of planes use the same shaders)
         this.shareProgram = shareProgram;
@@ -239,7 +244,33 @@ export class Mesh {
             return;
         }
 
+        if(this.type === "Plane") {
+            // remove from scene stacks
+            this.renderer.scene.removePlane(this);
+        }
+
         this.target = renderTarget;
+
+        if(this.type === "Plane") {
+            // add to scene stacks again
+            this.renderer.scene.addPlane(this);
+        }
+    }
+
+
+    /***
+     Set the mesh render order to draw it above or behind other meshes
+
+     params :
+     @renderOrder (int): new render order to apply: higher number means a mesh is drawn on top of others
+     ***/
+    setRenderOrder(renderOrder = 0) {
+        renderOrder = isNaN(renderOrder) ? this.renderOrder : parseInt(renderOrder);
+
+        if(renderOrder !== this.renderOrder) {
+            this.renderOrder = renderOrder;
+            this.renderer.scene.setPlaneRenderOrder(this);
+        }
     }
 
 
@@ -465,7 +496,13 @@ export class Mesh {
         this._program.updateUniforms();
 
         // bind plane attributes buffers
+        // TODO ideally we should only bind the attributes buffers if the geometry changed
+        // however it is leading to some bugs on macOS & iOS and should therefore be tested extensively
+        // for now we'll disable this feature even tho it is ready to be used
+        //if(this.renderer.state.currentGeometryID !== this._geometry.definition.id || this.renderer.state.forceBufferUpdate) {
         this._geometry.bindBuffers();
+        this.renderer.state.forceBufferUpdate = false;
+        //}
 
         // draw all our plane textures
         for(let i = 0; i < this.textures.length; i++) {
@@ -476,7 +513,7 @@ export class Mesh {
         // the draw call!
         this._geometry.draw();
 
-        // reset active texture TODO useless?
+        // reset active texture
         this.renderer.state.activeTexture = null;
 
         // callback after draw

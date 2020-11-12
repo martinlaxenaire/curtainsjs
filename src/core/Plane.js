@@ -37,6 +37,7 @@ export class Plane extends DOMMesh {
         shareProgram,
         widthSegments,
         heightSegments,
+        renderOrder = 0,
         depthTest,
         cullFace,
         uniforms,
@@ -59,12 +60,13 @@ export class Plane extends DOMMesh {
         },
         autoloadSources = true,
         watchScroll = true,
-        fov = 50
+        fov = 50,
     } = {}) {
         super(renderer, htmlElement, "Plane", {
             shareProgram,
             widthSegments,
             heightSegments,
+            renderOrder,
             depthTest,
             cullFace,
             uniforms,
@@ -217,6 +219,19 @@ export class Plane extends DOMMesh {
 
 
     /***
+     This function removes the plane current render target
+     ***/
+    removeRenderTarget() {
+        if(this.target) {
+            // reset our planes stacks
+            this.renderer.scene.removePlane(this);
+            this.target = null;
+            this.renderer.scene.addPlane(this);
+        }
+    }
+
+
+    /***
      Init our plane position: set its matrices, its position and perspective
      ***/
     _initPositions() {
@@ -340,9 +355,9 @@ export class Plane extends DOMMesh {
             // get transformation origin relative to world space
             const origin = new Vec3(
                 (this.transformOrigin.x * 2 - 1) // between -1 and 1
-                    * this._boundingRect.world.scale.x,
+                * this._boundingRect.world.scale.x,
                 -(this.transformOrigin.y * 2 - 1) // between -1 and 1
-                    * this._boundingRect.world.scale.y,
+                * this._boundingRect.world.scale.y,
                 this.transformOrigin.z
             );
 
@@ -952,9 +967,13 @@ export class Plane extends DOMMesh {
 
     /***
      This function puts the plane at the end of the draw stack, allowing it to overlap any other plane
+     TODO deprecated and should be removed!
      ***/
     moveToFront() {
-        this.renderer.scene.movePlaneToFront(this);
+        if(!this.renderer.production) {
+            throwWarning(this.type + ": moveToFront() is deprecated, please use setRenderOrder() instead");
+        }
+        this.setRenderOrder();
     }
 
 

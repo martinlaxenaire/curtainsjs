@@ -27,6 +27,7 @@ export class ShaderPass extends DOMMesh {
         shareProgram,
         widthSegments,
         heightSegments,
+        renderOrder,
         depthTest,
         cullFace,
         uniforms,
@@ -57,6 +58,7 @@ export class ShaderPass extends DOMMesh {
             shareProgram,
             widthSegments,
             heightSegments,
+            renderOrder,
             depthTest,
             cullFace,
             uniforms,
@@ -72,6 +74,7 @@ export class ShaderPass extends DOMMesh {
         this._isScenePass = true;
 
         this.index = this.renderer.shaderPasses.length;
+        this.renderOrder = 0;
 
         this._depth = depth;
 
@@ -193,7 +196,7 @@ export class ShaderPass extends DOMMesh {
             if(this._isScenePass) {
                 // if this is a scene pass, check if theres one more coming next and eventually bind it
                 if(this.renderer.state.scenePassIndex + 1 < this.renderer.scene.stacks.scenePasses.length) {
-                    this.renderer.bindFrameBuffer(this.renderer.shaderPasses[this.renderer.scene.stacks.scenePasses[this.renderer.state.scenePassIndex + 1]].target);
+                    this.renderer.bindFrameBuffer(this.renderer.scene.stacks.scenePasses[this.renderer.state.scenePassIndex + 1].target);
 
                     this.renderer.state.scenePassIndex++;
                 }
@@ -205,6 +208,9 @@ export class ShaderPass extends DOMMesh {
                 // we are rendering a bunch of planes inside a render target, unbind it
                 this.renderer.bindFrameBuffer(null);
             }
+
+            // force attribute buffer bindings update
+            this.renderer.state.forceBufferUpdate = true;
 
             // now check if we really need to draw it and its textures
             this._draw();

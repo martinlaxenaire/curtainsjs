@@ -1,5 +1,65 @@
 # Changelog
 
+## v7.3.0 (11/12/2020)
+
+#### Enhancements:
+
+###### core/Scene.js
+
+- refactored the draw stacks.
+
+###### core/Curtains.js
+
+- added isWebGL2(), clear(), clearColor() and clearDepth() methods.
+
+###### core/Plane.js
+
+- added renderOrder parameter, property and setRenderOrder() method.
+
+###### core/Texture.js
+
+- added offset property and setOffset() method.
+
+###### framebuffers/ShaderPass.js
+
+- added renderOrder parameter, property and setRenderOrder() method.
+
+###### extras/PingPongPlane.js
+
+- changed type property to "PingPongPlane" and updated stacking handling.
+
+###### examples
+
+- added a new example demonstrating the use of the new texture's setOffset() and plane's setRenderOrder() methods: [GSAP click to fullscreen gallery](https://www.curtainsjs.com/examples/gsap-click-to-fullscreen-gallery/index.html)
+
+#### Bug Fixes:
+
+###### core/Scene.js
+
+- refactoring fixed [#64](https://github.com/martinlaxenaire/curtainsjs/issues/64), [#65](https://github.com/martinlaxenaire/curtainsjs/issues/65) and [#66](https://github.com/martinlaxenaire/curtainsjs/issues/66).
+
+###### core/Texture.js
+
+- fixed texture matrix update affecting all shared program planes.
+- fixed onSourceLoaded() and onSourceUploaded() not fired when copying a texture
+- fixed erratic PingPongPlane texture bug where sometimes the ping pong plane's texture's empty [#67](https://github.com/martinlaxenaire/curtainsjs/issues/67)
+
+#### Deprecations:
+
+###### core/Plane.js
+
+- moveToFront() method is deprecated and will be removed soon. Use setRenderOrder() instead.
+
+###### core/DOMMesh.js
+
+- removed planeResize() method. Use resize() instead.
+
+###### core/Texture.js
+
+- removed setFromTexture() method. Use copy() instead.
+
+---
+
 ## v7.2.1 (11/03/2020)
 
 #### Enhancements:

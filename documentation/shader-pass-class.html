@@ -136,6 +136,9 @@
                                             <a href="shader-pass-class.html#renderer">renderer</a>
                                         </li>
                                         <li>
+                                            <a href="shader-pass-class.html#render-order">renderOrder</a>
+                                        </li>
+                                        <li>
                                             <a href="shader-pass-class.html#share-program">shareProgram</a>
                                         </li>
                                         <li>
@@ -205,6 +208,9 @@
                                         </li>
                                         <li>
                                             <a href="shader-pass-class.html#remove">remove</a>
+                                        </li>
+                                        <li>
+                                            <a href="shader-pass-class.html#set-render-order">setRenderOrder</a>
                                         </li>
                                     </ul>
                                     <div class="api-submenu-title">
@@ -585,6 +591,17 @@
                                     </li>
                                     <li>
                                         <span class="api-item-parameter-label">
+                                            renderOrder
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            int, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            defines in which order the shader passes are drawn. See <a href="shader-pass-class.html#render-order">renderOrder</a> property. Default to 0.
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
                                             depthTest
                                         </span>
                                         <span class="api-item-parameter-type">
@@ -773,6 +790,17 @@
                                 </p>
                                 <p>
                                     The Renderer class object created by our curtains object.
+                                </p>
+                            </li>
+                            <li id="render-order">
+                                <p>
+                                    <strong>renderOrder</strong> (int): <span class="api-item-version">v7.3</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    The shader pass renderOrder value, which determines in which order the shader passes are drawn.<br />
+                                    A shader pass will be drawn after shader passes with a lower renderOrder number.<br />
+                                    Use <a href="plane-class.html#set-render-order">setRenderOrder()</a> to change this value. Default to 0.<br />
+                                    See <a href="scene-rendering-order.html">Scene rendering order</a> to know more about how the things are drawn.
                                 </p>
                             </li>
                             <li id="share-program">
@@ -1651,6 +1679,28 @@
                                 <p>
                                     This function will remove the shader pass and its render target from our Curtains object and renderer and delete all of its textures. It will also update all other shader passes indexes.
                                 </p>
+                            </li>
+                            <li id="set-render-order">
+                                <p>
+                                    <strong>setRenderOrder</strong>(renderOrder): <span class="api-item-version">v7.3</span>
+                                </p>
+                                <p>
+                                    Sets the shader pass new <a href="plane-class.html#render-order">render order</a>.<br />
+                                    A shader pass will be drawn after the shader passes with a lower renderOrder number. Negative numbers are accepted. You can ommit the renderOrder parameter to reset a shader pass renderOrder value.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            renderOrder
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            int
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            the new render order to use. Default to 0.
+                                        </span>
+                                    </li>
+                                </ul>
                             </li>
 
                         </ul>

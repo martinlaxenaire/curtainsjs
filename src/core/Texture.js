@@ -121,6 +121,7 @@ export class Texture {
         };
 
         this.scale = new Vec2(1, 1);
+        this.offset = new Vec2();
 
         // source loading and GPU uploading flags
         this._loader = loader;
@@ -189,7 +190,7 @@ export class Texture {
             this._updateGlobalTexParameters();
 
             // draw a black plane before the real texture's content has been loaded
-            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this._globalParameters.internalFormat, 1, 1, 0, this._globalParameters.format, this._globalParameters.type, new Uint8Array([0, 0, 0, 255]));
+            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, 1, 1, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
 
             this._canDraw = true;
         }
@@ -287,7 +288,7 @@ export class Texture {
      Then runs _setParent() to set the size and uniforms if needed
      ***/
     addParent(parent) {
-        if(!parent || (parent.type !== "Plane" && parent.type !== "ShaderPass" && parent.type !== "RenderTarget")) {
+        if(!parent || (parent.type !== "Plane" && parent.type !== "PingPongPlane" && parent.type !== "ShaderPass" && parent.type !== "RenderTarget")) {
             if(!this.renderer.production) {
                 throwWarning(this.type + ": cannot add texture as a child of ", parent, " because it is not a valid parent");
             }
@@ -331,8 +332,19 @@ export class Texture {
             this._setTextureUniforms();
 
             if(this._copyOnInit) {
-                // copy the original texture on next render
-                this.renderer.nextRender.add(() => this.copy(this._copiedFrom));
+                // avoid lazy initialization bugs that affect mostly PingPongPlanes
+                if(!this._copiedFrom._sampler.texture) {
+                    this._sampler.texture = this.gl.createTexture();
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
+                }
+
+                // wait for original texture to be ready before copying it
+                const waitForOriginalTexture = this.renderer.nextRender.add(() => {
+                    if(this._copiedFrom._canDraw) {
+                        this.copy(this._copiedFrom);
+                        waitForOriginalTexture.keep = false;
+                    }
+                }, true);
 
                 // we're done!
                 return;
@@ -411,22 +423,6 @@ export class Texture {
         }
     }
 
-
-    /***
-     This copies an already existing Texture object to our texture
-     DEPRECATED
-
-     params:
-     @texture (Texture): texture to set from
-     ***/
-    setFromTexture(texture) {
-        if(!this.renderer.production) {
-            throwWarning(this.type + ": setFromTexture() is deprecated, use copy() instead");
-        }
-
-        this.copy(texture);
-    }
-
     /***
      This copies an already existing Texture object to our texture
 
@@ -442,14 +438,27 @@ export class Texture {
         }
 
         // copy states
-        //this._globalParameters = texture._globalParameters;
+        this._globalParameters = texture._globalParameters;
         this.parameters = texture.parameters;
         this._state = texture._state;
 
         // copy source
         this._size = texture._size;
+
+        // trigger loaded callback if needed
+        if(!this._sourceLoaded && texture._sourceLoaded) {
+            this._onSourceLoadedCallback && this._onSourceLoadedCallback();
+        }
+
         this._sourceLoaded = texture._sourceLoaded;
+
+        // trigger uploaded callback if needed
+        if(!this._uploaded && texture._uploaded) {
+            this._onSourceUploadedCallback && this._onSourceUploadedCallback();
+        }
+
         this._uploaded = texture._uploaded;
+
         this.sourceType = texture.sourceType;
         this.source = texture.source;
         this._videoFrameCallbackID = texture._videoFrameCallbackID;
@@ -942,6 +951,24 @@ export class Texture {
         }
     }
 
+    setOffset(offset) {
+        if(!offset.type || offset.type !== "Vec2") {
+            if(!this.renderer.production) {
+                throwWarning(this.type + ": Cannot set offset because the parameter passed is not of Vec2 type:", scale);
+            }
+
+            return;
+        }
+
+        offset.sanitizeNaNValuesWith(this.offset);
+
+        if(!offset.equals(this.offset)) {
+            this.offset.copy(offset);
+
+            this.resize();
+        }
+    }
+
 
     /***
      Gets our texture and parent sizes and tells our texture matrix to update based on those values
@@ -1010,13 +1037,21 @@ export class Texture {
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
-            (1 - textureScale.x) / 2, (1 - textureScale.y) / 2, 0, 1
+            (1 - textureScale.x) / 2 + this.offset.x, (1 - textureScale.y) / 2 + this.offset.y, 0, 1
         ]);
 
         // scale texture
         this._textureMatrix.matrix = textureTranslation.scale(textureScale);
 
         // update the texture matrix uniform
+        this._updateMatrixUniform();
+    }
+
+
+    /***
+     This updates our textures matrix GL uniform
+     ***/
+    _updateMatrixUniform() {
         this.renderer.useProgram(this._parent._program);
         this.gl.uniformMatrix4fv(this._textureMatrix.location, false, this._textureMatrix.matrix.elements);
     }
@@ -1084,6 +1119,11 @@ export class Texture {
             }
 
             this._forceUpdate = false;
+
+            // if parent program uniform is shared, update the texture matrix uniform
+            if(this._parent && this._parent.shareProgram) {
+                this._updateMatrixUniform();
+            }
         }
 
         // set parameters that need to be set after texture uploading

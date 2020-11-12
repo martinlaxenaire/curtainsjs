@@ -32,7 +32,7 @@ export class PlaneTextureLoader extends TextureLoader {
         this.type = "PlaneTextureLoader";
 
         this._parent = parent;
-        if(this._parent.type !== "Plane" && this._parent.type !== "ShaderPass") {
+        if(this._parent.type !== "Plane" && this._parent.type !== "PingPongPlane" && this._parent.type !== "ShaderPass") {
             throwWarning(this.type + ": Wrong parent type assigned to this loader");
             this._parent = null;
         }

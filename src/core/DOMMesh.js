@@ -24,6 +24,7 @@ export class DOMMesh extends Mesh {
         shareProgram,
         widthSegments,
         heightSegments,
+        renderOrder,
         depthTest,
         cullFace,
         uniforms,
@@ -42,6 +43,7 @@ export class DOMMesh extends Mesh {
             shareProgram,
             widthSegments,
             heightSegments,
+            renderOrder,
             depthTest,
             cullFace,
             uniforms,
@@ -108,19 +110,6 @@ export class DOMMesh extends Mesh {
         };
     }
 
-
-    /***
-     Handles each plane resizing
-     used internally when our container is resized
-     TODO will soon be DEPRECATED!
-     ***/
-    planeResize() {
-        if(!this.renderer.production) {
-            throwWarning(this.type + ": planeResize() is deprecated, use resize() instead.");
-        }
-
-        this.resize();
-    }
 
     /***
      Handles each plane resizing
