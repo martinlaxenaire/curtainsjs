@@ -302,7 +302,7 @@ export class Scene {
                 : this.stacks.opaque;
 
             // if the first drawn scene pass does not handle depth, we'll have to sort them in the inverse order
-            const scenePassWithoutDepth = this.stacks.scenePasses.filter((pass, index) => pass._isScenePass && !pass._depth && index === 0);
+            const scenePassWithoutDepth = this.stacks.scenePasses.find((pass, index) => pass._isScenePass && !pass._depth && index === 0);
 
             if(scenePassWithoutDepth) {
                 // inverted sorting

@@ -408,7 +408,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } else {
           var planeStack = plane._transparent ? this.stacks.transparent : this.stacks.opaque; // if the first drawn scene pass does not handle depth, we'll have to sort them in the inverse order
 
-          var scenePassWithoutDepth = this.stacks.scenePasses.filter(function (pass, index) {
+          var scenePassWithoutDepth = this.stacks.scenePasses.find(function (pass, index) {
             return pass._isScenePass && !pass._depth && index === 0;
           });
 

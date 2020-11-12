@@ -1,5 +1,15 @@
 # Changelog
 
+## v7.3.1 (11/12/2020)
+
+#### Bug Fixes:
+
+###### core/Scene.js
+
+- fixed setRenderOrder not working when no shader passes.
+
+---
+
 ## v7.3.0 (11/12/2020)
 
 #### Enhancements:
