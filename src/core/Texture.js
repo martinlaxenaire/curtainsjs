@@ -1206,6 +1206,8 @@ export class Texture {
         const shouldDelete = this.gl && !this._copiedFrom && (force || this.sourceType !== "image" || !this.renderer.state.isActive);
 
         if(shouldDelete) {
+            this._canDraw = false;
+
             // if the texture is in our textures cache array, remove it
             this.renderer.cache.removeTexture(this);
 

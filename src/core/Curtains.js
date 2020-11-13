@@ -33,27 +33,27 @@ import {throwWarning, lerp} from "../utils/utils.js";
  ***/
 export class Curtains {
     constructor({
-                    // renderer container
-                    container,
+        // renderer container
+        container,
 
-                    // webgl params
-                    alpha = true,
-                    premultipliedAlpha = false,
-                    antialias = true,
-                    depth = true,
-                    failIfMajorPerformanceCaveat = true,
-                    preserveDrawingBuffer = false,
-                    stencil = false,
+        // webgl params
+        alpha = true,
+        premultipliedAlpha = false,
+        antialias = true,
+        depth = true,
+        failIfMajorPerformanceCaveat = true,
+        preserveDrawingBuffer = false,
+        stencil = false,
 
-                    autoResize = true,
-                    autoRender = true,
-                    watchScroll = true,
+        autoResize = true,
+        autoRender = true,
+        watchScroll = true,
 
-                    pixelRatio = window.devicePixelRatio || 1,
-                    renderingScale = 1,
+        pixelRatio = window.devicePixelRatio || 1,
+        renderingScale = 1,
 
-                    production = false,
-                } = {}) {
+        production = false,
+    } = {}) {
         this.type = "Curtains";
 
         // if we should use auto resize (default to true)
@@ -177,7 +177,7 @@ export class Curtains {
         this.renderer = new Renderer({
             alpha: this.alpha,
             antialias: this.antialias,
-            premulitpliedAlpha: this.premultipliedAlpha,
+            premultipliedAlpha: this.premultipliedAlpha,
             depth: this.depth,
             failIfMajorPerformanceCaveat: this.failIfMajorPerformanceCaveat,
             preserveDrawingBuffer: this.preserveDrawingBuffer,

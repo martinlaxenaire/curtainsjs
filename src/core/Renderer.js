@@ -26,26 +26,26 @@ import {throwWarning} from '../utils/utils.js';
 
 export class Renderer {
     constructor({
-                    // inherited from Curtains class object
-                    alpha,
-                    antialias,
-                    premultipliedAlpha,
-                    depth,
-                    failIfMajorPerformanceCaveat,
-                    preserveDrawingBuffer,
-                    stencil,
-                    container,
-                    pixelRatio,
-                    renderingScale,
-                    production,
+        // inherited from Curtains class object
+        alpha,
+        antialias,
+        premultipliedAlpha,
+        depth,
+        failIfMajorPerformanceCaveat,
+        preserveDrawingBuffer,
+        stencil,
+        container,
+        pixelRatio,
+        renderingScale,
+        production,
 
-                    // callbacks passed by the Curtains class object on instantiation
-                    onError,
-                    onContextLost,
-                    onContextRestored,
-                    onDisposed,
-                    onSceneChange,
-                }) {
+        // callbacks passed by the Curtains class object on instantiation
+        onError,
+        onContextLost,
+        onContextRestored,
+        onDisposed,
+        onSceneChange,
+    }) {
         this.type = "Renderer";
         // context attributes
         this.alpha = alpha;

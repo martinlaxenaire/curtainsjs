@@ -1,5 +1,23 @@
 # Changelog
 
+## v7.3.1 (11/13/2020)
+
+#### Bug Fixes:
+
+###### core/Curtains.js
+
+- fixed premultipliedAlpha property that was not correctly passed to the Renderer.
+
+###### core/Scene.js
+
+- fixed setRenderOrder when context does not handle depth.
+
+###### extras/PingPongPlane.js
+
+- fixed remove() method.
+
+---
+
 ## v7.3.1 (11/12/2020)
 
 #### Bug Fixes:

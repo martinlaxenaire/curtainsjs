@@ -113,7 +113,7 @@ export class Scene {
      ***/
     addToRenderTargetsStack(plane) {
         // find all planes that are rendered onto a render target
-        const renderTargetsPlanes = this.renderer.planes.filter(el => el.target && el.uuid !== plane.uuid);
+        const renderTargetsPlanes = this.renderer.planes.filter(el => el.type !== "PingPongPlane" && el.target && el.uuid !== plane.uuid);
 
         // is there any plane that is already rendered onto that plane's render target?
         let siblingPlaneIndex = -1;
@@ -163,7 +163,7 @@ export class Scene {
      ***/
     addToRegularPlaneStack(plane) {
         // get all planes that have same transparency
-        const planeStack = this.renderer.planes.filter(el => !el.target && el._transparent === plane._transparent && el.uuid !== plane.uuid);
+        const planeStack = this.renderer.planes.filter(el => el.type !== "PingPongPlane" && !el.target && el._transparent === plane._transparent && el.uuid !== plane.uuid);
 
         // find first one that match this geometry
         let siblingPlaneIndex = -1;
@@ -213,7 +213,7 @@ export class Scene {
      ***/
     addPlane(plane) {
         if(plane.type === "PingPongPlane") {
-            this.stacks.pingPong.push(plane.index);
+            this.stacks.pingPong.push(plane);
         }
         else if(plane.target) {
             this.addToRenderTargetsStack(plane);
@@ -304,7 +304,7 @@ export class Scene {
             // if the first drawn scene pass does not handle depth, we'll have to sort them in the inverse order
             const scenePassWithoutDepth = this.stacks.scenePasses.find((pass, index) => pass._isScenePass && !pass._depth && index === 0);
 
-            if(scenePassWithoutDepth) {
+            if(!this.renderer.depth || scenePassWithoutDepth) {
                 // inverted sorting
 
                 // sort by indexes
@@ -423,7 +423,7 @@ export class Scene {
      ***/
     drawPingPongStack() {
         for(let i = 0; i < this.stacks.pingPong.length; i++) {
-            const plane = this.renderer.planes[this.stacks.pingPong[i]];
+            const plane = this.stacks.pingPong[i];
             // be sure the plane exists
             if(plane) {
                 // draw the plane

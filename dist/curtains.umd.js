@@ -201,7 +201,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function addToRenderTargetsStack(plane) {
         // find all planes that are rendered onto a render target
         var renderTargetsPlanes = this.renderer.planes.filter(function (el) {
-          return el.target && el.uuid !== plane.uuid;
+          return el.type !== "PingPongPlane" && el.target && el.uuid !== plane.uuid;
         }); // is there any plane that is already rendered onto that plane's render target?
 
         var siblingPlaneIndex = -1;
@@ -260,7 +260,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function addToRegularPlaneStack(plane) {
         // get all planes that have same transparency
         var planeStack = this.renderer.planes.filter(function (el) {
-          return !el.target && el._transparent === plane._transparent && el.uuid !== plane.uuid;
+          return el.type !== "PingPongPlane" && !el.target && el._transparent === plane._transparent && el.uuid !== plane.uuid;
         }); // find first one that match this geometry
 
         var siblingPlaneIndex = -1;
@@ -308,7 +308,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "addPlane",
       value: function addPlane(plane) {
         if (plane.type === "PingPongPlane") {
-          this.stacks.pingPong.push(plane.index);
+          this.stacks.pingPong.push(plane);
         } else if (plane.target) {
           this.addToRenderTargetsStack(plane);
         } else {
@@ -412,7 +412,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             return pass._isScenePass && !pass._depth && index === 0;
           });
 
-          if (scenePassWithoutDepth) {
+          if (!this.renderer.depth || scenePassWithoutDepth) {
             // inverted sorting
             // sort by indexes
             planeStack.sort(function (a, b) {
@@ -552,7 +552,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "drawPingPongStack",
       value: function drawPingPongStack() {
         for (var i = 0; i < this.stacks.pingPong.length; i++) {
-          var plane = this.renderer.planes[this.stacks.pingPong[i]]; // be sure the plane exists
+          var plane = this.stacks.pingPong[i]; // be sure the plane exists
 
           if (plane) {
             // draw the plane
@@ -1899,7 +1899,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderer = new Renderer({
           alpha: this.alpha,
           antialias: this.antialias,
-          premulitpliedAlpha: this.premultipliedAlpha,
+          premultipliedAlpha: this.premultipliedAlpha,
           depth: this.depth,
           failIfMajorPerformanceCaveat: this.failIfMajorPerformanceCaveat,
           preserveDrawingBuffer: this.preserveDrawingBuffer,
@@ -5366,7 +5366,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var shouldDelete = this.gl && !this._copiedFrom && (force || this.sourceType !== "image" || !this.renderer.state.isActive);
 
         if (shouldDelete) {
-          // if the texture is in our textures cache array, remove it
+          this._canDraw = false; // if the texture is in our textures cache array, remove it
+
           this.renderer.cache.removeTexture(this);
           this.gl.activeTexture(this.gl.TEXTURE0 + this.index);
           this.gl.bindTexture(this.gl.TEXTURE_2D, null);
@@ -9022,6 +9023,50 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
 
         return this;
+      }
+      /*** DESTROYING ***/
+
+      /***
+       Override the regular remove method to remove the 2 render targets
+       ***/
+
+    }, {
+      key: "remove",
+      value: function remove() {
+        // first we want to stop drawing it
+        this._canDraw = false;
+        this.target = null; // force unbinding frame buffer
+
+        this.renderer.bindFrameBuffer(null); // manually dispose the frame buffers (do not delete their textures)
+
+        if (this.writePass._frameBuffer) {
+          this.gl.deleteFramebuffer(this.writePass._frameBuffer);
+          this.writePass._frameBuffer = null;
+        }
+
+        if (this.writePass._depthBuffer) {
+          this.gl.deleteRenderbuffer(this.writePass._depthBuffer);
+          this.writePass._depthBuffer = null;
+        }
+
+        this.renderer.removeRenderTarget(this.writePass);
+
+        if (this.readPass._frameBuffer) {
+          this.gl.deleteFramebuffer(this.readPass._frameBuffer);
+          this.readPass._frameBuffer = null;
+        }
+
+        if (this.readPass._depthBuffer) {
+          this.gl.deleteRenderbuffer(this.readPass._depthBuffer);
+          this.readPass._depthBuffer = null;
+        }
+
+        this.renderer.removeRenderTarget(this.readPass); // delete all the webgl bindings
+
+        this._dispose(); // finally remove plane
+
+
+        this.renderer.removePlane(this);
       }
     }]);
 
