@@ -200,11 +200,12 @@
 
     .plane-wrapper {
         height: 75vh;
-        margin: 7.5vh auto;
+        width: 80%;
+        margin: 7.5vh 10%;
     }
 
     .plane-wrapper:nth-child(even) {
-        margin: 7.5vh auto;
+        margin: 7.5vh 10%;
     }
 
 }
