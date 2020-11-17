@@ -127,6 +127,11 @@ export class Renderer {
             // current program ID
             currentProgramID: null,
 
+            // current geometry drawn
+            currentGeometryID: null,
+            // whether we should force buffer bindings update
+            forceBufferUpdate: false,
+
             // if we're using depth test or not
             setDepth: null,
             // face culling
@@ -463,6 +468,20 @@ export class Renderer {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     }
 
+    /***
+     Clear our WebGL scene depth
+     ***/
+    clearDepth() {
+        this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
+    }
+
+    /***
+     Clear our WebGL scene colors and depth
+     ***/
+    clearColor() {
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+    }
+
 
     /*** FRAME BUFFER OBJECTS ***/
 
@@ -619,6 +638,8 @@ export class Renderer {
     removeRenderTarget(renderTarget) {
         if(!this.gl) return;
 
+        let hasPlane = this.planes.find(plane => plane.type !== "PingPongPlane" && plane.target && plane.target.uuid === renderTarget.uuid);
+
         // loop through all planes that might use that render target and reset it
         for(let i = 0; i < this.planes.length; i++) {
             if(this.planes[i].target && this.planes[i].target.uuid === renderTarget.uuid) {
@@ -637,6 +658,12 @@ export class Renderer {
 
         // clear the buffer to clean scene
         if(this.gl) this.clear();
+
+        // we had plane that was rendered in this render targets stack
+        // re init stacks
+        if(hasPlane) {
+            this.scene.resetPlaneStacks();
+        }
 
         // we've removed an object, keep Curtains class in sync with our renderer
         this.onSceneChange();
@@ -701,6 +728,9 @@ export class Renderer {
 
         // clear scene first
         this.clear();
+
+        // reset attributes buffer state
+        this.state.currentGeometryID = null;
 
         // draw our scene content
         this.scene.draw();

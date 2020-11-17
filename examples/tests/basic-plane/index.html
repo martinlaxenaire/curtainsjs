@@ -68,13 +68,14 @@
                 width: 100%;
                 height: 100vh;
                 display: flex;
+                flex-wrap: wrap;
             }
 
 			.plane {
 				/* define the size of your plane */
-				width: 40%;
-				height: 80vh;
-				margin: 10vh auto;
+				width: 50%;
+				height: 50vh;
+				margin: 0 auto;
 			}
 
 			.plane img {
@@ -97,6 +98,15 @@
             <div class="plane">
                 <img src="plane-texture-3.jpg" />
                 <img src="plane-texture-4.jpg" />
+            </div>
+
+            <div class="plane">
+                <img src="plane-texture-2.jpg" />
+                <img src="plane-texture-1.jpg" />
+            </div>
+            <div class="plane">
+                <img src="plane-texture-4.jpg" />
+                <img src="plane-texture-3.jpg" />
             </div>
         </div>
 
@@ -168,11 +178,14 @@
 			}
         </script>
 
-        <!--<script type="text/javascript" src="../../../dist/curtains.umd.js"></script>-->
+        <!--<script type="text/javascript" src="../../../dist/curtains.umd.min.js"></script>-->
 		<script type="module">
-            import {Curtains, Plane, Vec2} from '../../../src/index.mjs';
+            import {Curtains, Plane, Vec3} from '../../../src/index.mjs';
 
             window.addEventListener("load", () => {
+                //const {Curtains} = Curtains;
+                console.log(window.Curtains);
+
 				// set up our WebGL context and append the canvas to our wrapper
 				const curtains = new Curtains({
                     container: "canvas",
@@ -192,7 +205,7 @@
                 const params = {
 					vertexShaderID: "plane-vs", // our vertex shader ID
 					fragmentShaderID: "plane-fs", // our framgent shader ID
-                    //shareProgram: true,
+                    shareProgram: true,
 					uniforms: {
 						time: {
 							name: "uTime", // uniform name that will be passed to our shaders
@@ -202,11 +215,14 @@
 					}
 				};
 
+                const planes = [];
 				for(let i = 0; i < planeElements.length; i++) {
                     // create our plane mesh
                     const plane = new Plane(curtains, planeElements[i], params);
+                    planes.push(plane);
 
-                    plane.setRotation(-1.25, 0, 0);
+                    //plane.setRotation(-1.25, 0, 0);
+
 
                     // set up our basic methods
                     plane.onLoading((texture) => {
@@ -217,6 +233,25 @@
                     }).onRender(function() { // fired at each requestAnimationFrame call
                         plane.uniforms.time.value = plane.uniforms.time.value + (1 + 0.5 * plane.index); // update our time uniform value
                     });
+
+
+                    // test for moveToFront
+                    if(plane.index === 0) {
+                        plane.setRelativeTranslation(new Vec3(50, 50, 0));
+                    }
+                    else if(plane.index === 1) {
+                        plane.setRelativeTranslation(new Vec3(-50, 50, 0));
+                    }
+                    else if(plane.index === 2) {
+                        plane.setRelativeTranslation(new Vec3(50, -50, 0));
+                    }
+                    else if(plane.index === 3) {
+                        plane.setRelativeTranslation(new Vec3(-50, -50, 0));
+                    }
+
+                    setTimeout(() => {
+                        planes[1].moveToFront();
+                    }, 2000);
                 }
 
 			});

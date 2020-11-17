@@ -26,6 +26,7 @@ export class PingPongPlane extends Plane {
         shareProgram,
         widthSegments,
         heightSegments,
+        renderOrder, // does not have much sense
         depthTest,
         cullFace,
         uniforms,
@@ -52,6 +53,7 @@ export class PingPongPlane extends Plane {
             shareProgram,
             widthSegments,
             heightSegments,
+            renderOrder,
             depthTest,
             cullFace,
             uniforms,
@@ -67,8 +69,13 @@ export class PingPongPlane extends Plane {
             drawCheckMargins,
             autoloadSources,
             watchScroll,
-            fov
+            fov,
         });
+
+        // remove from stack, update type to PingPongPlane and then stack again
+        this.renderer.scene.removePlane(this);
+        this.type = "PingPongPlane";
+        this.renderer.scene.addPlane(this);
 
         // create 2 render targets
         this.readPass = new RenderTarget(curtains, {
@@ -86,11 +93,7 @@ export class PingPongPlane extends Plane {
         // create a texture where we'll draw
         const texture = this.createTexture({
             sampler: sampler,
-        });
-
-        // copy readPass texture on next render (this will prevent framebuffer feedback loop)
-        this.renderer.nextRender.add(() => {
-            texture.copy(this.readPass.getTexture());
+            fromTexture: this.readPass.getTexture()
         });
 
         // override onRender and onAfterRender callbacks

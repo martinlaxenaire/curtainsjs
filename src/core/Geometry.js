@@ -225,6 +225,9 @@ export class Geometry {
             // set where the attribute gets its data
             this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
         }
+
+        // update current buffers ID
+        this.renderer.state.currentGeometryID = this.definition.id;
     }
 
 
@@ -248,6 +251,9 @@ export class Geometry {
                 this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
             }
         }
+
+        // update current buffers ID
+        this.renderer.state.currentGeometryID = this.definition.id;
     }
 
 
@@ -281,5 +287,8 @@ export class Geometry {
         }
 
         this.attributes = null;
+
+        // update current buffers ID
+        this.renderer.state.currentGeometryID = null;
     }
 }

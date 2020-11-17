@@ -33,27 +33,27 @@ import {throwWarning, lerp} from "../utils/utils.js";
  ***/
 export class Curtains {
     constructor({
-        // renderer container
-        container,
+                    // renderer container
+                    container,
 
-        // webgl params
-        alpha = true,
-        premultipliedAlpha = false,
-        antialias = true,
-        depth = true,
-        failIfMajorPerformanceCaveat = true,
-        preserveDrawingBuffer = false,
-        stencil = false,
+                    // webgl params
+                    alpha = true,
+                    premultipliedAlpha = false,
+                    antialias = true,
+                    depth = true,
+                    failIfMajorPerformanceCaveat = true,
+                    preserveDrawingBuffer = false,
+                    stencil = false,
 
-        autoResize = true,
-        autoRender = true,
-        watchScroll = true,
+                    autoResize = true,
+                    autoRender = true,
+                    watchScroll = true,
 
-        pixelRatio = window.devicePixelRatio || 1,
-        renderingScale = 1,
+                    pixelRatio = window.devicePixelRatio || 1,
+                    renderingScale = 1,
 
-        production = false,
-    } = {}) {
+                    production = false,
+                } = {}) {
         this.type = "Curtains";
 
         // if we should use auto resize (default to true)
@@ -158,7 +158,7 @@ export class Curtains {
         this.container.appendChild(this.canvas);
 
         // watermark
-        console.log("curtains.js - v7.2");
+        console.log("curtains.js - v7.3");
 
         // start rendering
         this._animationFrameID = null;
@@ -250,6 +250,38 @@ export class Curtains {
      ***/
     nextRender(callback) {
         this.renderer.nextRender.add(callback);
+    }
+
+    /***
+     Clear our WebGL renderer colors and depth buffers
+     ***/
+    clear() {
+        this.renderer && this.renderer.clear();
+    }
+
+    /***
+     Clear our WebGL renderer depth buffer
+     ***/
+    clearDepth() {
+        this.renderer && this.renderer.clearDepth();
+    }
+
+    /***
+     Clear our WebGL renderer color buffer
+     ***/
+    clearColor() {
+        this.renderer && this.renderer.clearColor();
+    }
+
+
+    /***
+     Check whether the created context is WebGL2
+
+     return:
+     @isWebGL2 (bool): whether the created WebGL context is 2.0 or not
+     ***/
+    isWebGL2() {
+        return this.gl ? this.renderer._isWebGL2 : false;
     }
 
 

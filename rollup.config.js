@@ -7,7 +7,8 @@ export default [{
         {
             file: 'dist/curtains.umd.js',
             format: 'umd',
-            name: 'Curtains',
+            name: 'window',
+            extend: true,
             plugins: [
                 getBabelOutputPlugin({
                     allowAllFormats: true,
@@ -21,7 +22,8 @@ export default [{
         {
             file: 'dist/curtains.umd.min.js',
             format: 'umd',
-            name: 'Curtains',
+            name: 'window',
+            extend: true,
             plugins: [
                 getBabelOutputPlugin({
                     allowAllFormats: true,
