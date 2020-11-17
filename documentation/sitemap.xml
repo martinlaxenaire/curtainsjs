@@ -88,6 +88,11 @@
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
     </url>
+    <url>
+        <loc>https://www.curtainsjs.com/scene-rendering-order.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
 
     <!-- examples -->
     <url>
@@ -114,6 +119,12 @@
 
     <url>
         <loc>https://www.curtainsjs.com/examples/basic-plane/index.html</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://www.curtainsjs.com/examples/gsap-click-to-fullscreen-gallery/index.html</loc>
         <changefreq>yearly</changefreq>
         <priority>0.6</priority>
     </url>

@@ -177,7 +177,7 @@ export class Curtains {
         this.renderer = new Renderer({
             alpha: this.alpha,
             antialias: this.antialias,
-            premulitpliedAlpha: this.premultipliedAlpha,
+            premultipliedAlpha: this.premultipliedAlpha,
             depth: this.depth,
             failIfMajorPerformanceCaveat: this.failIfMajorPerformanceCaveat,
             preserveDrawingBuffer: this.preserveDrawingBuffer,

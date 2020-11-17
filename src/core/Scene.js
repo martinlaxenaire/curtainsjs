@@ -113,7 +113,7 @@ export class Scene {
      ***/
     addToRenderTargetsStack(plane) {
         // find all planes that are rendered onto a render target
-        const renderTargetsPlanes = this.renderer.planes.filter(el => el.target && el.uuid !== plane.uuid);
+        const renderTargetsPlanes = this.renderer.planes.filter(el => el.type !== "PingPongPlane" && el.target && el.uuid !== plane.uuid);
 
         // is there any plane that is already rendered onto that plane's render target?
         let siblingPlaneIndex = -1;
@@ -163,7 +163,7 @@ export class Scene {
      ***/
     addToRegularPlaneStack(plane) {
         // get all planes that have same transparency
-        const planeStack = this.renderer.planes.filter(el => !el.target && el._transparent === plane._transparent && el.uuid !== plane.uuid);
+        const planeStack = this.renderer.planes.filter(el => el.type !== "PingPongPlane" && !el.target && el._transparent === plane._transparent && el.uuid !== plane.uuid);
 
         // find first one that match this geometry
         let siblingPlaneIndex = -1;
@@ -301,10 +301,12 @@ export class Scene {
                 this.stacks.transparent
                 : this.stacks.opaque;
 
-            // if the first drawn scene pass does not handle depth
+            // if the first drawn scene pass does not handle depth, we'll have to sort them in the inverse order
             const scenePassWithoutDepth = this.stacks.scenePasses.find((pass, index) => pass._isScenePass && !pass._depth && index === 0);
 
-            if(scenePassWithoutDepth) {
+            if(!this.renderer.depth || scenePassWithoutDepth) {
+                // inverted sorting
+
                 // sort by indexes
                 planeStack.sort((a, b) => b.index - a.index);
 
@@ -317,6 +319,8 @@ export class Scene {
                 planeStack.sort((a, b) => a.renderOrder - b.renderOrder);
             }
             else {
+                // regular sorting
+
                 // sort by indexes
                 planeStack.sort((a, b) => a.index - b.index);
 
@@ -327,8 +331,6 @@ export class Scene {
 
                 // then sort by render order
                 planeStack.sort((a, b) => b.renderOrder - a.renderOrder);
-
-                console.log(planeStack);
             }
         }
     }

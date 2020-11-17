@@ -47,18 +47,18 @@ import {Curtains, Plane} from 'curtainsjs';
 
 </div>
 <div>
-In a browser, you can use the UMD files located in the `dist` directory. Note that all the classes will use the `Curtains` namespace:
+In a browser, you can use the UMD files located in the `dist` directory:
     
 ```html
 <script src="dist/curtains.umd.min.js"></script>
 ```
 
 ```javascript
-const curtains = new Curtains.Curtains({
+const curtains = new Curtains({
     container: "canvas"
 });
 
-const plane = new Curtains.Plane(curtains, document.querySelector("#plane"));
+const plane = new Plane(curtains, document.querySelector("#plane"));
 
 // etc
 ```
@@ -300,3 +300,7 @@ window.addEventListener("load", () => {
     }
 </script> 
 ```
+
+<h2>Changelog</h2>
+
+Complete [changelog](CHANGELOG.md) starting from version 7.1.0

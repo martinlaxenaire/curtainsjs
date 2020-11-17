@@ -22,7 +22,7 @@ import {throwWarning} from '../utils/utils.js';
 
  returns :
  @this: our Renderer
-***/
+ ***/
 
 export class Renderer {
     constructor({
@@ -659,7 +659,7 @@ export class Renderer {
         // clear the buffer to clean scene
         if(this.gl) this.clear();
 
-        // we had plane that was rendered in this render targets stack
+        // we had at least a plane that was rendered in this render targets stack
         // re init stacks
         if(hasPlane) {
             this.scene.resetPlaneStacks();

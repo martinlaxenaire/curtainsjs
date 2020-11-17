@@ -223,12 +223,10 @@ export class Plane extends DOMMesh {
      ***/
     removeRenderTarget() {
         if(this.target) {
+            // reset our planes stacks
             this.renderer.scene.removePlane(this);
             this.target = null;
             this.renderer.scene.addPlane(this);
-
-            // reset our plane stacks
-            //this.renderer.scene.resetPlaneStacks();
         }
     }
 

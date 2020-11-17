@@ -141,6 +141,15 @@
                                     </div>
                                     <ul class="api-submenu">
                                         <li>
+                                            <a href="curtains-class.html#clear">clear</a>
+                                        </li>
+                                        <li>
+                                            <a href="curtains-class.html#clear-color">clearColor</a>
+                                        </li>
+                                        <li>
+                                            <a href="curtains-class.html#clear-depth">clearDepth</a>
+                                        </li>
+                                        <li>
                                             <a href="curtains-class.html#disable-drawing">disableDrawing</a>
                                         </li>
                                         <li>
@@ -157,6 +166,9 @@
                                         </li>
                                         <li>
                                             <a href="curtains-class.html#get-scroll-values">getScrollValues</a>
+                                        </li>
+                                        <li>
+                                            <a href="curtains-class.html#is-webgl2">isWebGL2</a>
                                         </li>
                                         <li>
                                             <a href="curtains-class.html#lerp">lerp</a>
@@ -632,6 +644,30 @@
 						</ul>
 						<h2 id="methods">Methods</h2>
 						<ul>
+                            <li id="clear">
+                                <p>
+                                    <strong>clear</strong>(): <span class="api-item-version">v7.3</span>
+                                </p>
+                                <p>
+                                    Clears both WebGL context colors and depth buffers.
+                                </p>
+                            </li>
+                            <li id="clear-color">
+                                <p>
+                                    <strong>clearColor</strong>(): <span class="api-item-version">v7.3</span>
+                                </p>
+                                <p>
+                                    Clears WebGL context color buffer.
+                                </p>
+                            </li>
+                            <li id="clear-depth">
+                                <p>
+                                    <strong>clearDepth</strong>(): <span class="api-item-version">v7.3</span>
+                                </p>
+                                <p>
+                                    Clears WebGL context depth buffer.
+                                </p>
+                            </li>
 							<li id="disable-drawing">
 								<p>
 									<strong>disableDrawing</strong>(): <span class="api-item-version">v1.8</span>
@@ -704,6 +740,18 @@
                                 </p>
                                 <p class="api-item-examples">
                                     <strong>Examples:</strong> used in <a href="examples/multiple-planes/index.html" title="Multiple planes" target="_blank">Multiple planes</a>, <a href="examples/multiple-planes-scroll-effect/index.html" title="Multiple planes scroll effect : rotation, scale and parallax" target="_blank">Multiple planes scroll effect : rotation, scale and parallax</a>, <a href="examples/post-processing-displacement/index.html" title="Post processing displacement effect" target="_blank">Post processing displacement effect</a> and <a href="examples/post-processing-scroll-effect/index.html" title="Post processing multiple passes" target="_blank">Post processing multiple passes</a> examples.
+                                </p>
+                            </li>
+
+                            <li id="is-webgl2">
+                                <p>
+                                    <strong>isWebGL2</strong>(): <span class="api-item-version">v7.3</span>
+                                </p>
+                                <p>
+                                    Check whether the created WebGL context is using WebGL2 or not.
+                                </p>
+                                <p>
+                                    <strong>returns:</strong> an boolean indicating if the context is using WebGL2 or not.
                                 </p>
                             </li>
 

@@ -445,6 +445,12 @@ export class Texture {
 
         // copy source
         this._size = texture._size;
+
+        // trigger loaded callback if needed
+        if(!this._sourceLoaded && texture._sourceLoaded) {
+            this._onSourceLoadedCallback && this._onSourceLoadedCallback();
+        }
+
         this._sourceLoaded = texture._sourceLoaded;
 
         // trigger uploaded callback if needed
@@ -453,6 +459,7 @@ export class Texture {
         }
 
         this._uploaded = texture._uploaded;
+
         this.sourceType = texture.sourceType;
         this.source = texture.source;
         this._videoFrameCallbackID = texture._videoFrameCallbackID;
@@ -1199,6 +1206,8 @@ export class Texture {
         const shouldDelete = this.gl && !this._copiedFrom && (force || this.sourceType !== "image" || !this.renderer.state.isActive);
 
         if(shouldDelete) {
+            this._canDraw = false;
+
             // if the texture is in our textures cache array, remove it
             this.renderer.cache.removeTexture(this);
 

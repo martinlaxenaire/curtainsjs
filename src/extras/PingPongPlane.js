@@ -169,4 +169,46 @@ export class PingPongPlane extends Plane {
 
         return this;
     }
+
+
+    /*** DESTROYING ***/
+
+    /***
+     Override the regular remove method to remove the 2 render targets
+     ***/
+    remove() {
+        // first we want to stop drawing it
+        this._canDraw = false;
+
+        this.target = null;
+        // force unbinding frame buffer
+        this.renderer.bindFrameBuffer(null);
+
+        // manually dispose the frame buffers (do not delete their textures)
+        if(this.writePass._frameBuffer) {
+            this.gl.deleteFramebuffer(this.writePass._frameBuffer);
+            this.writePass._frameBuffer = null;
+        }
+        if(this.writePass._depthBuffer) {
+            this.gl.deleteRenderbuffer(this.writePass._depthBuffer);
+            this.writePass._depthBuffer = null;
+        }
+        this.renderer.removeRenderTarget(this.writePass);
+
+        if(this.readPass._frameBuffer) {
+            this.gl.deleteFramebuffer(this.readPass._frameBuffer);
+            this.readPass._frameBuffer = null;
+        }
+        if(this.readPass._depthBuffer) {
+            this.gl.deleteRenderbuffer(this.readPass._depthBuffer);
+            this.readPass._depthBuffer = null;
+        }
+        this.renderer.removeRenderTarget(this.readPass);
+
+        // delete all the webgl bindings
+        this._dispose();
+
+        // finally remove plane
+        this.renderer.removePlane(this);
+    }
 }

@@ -103,7 +103,7 @@
 						<div class="text-section">
 							<h2>Download</h2>
                             <p>
-                                <a href="dist/curtains.umd.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v7.1">curtains.umd.js v7.1 (319Ko)</a> - <a href="dist/curtains.umd.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.umd.min.js v7.1">curtains.umd.min.js v7.1 (111Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
+                                <a href="dist/curtains.umd.js" id="download-full-lib-link" download target="_blank" title="download curtains.js v7.3">curtains.umd.js v7.3 (329Ko)</a> - <a href="dist/curtains.umd.min.js" id="download-min-lib-link" download target="_blank" title="download curtains.umd.min.js v7.3">curtains.umd.min.js v7.3 (116Ko)</a> - <a href="https://github.com/martinlaxenaire/curtainsjs" title="curtains.js on Github" target="_blank">Github</a>.
                             </p>
 						</div>
 
@@ -142,7 +142,8 @@
                             <h3>Advanced render targets usage</h3>
                             <p>
                                 <a href="examples/ping-pong-shading-flowmap/index.html" title="Ping pong shading flowmap example" target="_blank">Ping pong shading / FBOs swapping flowmap example</a><br />
-                                <a href="examples/render-passes-using-render-targets/index.html" title="Selective shader passes using render targets" target="_blank">Selective shader passes using render targets</a>
+                                <a href="examples/render-passes-using-render-targets/index.html" title="Selective shader passes using render targets" target="_blank">Selective shader passes using render targets</a><br />
+                                <a href="examples/gsap-click-to-fullscreen-gallery/index.html" title="GSAP click to fullscreen gallery" target="_blank">GSAP click to fullscreen gallery</a>
                             </p>
                             <h3>Custom scroll</h3>
                             <p>
@@ -187,7 +188,7 @@
                             </div>
 							<div>
                                 <p>
-                                    In a browser, you can use the UMD files located in the 'dist' directory. Note that all the classes will use the 'Curtains' namespace:
+                                    In a browser, you can use the UMD files located in the 'dist' directory:
                                 </p>
 
                                 <div class="code">
@@ -202,12 +203,12 @@
                                             // "canvas" is the ID of our HTML container element
                                         </div>
                                         <div>
-                                            <span class="code-var">const</span> curtains = <span class="code-var">new</span> Curtains.<span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
+                                            <span class="code-var">const</span> curtains = <span class="code-var">new</span> <span class="code-tag">Curtains</span>({<div class="code-indent"><span class="code-property">container</span>: <span class="code-string">"canvas"</span></div>})<span class="code-var">;</span>
                                         </div>
                                     </div>
 
                                     <div>
-                                        <span class="code-var">const</span> plane = <span class="code-var">new</span> Curtains.<span class="code-tag">Plane</span>(curtains<span class="code-var">,</span> document.<span class="code-tag">getElementById</span>(<span class="code-string">"my-plane"</span>))<span class="code-var">;</span>
+                                        <span class="code-var">const</span> plane = <span class="code-var">new</span> <span class="code-tag">Plane</span>(curtains<span class="code-var">,</span> document.<span class="code-tag">getElementById</span>(<span class="code-string">"my-plane"</span>))<span class="code-var">;</span>
                                     </div>
                                 </div>
 

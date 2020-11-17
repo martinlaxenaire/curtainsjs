@@ -27,7 +27,7 @@ export class ShaderPass extends DOMMesh {
         shareProgram,
         widthSegments,
         heightSegments,
-        renderOrder = 0,
+        renderOrder,
         depthTest,
         cullFace,
         uniforms,
@@ -74,6 +74,7 @@ export class ShaderPass extends DOMMesh {
         this._isScenePass = true;
 
         this.index = this.renderer.shaderPasses.length;
+        this.renderOrder = 0;
 
         this._depth = depth;
 

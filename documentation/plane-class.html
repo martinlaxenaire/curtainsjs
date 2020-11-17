@@ -140,6 +140,9 @@
                                             <a href="plane-class.html#renderer">renderer</a>
                                         </li>
                                         <li>
+                                            <a href="plane-class.html#render-order">renderOrder</a>
+                                        </li>
+                                        <li>
                                             <a href="plane-class.html#rotation">rotation</a>
                                         </li>
                                         <li>
@@ -229,13 +232,13 @@
                                             <a href="plane-class.html#mouse-to-plane-coords">mouseToPlaneCoords</a>
                                         </li>
                                         <li>
-                                            <a href="plane-class.html#move-to-front">moveToFront</a>
-                                        </li>
-                                        <li>
                                             <a href="plane-class.html#play-videos">playVideos</a>
                                         </li>
                                         <li>
                                             <a href="plane-class.html#remove">remove</a>
+                                        </li>
+                                        <li>
+                                            <a href="plane-class.html#remove-render-target">removeRenderTarget</a>
                                         </li>
                                         <li>
                                             <a href="plane-class.html#reset-plane">resetPlane</a>
@@ -245,6 +248,9 @@
                                         </li>
                                         <li>
                                             <a href="plane-class.html#set-perspective">setPerspective</a>
+                                        </li>
+                                        <li>
+                                            <a href="plane-class.html#set-render-order">setRenderOrder</a>
                                         </li>
                                         <li>
                                             <a href="plane-class.html#set-render-target">setRenderTarget</a>
@@ -601,6 +607,17 @@
                                         </span>
                                         <span class="api-item-parameter-desc">
                                             the plane's definition along the Y axis (1 by default).
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            renderOrder
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            int, optional
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            defines in which order the planes are drawn. See <a href="plane-class.html#render-order">renderOrder</a> property. Default to 0.
                                         </span>
                                     </li>
                                     <li>
@@ -1015,6 +1032,17 @@
                                 </p>
                                 <p>
                                     The Renderer class object created by our curtains object.
+                                </p>
+                            </li>
+                            <li id="render-order">
+                                <p>
+                                    <strong>renderOrder</strong> (int): <span class="api-item-version">v7.3</span><span class="api-item-warning">read only</span>
+                                </p>
+                                <p>
+                                    The plane renderOrder value, which determines in which order the planes are drawn.<br />
+                                    A plane will be rendered on top of planes with a lower renderOrder number.<br />
+                                    Use <a href="plane-class.html#set-render-order">setRenderOrder()</a> to change this value. Default to 0.<br />
+                                    See <a href="scene-rendering-order.html">Scene rendering order</a> to know more about how the things are drawn.
                                 </p>
                             </li>
                             <li id="rotation">
@@ -1964,15 +1992,6 @@
                                 </p>
                             </li>
 
-                            <li id="move-to-front">
-                                <p>
-                                    <strong>moveToFront</strong>(): <span class="api-item-version">v1.3</span>
-                                </p>
-                                <p>
-                                    Change the render order of that plane so it is drawn last. Note that transparent planes will always be drawn after opaque ones.
-                                </p>
-                            </li>
-
                             <li id="play-videos">
                                 <p>
                                     <strong>playVideos</strong>(): <span class="api-item-version">v1.2</span>
@@ -1994,6 +2013,15 @@
                                 </p>
                                 <p class="api-item-examples">
                                     <strong>Examples:</strong> used in <a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a> example.
+                                </p>
+                            </li>
+
+                            <li id="remove-render-target">
+                                <p>
+                                    <strong>removeRenderTarget</strong>(): <span class="api-item-version">v7.3</span>
+                                </p>
+                                <p>
+                                    Removes the plane current render target if any.
                                 </p>
                             </li>
 
@@ -2075,6 +2103,32 @@
                                 </ul>
                                 <p class="api-item-examples">
                                     <strong>Examples:</strong> used in <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a>, <a href="examples/simple-plane/index.html" title="Simple plane" target="_blank">Simple plane</a>, <a href="examples/simple-video-plane/index.html" title="Simple video plane" target="_blank">Simple video plane</a>, <a href="examples/simple-canvas-plane/index.html" title="Simple canvas plane" target="_blank">Simple canvas plane</a> examples.
+                                </p>
+                            </li>
+
+                            <li id="set-render-order">
+                                <p>
+                                    <strong>setRenderOrder</strong>(renderOrder): <span class="api-item-version">v7.3</span>
+                                </p>
+                                <p>
+                                    Sets the plane new <a href="plane-class.html#render-order">render order</a>.<br />
+                                    A plane will be rendered on top of planes with a lower renderOrder number. Negative numbers are accepted. You can ommit the renderOrder parameter to reset a plane renderOrder value.
+                                </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            renderOrder
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            int
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            the new render order to use. Default to 0.
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p class="api-item-examples">
+                                    <strong>Examples:</strong> used in <a href="examples/gsap-click-to-fullscreen-gallery/index.html" title="GSAP click to fullscreen gallery example" target="_blank">GSAP click to fullscreen gallery</a> example.
                                 </p>
                             </li>
 

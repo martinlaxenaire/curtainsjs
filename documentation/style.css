@@ -518,7 +518,7 @@
         list-style: disc;
     }
 
-    .api-content-inner .main-classes-list li {
+    .api-content-inner .main-classes-list li, .main-ordered-list li {
         margin-bottom: 2.5em;
     }
 
