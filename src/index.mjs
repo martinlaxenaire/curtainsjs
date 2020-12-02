@@ -14,6 +14,7 @@ export {TextureLoader} from './loaders/TextureLoader.js';
 export {Vec2} from './math/Vec2.js';
 export {Vec3} from './math/Vec3.js';
 export {Mat4} from './math/Mat4.js';
+export {Quat} from './math/Quat.js';
 
 // extras
 // TODO TextTexture class?
