@@ -291,6 +291,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         planeStack.sort(function (a, b) {
           return a.index - b.index;
         });
+
+        if (plane.shareProgram) {
+          // sort by program id
+          planeStack.sort(function (a, b) {
+            return a._program.id - b._program.id;
+          });
+        }
+
         return planeStack;
       }
       /***
@@ -6009,7 +6017,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           var _parentAssetArray2 = this._parent["canvases"];
 
           var _isInParent2 = _parentAssetArray2.find(function (element) {
-            return element.isEqualNode(source);
+            return element.isSameNode(source);
           });
 
           !_isInParent2 && _parentAssetArray2.push(source);
@@ -9130,6 +9138,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   exports.Mat4 = Mat4;
   exports.PingPongPlane = PingPongPlane;
   exports.Plane = Plane;
+  exports.Quat = Quat;
   exports.RenderTarget = RenderTarget;
   exports.ShaderPass = ShaderPass;
   exports.Texture = Texture;

@@ -1,6 +1,24 @@
 # Changelog
 
-## v7.3.1 (11/13/2020)
+## v7.3.3 (02/12/2020)
+
+#### Bug Fixes:
+
+###### index.mjs
+
+- fixed Quat class not being exported.
+
+###### core/Scene.js
+
+- fixed sharedProgram render order by program IDs
+
+###### loaders/PlaneTextureLoader.js
+
+- replaced isEqualNode() with isSameNode()
+
+---
+
+## v7.3.2 (11/13/2020)
 
 #### Bug Fixes:
 
