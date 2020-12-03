@@ -31,6 +31,18 @@ import {throwWarning} from '../utils/utils.js';
  returns :
  @this: our Plane
  ***/
+
+// avoid reinstancing those during runtime
+const tempMat4a = new Mat4();
+const tempMat4b = new Mat4();
+
+const tempVec2 = new Vec2();
+
+const tempVec3a = new Vec3();
+const tempVec3b = new Vec3();
+const tempVec3c = new Vec3();
+const tempVec3d = new Vec3();
+
 export class Plane extends DOMMesh {
     constructor(renderer, htmlElement, {
         // Mesh params
@@ -353,7 +365,7 @@ export class Plane extends DOMMesh {
             this._translation.z = -((1 - (this.relativeTranslation.z / this.camera.CSSPerspective)) / this.camera.position.z);
 
             // get transformation origin relative to world space
-            const origin = new Vec3(
+            const origin = tempVec3a.set(
                 (this.transformOrigin.x * 2 - 1) // between -1 and 1
                 * this._boundingRect.world.scale.x,
                 -(this.transformOrigin.y * 2 - 1) // between -1 and 1
@@ -362,10 +374,10 @@ export class Plane extends DOMMesh {
             );
 
             // get our transformation matrix
-            let transformFromOrigin = new Mat4().composeFromOrigin(this._translation, this.quaternion, this.scale, origin);
+            let transformFromOrigin = tempMat4a.composeFromOrigin(this._translation, this.quaternion, this.scale, origin);
 
             // now scale our plane according to its world bounding rect
-            const scaleMatrix = new Mat4([
+            const scaleMatrix = tempMat4b.setFromArray([
                 this._boundingRect.world.scale.x, 0, 0, 0,
                 0, this._boundingRect.world.scale.y, 0, 0,
                 0, 0, 1, 0,
@@ -411,7 +423,7 @@ export class Plane extends DOMMesh {
             return;
         }
 
-        scale.sanitizeNaNValuesWith(this.scale).max(new Vec2(0.001, 0.001));
+        scale.sanitizeNaNValuesWith(this.scale).max(tempVec2.set(0.001, 0.001));
 
         // only apply if values changed
         if(scale.x !== this.scale.x || scale.y !== this.scale.y) {
@@ -491,7 +503,7 @@ export class Plane extends DOMMesh {
      ***/
     _setTranslation() {
         // avoid unnecessary calculations if we don't have a users set relative position
-        let worldPosition = new Vec3();
+        let worldPosition = tempVec3a.set(0, 0, 0);
         if(!this.relativeTranslation.equals(worldPosition)) {
             worldPosition = this._documentToWorldSpace(this.relativeTranslation);
         }
@@ -559,7 +571,7 @@ export class Plane extends DOMMesh {
      @worldPosition: plane's position in WebGL space
      ***/
     _documentToWorldSpace(vector) {
-        const worldPosition = new Vec3(
+        const worldPosition = tempVec3a.set(
             vector.x / (this.renderer._boundingRect.width / this.renderer.pixelRatio) * (this.renderer._boundingRect.width / this.renderer._boundingRect.height),
             -vector.y / (this.renderer._boundingRect.height / this.renderer.pixelRatio),
             vector.z,
@@ -619,60 +631,60 @@ export class Plane extends DOMMesh {
             if(clippedCorners[0] === 0) {
                 // top left is culled
                 // get intersection iterating from top right
-                mvpCorners[0] = this._getIntersection(mvpCorners[1], new Vec3(0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[0] = this._getIntersection(mvpCorners[1], tempVec3a.set(0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
 
                 // get intersection iterating from bottom left
-                mvpCorners.push(this._getIntersection(mvpCorners[3], new Vec3(-1, -0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[3], tempVec3a.set(-1, -0.95, 0).applyMat4(this._matrices.mVPMatrix)));
             }
             else if(clippedCorners[0] === 1) {
                 // top right is culled
                 // get intersection iterating from top left
-                mvpCorners[1] = this._getIntersection(mvpCorners[0], new Vec3(-0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[1] = this._getIntersection(mvpCorners[0], tempVec3a.set(-0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
 
                 // get intersection iterating from bottom right
-                mvpCorners.push(this._getIntersection(mvpCorners[2], new Vec3(1, -0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[2], tempVec3a.set(1, -0.95, 0).applyMat4(this._matrices.mVPMatrix)));
             }
             else if(clippedCorners[0] === 2) {
                 // bottom right is culled
                 // get intersection iterating from bottom left
-                mvpCorners[2] = this._getIntersection(mvpCorners[3], new Vec3(-0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[2] = this._getIntersection(mvpCorners[3], tempVec3a.set(-0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
 
                 // get intersection iterating from top right
-                mvpCorners.push(this._getIntersection(mvpCorners[1], new Vec3(1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[1], tempVec3a.set(1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
             }
             else if(clippedCorners[0] === 3) {
                 // bottom left is culled
                 // get intersection iterating from bottom right
-                mvpCorners[3] = this._getIntersection(mvpCorners[2], new Vec3(0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[3] = this._getIntersection(mvpCorners[2], tempVec3a.set(0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
 
                 // get intersection iterating from top left
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3( -1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempVec3a.set( -1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
             }
         }
         else if(clippedCorners.length === 2) {
             if(clippedCorners[0] === 0 && clippedCorners[1] === 1) {
                 // top part of the plane is culled by near plane
                 // find intersection using bottom corners
-                mvpCorners[0] = this._getIntersection(mvpCorners[3], new Vec3(-1, -0.95, 0).applyMat4(this._matrices.mVPMatrix));
-                mvpCorners[1] = this._getIntersection(mvpCorners[2], new Vec3( 1, -0.95, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[0] = this._getIntersection(mvpCorners[3], tempVec3a.set(-1, -0.95, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[1] = this._getIntersection(mvpCorners[2], tempVec3a.set( 1, -0.95, 0).applyMat4(this._matrices.mVPMatrix));
             }
             else if(clippedCorners[0] === 1 && clippedCorners[1] === 2) {
                 // right part of the plane is culled by near plane
                 // find intersection using left corners
-                mvpCorners[1] = this._getIntersection(mvpCorners[0], new Vec3(-0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
-                mvpCorners[2] = this._getIntersection(mvpCorners[3], new Vec3(-0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[1] = this._getIntersection(mvpCorners[0], tempVec3a.set(-0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[2] = this._getIntersection(mvpCorners[3], tempVec3a.set(-0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
             }
             else if(clippedCorners[0] === 2 && clippedCorners[1] === 3) {
                 // bottom part of the plane is culled by near plane
                 // find intersection using top corners
-                mvpCorners[2] = this._getIntersection(mvpCorners[1], new Vec3(1, 0.95, 0).applyMat4(this._matrices.mVPMatrix));
-                mvpCorners[3] = this._getIntersection(mvpCorners[0], new Vec3(-1, 0.95, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[2] = this._getIntersection(mvpCorners[1], tempVec3a.set(1, 0.95, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[3] = this._getIntersection(mvpCorners[0], tempVec3a.set(-1, 0.95, 0).applyMat4(this._matrices.mVPMatrix));
             }
             else if(clippedCorners[0] === 0 && clippedCorners[1] === 3) {
                 // left part of the plane is culled by near plane
                 // find intersection using right corners
-                mvpCorners[0] = this._getIntersection(mvpCorners[1], new Vec3(0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
-                mvpCorners[3] = this._getIntersection(mvpCorners[2], new Vec3(0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[0] = this._getIntersection(mvpCorners[1], tempVec3a.set(0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[3] = this._getIntersection(mvpCorners[2], tempVec3a.set(0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
             }
         }
         else if(clippedCorners.length === 3) {
@@ -690,27 +702,27 @@ export class Plane extends DOMMesh {
             ];
             if(nonClippedCorner === 0) {
                 // from top left corner to right
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(-0.95, 1, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempVec3a.set(-0.95, 1, 0).applyMat4(this._matrices.mVPMatrix)));
                 // from top left corner to bottom
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(-1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempVec3a.set(-1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
             }
             else if(nonClippedCorner === 1) {
                 // from top right corner to left
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(0.95, 1, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempVec3a.set(0.95, 1, 0).applyMat4(this._matrices.mVPMatrix)));
                 // from top right corner to bottom
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempVec3a.set(1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
             }
             else if(nonClippedCorner === 2) {
                 // from bottom right corner to left
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(0.95, -1, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempVec3a.set(0.95, -1, 0).applyMat4(this._matrices.mVPMatrix)));
                 // from bottom right corner to top
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(1,-0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempVec3a.set(1,-0.95, 0).applyMat4(this._matrices.mVPMatrix)));
             }
             else if(nonClippedCorner === 3) {
                 // from bottom left corner to right
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(-0.95, -1, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempVec3a.set(-0.95, -1, 0).applyMat4(this._matrices.mVPMatrix)));
                 // from bottom left corner to top
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(-1 -0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempVec3a.set(-1 -0.95, 0).applyMat4(this._matrices.mVPMatrix)));
             }
         }
         else {
@@ -735,10 +747,10 @@ export class Plane extends DOMMesh {
      ***/
     _getWorldCoords() {
         const corners = [
-            new Vec3(-1, 1, 0), // plane's top left corner
-            new Vec3(1, 1, 0), // plane's top right corner
-            new Vec3(1, -1, 0), // plane's bottom right corner
-            new Vec3(-1, -1, 0), // plane's bottom left corner
+            tempVec3a.set(-1, 1, 0), // plane's top left corner
+            tempVec3b.set(1, 1, 0), // plane's top right corner
+            tempVec3c.set(1, -1, 0), // plane's bottom right corner
+            tempVec3d.set(-1, -1, 0), // plane's bottom left corner
         ];
 
         // corners with model view projection matrix applied

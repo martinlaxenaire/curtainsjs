@@ -30,6 +30,11 @@ import {generateUUID, throwError, throwWarning, isPowerOf2} from '../utils/utils
  returns:
  @this: our newly created Texture class object
  ***/
+
+// avoid reinstancing those during runtime
+const tempVec2 = new Vec2();
+const tempVec3 = new Vec3();
+
 export class Texture {
     constructor(renderer, {
         isFBOTexture = false,
@@ -894,7 +899,7 @@ export class Texture {
         }
 
         // remember our ShaderPass objects don't have a scale property
-        const scale = this._parent.scale ? new Vec2(this._parent.scale.x, this._parent.scale.y) : new Vec2(1, 1);
+        const scale = this._parent.scale ? tempVec2.set(this._parent.scale.x, this._parent.scale.y) : tempVec2.set(1, 1);
 
         const parentWidth  = this._parent._boundingRect.document.width * scale.x;
         const parentHeight = this._parent._boundingRect.document.height * scale.y;
@@ -942,7 +947,7 @@ export class Texture {
             return;
         }
 
-        scale.sanitizeNaNValuesWith(this.scale).max(new Vec2(0.001, 0.001));
+        scale.sanitizeNaNValuesWith(this.scale).max(tempVec2.set(0.001, 0.001));
 
         if(!scale.equals(this.scale)) {
             this.scale.copy(scale);
@@ -1022,7 +1027,7 @@ export class Texture {
      ***/
     _updateTextureMatrix(sizes) {
         // calculate scale to apply to the matrix
-        let textureScale = new Vec3(
+        let textureScale = tempVec3.set(
             sizes.parentWidth / (sizes.parentWidth - sizes.xOffset),
             sizes.parentHeight / (sizes.parentHeight - sizes.yOffset),
             1
