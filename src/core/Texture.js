@@ -35,6 +35,8 @@ import {generateUUID, throwError, throwWarning, isPowerOf2} from '../utils/utils
 const tempVec2 = new Vec2();
 const tempVec3 = new Vec3();
 
+const textureTranslation = new Mat4();
+
 export class Texture {
     constructor(renderer, {
         isFBOTexture = false,
@@ -125,8 +127,11 @@ export class Texture {
             height: 0,
         };
 
-        this.scale = new Vec2(1, 1);
+        this.scale = new Vec2(1);
+        this.scale.onChange(() => this.resize());
+
         this.offset = new Vec2();
+        this.offset.onChange(() => this.resize());
 
         // source loading and GPU uploading flags
         this._loader = loader;
@@ -1038,7 +1043,7 @@ export class Texture {
         textureScale.y /= this.scale.y;
 
         // translate texture to center it
-        const textureTranslation = new Mat4([
+        textureTranslation.setFromArray([
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
