@@ -20,13 +20,13 @@ import {Mat4} from '../math/Mat4.js';
  ***/
 export class Camera {
     constructor({
-        fov = 50,
-        near = 0.1,
-        far = 150,
-        width,
-        height,
-        pixelRatio = 1,
-    } = {}) {
+                    fov = 50,
+                    near = 0.1,
+                    far = 150,
+                    width,
+                    height,
+                    pixelRatio = 1,
+                } = {}) {
 
         this.position = new Vec3();
         this.projectionMatrix = new Mat4();
@@ -56,10 +56,11 @@ export class Camera {
         if(fov !== this.fov) {
             this.fov = fov;
             this.setPosition();
-            this.setCSSPerspective();
 
             this._shouldUpdate = true;
         }
+
+        this.setCSSPerspective();
     }
 
 
@@ -162,7 +163,7 @@ export class Camera {
      Used by the Plane class objects to scale the planes with the right amount
      ***/
     setPosition() {
-        this.position.set(0, 0, Math.tan((Math.PI / 180) * 0.5 * this.fov) * 2.0);
+        this.position.set(0, 0, 1);
 
         // update matrices
         this.worldMatrix.setFromArray([
@@ -178,9 +179,37 @@ export class Camera {
     /***
      Sets a CSSPerspective property based on width, height, pixelRatio and fov
      Used to translate planes along the Z axis using pixel units as CSS would do
+     Taken from: https://stackoverflow.com/questions/22421439/convert-field-of-view-value-to-css3d-perspective-value
      ***/
     setCSSPerspective() {
-        this.CSSPerspective = Math.pow(Math.pow(this.width / (2 * this.pixelRatio), 2) + Math.pow(this.height / (2 * this.pixelRatio), 2), 0.5) / (this.position.z * 0.5);
+        this.CSSPerspective = Math.pow( Math.pow(this.width / (2 * this.pixelRatio), 2) + Math.pow(this.height / (2 * this.pixelRatio) , 2), 0.5 ) / Math.tan((this.fov * 0.5) * Math.PI / 180);
+    }
+
+
+    /***
+     Returns visible width / height at a given z-depth from our camera parameters
+
+     Taken from: https://discourse.threejs.org/t/functions-to-calculate-the-visible-width-height-at-a-given-z-depth-from-a-perspective-camera/269
+     ***/
+    getScreenRatiosFromFov(depth = 0) {
+        // compensate for cameras not positioned at z=0
+        const cameraOffset = this.position.z;
+        if (depth < cameraOffset) {
+            depth -= cameraOffset;
+        }
+        else {
+            depth += cameraOffset;
+        }
+
+        // vertical fov in radians
+        const vFOV = this.fov * Math.PI / 180;
+
+        // Math.abs to ensure the result is always positive
+        const height = 2 * Math.tan( vFOV / 2 ) * Math.abs(depth);
+        return {
+            width: height * this.width / this.height,
+            height: height,
+        };
     }
 
     /***

@@ -158,7 +158,7 @@ export class Curtains {
         this.container.appendChild(this.canvas);
 
         // watermark
-        console.log("curtains.js - v7.3");
+        console.log("curtains.js - v7.4");
 
         // start rendering
         this._animationFrameID = null;

@@ -16,8 +16,6 @@ import {throwWarning} from '../utils/utils.js';
  @this: our BasePlane element
  ***/
 
-// TODO raycasting inside mouseToPlaneCoords for Plane objects when transformed
-
 // avoid reinstancing those during runtime
 const tempVec2a = new Vec2();
 const tempVec2b = new Vec2();
@@ -129,6 +127,7 @@ export class DOMMesh extends Mesh {
             this.setPerspective(this.camera.fov, this.camera.near, this.camera.far);
 
             // apply new position
+            this._setWorldSizes();
             this._applyWorldPositions();
         }
 
