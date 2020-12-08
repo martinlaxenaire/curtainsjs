@@ -16,10 +16,41 @@
 export class Vec2 {
     constructor(
         x = 0,
-        y = 0,
+        y = x,
     ) {
         this.type = "Vec2";
-        this.set(x, y);
+
+        this._x = x;
+        this._y = y;
+    }
+
+    /***
+     Getters and setters (with onChange callback)
+     ***/
+    get x() {
+        return this._x;
+    }
+
+    get y() {
+        return this._y;
+    }
+
+    set x(value) {
+        const changed = value !== this._x;
+        this._x = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+    }
+
+    set y(value) {
+        const changed = value !== this._y;
+        this._y = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+    }
+
+    onChange(callback) {
+        if(callback) {
+            this._onChangeCallback = callback;
+        }
     }
 
     /***
@@ -33,8 +64,8 @@ export class Vec2 {
      @this (Vec2): this vector after being set
      ***/
     set(x, y) {
-        this.x = x;
-        this.y = y;
+        this._x = x;
+        this._y = y;
 
         return this;
     }
@@ -49,8 +80,8 @@ export class Vec2 {
      @this (Vec2): this vector after addition
      ***/
     add(vector) {
-        this.x += vector.x;
-        this.y += vector.y;
+        this._x += vector.x;
+        this._y += vector.y;
 
         return this;
     }
@@ -66,8 +97,8 @@ export class Vec2 {
      @this (Vec2): this vector after addition
      ***/
     addScalar(value) {
-        this.x += value;
-        this.y += value;
+        this._x += value;
+        this._y += value;
 
         return this;
     }
@@ -83,8 +114,8 @@ export class Vec2 {
      @this (Vec2): this vector after subtraction
      ***/
     sub(vector) {
-        this.x -= vector.x;
-        this.y -= vector.y;
+        this._x -= vector.x;
+        this._y -= vector.y;
 
         return this;
     }
@@ -100,8 +131,8 @@ export class Vec2 {
      @this (Vec2): this vector after subtraction
      ***/
     subScalar(value) {
-        this.x -= value;
-        this.y -= value;
+        this._x -= value;
+        this._y -= value;
 
         return this;
     }
@@ -117,8 +148,8 @@ export class Vec2 {
      @this (Vec2): this vector after multiplication
      ***/
     multiply(vector) {
-        this.x *= vector.x;
-        this.y *= vector.y;
+        this._x *= vector.x;
+        this._y *= vector.y;
 
         return this;
     }
@@ -134,8 +165,8 @@ export class Vec2 {
      @this (Vec2): this vector after multiplication
      ***/
     multiplyScalar(value) {
-        this.x *= value;
-        this.y *= value;
+        this._x *= value;
+        this._y *= value;
 
         return this;
     }
@@ -151,8 +182,8 @@ export class Vec2 {
      @this (Vec2): this vector after copy
      ***/
     copy(vector) {
-        this.x = vector.x;
-        this.y = vector.y;
+        this._x = vector.x;
+        this._y = vector.y;
 
         return this;
     }
@@ -165,7 +196,7 @@ export class Vec2 {
      @vector (Vec2): cloned vector
      ***/
     clone() {
-        return new Vec2(this.x, this.y);
+        return new Vec2(this._x, this._y);
     }
 
 
@@ -179,8 +210,8 @@ export class Vec2 {
      @vector (Vec2): sanitized vector
      ***/
     sanitizeNaNValuesWith(vector) {
-        this.x = isNaN(this.x) ? vector.x : parseFloat(this.x);
-        this.y = isNaN(this.y) ? vector.y : parseFloat(this.y);
+        this._x = isNaN(this._x) ? vector.x : parseFloat(this._x);
+        this._y = isNaN(this._y) ? vector.y : parseFloat(this._y);
 
         return this;
     }
@@ -196,8 +227,8 @@ export class Vec2 {
      @vector (Vec2): vector with max values applied
      ***/
     max(vector) {
-        this.x = Math.max(this.x, vector.x);
-        this.y = Math.max(this.y, vector.y);
+        this._x = Math.max(this._x, vector.x);
+        this._y = Math.max(this._y, vector.y);
 
         return this;
     }
@@ -213,8 +244,8 @@ export class Vec2 {
      @vector (Vec2): vector with min values applied
      ***/
     min(vector) {
-        this.x = Math.min(this.x, vector.x);
-        this.y = Math.min(this.y, vector.y);
+        this._x = Math.min(this._x, vector.x);
+        this._y = Math.min(this._y, vector.y);
 
         return this;
     }
@@ -230,7 +261,7 @@ export class Vec2 {
      @isEqual (bool): whether the vectors are equals or not
      ***/
     equals(vector) {
-        return this.x === vector.x && this.y === vector.y;
+        return this._x === vector.x && this._y === vector.y;
     }
 
 
@@ -242,12 +273,12 @@ export class Vec2 {
      ***/
     normalize() {
         // normalize
-        let len = this.x * this.x + this.y * this.y;
+        let len = this._x * this._x + this._y * this._y;
         if (len > 0) {
             len = 1 / Math.sqrt(len);
         }
-        this.x *= len;
-        this.y *= len;
+        this._x *= len;
+        this._y *= len;
 
         return this;
     }
@@ -263,6 +294,6 @@ export class Vec2 {
      @dotProduct (float): dot product of the 2 vectors
      ***/
     dot(vector) {
-        return this.x * vector.x + this.y * vector.y;
+        return this._x * vector.x + this._y * vector.y;
     }
 }

@@ -17,11 +17,53 @@
 export class Vec3 {
     constructor(
         x = 0,
-        y = 0,
-        z = 0,
+        y = x,
+        z = x,
     ) {
         this.type = "Vec3";
-        this.set(x, y, z);
+
+        this._x = x;
+        this._y = y;
+        this._z = z;
+    }
+
+    /***
+     Getters and setters (with onChange callback)
+     ***/
+    get x() {
+        return this._x;
+    }
+
+    get y() {
+        return this._y;
+    }
+
+    get z() {
+        return this._z;
+    }
+
+    set x(value) {
+        const changed = value !== this._x;
+        this._x = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+    }
+
+    set y(value) {
+        const changed = value !== this._y;
+        this._y = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+    }
+
+    set z(value) {
+        const changed = value !== this._z;
+        this._z = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+    }
+
+    onChange(callback) {
+        if(callback) {
+            this._onChangeCallback = callback;
+        }
     }
 
     /***
@@ -36,9 +78,9 @@ export class Vec3 {
      @this (Vec2): this vector after being set
      ***/
     set(x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this._x = x;
+        this._y = y;
+        this._z = z;
 
         return this;
     }
@@ -54,9 +96,9 @@ export class Vec3 {
      @this (Vec3): this vector after addition
      ***/
     add(vector) {
-        this.x += vector.x;
-        this.y += vector.y;
-        this.z += vector.z;
+        this._x += vector.x;
+        this._y += vector.y;
+        this._z += vector.z;
 
         return this;
     }
@@ -72,9 +114,9 @@ export class Vec3 {
      @this (Vec3): this vector after addition
      ***/
     addScalar(value) {
-        this.x += value;
-        this.y += value;
-        this.z += value;
+        this._x += value;
+        this._y += value;
+        this._z += value;
 
         return this;
     }
@@ -90,9 +132,9 @@ export class Vec3 {
      @this (Vec3): this vector after subtraction
      ***/
     sub(vector) {
-        this.x -= vector.x;
-        this.y -= vector.y;
-        this.z -= vector.z;
+        this._x -= vector.x;
+        this._y -= vector.y;
+        this._z -= vector.z;
 
         return this;
     }
@@ -108,9 +150,9 @@ export class Vec3 {
      @this (Vec3): this vector after subtraction
      ***/
     subScalar(value) {
-        this.x -= value;
-        this.y -= value;
-        this.z -= value;
+        this._x -= value;
+        this._y -= value;
+        this._z -= value;
 
         return this;
     }
@@ -126,9 +168,9 @@ export class Vec3 {
      @this (Vec3): this vector after multiplication
      ***/
     multiply(vector) {
-        this.x *= vector.x;
-        this.y *= vector.y;
-        this.z *= vector.z;
+        this._x *= vector.x;
+        this._y *= vector.y;
+        this._z *= vector.z;
 
         return this;
     }
@@ -144,9 +186,9 @@ export class Vec3 {
      @this (Vec3): this vector after multiplication
      ***/
     multiplyScalar(value) {
-        this.x *= value;
-        this.y *= value;
-        this.z *= value;
+        this._x *= value;
+        this._y *= value;
+        this._z *= value;
 
         return this;
     }
@@ -162,9 +204,9 @@ export class Vec3 {
      @this (Vec3): this vector after copy
      ***/
     copy(vector) {
-        this.x = vector.x;
-        this.y = vector.y;
-        this.z = vector.z;
+        this._x = vector.x;
+        this._y = vector.y;
+        this._z = vector.z;
 
         return this;
     }
@@ -177,7 +219,7 @@ export class Vec3 {
      @vector (Vec3): cloned vector
      ***/
     clone() {
-        return new Vec3(this.x, this.y, this.z);
+        return new Vec3(this._x, this._y, this._z);
     }
 
 
@@ -191,9 +233,9 @@ export class Vec3 {
      @vector (Vec3): sanitized vector
      ***/
     sanitizeNaNValuesWith(vector) {
-        this.x = isNaN(this.x) ? vector.x : parseFloat(this.x);
-        this.y = isNaN(this.y) ? vector.y : parseFloat(this.y);
-        this.z = isNaN(this.z) ? vector.z : parseFloat(this.z);
+        this._x = isNaN(this._x) ? vector.x : parseFloat(this._x);
+        this._y = isNaN(this._y) ? vector.y : parseFloat(this._y);
+        this._z = isNaN(this._z) ? vector.z : parseFloat(this._z);
 
         return this;
     }
@@ -209,9 +251,9 @@ export class Vec3 {
      @vector (Vec3): vector with max values applied
      ***/
     max(vector) {
-        this.x = Math.max(this.x, vector.x);
-        this.y = Math.max(this.y, vector.y);
-        this.z = Math.max(this.z, vector.z);
+        this._x = Math.max(this._x, vector.x);
+        this._y = Math.max(this._y, vector.y);
+        this._z = Math.max(this._z, vector.z);
 
         return this;
     }
@@ -227,9 +269,9 @@ export class Vec3 {
      @vector (Vec3): vector with min values applied
      ***/
     min(vector) {
-        this.x = Math.min(this.x, vector.x);
-        this.y = Math.min(this.y, vector.y);
-        this.z = Math.min(this.z, vector.z);
+        this._x = Math.min(this._x, vector.x);
+        this._y = Math.min(this._y, vector.y);
+        this._z = Math.min(this._z, vector.z);
 
         return this;
     }
@@ -242,7 +284,7 @@ export class Vec3 {
      @isEqual (bool): whether the vectors are equals or not
      ***/
     equals(vector) {
-        return this.x === vector.x && this.y === vector.y && this.z === vector.z;
+        return this._x === vector.x && this._y === vector.y && this._z === vector.z;
     }
 
 
@@ -254,13 +296,13 @@ export class Vec3 {
      ***/
     normalize() {
         // normalize
-        let len = this.x * this.x + this.y * this.y + this.z * this.z;
+        let len = this._x * this._x + this._y * this._y + this._z * this._z;
         if (len > 0) {
             len = 1 / Math.sqrt(len);
         }
-        this.x *= len;
-        this.y *= len;
-        this.z *= len;
+        this._x *= len;
+        this._y *= len;
+        this._z *= len;
 
         return this;
     }
@@ -273,8 +315,10 @@ export class Vec3 {
      @dotProduct (float): dot product of the 2 vectors
      ***/
     dot(vector) {
-        return this.x * vector.x + this.y * vector.y + this.z * vector.z;
+        return this._x * vector.x + this._y * vector.y + this._z * vector.z;
     }
+
+
 
     /***
      Apply a matrix 4 to a point (vec3)
@@ -288,15 +332,15 @@ export class Vec3 {
      @this (Vec3): this vector after matrix application
      ***/
     applyMat4(matrix) {
-        const x = this.x, y = this.y, z = this.z;
+        const x = this._x, y = this._y, z = this._z;
         const mArray = matrix.elements;
 
         let w = mArray[3] * x + mArray[7] * y + mArray[11] * z + mArray[15];
         w = w || 1;
 
-        this.x = (mArray[0] * x + mArray[4] * y + mArray[8] * z + mArray[12]) / w;
-        this.y = (mArray[1] * x + mArray[5] * y + mArray[9] * z + mArray[13]) / w;
-        this.z = (mArray[2] * x + mArray[6] * y + mArray[10] * z + mArray[14]) / w;
+        this._x = (mArray[0] * x + mArray[4] * y + mArray[8] * z + mArray[12]) / w;
+        this._y = (mArray[1] * x + mArray[5] * y + mArray[9] * z + mArray[13]) / w;
+        this._z = (mArray[2] * x + mArray[6] * y + mArray[10] * z + mArray[14]) / w;
 
         return this;
     }
@@ -312,7 +356,7 @@ export class Vec3 {
      @this (Vec3): this vector after applying the transformation
      ***/
     applyQuat(quaternion) {
-        const x = this.x, y = this.y, z = this.z;
+        const x = this._x, y = this._y, z = this._z;
         const qx = quaternion.elements[0], qy = quaternion.elements[1], qz = quaternion.elements[2], qw = quaternion.elements[3];
 
         // calculate quat * vector
@@ -324,9 +368,9 @@ export class Vec3 {
 
         // calculate result * inverse quat
 
-        this.x = ix * qw + iw * - qx + iy * - qz - iz * - qy;
-        this.y = iy * qw + iw * - qy + iz * - qx - ix * - qz;
-        this.z = iz * qw + iw * - qz + ix * - qy - iy * - qx;
+        this._x = ix * qw + iw * - qx + iy * - qz - iz * - qy;
+        this._y = iy * qw + iw * - qy + iz * - qx - ix * - qz;
+        this._z = iz * qw + iw * - qz + ix * - qy - iy * - qx;
 
         return this;
     }
