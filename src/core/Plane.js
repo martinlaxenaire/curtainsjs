@@ -383,17 +383,16 @@ export class Plane extends DOMMesh {
             this._matrices.modelView.matrix.copy(this._matrices.world.matrix);
             this._matrices.modelView.matrix.elements[14] -= this.camera.position.z;
 
-            // this is the result of our projection matrix * our mv matrix, useful for bounding box calculations and frustum culling
+            // our modelViewProjection matrix, useful for bounding box calculations and frustum culling
+            // this is the result of our projection matrix multiplied by our modelView matrix
             this._matrices.modelViewProjection.matrix = this._matrices.projection.matrix.multiply(this._matrices.modelView.matrix);
 
             // check if we should draw the plane but only if everything has been initialized
             if(!this.alwaysDraw) {
                 this._shouldDrawCheck();
             }
-        }
 
-        // update our matrix uniform only if we actually have updated its values
-        if(this._updateMVMatrix) {
+            // update our matrix uniform
             this.renderer.useProgram(this._program);
             this.gl.uniformMatrix4fv(this._matrices.modelView.location, false, this._matrices.modelView.matrix.elements);
         }
