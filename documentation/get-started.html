@@ -1595,9 +1595,6 @@
                                     Try to use only one global request animation frame loop and one scroll event listener in your application. You could either hook to the library <a href="curtains-class.html#on-render">onRender()</a> and <a href="curtains-class.html#on-scroll">onScroll()</a> events or handle this by yourself by not instancing them in the first place thanks to the init params.
                                 </li>
                                 <li>
-                                    If you have a significant number of planes that are using the same shaders, try to set their init paramater <a href="plane-classe.html#share-program">shareProgram</a> property to true as it can speed up their creation a lot.
-                                </li>
-                                <li>
                                     Disable and reenable the scene drawing each time you can. This can save a lot of performance and battery usage when your WebGL scene is idling.
                                 </li>
                                 <li>

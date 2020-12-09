@@ -149,9 +149,6 @@
                                             <a href="plane-class.html#scale">scale</a>
                                         </li>
                                         <li>
-                                            <a href="plane-class.html#share-program">shareProgram</a>
-                                        </li>
-                                        <li>
                                             <a href="plane-class.html#target">target</a>
                                         </li>
                                         <li>
@@ -666,17 +663,6 @@
                                     </li>
                                     <li>
                                         <span class="api-item-parameter-label">
-                                            shareProgram
-                                        </span>
-                                        <span class="api-item-parameter-type">
-                                            bool, optional
-                                        </span>
-                                        <span class="api-item-parameter-desc">
-                                            Whether this plane should share its WebGL program with other planes that share the same shaders in order to optimize its creation. Use with caution and see the Plane's <a href="plane-class.html#share-program">shareProgram</a> property to know more. Default to false.
-                                        </span>
-                                    </li>
-                                    <li>
-                                        <span class="api-item-parameter-label">
                                             visible
                                         </span>
                                         <span class="api-item-parameter-type">
@@ -1059,21 +1045,6 @@
                                 </p>
                                 <p>
                                     A <a href="vec-3-class.html">Vec3</a> class object containing the scale applied to your plane on X and Y axis (value along Z axis is always equal to 1).
-                                </p>
-                            </li>
-                            <li id="share-program">
-                                <p>
-                                    <strong>shareProgram</strong> (bool): <span class="api-item-version">v5.0</span><span class="api-item-warning">read only</span>
-                                </p>
-                                <p>
-                                    Whether this plane should share its WebGL program with other planes that share the same shaders.
-                                </p>
-                                <p>
-                                    Setting this option to true to a batch of planes will speed up their creations processes by skipping shaders compilation and WebGL program creations.<br />
-                                    However the downside is that their uniforms will have to be updated before each draw calls. You can set this to true upon plane creation if you are dealing with a large number of planes that don't use many uniforms.
-                                </p>
-                                <p>
-                                    It is up to you to test performance both when creating the planes and when rendering them in order to determine if it's worth it.
                                 </p>
                             </li>
                             <li id="target">
