@@ -1032,7 +1032,7 @@ export class Texture {
      ***/
     _updateTextureMatrix(sizes) {
         // calculate scale to apply to the matrix
-        let textureScale = tempVec3.set(
+        const textureScale = tempVec3.set(
             sizes.parentWidth / (sizes.parentWidth - sizes.xOffset),
             sizes.parentHeight / (sizes.parentHeight - sizes.yOffset),
             1
@@ -1042,16 +1042,16 @@ export class Texture {
         textureScale.x /= this.scale.x;
         textureScale.y /= this.scale.y;
 
-        // translate texture to center it
-        textureTranslation.setFromArray([
-            1, 0, 0, 0,
-            0, 1, 0, 0,
+        // translate and scale texture to center it
+        // equivalent (but faster) than applying those steps to an identity matrix:
+        // translate from [(1 - textureScale.x) / 2 + this.offset.x, (1 - textureScale.y) / 2 + this.offset.y, 0]
+        // then apply a scale of [textureScale.x, textureScale.y, 1]
+        this._textureMatrix.matrix = textureTranslation.setFromArray([
+            textureScale.x, 0, 0, 0,
+            0, textureScale.y, 0, 0,
             0, 0, 1, 0,
             (1 - textureScale.x) / 2 + this.offset.x, (1 - textureScale.y) / 2 + this.offset.y, 0, 1
         ]);
-
-        // scale texture
-        this._textureMatrix.matrix = textureTranslation.scale(textureScale);
 
         // update the texture matrix uniform
         this._updateMatrixUniform();
