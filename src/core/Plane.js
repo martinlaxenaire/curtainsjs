@@ -350,9 +350,15 @@ export class Plane extends DOMMesh {
 
         this._matrices.projection.matrix = this.camera.projectionMatrix;
 
-        // translation along the Z axis is dependant of camera CSSPerspective
-        // we're computing it here because it will change when our fov changes
-        this._translation.z = this.relativeTranslation.z / this.camera.CSSPerspective;
+        if(this.camera._shouldUpdate) {
+            // we changed the fov, update world sizes and world positions
+            this._setWorldSizes();
+            this._applyWorldPositions();
+
+            // translation along the Z axis is dependant of camera CSSPerspective
+            // we're computing it here because it changes when the fov changes
+            this._translation.z = this.relativeTranslation.z / this.camera.CSSPerspective;
+        }
 
         // if camera settings changed update the mvMatrix as well cause we need to update z translation based on new fov
         this._updateMVMatrix = this.camera._shouldUpdate;
