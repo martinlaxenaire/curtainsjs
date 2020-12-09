@@ -271,19 +271,23 @@ export class TextureLoader {
         const image = this._createImage(source);
 
         // merge texture options with its parent textures options if needed
+        let options = {};
         if(this._parent) {
-            textureOptions = Object.assign(textureOptions, this._parent._texturesOptions);
+            options = Object.assign(textureOptions, this._parent._texturesOptions);
+        }
+        else {
+            options = Object.assign(textureOptions, options);
         }
 
-        textureOptions.loader = this;
-        if(!textureOptions.sampler) textureOptions.sampler = image.getAttribute("data-sampler");
+        options.loader = this;
+        options.sampler = image.getAttribute("data-sampler") || options.sampler;
 
         // check for cache
         const cachedTexture = this.renderer.cache.getTextureFromSource(image);
 
         if(cachedTexture) {
-            textureOptions.fromTexture = cachedTexture;
-            const texture = new Texture(this.renderer, textureOptions);
+            options.fromTexture = cachedTexture;
+            const texture = new Texture(this.renderer, options);
 
             // execute sucess callback directly
             if(successCallback) {
@@ -298,7 +302,7 @@ export class TextureLoader {
         }
 
         // create a new texture that will use our image later
-        const texture = new Texture(this.renderer, textureOptions);
+        const texture = new Texture(this.renderer, options);
 
         // add a new entry in our elements array
         const el = this._addElement(image, texture, successCallback, errorCallback);
@@ -375,15 +379,19 @@ export class TextureLoader {
         source.crossOrigin = this.crossOrigin;
 
         // merge texture options with its parent textures options if needed
+        let options = {};
         if(this._parent) {
-            textureOptions = Object.assign(textureOptions, this._parent._texturesOptions);
+            options = Object.assign(textureOptions, this._parent._texturesOptions);
+        }
+        else {
+            options = Object.assign(textureOptions, options);
         }
 
-        textureOptions.loader = this;
-        if(!textureOptions.sampler) textureOptions.sampler = image.getAttribute("data-sampler");
+        options.loader = this;
+        options.sampler = source.getAttribute("data-sampler") || options.sampler;
 
         // create a new texture that will use our video later
-        const texture = new Texture(this.renderer, textureOptions);
+        const texture = new Texture(this.renderer, options);
 
         // add a new entry in our elements array
         const el = this._addElement(source, texture, successCallback, errorCallback);
