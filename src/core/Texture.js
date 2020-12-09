@@ -1129,11 +1129,6 @@ export class Texture {
             }
 
             this._forceUpdate = false;
-
-            // if parent program uniform is shared, update the texture matrix uniform
-            if(this._parent && this._parent.shareProgram) {
-                this._updateMatrixUniform();
-            }
         }
 
         // set parameters that need to be set after texture uploading

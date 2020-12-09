@@ -131,7 +131,7 @@ export class Program {
 
     /***
      Checks whether the program has already been registered before creating it
-     If yes, use the compiled program if the program should be shared, or just use the compiled shaders to create a new one else with createProgram()
+     If yes, use the compiled shaders to create a new one with createProgram()
      If not, compile the shaders and call createProgram()
      ***/
     setupProgram() {
@@ -139,24 +139,14 @@ export class Program {
 
         // we found an existing program
         if(existingProgram) {
-            // if we've decided to share existing programs, just return the existing one
-            if(this.parent.shareProgram) {
-                //return existingProgram;
-                this.shared = true;
-                this.vertexShader = existingProgram.vertexShader;
-                this.fragmentShader = existingProgram.fragmentShader;
-                this.program = existingProgram.program;
-                this.id = existingProgram.id;
-                this.activeTextures = existingProgram.activeTextures;
-            }
-            else {
-                // we need to create a new program but we don't have to re compile the shaders
-                this.vertexShader = existingProgram.vertexShader;
-                this.fragmentShader = existingProgram.fragmentShader;
-                // copy active textures as well
-                this.activeTextures = existingProgram.activeTextures;
-                this.createProgram();
-            }
+            // we need to create a new program but we don't have to re compile the shaders
+            this.vertexShader = existingProgram.vertexShader;
+            this.fragmentShader = existingProgram.fragmentShader;
+
+            // copy active textures as well
+            this.activeTextures = existingProgram.activeTextures;
+
+            this.createProgram();
         }
         else {
             // compile the new shaders and create a new program
@@ -176,7 +166,6 @@ export class Program {
     createProgram() {
         // set program id and type
         this.id = this.renderer.cache.programs.length;
-        this.shared = this.parent.shareProgram;
 
         // we need to create a new shader program
         this.program = this.gl.createProgram();
@@ -234,7 +223,7 @@ export class Program {
      @uniforms (object): an object describing our uniforms (see Uniforms class object)
      ***/
     createUniforms(uniforms) {
-        this.uniformsManager = new Uniforms(this.renderer, this.program, this.shared, uniforms);
+        this.uniformsManager = new Uniforms(this.renderer, this.program, uniforms);
 
         // set them right away
         this.setUniforms();

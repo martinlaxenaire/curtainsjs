@@ -13,7 +13,6 @@ import {generateUUID, throwError, throwWarning} from '../utils/utils.js';
  @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
  @type (string): Object type (should be either "Plane" or "ShaderPass")
 
- @shareProgram (bool): Whether the mesh should share its program with other meshes. Results in only one program compilation for multiple meshes, but all their uniforms need to be updated at runtime
  @vertexShaderID (string, optional): the vertex shader script ID. If not specified, will look for a data attribute data-vs-id on the plane HTML element.
  @fragmentShaderID (string, optional): the fragment shader script ID. If not specified, will look for a data attribute data-fs-id on the plane HTML element.
  @vertexShader (string, optional): the vertex shader as a string. Will look for a vertexShaderID if not specified.
@@ -33,7 +32,6 @@ import {generateUUID, throwError, throwWarning} from '../utils/utils.js';
 export class Mesh {
     constructor(renderer, type = "Mesh", {
         // program
-        shareProgram = false,
         vertexShaderID,
         fragmentShaderID,
         vertexShader,
@@ -85,9 +83,6 @@ export class Mesh {
 
         this._canDraw = false;
         this.renderOrder = renderOrder;
-
-        // whether to share programs or not (could enhance performance if a lot of planes use the same shaders)
-        this.shareProgram = shareProgram;
 
         // depth test
         this._depthTest = depthTest;

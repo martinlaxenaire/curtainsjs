@@ -6,7 +6,6 @@ import {throwError, throwWarning} from '../utils/utils.js';
  params:
  @renderer (Renderer class object): our renderer class object
  @program (object): our mesh's Program (see Program class object)
- @shared (bool): whether the program is shared or not
 
  @uniforms (object): our uniforms object:
  - name (string): uniform name to use in your shaders
@@ -18,7 +17,7 @@ import {throwError, throwWarning} from '../utils/utils.js';
  ***/
 
 export class Uniforms {
-    constructor(renderer, program, shared, uniforms) {
+    constructor(renderer, program, uniforms) {
         this.type = "Uniforms";
         if(!renderer || renderer.type !== "Renderer") {
             throwError(this.type + ": Renderer not passed as first argument", renderer);
@@ -29,7 +28,6 @@ export class Uniforms {
         this.renderer = renderer;
         this.gl = renderer.gl;
         this.program = program;
-        this.shared = shared;
 
         this.uniforms = {};
 
@@ -252,39 +250,34 @@ export class Uniforms {
                 const uniform = this.uniforms[key];
                 let shouldUpdate = false;
 
-                if(!this.shared) {
-                    if(uniform._internalFormat === "Vec2") {
-                        if(!uniform.value.equals(uniform.lastValue)) {
-                            shouldUpdate = true;
-                            uniform.lastValue.copy(uniform.value);
-                        }
-                    }
-                    else if(uniform._internalFormat === "Vec3") {
-                        if(!uniform.value.equals(uniform.lastValue)) {
-                            shouldUpdate = true;
-                            uniform.lastValue.copy(uniform.value);
-                        }
-                    }
-                    else if(uniform._internalFormat === "Quat") {
-                        if(!uniform.value.equals(uniform.lastValue)) {
-                            shouldUpdate = true;
-                            uniform.lastValue.copy(uniform.value);
-                        }
-                    }
-                    else if(!uniform.value.length) {
-                        if(uniform.value !== uniform.lastValue) {
-                            shouldUpdate = true;
-                            uniform.lastValue = uniform.value;
-                        }
-                    }
-                    else if(JSON.stringify(uniform.value) !== JSON.stringify(uniform.lastValue)) { // compare two arrays
+                if(uniform._internalFormat === "Vec2") {
+                    if(!uniform.value.equals(uniform.lastValue)) {
                         shouldUpdate = true;
-                        // copy array
-                        uniform.lastValue = Array.from(uniform.value);
+                        uniform.lastValue.copy(uniform.value);
                     }
                 }
-                else {
+                else if(uniform._internalFormat === "Vec3") {
+                    if(!uniform.value.equals(uniform.lastValue)) {
+                        shouldUpdate = true;
+                        uniform.lastValue.copy(uniform.value);
+                    }
+                }
+                else if(uniform._internalFormat === "Quat") {
+                    if(!uniform.value.equals(uniform.lastValue)) {
+                        shouldUpdate = true;
+                        uniform.lastValue.copy(uniform.value);
+                    }
+                }
+                else if(!uniform.value.length) {
+                    if(uniform.value !== uniform.lastValue) {
+                        shouldUpdate = true;
+                        uniform.lastValue = uniform.value;
+                    }
+                }
+                else if(JSON.stringify(uniform.value) !== JSON.stringify(uniform.lastValue)) { // compare two arrays
                     shouldUpdate = true;
+                    // copy array
+                    uniform.lastValue = Array.from(uniform.value);
                 }
 
                 if(shouldUpdate) {

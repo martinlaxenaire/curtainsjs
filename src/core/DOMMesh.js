@@ -23,7 +23,6 @@ const tempVec2b = new Vec2();
 export class DOMMesh extends Mesh {
     constructor(renderer, htmlElement, type = "DOMMesh", {
         // Mesh params
-        shareProgram,
         widthSegments,
         heightSegments,
         renderOrder,
@@ -42,7 +41,6 @@ export class DOMMesh extends Mesh {
         fragmentShaderID = fragmentShaderID || htmlElement && htmlElement.getAttribute("data-fs-id");
 
         super(renderer, type, {
-            shareProgram,
             widthSegments,
             heightSegments,
             renderOrder,

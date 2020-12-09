@@ -23,7 +23,6 @@ export class PingPongPlane extends Plane {
         sampler = "uPingPongTexture",
 
         // Plane params
-        shareProgram,
         widthSegments,
         heightSegments,
         renderOrder, // does not have much sense
@@ -50,7 +49,6 @@ export class PingPongPlane extends Plane {
 
         // create our plane
         super(curtains, htmlElement, {
-            shareProgram,
             widthSegments,
             heightSegments,
             renderOrder,
@@ -92,8 +90,12 @@ export class PingPongPlane extends Plane {
 
         // create a texture where we'll draw
         const texture = this.createTexture({
-            sampler: sampler,
-            fromTexture: this.readPass.getTexture()
+            sampler: sampler
+        });
+
+        const readPassTexture = this.readPass.getTexture();
+        readPassTexture.onSourceUploaded(() => {
+            texture.copy(readPassTexture);
         });
 
         // override onRender and onAfterRender callbacks

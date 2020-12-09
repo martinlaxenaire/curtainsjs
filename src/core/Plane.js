@@ -59,7 +59,6 @@ const castedMouseCoords = new Vec2();
 export class Plane extends DOMMesh {
     constructor(renderer, htmlElement, {
         // Mesh params
-        shareProgram,
         widthSegments,
         heightSegments,
         renderOrder = 0,
@@ -88,7 +87,6 @@ export class Plane extends DOMMesh {
         fov = 50,
     } = {}) {
         super(renderer, htmlElement, "Plane", {
-            shareProgram,
             widthSegments,
             heightSegments,
             renderOrder,
@@ -322,8 +320,8 @@ export class Plane extends DOMMesh {
      used internally at each draw call if needed
      ***/
     _setPerspectiveMatrix() {
-        // update our matrix uniform only if we share programs or if we actually have updated its values
-        if(this.shareProgram || !this.shareProgram && this.camera._shouldUpdate) {
+        // update our matrix uniform if we actually have updated its values
+        if(this.camera._shouldUpdate) {
             this.renderer.useProgram(this._program);
             this.gl.uniformMatrix4fv(this._matrices.projection.location, false, this._matrices.projection.matrix.elements);
         }
@@ -394,8 +392,8 @@ export class Plane extends DOMMesh {
             }
         }
 
-        // update our matrix uniform only if we share programs or if we actually have updated its values
-        if(this.shareProgram || !this.shareProgram && this._updateMVMatrix) {
+        // update our matrix uniform only if we actually have updated its values
+        if(this._updateMVMatrix) {
             this.renderer.useProgram(this._program);
             this.gl.uniformMatrix4fv(this._matrices.modelView.location, false, this._matrices.modelView.matrix.elements);
         }
