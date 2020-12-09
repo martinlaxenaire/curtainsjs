@@ -762,6 +762,41 @@
                                 <p>
                                     Calculates a linear interpolation of the amount specified between the start and end values
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            start
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            value to lerp
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            end
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            end value to use for lerp
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            amount
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            amount of lerp
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> the linear interpolation result as a float.
                                 </p>
@@ -784,13 +819,40 @@
 
                             <li id="next-render">
                                 <p>
-                                    <strong>nextRender</strong>(callback): <span class="api-item-version">v7.0</span>
+                                    <strong>nextRender</strong>(callback, keep): <span class="api-item-version">v7.0</span><span class="api-item-warning">updated in v8.0</span>
                                 </p>
                                 <p>
                                     A function to execute on the next render call.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            callback to execute
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            keep
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            bool
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            whether to keep executing the callback (act as a setTimeout vs setInterval). Default to false.
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>returns:</strong> the callback queue item. Useful if you need to switch its keep property from true to false once a condition is met (act as a clearInterval).
+                                </p>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a> example.
+                                    <strong>Examples:</strong> used in <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a> and <a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a> examples.
                                 </p>
                             </li>
 
