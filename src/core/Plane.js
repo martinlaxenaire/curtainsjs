@@ -609,22 +609,6 @@ export class Plane extends DOMMesh {
 
     /***
      This function takes pixel values along X and Y axis and convert them to clip space coordinates, and then apply the corresponding translation
-     TODO deprecated and will be removed soon
-
-     params :
-     @translation (Vec3): translation to apply on X, Y and Z axes
-     ***/
-    setRelativePosition(translation) {
-        if(!this.renderer.production) {
-            throwWarning(this.type + ": setRelativePosition() is deprecated, use setRelativeTranslation() instead");
-        }
-
-        this.setRelativeTranslation(translation);
-    }
-
-
-    /***
-     This function takes pixel values along X and Y axis and convert them to clip space coordinates, and then apply the corresponding translation
 
      params :
      @translation (Vec3): translation to apply on X, Y and Z axes
@@ -1043,18 +1027,6 @@ export class Plane extends DOMMesh {
      ***/
     enableDepthTest(shouldEnableDepthTest) {
         this._depthTest = shouldEnableDepthTest;
-    }
-
-
-    /***
-     This function puts the plane at the end of the draw stack, allowing it to overlap any other plane
-     TODO deprecated and should be removed!
-     ***/
-    moveToFront() {
-        if(!this.renderer.production) {
-            throwWarning(this.type + ": moveToFront() is deprecated, please use setRenderOrder() instead");
-        }
-        this.setRenderOrder();
     }
 
 
