@@ -381,7 +381,9 @@ export class Plane extends DOMMesh {
 
 
             // our model view matrix is our world matrix multiplied with our camera view matrix
-            this._matrices.modelView.matrix = this._matrices.world.matrix.multiply(this.camera.viewMatrix);
+            // in our case we're just subtracting the camera Z position to our world matrix
+            this._matrices.modelView.matrix.copy(this._matrices.world.matrix);
+            this._matrices.modelView.matrix.elements[14] -= this.camera.position.z;
 
             // this is the result of our projection matrix * our mv matrix, useful for bounding box calculations and frustum culling
             this._matrices.modelViewProjection.matrix = this._matrices.projection.matrix.multiply(this._matrices.modelView.matrix);
@@ -521,7 +523,7 @@ export class Plane extends DOMMesh {
             * this._boundingRect.world.width,
             -(this.transformOrigin.y * 2 - 1) // between -1 and 1
             * this._boundingRect.world.height,
-            this.transformOrigin.z - this.camera.position.z
+            this.transformOrigin.z
         );
     }
 
@@ -536,13 +538,11 @@ export class Plane extends DOMMesh {
      @worldPosition: plane's position in WebGL space
      ***/
     _documentToWorldSpace(vector) {
-        const worldPosition = tempWorldPos2.set(
-            vector.x / (this.renderer._boundingRect.width / this.renderer.pixelRatio) * (this.renderer._boundingRect.width / this.renderer._boundingRect.height),
-            -vector.y / (this.renderer._boundingRect.height / this.renderer.pixelRatio),
+        return tempWorldPos2.set(
+            (vector.x * this.renderer.pixelRatio / this.renderer._boundingRect.width) * this._boundingRect.world.ratios.width,
+            -(vector.y * this.renderer.pixelRatio / this.renderer._boundingRect.height) * this._boundingRect.world.ratios.height,
             vector.z,
         );
-
-        return worldPosition;
     }
 
     /***
@@ -1203,18 +1203,13 @@ export class Plane extends DOMMesh {
 
                 // get the plane's center coordinates
                 // start with our transform origin point
-                const transformOrigin = this._boundingRect.world.transformOrigin.clone();
-                // compensate for camera position
-                transformOrigin.z += this.camera.position.z;
-
-                // add our transform origin point to our translation vector
-                const planeOrigin = this._translation.clone().add(transformOrigin);
+                const planeOrigin = this._boundingRect.world.transformOrigin.clone().add(this._translation);
 
                 // rotate our transform origin about world center
                 const rotatedOrigin = tempRotatedOrigin.set(
-                    -transformOrigin.x,
-                    -transformOrigin.y,
-                    -transformOrigin.z,
+                    this._translation.x - planeOrigin.x,
+                    this._translation.y - planeOrigin.y,
+                    this._translation.z - planeOrigin.z,
                 );
                 rotatedOrigin.applyQuat(this.quaternion);
 
