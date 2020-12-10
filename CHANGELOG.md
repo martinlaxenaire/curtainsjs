@@ -1,5 +1,72 @@
 # Changelog
 
+## v8.0.0 (10/12/2020)
+
+#### Enhancements:
+
+###### core/Plane.js
+
+- refactored the whole matrix and screen space to world space calculations.
+- implemented a raycasting (ray-plane intersection) algorithm so mouseToPlaneCoords() method now works with transformed planes.
+- added onChange events to rotation, relativeTranslation and scale vectors to automatically update their properties via setters (see Vec2/Vec3).
+
+###### core/Texture.js
+
+- added onChange events to scale and offset vectors to automatically update their properties via setters (see Vec2/Vec3).
+- improved texture matrix calculations performance.
+- only set/get texture matrix uniform when used in the shaders.
+
+###### math/Vec2.js
+
+- added getters, setters and onChange event to the x and y components of the vector, allowing to execute a callback when one of this property changes.
+
+###### math/Vec3.js
+
+- added getters, setters and onChange event to the x, y and z components of the vector, allowing to execute a callback when one of this property changes.
+
+###### camera/Camera.js
+
+- changed default camera position
+- updated CSSPerspective calculations
+- added a getScreenRatiosFromFov() method
+
+###### loaders/TextureLoader.js
+
+- create a new Image() or video element each time an image or video is loaded, so we can set its crossOrigin property before its src (fix potential CORS issues).
+
+###### core/Curtains.js
+
+- added keep parameter to the nextRender() method so it can act both like setTimeout and setInterval.
+
+###### extras/FXAAPass.js
+
+- FXAAPASS now extends ShaderPass class.
+
+###### examples
+
+- updated the examples to reflect those changes.
+
+#### Bug Fixes:
+
+###### core/Plane.js
+
+- fixed mouseToPlaneCoords() method with transformed planes.
+
+###### extras/PingPongPlane.js
+
+- should hopefully fix erratic behaviour/inconsistent results [#67](https://github.com/martinlaxenaire/curtainsjs/issues/67).
+- fixed weird resize issue [#71](https://github.com/martinlaxenaire/curtainsjs/issues/71).
+
+#### Deprecations:
+
+###### core/Plane.js
+
+- removed shareProgram parameter: it was unnecessarily complicating the codebase, adding a lot of extra GL calls for each plane (updating all the uniforms at every frame) and the performance boost wasn't obvious at all.
+- removed deprecated setRelativePosition() method.
+- removed deprecated moveToFront() method.
+
+---
+
 ## v7.3.3 (02/12/2020)
 
 #### Bug Fixes:
