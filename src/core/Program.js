@@ -196,15 +196,24 @@ export class Program {
         this.gl.deleteShader(this.fragmentShader);
 
         // store active textures (those that are used in the shaders) to avoid binding unused textures
-        if(!this.activeTextures) {
-            this.activeTextures = [];
+        if(!this.activeUniforms) {
+            this.activeUniforms = {
+                textures: [],
+                textureMatrices: [],
+            };
+
             // check for program active textures
-            let numUniforms = this.gl.getProgramParameter(this.program, this.gl.ACTIVE_UNIFORMS);
+            const numUniforms = this.gl.getProgramParameter(this.program, this.gl.ACTIVE_UNIFORMS);
             for(let i = 0; i < numUniforms; i++) {
                 const activeUniform = this.gl.getActiveUniform(this.program, i);
-                // if it's a texture add it to our activeTextures array
+
                 if(activeUniform.type === this.gl.SAMPLER_2D) {
-                    this.activeTextures.push(activeUniform.name);
+                    // if it's a texture add it to our activeUniforms textures array
+                    this.activeUniforms.textures.push(activeUniform.name);
+                }
+                if(activeUniform.type === this.gl.FLOAT_MAT4 && activeUniform.name !== "uMVMatrix" && activeUniform.name !== "uPMatrix") {
+                    // if it's a texture matrix add it to our activeUniforms textureMatrices array
+                    this.activeUniforms.textureMatrices.push(activeUniform.name);
                 }
             }
         }

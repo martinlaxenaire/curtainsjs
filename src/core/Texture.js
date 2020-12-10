@@ -113,12 +113,14 @@ export class Texture {
 
         // prepare texture sampler
         this._sampler = {
-            isActive: false
+            isActive: false,
+            isTextureBound: false,
         };
 
         // we will always declare a texture matrix
         this._textureMatrix = {
-            matrix: new Mat4()
+            matrix: new Mat4(),
+            isActive: false
         };
 
         // actual size will be set later on
@@ -408,8 +410,8 @@ export class Texture {
     _setTextureUniforms() {
         // check if our texture is used in our program shaders
         // if so, get its uniform locations and bind it to our program
-        for(let i = 0; i < this._parent._program.activeTextures.length; i++) {
-            if(this._parent._program.activeTextures[i] === this._sampler.name) {
+        for(let i = 0; i < this._parent._program.activeUniforms.textures.length; i++) {
+            if(this._parent._program.activeUniforms.textures[i] === this._sampler.name) {
                 // this texture is active
                 this._sampler.isActive = true;
 
@@ -418,8 +420,13 @@ export class Texture {
 
                 // set our texture sampler uniform
                 this._sampler.location = this.gl.getUniformLocation(this._parent._program.program, this._sampler.name);
-                // texture matrix uniform
-                this._textureMatrix.location = this.gl.getUniformLocation(this._parent._program.program, this._textureMatrix.name);
+
+                // set texture matrix uniform location only if active
+                const isTextureMatrixActive = this._parent._program.activeUniforms.textureMatrices.find(textureMatrix => textureMatrix === this._textureMatrix.name);
+                if(isTextureMatrixActive) {
+                    this._textureMatrix.isActive = true;
+                    this._textureMatrix.location = this.gl.getUniformLocation(this._parent._program.program, this._textureMatrix.name);
+                }
 
                 // tell the shader we bound the texture to our indexed texture unit
                 this.gl.uniform1i(this._sampler.location, this.index);
@@ -862,7 +869,7 @@ export class Texture {
             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this._globalParameters.internalFormat, this._globalParameters.format, this._globalParameters.type, this.source);
         }
         else if(this.sourceType === "fbo") {
-            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this._globalParameters.internalFormat, this._size.width, this._size.height, 0, this._globalParameters.format, this._globalParameters.type, this.source);
+            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this._globalParameters.internalFormat, this._size.width, this._size.height, 0, this._globalParameters.format, this._globalParameters.type, this.source || null);
         }
 
         // texture has been uploaded
@@ -1056,8 +1063,10 @@ export class Texture {
      This updates our textures matrix GL uniform
      ***/
     _updateMatrixUniform() {
-        this.renderer.useProgram(this._parent._program);
-        this.gl.uniformMatrix4fv(this._textureMatrix.location, false, this._textureMatrix.matrix.elements);
+        if(this._textureMatrix.isActive) {
+            this.renderer.useProgram(this._parent._program);
+            this.gl.uniformMatrix4fv(this._textureMatrix.location, false, this._textureMatrix.matrix.elements);
+        }
     }
 
 
@@ -1091,6 +1100,11 @@ export class Texture {
                 this.renderer.state.activeTexture = this.index;
             }
 
+            // check for texture binding until we got one
+            if(!this._sampler.isTextureBound) {
+                this._sampler.isTextureBound = !!this.gl.getParameter(this.gl.TEXTURE_BINDING_2D);
+            }
+
             // bind the texture to the plane's index unit
             this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
         }
@@ -1101,6 +1115,10 @@ export class Texture {
      This is called to draw the texture
      ***/
     _draw() {
+        if(!this._sampler.texture) {
+            this._sampler.texture = this.gl.createTexture();
+        }
+
         // only draw if the texture is active (used in the shader)
         if(this._sampler.isActive) {
             // bind the texture

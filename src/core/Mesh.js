@@ -499,10 +499,16 @@ export class Mesh {
         this.renderer.state.forceBufferUpdate = false;
         //}
 
+        let shouldDraw = true;
+
         // draw all our plane textures
         for(let i = 0; i < this.textures.length; i++) {
             // draw (bind and maybe update) our texture
             this.textures[i]._draw();
+
+            if(!this.textures[i]._sampler.isTextureBound) {
+                return;
+            }
         }
 
         // the draw call!
