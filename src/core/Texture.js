@@ -427,7 +427,7 @@ export class Texture {
                 const isTextureMatrixActive = activeUniforms.textureMatrices.find(textureMatrix =>
                     textureMatrix === this._textureMatrix.name
                 );
-                
+
                 if(isTextureMatrixActive) {
                     this._textureMatrix.isActive = true;
                     this._textureMatrix.location = this.gl.getUniformLocation(this._parent._program.program, this._textureMatrix.name);
@@ -1105,13 +1105,16 @@ export class Texture {
                 this.renderer.state.activeTexture = this.index;
             }
 
+            // bind the texture to the plane's index unit
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
+
             // check for texture binding until we got one
             if(!this._sampler.isTextureBound) {
                 this._sampler.isTextureBound = !!this.gl.getParameter(this.gl.TEXTURE_BINDING_2D);
-            }
 
-            // bind the texture to the plane's index unit
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
+                // force render
+                this._sampler.isTextureBound && this.renderer.needRender();
+            }
         }
     }
 
