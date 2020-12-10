@@ -187,9 +187,15 @@ export class TextureLoader {
      @video (HTML video element): an HTML video element
      ***/
     _createVideo(source) {
-        const video = document.createElement('video');
+        const video = document.createElement("video");
         video.crossOrigin = this.crossOrigin;
-        video.src = source;
+        if(typeof source === "string") {
+            video.src = source;
+        }
+        else {
+            video.src = source.src;
+            video.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+        }
 
         return video;
     }
@@ -367,16 +373,14 @@ export class TextureLoader {
         successCallback,
         errorCallback
     ) {
-        if(typeof source === "string") {
-            source = this._createVideo(source);
-        }
+        const video = this._createVideo(source);
 
-        source.preload = true;
-        source.muted = true;
-        source.loop = true;
-        source.playsinline = true;
+        video.preload = true;
+        video.muted = true;
+        video.loop = true;
+        video.setAttribute("playsinline", "");
 
-        source.crossOrigin = this.crossOrigin;
+        video.crossOrigin = this.crossOrigin;
 
         // merge texture options with its parent textures options if needed
         let options = {};
@@ -388,35 +392,35 @@ export class TextureLoader {
         }
 
         options.loader = this;
-        options.sampler = source.getAttribute("data-sampler") || options.sampler;
+        options.sampler = video.getAttribute("data-sampler") || options.sampler;
 
         // create a new texture that will use our video later
         const texture = new Texture(this.renderer, options);
 
         // add a new entry in our elements array
-        const el = this._addElement(source, texture, successCallback, errorCallback);
+        const el = this._addElement(video, texture, successCallback, errorCallback);
 
         // handle our loaded data event inside the texture and tell our plane when the video is ready to play
-        source.addEventListener('canplaythrough', el.load, false);
-        source.addEventListener('error', el.error, false);
+        video.addEventListener('canplaythrough', el.load, false);
+        video.addEventListener('error', el.error, false);
 
         // If the video is in the cache of the browser,
         // the 'canplaythrough' event might have been triggered
         // before we registered the event handler.
-        if(source.readyState >= source.HAVE_FUTURE_DATA && successCallback) {
-            this._sourceLoaded(source, texture, successCallback);
+        if(video.readyState >= video.HAVE_FUTURE_DATA && successCallback) {
+            this._sourceLoaded(video, texture, successCallback);
         }
 
         // start loading our video
-        source.load();
+        video.load();
 
         // if there's a parent (PlaneTextureLoader) add texture and source to it
-        this._addToParent && this._addToParent(texture, source, "video");
+        this._addToParent && this._addToParent(texture, video, "video");
 
         // if requestVideoFrameCallback exist, use it to update our video texture
         if('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
             el.videoFrameCallback = texture._videoFrameCallback.bind(texture);
-            texture._videoFrameCallbackID = source.requestVideoFrameCallback(el.videoFrameCallback);
+            texture._videoFrameCallbackID = video.requestVideoFrameCallback(el.videoFrameCallback);
         }
     }
 
