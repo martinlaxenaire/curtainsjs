@@ -1011,6 +1011,18 @@
                                 <p>
                                     A <a href="vec-3-class.html">Vec3</a> class object containing the additional translation applied to your plane along X, Y and Z axis.
                                 </p>
+                                <p>
+                                    Since <strong>v8.0</strong>, this property is reactive, which means that when you update one of the relativeTranslation vector component, the translation of the plane will automatically be updated:
+                                </p>
+                                <div class="code">
+
+                                    <div class="code-comment">
+                                        // translate our plane by 100px along X axis
+                                    </div>
+                                    <div>
+                                        plane.<span class="code-property">relativeTranslation</span>.<span class="code-property">x</span> = <span class="code-number">100</span><span class="code-var">;</span>
+                                    </div>
+                                </div>
                             </li>
                             <li id="renderer">
                                 <p>
@@ -1038,6 +1050,18 @@
                                 <p>
                                     A <a href="vec-3-class.html">Vec3</a> class object containing the rotation applied to your plane on X, Y and Z axis.
                                 </p>
+                                <p>
+                                    Since <strong>v8.0</strong>, this property is reactive, which means that when you update one of the rotation vector component, the rotation of the plane will automatically be updated:
+                                </p>
+                                <div class="code">
+
+                                    <div class="code-comment">
+                                        // rotate our plane by PI / 2 along X axis
+                                    </div>
+                                    <div>
+                                        plane.<span class="code-property">rotation</span>.<span class="code-property">x</span> = Math.PI / <span class="code-number">2</span><span class="code-var">;</span>
+                                    </div>
+                                </div>
                             </li>
                             <li id="scale">
                                 <p>
@@ -1046,6 +1070,18 @@
                                 <p>
                                     A <a href="vec-3-class.html">Vec3</a> class object containing the scale applied to your plane on X and Y axis (value along Z axis is always equal to 1).
                                 </p>
+                                <p>
+                                    Since <strong>v8.0</strong>, this property is reactive, which means that when you update one of the scale vector component, the scale of the plane will automatically be updated:
+                                </p>
+                                <div class="code">
+
+                                    <div class="code-comment">
+                                        // scale our plane by 2 along X axis
+                                    </div>
+                                    <div>
+                                        plane.<span class="code-property">scale</span>.<span class="code-property">x</span> = <span class="code-number">2</span><span class="code-var">;</span>
+                                    </div>
+                                </div>
                             </li>
                             <li id="target">
                                 <p>
