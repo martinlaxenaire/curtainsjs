@@ -408,6 +408,84 @@ export class Plane extends DOMMesh {
     }
 
 
+    /*** SCREEN TO WORLD CALCS ***/
+
+    /***
+     Convert our transform origin point from plane space to world space
+     ***/
+    _setWorldTransformOrigin() {
+        // set transformation origin relative to world space as well
+        this._boundingRect.world.transformOrigin = new Vec3(
+            (this.transformOrigin.x * 2 - 1) // between -1 and 1
+            * this._boundingRect.world.width,
+            -(this.transformOrigin.y * 2 - 1) // between -1 and 1
+            * this._boundingRect.world.height,
+            this.transformOrigin.z
+        );
+    }
+
+
+    /***
+     This function takes pixel values along X and Y axis and convert them to world space coordinates
+
+     params :
+     @vector (Vec3): position to convert on X, Y and Z axes
+
+     returns :
+     @worldPosition: plane's position in WebGL space
+     ***/
+    _documentToWorldSpace(vector) {
+        return tempWorldPos2.set(
+            (vector.x * this.renderer.pixelRatio / this.renderer._boundingRect.width) * this._boundingRect.world.ratios.width,
+            -(vector.y * this.renderer.pixelRatio / this.renderer._boundingRect.height) * this._boundingRect.world.ratios.height,
+            vector.z,
+        );
+    }
+
+    /***
+     Set our plane dimensions relative to clip spaces
+     ***/
+    _setWorldSizes() {
+        const ratios = this.camera.getScreenRatiosFromFov();
+
+        // our plane world informations
+        // since our vertices values range from -1 to 1, it is supposed to draw a square
+        // we need to scale them under the hood relatively to our canvas
+        // to display an accurately sized plane
+        this._boundingRect.world = {
+            width: (this._boundingRect.document.width / this.renderer._boundingRect.width) * ratios.width / 2,
+            height: (this._boundingRect.document.height / this.renderer._boundingRect.height) * ratios.height / 2,
+            ratios
+        };
+
+        // set transformation origin relative to world space as well
+        this._setWorldTransformOrigin();
+    }
+
+
+    /***
+     Set our plane position relative to clip spaces
+     ***/
+    _setWorldPosition() {
+        // dimensions and positions of our plane in the document and clip spaces
+        // don't forget translations in webgl space are referring to the center of our plane and canvas
+        const planeCenter = {
+            x: (this._boundingRect.document.width / 2) + this._boundingRect.document.left,
+            y: (this._boundingRect.document.height / 2) + this._boundingRect.document.top,
+        };
+
+        const containerCenter = {
+            x: (this.renderer._boundingRect.width / 2) + this.renderer._boundingRect.left,
+            y: (this.renderer._boundingRect.height / 2) + this.renderer._boundingRect.top,
+        };
+
+        this._boundingRect.world.top = ((containerCenter.y - planeCenter.y) / this.renderer._boundingRect.height) * this._boundingRect.world.ratios.height;
+        this._boundingRect.world.left = ((planeCenter.x - containerCenter.x) / this.renderer._boundingRect.width) * this._boundingRect.world.ratios.width;
+    }
+
+
+    /*** TRANSFORMATIONS ***/
+
     /***
      This will set our plane scale
      used internally but can be used externally as well
@@ -517,80 +595,6 @@ export class Plane extends DOMMesh {
 
 
     /***
-     Convert our transform origin point from plane space to world space
-     ***/
-    _setWorldTransformOrigin() {
-        // set transformation origin relative to world space as well
-        this._boundingRect.world.transformOrigin = new Vec3(
-            (this.transformOrigin.x * 2 - 1) // between -1 and 1
-            * this._boundingRect.world.width,
-            -(this.transformOrigin.y * 2 - 1) // between -1 and 1
-            * this._boundingRect.world.height,
-            this.transformOrigin.z
-        );
-    }
-
-
-    /***
-     This function takes pixel values along X and Y axis and convert them to clip space coordinates
-
-     params :
-     @vector (Vec3): position to convert on X, Y and Z axes
-
-     returns :
-     @worldPosition: plane's position in WebGL space
-     ***/
-    _documentToWorldSpace(vector) {
-        return tempWorldPos2.set(
-            (vector.x * this.renderer.pixelRatio / this.renderer._boundingRect.width) * this._boundingRect.world.ratios.width,
-            -(vector.y * this.renderer.pixelRatio / this.renderer._boundingRect.height) * this._boundingRect.world.ratios.height,
-            vector.z,
-        );
-    }
-
-    /***
-     Set our plane dimensions relative to clip spaces
-     ***/
-    _setWorldSizes() {
-        const ratios = this.camera.getScreenRatiosFromFov();
-
-        // our plane world informations
-        // since our vertices values range from -1 to 1, it is supposed to draw a square
-        // we need to scale them under the hood relatively to our canvas
-        // to display an accurately sized plane
-        this._boundingRect.world = {
-            width: (this._boundingRect.document.width / this.renderer._boundingRect.width) * ratios.width / 2,
-            height: (this._boundingRect.document.height / this.renderer._boundingRect.height) * ratios.height / 2,
-            ratios
-        };
-
-        // set transformation origin relative to world space as well
-        this._setWorldTransformOrigin();
-    }
-
-
-    /***
-     Set our plane position relative to clip spaces
-     ***/
-    _setWorldPosition() {
-        // dimensions and positions of our plane in the document and clip spaces
-        // don't forget translations in webgl space are referring to the center of our plane and canvas
-        const planeCenter = {
-            x: (this._boundingRect.document.width / 2) + this._boundingRect.document.left,
-            y: (this._boundingRect.document.height / 2) + this._boundingRect.document.top,
-        };
-
-        const containerCenter = {
-            x: (this.renderer._boundingRect.width / 2) + this.renderer._boundingRect.left,
-            y: (this.renderer._boundingRect.height / 2) + this.renderer._boundingRect.top,
-        };
-
-        this._boundingRect.world.top = ((containerCenter.y - planeCenter.y) / this.renderer._boundingRect.height) * this._boundingRect.world.ratios.height;
-        this._boundingRect.world.left = ((planeCenter.x - containerCenter.x) / this.renderer._boundingRect.width) * this._boundingRect.world.ratios.width;
-    }
-
-
-    /***
      This will set our plane translation by adding plane computed bounding box values and computed relative position values
      ***/
     _setTranslation() {
@@ -634,6 +638,51 @@ export class Plane extends DOMMesh {
             this.relativeTranslation.copy(translation);
 
             this._setTranslation();
+        }
+    }
+
+
+    /***
+     This function uses our plane HTML Element bounding rectangle values and convert them to the world clip space coordinates, and then apply the corresponding translation
+     ***/
+    _applyWorldPositions() {
+        // set our plane sizes and positions relative to the world clipspace
+        this._setWorldPosition();
+
+        // set the translation values
+        this._setTranslation();
+    }
+
+
+    /***
+     This function updates the plane position based on its CSS positions and transformations values.
+     Useful if the HTML element has been moved while the container size has not changed.
+     ***/
+    updatePosition() {
+        // set the new plane sizes and positions relative to document by triggering getBoundingClientRect()
+        this._setDocumentSizes();
+
+        // apply them
+        this._applyWorldPositions();
+    }
+
+
+    /***
+     This function updates the plane position based on the Curtains class scroll manager values
+
+     params:
+     @lastXDelta (float): last scroll value along X axis
+     @lastYDelta (float): last scroll value along Y axis
+     ***/
+    updateScrollPosition(lastXDelta, lastYDelta) {
+        // actually update the plane position only if last X delta or last Y delta is not equal to 0
+        if(lastXDelta || lastYDelta) {
+            // set new positions based on our delta without triggering reflow
+            this._boundingRect.document.top += lastYDelta * this.renderer.pixelRatio;
+            this._boundingRect.document.left += lastXDelta * this.renderer.pixelRatio;
+
+            // apply them
+            this._applyWorldPositions();
         }
     }
 
@@ -975,51 +1024,6 @@ export class Plane extends DOMMesh {
     isDrawn() {
         return this._canDraw && this.visible && (this._shouldDraw || this.alwaysDraw);
     }
-
-
-    /***
-     This function uses our plane HTML Element bounding rectangle values and convert them to the world clip space coordinates, and then apply the corresponding translation
-     ***/
-    _applyWorldPositions() {
-        // set our plane sizes and positions relative to the world clipspace
-        this._setWorldPosition();
-
-        // set the translation values
-        this._setTranslation();
-    }
-
-
-    /***
-     This function updates the plane position based on its CSS positions and transformations values.
-     Useful if the HTML element has been moved while the container size has not changed.
-     ***/
-    updatePosition() {
-        // set the new plane sizes and positions relative to document by triggering getBoundingClientRect()
-        this._setDocumentSizes();
-
-        // apply them
-        this._applyWorldPositions();
-    }
-
-
-    /***
-     This function updates the plane position based on the Curtains class scroll manager values
-
-     params:
-     @lastXDelta (float): last scroll value along X axis
-     @lastYDelta (float): last scroll value along Y axis
-     ***/
-    updateScrollPosition(lastXDelta, lastYDelta) {
-        // actually update the plane position only if last X delta or last Y delta is not equal to 0
-        if(lastXDelta || lastYDelta) {
-            // set new positions based on our delta without triggering reflow
-            this._boundingRect.document.top += lastYDelta * this.renderer.pixelRatio;
-            this._boundingRect.document.left += lastXDelta * this.renderer.pixelRatio;
-
-            // apply them
-            this._applyWorldPositions();
-        }
-    };
 
 
     /*** DEPTH AND RENDER ORDER ***/
