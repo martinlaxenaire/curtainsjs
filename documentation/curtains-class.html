@@ -984,22 +984,48 @@
 						<ul>
                             <li id="on-after-resize">
                                 <p>
-                                    <strong>onAfterResize</strong>(): <span class="api-item-version">v3.0</span>
+                                    <strong>onAfterResize</strong>(callback): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
                                     This function will be called each time the window has been resized, after everything has been updated.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Curtains object, allowing it to be chainable.
                                 </p>
                             </li>
 							<li id="on-context-lost">
 								<p>
-									<strong>onContextLost</strong>(): <span class="api-item-version">v2.0</span>
+									<strong>onContextLost</strong>(callback): <span class="api-item-version">v2.0</span>
 								</p>
 								<p>
 									This function will be called each time the WebGL context has been lost.
 								</p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
 								<p>
 									<strong>returns:</strong> your Curtains object, allowing it to be chainable.
 								</p>
@@ -1009,22 +1035,48 @@
 							</li>
 							<li id="on-context-restored">
 								<p>
-									<strong>onContextRestored</strong>(): <span class="api-item-version">v2.0</span>
+									<strong>onContextRestored</strong>(callback): <span class="api-item-version">v2.0</span>
 								</p>
 								<p>
 									This function will be called each time the WebGL context has been successfully restored.
 								</p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
 								<p>
 									<strong>returns:</strong> your Curtains object, allowing it to be chainable.
 								</p>
 							</li>
 							<li id="on-error">
 								<p>
-									<strong>onError</strong>(): <span class="api-item-version">v1.7</span>
+									<strong>onError</strong>(callback): <span class="api-item-version">v1.7</span>
 								</p>
 								<p>
 									This function will be called if there's an error during the initialisation, or if the WebGL context could not be created.
 								</p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
 								<p>
 									<strong>returns:</strong> your Curtains object, allowing it to be chainable.
 								</p>
@@ -1034,11 +1086,24 @@
 							</li>
 							<li id="on-render">
 								<p>
-									<strong>onRender</strong>(): <span class="api-item-version">v2.0</span>
+									<strong>onRender</strong>(callback): <span class="api-item-version">v2.0</span>
 								</p>
 								<p>
 									This function is called once at each request animation frame call. Useful if you need to update stats or tweening engine.
 								</p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
 								<p>
 									<strong>returns:</strong> your Curtains object, allowing it to be chainable.
 								</p>
@@ -1048,11 +1113,24 @@
 							</li>
                             <li id="on-scroll">
                                 <p>
-                                    <strong>onScroll</strong>(): <span class="api-item-version">v4.0</span>
+                                    <strong>onScroll</strong>(callback): <span class="api-item-version">v4.0</span>
                                 </p>
                                 <p>
                                     This function is called each time a window scroll event is fired and scroll watching is active.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Curtains object, allowing it to be chainable.
                                 </p>

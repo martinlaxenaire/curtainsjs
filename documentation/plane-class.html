@@ -2257,11 +2257,24 @@
                         <ul>
                             <li id="on-after-render">
                                 <p>
-                                    <strong>onAfterRender</strong>(): <span class="api-item-version">v5.0</span>
+                                    <strong>onAfterRender</strong>(callback): <span class="api-item-version">v5.0</span>
                                 </p>
                                 <p>
                                     This function will be called just after your plane has been drawn.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2271,11 +2284,24 @@
                             </li>
                             <li id="on-after-resize">
                                 <p>
-                                    <strong>onAfterResize</strong>(): <span class="api-item-version">v3.0</span>
+                                    <strong>onAfterResize</strong>(callback): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
                                     This function will be called each time your plane has been resized, after everything has been updated.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2285,11 +2311,24 @@
                             </li>
                             <li id="on-error">
                                 <p>
-                                    <strong>onError</strong>(): <span class="api-item-version">v7.0</span>
+                                    <strong>onError</strong>(callback): <span class="api-item-version">v7.0</span>
                                 </p>
                                 <p>
                                     This function is called if there's an error while instancing your plane, usually because the shaders compilation failed.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2299,13 +2338,26 @@
                             </li>
                             <li id="on-leave-view">
                                 <p>
-                                    <strong>onLeaveView</strong>(): <span class="api-item-version">v2.0</span>
+                                    <strong>onLeaveView</strong>(callback): <span class="api-item-version">v2.0</span>
                                 </p>
                                 <p>
                                     This function will be triggered each time a plane leaves the Curtains container viewport area, unless <a href="plane-class.html#always-draw">alwaysDraw property</a> is set to true.<br />
                                     If alwaysDraw property is set to false, an out-of-view plane is not drawn anymore and its textures are no longer updated, but its uniforms are still updated and its onRender callback is still called.<br />
                                     You might want to pause its videos as well if it contains any.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2315,11 +2367,24 @@
                             </li>
                             <li id="on-loading">
                                 <p>
-                                    <strong>onLoading</strong>(texture): <span class="api-item-version">v1.0</span>
+                                    <strong>onLoading</strong>(callback(texture)): <span class="api-item-version">v1.0</span>
                                 </p>
                                 <p>
                                     This function will be fired each time a source element (either an image, a canvas or a video) of the plane has been loaded and is ready to display. You'll have access here to the newly created texture. Useful to handle a loader or manipulate the texture.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute, with the newly created texture passed as parameter.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2329,13 +2394,26 @@
                             </li>
                             <li id="on-ready">
                                 <p>
-                                    <strong>onReady</strong>(): <span class="api-item-version">v1.0</span>
+                                    <strong>onReady</strong>(callback): <span class="api-item-version">v1.0</span>
                                 </p>
                                 <p>
                                     This function will be called once our plane is all set up and ready to be drawn.<br />
                                     If <a href="plane-class.html#autoload-sources">autoloadSources</a> is set to true, il will be called after the images, canvas and videos are loaded. Otherwise it will be called almost right away.<br />
                                     This is where you may want to add event listener to interact with your plane or update its uniforms.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2345,11 +2423,24 @@
                             </li>
                             <li id="on-re-enter-view">
                                 <p>
-                                    <strong>onReEnterView</strong>(): <span class="api-item-version">v2.0</span>
+                                    <strong>onReEnterView</strong>(callback): <span class="api-item-version">v2.0</span>
                                 </p>
                                 <p>
                                     This function will be triggered each time a plane reenters the Curtains container viewport area, unless <a href="plane-class.html#always-draw">alwaysDraw property</a> is set to true.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2359,11 +2450,24 @@
                             </li>
                             <li id="on-render">
                                 <p>
-                                    <strong>onRender</strong>(): <span class="api-item-version">v1.0</span>
+                                    <strong>onRender</strong>(callback): <span class="api-item-version">v1.0</span>
                                 </p>
                                 <p>
                                     This function will be triggered for each plane at each requestAnimationFrame call. Useful to update a time uniform, change plane rotation, scale, etc.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
