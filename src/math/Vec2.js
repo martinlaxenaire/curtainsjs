@@ -51,6 +51,8 @@ export class Vec2 {
         if(callback) {
             this._onChangeCallback = callback;
         }
+
+        return this;
     }
 
     /***

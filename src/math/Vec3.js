@@ -64,6 +64,8 @@ export class Vec3 {
         if(callback) {
             this._onChangeCallback = callback;
         }
+
+        return this;
     }
 
     /***
