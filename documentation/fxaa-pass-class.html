@@ -141,14 +141,6 @@
                                     <div class="api-submenu-title">
                                         <a href="fxaa-pass-class.html#parameters">Parameters</a>
                                     </div>
-                                    <div class="api-submenu-title">
-                                        <a href="fxaa-pass-class.html#properties">Properties</a>
-                                    </div>
-                                    <ul class="api-submenu">
-                                        <li>
-                                            <a href="fxaa-pass-class.html#pass">pass</a>
-                                        </li>
-                                    </ul>
                                 </div>
                             </li>
                         </ul>
@@ -169,6 +161,7 @@
                         <h2 id="basic-usage">Basic usage</h2>
                         <p>
                             The FXAAPass lets you easily add a <strong>Fast Approximate Anti-Aliasing</strong> pass to your scene.<br />
+                            The FXAAPass class extends the <a href="shader-pass-class.html">ShaderPass</a> class, inheriting from all its methods and properties.
                         </p>
                         <p class="api-item-examples">
                             The fragment shader code used for that FXAA pass has been taken from here:<br />
@@ -203,21 +196,8 @@
 
                         <p>
                             To create a FXAAPass you will have to pass your curtains object as the first parameter.<br />
-                            You can add an additional parameter object in which you can pass the following <a href="shader-pass-class.html#shader-pass-parameters">ShaderPass parameters</a> options: <strong>clear, depth, depthTest, renderTarget, texturesOptions</strong>.
+                            You can add an additional parameter object in which you can pass the following <a href="shader-pass-class.html#shader-pass-parameters">ShaderPass parameters</a> options: <strong>clear, depth, depthTest, renderOrder, renderTarget, texturesOptions</strong>.
                         </p>
-
-                        <h2 id="properties">Properties</h2>
-
-                        <ul>
-                            <li id="pass">
-                                <p>
-                                    <strong>pass</strong> (<a href="shader-pass-class.html">ShaderPass</a> class object): <span class="api-item-version">v7.0</span>
-                                </p>
-                                <p>
-                                    The ShaderPass used to apply the FXAA effect.
-                                </p>
-                            </li>
-                        </ul>
 
                     </div>
                 </div>
