@@ -482,7 +482,7 @@ export class Mesh {
      ***/
     _draw() {
         // enable/disable depth test
-        this.renderer.setDepth(this._depthTest);
+        this.renderer.setDepthTest(this._depthTest);
 
         // face culling
         this.renderer.setFaceCulling(this.cullFace);
