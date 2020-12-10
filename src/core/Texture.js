@@ -342,12 +342,6 @@ export class Texture {
             this._setTextureUniforms();
 
             if(this._copyOnInit) {
-                // avoid lazy initialization bugs that affect mostly PingPongPlanes
-                if(!this._copiedFrom._sampler.texture) {
-                    this._sampler.texture = this.gl.createTexture();
-                    this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
-                }
-
                 // wait for original texture to be ready before copying it
                 const waitForOriginalTexture = this.renderer.nextRender.add(() => {
                     if(this._copiedFrom._canDraw) {
