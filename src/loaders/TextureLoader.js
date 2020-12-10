@@ -276,13 +276,10 @@ export class TextureLoader {
     ) {
         const image = this._createImage(source);
 
+        let options = Object.assign(textureOptions, {});
         // merge texture options with its parent textures options if needed
-        let options = {};
         if(this._parent) {
-            options = Object.assign(textureOptions, this._parent._texturesOptions);
-        }
-        else {
-            options = Object.assign(textureOptions, options);
+            options = Object.assign(options, this._parent._texturesOptions);
         }
 
         options.loader = this;
@@ -382,13 +379,10 @@ export class TextureLoader {
 
         video.crossOrigin = this.crossOrigin;
 
+        let options = Object.assign(textureOptions, {});
         // merge texture options with its parent textures options if needed
-        let options = {};
         if(this._parent) {
             options = Object.assign(textureOptions, this._parent._texturesOptions);
-        }
-        else {
-            options = Object.assign(textureOptions, options);
         }
 
         options.loader = this;
@@ -460,23 +454,17 @@ export class TextureLoader {
         textureOptions = {},
         successCallback
     ) {
+        let options = Object.assign(textureOptions, {});
         // merge texture options with its parent textures options if needed
         if(this._parent) {
-            textureOptions = Object.assign(textureOptions, this._parent._texturesOptions);
+            options = Object.assign(textureOptions, this._parent._texturesOptions);
         }
 
+        options.loader = this;
+        options.sampler = source.getAttribute("data-sampler") || options.sampler;
+
         // create a new texture that will use our source later
-        const texture = new Texture(this.renderer, {
-            loader: this,
-            sampler: textureOptions.sampler || source.getAttribute("data-sampler"),
-            premultiplyAlpha: textureOptions.premultiplyAlpha,
-            anisotropy: textureOptions.anisotropy,
-            generateMipmap: textureOptions.generateMipmap,
-            wrapS: textureOptions.wrapS,
-            wrapT: textureOptions.wrapT,
-            minFilter: textureOptions.minFilter,
-            magFilter: textureOptions.magFilter,
-        });
+        const texture = new Texture(this.renderer, options);
 
         // add a new entry in our elements array
         this._addElement(source, texture, successCallback, null);
