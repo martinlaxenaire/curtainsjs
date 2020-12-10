@@ -85,17 +85,15 @@ export class FXAAPass extends ShaderPass {
             }
         `;
 
-        const renderer = curtains.renderer || curtains;
-
         const uniforms = {
             resolution: {
                 name: "uResolution",
                 type: "2f",
-                value: [renderer._boundingRect.width, renderer._boundingRect.height],
+                value: [0, 0], // will be updated after having called super()
             }
         };
 
-        super(renderer, {
+        super(curtains, {
             fragmentShader,
             uniforms,
 
@@ -109,8 +107,15 @@ export class FXAAPass extends ShaderPass {
             renderTarget,
         });
 
+        // update the resolution uniform
+        this.uniforms.resolution.value = [
+            this.renderer._boundingRect.width,
+            this.renderer._boundingRect.height
+        ];
+
         // override onAfterResize callback
         this._onAfterResizeCallback = () => {
+            // update the resolution uniform
             this.uniforms.resolution.value = [
                 this.renderer._boundingRect.width,
                 this.renderer._boundingRect.height
