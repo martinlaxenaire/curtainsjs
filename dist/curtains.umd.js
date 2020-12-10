@@ -1,3 +1,7 @@
+function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
+
+function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
+
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
@@ -97,8 +101,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    - draw the planes from the first render target created, ordered by their renderOrder then indexes (first added first drawn) order
    - draw the planes from the second render target created, etc.
    - draw the render passes content (depth buffer is cleared after each pass)
-   - draw the transparent planes ordered by renderOrder, Z positions, program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
-   - draw the opaque planes ordered by renderOrder, program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
+   - draw the transparent planes ordered by renderOrder, Z positions, geometry IDs and then indexes (first added first drawn)
+   - draw the opaque planes ordered by renderOrder, geometry IDs and then indexes (first added first drawn)
    - draw the scene passes content
      params:
    @renderer (Renderer class object): our renderer class object
@@ -248,7 +252,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.stacks.renderTargets = renderTargetsPlanes;
       }
       /***
-       Rebuilds our regular stack (transparent or opaque) with our plane added, ordered by program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
+       Rebuilds our regular stack (transparent or opaque) with our plane added, geometry IDs and then indexes (first added first drawn)
          params:
        @plane (Plane object): plane to add to our stack
          returns:
@@ -261,25 +265,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         // get all planes that have same transparency
         var planeStack = this.renderer.planes.filter(function (el) {
           return el.type !== "PingPongPlane" && !el.target && el._transparent === plane._transparent && el.uuid !== plane.uuid;
-        }); // find first one that match this geometry
+        }); // find if there's already a plane with the same geometry with a findLastIndex function
 
         var siblingPlaneIndex = -1;
 
-        if (plane.shareProgram) {
-          // if plane shares its program, find if there's already a plane with that program with a findLastIndex function
-          for (var i = planeStack.length - 1; i >= 0; i--) {
-            if (planeStack[i]._program.id === plane._program.id) {
-              siblingPlaneIndex = i + 1;
-              break;
-            }
-          }
-        } else {
-          // else find if there's already a plane with the same geometry with a findLastIndex function
-          for (var _i = planeStack.length - 1; _i >= 0; _i--) {
-            if (planeStack[_i]._geometry.definition.id === plane._geometry.definition.id) {
-              siblingPlaneIndex = _i + 1;
-              break;
-            }
+        for (var i = planeStack.length - 1; i >= 0; i--) {
+          if (planeStack[i]._geometry.definition.id === plane._geometry.definition.id) {
+            siblingPlaneIndex = i + 1;
+            break;
           }
         } // if findIndex returned -1 (no matching geometry or program)
 
@@ -291,23 +284,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         planeStack.sort(function (a, b) {
           return a.index - b.index;
         });
-
-        if (plane.shareProgram) {
-          // sort by program id
-          planeStack.sort(function (a, b) {
-            return a._program.id - b._program.id;
-          });
-        }
-
         return planeStack;
       }
       /***
        This function will add a plane into one of our 4 stacks : pingPong, renderTargets, transparent and opaque
        - pingPong is just a simple array (ordered by order of creation)
        - renderTargets array is ordered by render target creation order, planes renderOrder value and then planes indexes (order of creation)
-       - transparent array is ordered by renderOrder, Z positions, program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
-       - opaque array is ordered by renderOrder, program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
-         This is done to improve speed, notably when using shared programs, and reduce GL calls
+       - transparent array is ordered by renderOrder, Z positions, geometry IDs and then indexes (first added first drawn)
+       - opaque array is ordered by renderOrder, geometry IDs and then indexes (first added first drawn)
+         This is done to improve speed and reduce GL calls
          params:
        @plane (Plane object): plane to add to our scene
        ***/
@@ -960,7 +945,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           // whether we should force buffer bindings update
           forceBufferUpdate: false,
           // if we're using depth test or not
-          setDepth: null,
+          depthTest: null,
           // face culling
           cullFace: null,
           // current frame buffer ID
@@ -1000,7 +985,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.setBlendFunc(); // enable depth by default
 
-        this.setDepth(true); // texture cache
+        this.setDepthTest(true); // texture cache
 
         this.cache = new CacheManager(); // init our scene
 
@@ -1107,13 +1092,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
 
         if (isRestored) {
-          for (var _i2 = 0; _i2 < this.planes.length; _i2++) {
-            if (!this.planes[_i2]._canDraw) {
+          for (var _i = 0; _i < this.planes.length; _i++) {
+            if (!this.planes[_i]._canDraw) {
               isRestored = false;
               break;
             } else {
-              for (var j = 0; j < this.planes[_i2].textures.length; j++) {
-                if (!this.planes[_i2].textures[j]._canDraw) {
+              for (var j = 0; j < this.planes[_i].textures.length; j++) {
+                if (!this.planes[_i].textures[j]._canDraw) {
                   isRestored = false;
                   break;
                 }
@@ -1123,13 +1108,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
 
         if (isRestored) {
-          for (var _i3 = 0; _i3 < this.shaderPasses.length; _i3++) {
-            if (!this.shaderPasses[_i3]._canDraw) {
+          for (var _i2 = 0; _i2 < this.shaderPasses.length; _i2++) {
+            if (!this.shaderPasses[_i2]._canDraw) {
               isRestored = false;
               break;
             } else {
-              for (var _j = 0; _j < this.shaderPasses[_i3].textures.length; _j++) {
-                if (!this.shaderPasses[_i3].textures[_j]._canDraw) {
+              for (var _j = 0; _j < this.shaderPasses[_i2].textures.length; _j++) {
+                if (!this.shaderPasses[_i2].textures[_j]._canDraw) {
                   isRestored = false;
                   break;
                 }
@@ -1153,7 +1138,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.setBlendFunc(); // enable depth by default
 
-        this.setDepth(true); // clear texture and programs cache
+        this.setDepthTest(true); // clear texture and programs cache
 
         this.cache.clear(); // reset draw stacks
 
@@ -1163,13 +1148,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this.renderTargets[i]._restoreContext();
         }
 
-        for (var _i4 = 0; _i4 < this.planes.length; _i4++) {
-          this.planes[_i4]._restoreContext();
+        for (var _i3 = 0; _i3 < this.planes.length; _i3++) {
+          this.planes[_i3]._restoreContext();
         } // same goes for shader passes
 
 
-        for (var _i5 = 0; _i5 < this.shaderPasses.length; _i5++) {
-          this.shaderPasses[_i5]._restoreContext();
+        for (var _i4 = 0; _i4 < this.shaderPasses.length; _i4++) {
+          this.shaderPasses[_i4]._restoreContext();
         } // callback if everything is restored
 
 
@@ -1267,15 +1252,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } // resize the shader passes only if they are fully initiated
 
 
-        for (var _i6 = 0; _i6 < this.shaderPasses.length; _i6++) {
-          if (this.shaderPasses[_i6]._canDraw) {
-            this.shaderPasses[_i6].resize();
+        for (var _i5 = 0; _i5 < this.shaderPasses.length; _i5++) {
+          if (this.shaderPasses[_i5]._canDraw) {
+            this.shaderPasses[_i5].resize();
           }
         } // resize the render targets
 
 
-        for (var _i7 = 0; _i7 < this.renderTargets.length; _i7++) {
-          this.renderTargets[_i7].resize();
+        for (var _i6 = 0; _i6 < this.renderTargets.length; _i6++) {
+          this.renderTargets[_i6].resize();
         } // be sure we'll update the scene even if drawing is disabled
 
 
@@ -1352,14 +1337,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        ***/
 
     }, {
-      key: "setDepth",
-      value: function setDepth(_setDepth) {
-        if (_setDepth && !this.state.depthTest) {
-          this.state.depthTest = _setDepth; // enable depth test
+      key: "setDepthTest",
+      value: function setDepthTest(depthTest) {
+        if (depthTest && !this.state.depthTest) {
+          this.state.depthTest = depthTest; // enable depth test
 
           this.gl.enable(this.gl.DEPTH_TEST);
-        } else if (!_setDepth && this.state.depthTest) {
-          this.state.depthTest = _setDepth; // disable depth test
+        } else if (!depthTest && this.state.depthTest) {
+          this.state.depthTest = depthTest; // disable depth test
 
           this.gl.disable(this.gl.DEPTH_TEST);
         }
@@ -1471,8 +1456,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           return element.uuid !== renderTarget.uuid;
         }); // update render target indexes
 
-        for (var _i8 = 0; _i8 < this.renderTargets.length; _i8++) {
-          this.renderTargets[_i8].index = _i8;
+        for (var _i7 = 0; _i7 < this.renderTargets.length; _i7++) {
+          this.renderTargets[_i7].index = _i7;
         }
 
         renderTarget = null; // clear the buffer to clean scene
@@ -1731,6 +1716,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     return ScrollManager;
   }();
+
+  var version = "8.0";
   /***
    Here we create our Curtains object
        params:
@@ -1752,7 +1739,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      returns :
    @this: our Renderer
    ***/
-
 
   var Curtains = /*#__PURE__*/function () {
     function Curtains() {
@@ -1885,7 +1871,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.container.appendChild(this.canvas); // watermark
 
-        console.log("curtains.js - v7.3"); // start rendering
+        console.log("curtains.js - v" + version); // start rendering
 
         this._animationFrameID = null;
 
@@ -1988,12 +1974,16 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        Executes a callback on next frame
          params:
        @callback (function): callback to execute on next frame
+       @keep (bool): whether to keep calling that callback on each rendering call or not (act as a setInterval). Default to false
+         returns:
+       @queueItem: the queue item. Allows to keep a track of it and set its keep property to false when needed
        ***/
 
     }, {
       key: "nextRender",
       value: function nextRender(callback) {
-        this.renderer.nextRender.add(callback);
+        var keep = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+        return this.renderer.nextRender.add(callback, keep);
       }
       /***
        Clear our WebGL renderer colors and depth buffers
@@ -2421,7 +2411,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      params:
    @renderer (Renderer class object): our renderer class object
    @program (object): our mesh's Program (see Program class object)
-   @shared (bool): whether the program is shared or not
      @uniforms (object): our uniforms object:
    - name (string): uniform name to use in your shaders
    - type (uniform type): uniform type. Will try to detect it if not set (see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/uniform)
@@ -2432,7 +2421,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
   var Uniforms = /*#__PURE__*/function () {
-    function Uniforms(renderer, program, shared, uniforms) {
+    function Uniforms(renderer, program, uniforms) {
       _classCallCheck(this, Uniforms);
 
       this.type = "Uniforms";
@@ -2446,7 +2435,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       this.renderer = renderer;
       this.gl = renderer.gl;
       this.program = program;
-      this.shared = shared;
       this.uniforms = {};
 
       if (uniforms) {
@@ -2661,35 +2649,31 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             var uniform = this.uniforms[key];
             var shouldUpdate = false;
 
-            if (!this.shared) {
-              if (uniform._internalFormat === "Vec2") {
-                if (!uniform.value.equals(uniform.lastValue)) {
-                  shouldUpdate = true;
-                  uniform.lastValue.copy(uniform.value);
-                }
-              } else if (uniform._internalFormat === "Vec3") {
-                if (!uniform.value.equals(uniform.lastValue)) {
-                  shouldUpdate = true;
-                  uniform.lastValue.copy(uniform.value);
-                }
-              } else if (uniform._internalFormat === "Quat") {
-                if (!uniform.value.equals(uniform.lastValue)) {
-                  shouldUpdate = true;
-                  uniform.lastValue.copy(uniform.value);
-                }
-              } else if (!uniform.value.length) {
-                if (uniform.value !== uniform.lastValue) {
-                  shouldUpdate = true;
-                  uniform.lastValue = uniform.value;
-                }
-              } else if (JSON.stringify(uniform.value) !== JSON.stringify(uniform.lastValue)) {
-                // compare two arrays
-                shouldUpdate = true; // copy array
-
-                uniform.lastValue = Array.from(uniform.value);
+            if (uniform._internalFormat === "Vec2") {
+              if (!uniform.value.equals(uniform.lastValue)) {
+                shouldUpdate = true;
+                uniform.lastValue.copy(uniform.value);
               }
-            } else {
-              shouldUpdate = true;
+            } else if (uniform._internalFormat === "Vec3") {
+              if (!uniform.value.equals(uniform.lastValue)) {
+                shouldUpdate = true;
+                uniform.lastValue.copy(uniform.value);
+              }
+            } else if (uniform._internalFormat === "Quat") {
+              if (!uniform.value.equals(uniform.lastValue)) {
+                shouldUpdate = true;
+                uniform.lastValue.copy(uniform.value);
+              }
+            } else if (!uniform.value.length) {
+              if (uniform.value !== uniform.lastValue) {
+                shouldUpdate = true;
+                uniform.lastValue = uniform.value;
+              }
+            } else if (JSON.stringify(uniform.value) !== JSON.stringify(uniform.lastValue)) {
+              // compare two arrays
+              shouldUpdate = true; // copy array
+
+              uniform.lastValue = Array.from(uniform.value);
             }
 
             if (shouldUpdate) {
@@ -2937,30 +2921,19 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Checks whether the program has already been registered before creating it
-       If yes, use the compiled program if the program should be shared, or just use the compiled shaders to create a new one else with createProgram()
+       If yes, use the compiled shaders to create a new one with createProgram()
        If not, compile the shaders and call createProgram()
        ***/
       value: function setupProgram() {
         var existingProgram = this.renderer.cache.getProgramFromShaders(this.vsCode, this.fsCode); // we found an existing program
 
         if (existingProgram) {
-          // if we've decided to share existing programs, just return the existing one
-          if (this.parent.shareProgram) {
-            //return existingProgram;
-            this.shared = true;
-            this.vertexShader = existingProgram.vertexShader;
-            this.fragmentShader = existingProgram.fragmentShader;
-            this.program = existingProgram.program;
-            this.id = existingProgram.id;
-            this.activeTextures = existingProgram.activeTextures;
-          } else {
-            // we need to create a new program but we don't have to re compile the shaders
-            this.vertexShader = existingProgram.vertexShader;
-            this.fragmentShader = existingProgram.fragmentShader; // copy active textures as well
+          // we need to create a new program but we don't have to re compile the shaders
+          this.vertexShader = existingProgram.vertexShader;
+          this.fragmentShader = existingProgram.fragmentShader; // copy active textures as well
 
-            this.activeTextures = existingProgram.activeTextures;
-            this.createProgram();
-          }
+          this.activeTextures = existingProgram.activeTextures;
+          this.createProgram();
         } else {
           // compile the new shaders and create a new program
           this.useNewShaders();
@@ -2980,8 +2953,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "createProgram",
       value: function createProgram() {
         // set program id and type
-        this.id = this.renderer.cache.programs.length;
-        this.shared = this.parent.shareProgram; // we need to create a new shader program
+        this.id = this.renderer.cache.programs.length; // we need to create a new shader program
 
         this.program = this.gl.createProgram(); // if shaders are valid, go on
 
@@ -3006,16 +2978,25 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.gl.deleteShader(this.vertexShader);
         this.gl.deleteShader(this.fragmentShader); // store active textures (those that are used in the shaders) to avoid binding unused textures
 
-        if (!this.activeTextures) {
-          this.activeTextures = []; // check for program active textures
+        if (!this.activeUniforms) {
+          this.activeUniforms = {
+            textures: [],
+            textureMatrices: []
+          }; // check for program active textures
 
           var numUniforms = this.gl.getProgramParameter(this.program, this.gl.ACTIVE_UNIFORMS);
 
           for (var i = 0; i < numUniforms; i++) {
-            var activeUniform = this.gl.getActiveUniform(this.program, i); // if it's a texture add it to our activeTextures array
+            var activeUniform = this.gl.getActiveUniform(this.program, i);
 
             if (activeUniform.type === this.gl.SAMPLER_2D) {
-              this.activeTextures.push(activeUniform.name);
+              // if it's a texture add it to our activeUniforms textures array
+              this.activeUniforms.textures.push(activeUniform.name);
+            }
+
+            if (activeUniform.type === this.gl.FLOAT_MAT4 && activeUniform.name !== "uMVMatrix" && activeUniform.name !== "uPMatrix") {
+              // if it's a texture matrix add it to our activeUniforms textureMatrices array
+              this.activeUniforms.textureMatrices.push(activeUniform.name);
             }
           }
         } // add it to our program manager programs list
@@ -3034,7 +3015,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "createUniforms",
       value: function createUniforms(uniforms) {
-        this.uniformsManager = new Uniforms(this.renderer, this.program, this.shared, uniforms); // set them right away
+        this.uniformsManager = new Uniforms(this.renderer, this.program, uniforms); // set them right away
 
         this.setUniforms();
       }
@@ -3542,28 +3523,73 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "scale",
       value: function scale(vector) {
         var a = this.elements;
-        var result = new Mat4();
-        result.elements[0] = vector.x * a[0 * 4 + 0];
-        result.elements[1] = vector.x * a[0 * 4 + 1];
-        result.elements[2] = vector.x * a[0 * 4 + 2];
-        result.elements[3] = vector.x * a[0 * 4 + 3];
-        result.elements[4] = vector.y * a[1 * 4 + 0];
-        result.elements[5] = vector.y * a[1 * 4 + 1];
-        result.elements[6] = vector.y * a[1 * 4 + 2];
-        result.elements[7] = vector.y * a[1 * 4 + 3];
-        result.elements[8] = vector.z * a[2 * 4 + 0];
-        result.elements[9] = vector.z * a[2 * 4 + 1];
-        result.elements[10] = vector.z * a[2 * 4 + 2];
-        result.elements[11] = vector.z * a[2 * 4 + 3];
+        a[0] *= vector.x;
+        a[1] *= vector.x;
+        a[2] *= vector.x;
+        a[3] *= vector.x;
+        a[4] *= vector.y;
+        a[5] *= vector.y;
+        a[6] *= vector.y;
+        a[7] *= vector.y;
+        a[8] *= vector.z;
+        a[9] *= vector.z;
+        a[10] *= vector.z;
+        a[11] *= vector.z;
+        return this;
+      }
+      /***
+       Creates a matrix from a quaternion rotation, vector translation and vector scale
+       Equivalent for applying translation, rotation and scale matrices but much faster
+       Source code from: http://glmatrix.net/docs/mat4.js.html
+         params :
+       @translation (Vec3 class object): translation vector
+       @quaternion (Quat class object): rotation quaternion
+       @scale (Vec3 class object): scale vector
+         returns :
+       @this (Mat4 class object): matrix after transformations
+       ***/
 
-        if (a !== result.elements) {
-          result.elements[12] = a[12];
-          result.elements[13] = a[13];
-          result.elements[14] = a[14];
-          result.elements[15] = a[15];
-        }
+    }, {
+      key: "compose",
+      value: function compose(translation, quaternion, scale) {
+        var matrix = this.elements; // Quaternion math
 
-        return result;
+        var x = quaternion.elements[0],
+            y = quaternion.elements[1],
+            z = quaternion.elements[2],
+            w = quaternion.elements[3];
+        var x2 = x + x;
+        var y2 = y + y;
+        var z2 = z + z;
+        var xx = x * x2;
+        var xy = x * y2;
+        var xz = x * z2;
+        var yy = y * y2;
+        var yz = y * z2;
+        var zz = z * z2;
+        var wx = w * x2;
+        var wy = w * y2;
+        var wz = w * z2;
+        var sx = scale.x;
+        var sy = scale.y;
+        var sz = scale.z;
+        matrix[0] = (1 - (yy + zz)) * sx;
+        matrix[1] = (xy + wz) * sx;
+        matrix[2] = (xz - wy) * sx;
+        matrix[3] = 0;
+        matrix[4] = (xy - wz) * sy;
+        matrix[5] = (1 - (xx + zz)) * sy;
+        matrix[6] = (yz + wx) * sy;
+        matrix[7] = 0;
+        matrix[8] = (xz + wy) * sz;
+        matrix[9] = (yz - wx) * sz;
+        matrix[10] = (1 - (xx + yy)) * sz;
+        matrix[11] = 0;
+        matrix[12] = translation.x;
+        matrix[13] = translation.y;
+        matrix[14] = translation.z;
+        matrix[15] = 1;
+        return this;
       }
       /***
        Creates a matrix from a quaternion rotation, vector translation and vector scale, rotating and scaling around the given origin
@@ -3653,28 +3679,42 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   var Vec2 = /*#__PURE__*/function () {
     function Vec2() {
       var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-      var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : x;
 
       _classCallCheck(this, Vec2);
 
       this.type = "Vec2";
-      this.set(x, y);
+      this._x = x;
+      this._y = y;
     }
     /***
-     Sets the vector from values
-       params:
-     @x (float): X component of our vector
-     @y (float): Y component of our vector
-       returns:
-     @this (Vec2): this vector after being set
+     Getters and setters (with onChange callback)
      ***/
 
 
     _createClass(Vec2, [{
+      key: "onChange",
+      value: function onChange(callback) {
+        if (callback) {
+          this._onChangeCallback = callback;
+        }
+
+        return this;
+      }
+      /***
+       Sets the vector from values
+         params:
+       @x (float): X component of our vector
+       @y (float): Y component of our vector
+         returns:
+       @this (Vec2): this vector after being set
+       ***/
+
+    }, {
       key: "set",
       value: function set(x, y) {
-        this.x = x;
-        this.y = y;
+        this._x = x;
+        this._y = y;
         return this;
       }
       /***
@@ -3688,8 +3728,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "add",
       value: function add(vector) {
-        this.x += vector.x;
-        this.y += vector.y;
+        this._x += vector.x;
+        this._y += vector.y;
         return this;
       }
       /***
@@ -3703,8 +3743,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "addScalar",
       value: function addScalar(value) {
-        this.x += value;
-        this.y += value;
+        this._x += value;
+        this._y += value;
         return this;
       }
       /***
@@ -3718,8 +3758,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "sub",
       value: function sub(vector) {
-        this.x -= vector.x;
-        this.y -= vector.y;
+        this._x -= vector.x;
+        this._y -= vector.y;
         return this;
       }
       /***
@@ -3733,8 +3773,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "subScalar",
       value: function subScalar(value) {
-        this.x -= value;
-        this.y -= value;
+        this._x -= value;
+        this._y -= value;
         return this;
       }
       /***
@@ -3748,8 +3788,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "multiply",
       value: function multiply(vector) {
-        this.x *= vector.x;
-        this.y *= vector.y;
+        this._x *= vector.x;
+        this._y *= vector.y;
         return this;
       }
       /***
@@ -3763,8 +3803,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "multiplyScalar",
       value: function multiplyScalar(value) {
-        this.x *= value;
-        this.y *= value;
+        this._x *= value;
+        this._y *= value;
         return this;
       }
       /***
@@ -3778,8 +3818,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "copy",
       value: function copy(vector) {
-        this.x = vector.x;
-        this.y = vector.y;
+        this._x = vector.x;
+        this._y = vector.y;
         return this;
       }
       /***
@@ -3791,7 +3831,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "clone",
       value: function clone() {
-        return new Vec2(this.x, this.y);
+        return new Vec2(this._x, this._y);
       }
       /***
        Merges this vector with a vector when values are NaN. Mostly used internally.
@@ -3804,8 +3844,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "sanitizeNaNValuesWith",
       value: function sanitizeNaNValuesWith(vector) {
-        this.x = isNaN(this.x) ? vector.x : parseFloat(this.x);
-        this.y = isNaN(this.y) ? vector.y : parseFloat(this.y);
+        this._x = isNaN(this._x) ? vector.x : parseFloat(this._x);
+        this._y = isNaN(this._y) ? vector.y : parseFloat(this._y);
         return this;
       }
       /***
@@ -3819,8 +3859,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "max",
       value: function max(vector) {
-        this.x = Math.max(this.x, vector.x);
-        this.y = Math.max(this.y, vector.y);
+        this._x = Math.max(this._x, vector.x);
+        this._y = Math.max(this._y, vector.y);
         return this;
       }
       /***
@@ -3834,8 +3874,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "min",
       value: function min(vector) {
-        this.x = Math.min(this.x, vector.x);
-        this.y = Math.min(this.y, vector.y);
+        this._x = Math.min(this._x, vector.x);
+        this._y = Math.min(this._y, vector.y);
         return this;
       }
       /***
@@ -3849,7 +3889,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "equals",
       value: function equals(vector) {
-        return this.x === vector.x && this.y === vector.y;
+        return this._x === vector.x && this._y === vector.y;
       }
       /***
        Normalize this vector
@@ -3861,14 +3901,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "normalize",
       value: function normalize() {
         // normalize
-        var len = this.x * this.x + this.y * this.y;
+        var len = this._x * this._x + this._y * this._y;
 
         if (len > 0) {
           len = 1 / Math.sqrt(len);
         }
 
-        this.x *= len;
-        this.y *= len;
+        this._x *= len;
+        this._y *= len;
         return this;
       }
       /***
@@ -3882,7 +3922,27 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "dot",
       value: function dot(vector) {
-        return this.x * vector.x + this.y * vector.y;
+        return this._x * vector.x + this._y * vector.y;
+      }
+    }, {
+      key: "x",
+      get: function get() {
+        return this._x;
+      },
+      set: function set(value) {
+        var changed = value !== this._x;
+        this._x = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+      }
+    }, {
+      key: "y",
+      get: function get() {
+        return this._y;
+      },
+      set: function set(value) {
+        var changed = value !== this._y;
+        this._y = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
       }
     }]);
 
@@ -3905,31 +3965,46 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   var Vec3 = /*#__PURE__*/function () {
     function Vec3() {
       var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-      var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-      var z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+      var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : x;
+      var z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : x;
 
       _classCallCheck(this, Vec3);
 
       this.type = "Vec3";
-      this.set(x, y, z);
+      this._x = x;
+      this._y = y;
+      this._z = z;
     }
     /***
-     Sets the vector from values
-       params:
-     @x (float): X component of our vector
-     @y (float): Y component of our vector
-     @z (float): Z component of our vector
-       returns:
-     @this (Vec2): this vector after being set
+     Getters and setters (with onChange callback)
      ***/
 
 
     _createClass(Vec3, [{
+      key: "onChange",
+      value: function onChange(callback) {
+        if (callback) {
+          this._onChangeCallback = callback;
+        }
+
+        return this;
+      }
+      /***
+       Sets the vector from values
+         params:
+       @x (float): X component of our vector
+       @y (float): Y component of our vector
+       @z (float): Z component of our vector
+         returns:
+       @this (Vec2): this vector after being set
+       ***/
+
+    }, {
       key: "set",
       value: function set(x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this._x = x;
+        this._y = y;
+        this._z = z;
         return this;
       }
       /***
@@ -3943,9 +4018,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "add",
       value: function add(vector) {
-        this.x += vector.x;
-        this.y += vector.y;
-        this.z += vector.z;
+        this._x += vector.x;
+        this._y += vector.y;
+        this._z += vector.z;
         return this;
       }
       /***
@@ -3959,9 +4034,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "addScalar",
       value: function addScalar(value) {
-        this.x += value;
-        this.y += value;
-        this.z += value;
+        this._x += value;
+        this._y += value;
+        this._z += value;
         return this;
       }
       /***
@@ -3975,9 +4050,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "sub",
       value: function sub(vector) {
-        this.x -= vector.x;
-        this.y -= vector.y;
-        this.z -= vector.z;
+        this._x -= vector.x;
+        this._y -= vector.y;
+        this._z -= vector.z;
         return this;
       }
       /***
@@ -3991,9 +4066,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "subScalar",
       value: function subScalar(value) {
-        this.x -= value;
-        this.y -= value;
-        this.z -= value;
+        this._x -= value;
+        this._y -= value;
+        this._z -= value;
         return this;
       }
       /***
@@ -4007,9 +4082,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "multiply",
       value: function multiply(vector) {
-        this.x *= vector.x;
-        this.y *= vector.y;
-        this.z *= vector.z;
+        this._x *= vector.x;
+        this._y *= vector.y;
+        this._z *= vector.z;
         return this;
       }
       /***
@@ -4023,9 +4098,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "multiplyScalar",
       value: function multiplyScalar(value) {
-        this.x *= value;
-        this.y *= value;
-        this.z *= value;
+        this._x *= value;
+        this._y *= value;
+        this._z *= value;
         return this;
       }
       /***
@@ -4039,9 +4114,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "copy",
       value: function copy(vector) {
-        this.x = vector.x;
-        this.y = vector.y;
-        this.z = vector.z;
+        this._x = vector.x;
+        this._y = vector.y;
+        this._z = vector.z;
         return this;
       }
       /***
@@ -4053,7 +4128,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "clone",
       value: function clone() {
-        return new Vec3(this.x, this.y, this.z);
+        return new Vec3(this._x, this._y, this._z);
       }
       /***
        Merges this vector with a vector when values are NaN. Mostly used internally.
@@ -4066,9 +4141,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "sanitizeNaNValuesWith",
       value: function sanitizeNaNValuesWith(vector) {
-        this.x = isNaN(this.x) ? vector.x : parseFloat(this.x);
-        this.y = isNaN(this.y) ? vector.y : parseFloat(this.y);
-        this.z = isNaN(this.z) ? vector.z : parseFloat(this.z);
+        this._x = isNaN(this._x) ? vector.x : parseFloat(this._x);
+        this._y = isNaN(this._y) ? vector.y : parseFloat(this._y);
+        this._z = isNaN(this._z) ? vector.z : parseFloat(this._z);
         return this;
       }
       /***
@@ -4082,9 +4157,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "max",
       value: function max(vector) {
-        this.x = Math.max(this.x, vector.x);
-        this.y = Math.max(this.y, vector.y);
-        this.z = Math.max(this.z, vector.z);
+        this._x = Math.max(this._x, vector.x);
+        this._y = Math.max(this._y, vector.y);
+        this._z = Math.max(this._z, vector.z);
         return this;
       }
       /***
@@ -4098,9 +4173,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "min",
       value: function min(vector) {
-        this.x = Math.min(this.x, vector.x);
-        this.y = Math.min(this.y, vector.y);
-        this.z = Math.min(this.z, vector.z);
+        this._x = Math.min(this._x, vector.x);
+        this._y = Math.min(this._y, vector.y);
+        this._z = Math.min(this._z, vector.z);
         return this;
       }
       /***
@@ -4112,7 +4187,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "equals",
       value: function equals(vector) {
-        return this.x === vector.x && this.y === vector.y && this.z === vector.z;
+        return this._x === vector.x && this._y === vector.y && this._z === vector.z;
       }
       /***
        Normalize this vector
@@ -4124,15 +4199,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "normalize",
       value: function normalize() {
         // normalize
-        var len = this.x * this.x + this.y * this.y + this.z * this.z;
+        var len = this._x * this._x + this._y * this._y + this._z * this._z;
 
         if (len > 0) {
           len = 1 / Math.sqrt(len);
         }
 
-        this.x *= len;
-        this.y *= len;
-        this.z *= len;
+        this._x *= len;
+        this._y *= len;
+        this._z *= len;
         return this;
       }
       /***
@@ -4144,7 +4219,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "dot",
       value: function dot(vector) {
-        return this.x * vector.x + this.y * vector.y + this.z * vector.z;
+        return this._x * vector.x + this._y * vector.y + this._z * vector.z;
       }
       /***
        Apply a matrix 4 to a point (vec3)
@@ -4159,15 +4234,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "applyMat4",
       value: function applyMat4(matrix) {
-        var x = this.x,
-            y = this.y,
-            z = this.z;
+        var x = this._x,
+            y = this._y,
+            z = this._z;
         var mArray = matrix.elements;
         var w = mArray[3] * x + mArray[7] * y + mArray[11] * z + mArray[15];
         w = w || 1;
-        this.x = (mArray[0] * x + mArray[4] * y + mArray[8] * z + mArray[12]) / w;
-        this.y = (mArray[1] * x + mArray[5] * y + mArray[9] * z + mArray[13]) / w;
-        this.z = (mArray[2] * x + mArray[6] * y + mArray[10] * z + mArray[14]) / w;
+        this._x = (mArray[0] * x + mArray[4] * y + mArray[8] * z + mArray[12]) / w;
+        this._y = (mArray[1] * x + mArray[5] * y + mArray[9] * z + mArray[13]) / w;
+        this._z = (mArray[2] * x + mArray[6] * y + mArray[10] * z + mArray[14]) / w;
         return this;
       }
       /***
@@ -4181,9 +4256,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "applyQuat",
       value: function applyQuat(quaternion) {
-        var x = this.x,
-            y = this.y,
-            z = this.z;
+        var x = this._x,
+            y = this._y,
+            z = this._z;
         var qx = quaternion.elements[0],
             qy = quaternion.elements[1],
             qz = quaternion.elements[2],
@@ -4194,9 +4269,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var iz = qw * z + qx * y - qy * x;
         var iw = -qx * x - qy * y - qz * z; // calculate result * inverse quat
 
-        this.x = ix * qw + iw * -qx + iy * -qz - iz * -qy;
-        this.y = iy * qw + iw * -qy + iz * -qx - ix * -qz;
-        this.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
+        this._x = ix * qw + iw * -qx + iy * -qz - iz * -qy;
+        this._y = iy * qw + iw * -qy + iz * -qx - ix * -qz;
+        this._z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
         return this;
       }
       /***
@@ -4223,6 +4298,36 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.applyMat4(camera.projectionMatrix.getInverse()).applyMat4(camera.worldMatrix);
         return this;
       }
+    }, {
+      key: "x",
+      get: function get() {
+        return this._x;
+      },
+      set: function set(value) {
+        var changed = value !== this._x;
+        this._x = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+      }
+    }, {
+      key: "y",
+      get: function get() {
+        return this._y;
+      },
+      set: function set(value) {
+        var changed = value !== this._y;
+        this._y = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+      }
+    }, {
+      key: "z",
+      get: function get() {
+        return this._z;
+      },
+      set: function set(value) {
+        var changed = value !== this._z;
+        this._z = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+      }
     }]);
 
     return Vec3;
@@ -4247,10 +4352,17 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      returns:
    @this: our newly created Texture class object
    ***/
+  // avoid reinstancing those during runtime
 
+
+  var tempVec2 = new Vec2();
+  var tempVec3 = new Vec3();
+  var textureTranslation = new Mat4();
 
   var Texture = /*#__PURE__*/function () {
     function Texture(renderer) {
+      var _this11 = this;
+
       var _ref6 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
           _ref6$isFBOTexture = _ref6.isFBOTexture,
           isFBOTexture = _ref6$isFBOTexture === void 0 ? false : _ref6$isFBOTexture,
@@ -4317,19 +4429,27 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       this._samplerName = sampler; // prepare texture sampler
 
       this._sampler = {
-        isActive: false
+        isActive: false,
+        isTextureBound: false
       }; // we will always declare a texture matrix
 
       this._textureMatrix = {
-        matrix: new Mat4()
+        matrix: new Mat4(),
+        isActive: false
       }; // actual size will be set later on
 
       this._size = {
         width: 0,
         height: 0
       };
-      this.scale = new Vec2(1, 1);
-      this.offset = new Vec2(); // source loading and GPU uploading flags
+      this.scale = new Vec2(1);
+      this.scale.onChange(function () {
+        return _this11.resize();
+      });
+      this.offset = new Vec2();
+      this.offset.onChange(function () {
+        return _this11.resize();
+      }); // source loading and GPU uploading flags
 
       this._loader = loader;
       this._sourceLoaded = false;
@@ -4437,7 +4557,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_restoreContext",
       value: function _restoreContext() {
-        var _this11 = this;
+        var _this12 = this;
 
         // avoid binding that texture before reseting it
         this._canDraw = false;
@@ -4472,8 +4592,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } else {
           // wait for the original texure to be ready before attempting to restore the copy
           var queue = this.renderer.nextRender.add(function () {
-            if (_this11._copiedFrom._canDraw) {
-              _this11._restoreFromTexture(); // remove from callback queue
+            if (_this12._copiedFrom._canDraw) {
+              _this12._restoreFromTexture(); // remove from callback queue
 
 
               queue.keep = false;
@@ -4518,7 +4638,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_setParent",
       value: function _setParent() {
-        var _this12 = this;
+        var _this13 = this;
 
         // prepare texture sampler
         this._sampler.name = this._samplerName || "uSampler" + this.index; // we will always declare a texture matrix
@@ -4538,16 +4658,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this._setTextureUniforms();
 
           if (this._copyOnInit) {
-            // avoid lazy initialization bugs that affect mostly PingPongPlanes
-            if (!this._copiedFrom._sampler.texture) {
-              this._sampler.texture = this.gl.createTexture();
-              this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
-            } // wait for original texture to be ready before copying it
-
-
+            // wait for original texture to be ready before copying it
             var waitForOriginalTexture = this.renderer.nextRender.add(function () {
-              if (_this12._copiedFrom._canDraw) {
-                _this12.copy(_this12._copiedFrom);
+              if (_this13._copiedFrom._canDraw) {
+                _this13.copy(_this13._copiedFrom);
 
                 waitForOriginalTexture.keep = false;
               }
@@ -4606,18 +4720,30 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_setTextureUniforms",
       value: function _setTextureUniforms() {
+        var _this14 = this;
+
         // check if our texture is used in our program shaders
         // if so, get its uniform locations and bind it to our program
-        for (var i = 0; i < this._parent._program.activeTextures.length; i++) {
-          if (this._parent._program.activeTextures[i] === this._sampler.name) {
+        var activeUniforms = this._parent._program.activeUniforms;
+
+        for (var i = 0; i < activeUniforms.textures.length; i++) {
+          if (activeUniforms.textures[i] === this._sampler.name) {
             // this texture is active
             this._sampler.isActive = true; // use the program and get our sampler and texture matrices uniforms
 
             this.renderer.useProgram(this._parent._program); // set our texture sampler uniform
 
-            this._sampler.location = this.gl.getUniformLocation(this._parent._program.program, this._sampler.name); // texture matrix uniform
+            this._sampler.location = this.gl.getUniformLocation(this._parent._program.program, this._sampler.name); // set texture matrix uniform location only if active
 
-            this._textureMatrix.location = this.gl.getUniformLocation(this._parent._program.program, this._textureMatrix.name); // tell the shader we bound the texture to our indexed texture unit
+            var isTextureMatrixActive = activeUniforms.textureMatrices.find(function (textureMatrix) {
+              return textureMatrix === _this14._textureMatrix.name;
+            });
+
+            if (isTextureMatrixActive) {
+              this._textureMatrix.isActive = true;
+              this._textureMatrix.location = this.gl.getUniformLocation(this._parent._program.program, this._textureMatrix.name);
+            } // tell the shader we bound the texture to our indexed texture unit
+
 
             this.gl.uniform1i(this._sampler.location, this.index);
           }
@@ -4686,13 +4812,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "setSource",
       value: function setSource(source) {
-        var _this13 = this;
+        var _this15 = this;
 
         // fire callback during load (useful for a loader)
         if (!this._sourceLoaded) {
           // texture source loaded callback
           this.renderer.nextRender.add(function () {
-            return _this13._onSourceLoadedCallback && _this13._onSourceLoadedCallback();
+            return _this15._onSourceLoadedCallback && _this15._onSourceLoadedCallback();
           });
         } // check for cache
 
@@ -4704,7 +4830,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           if (!this._uploaded) {
             // GPU uploading callback
             this.renderer.nextRender.add(function () {
-              return _this13._onSourceUploadedCallback && _this13._onSourceUploadedCallback();
+              return _this15._onSourceUploadedCallback && _this15._onSourceUploadedCallback();
             });
             this._uploaded = true;
           }
@@ -5017,11 +5143,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_videoFrameCallback",
       value: function _videoFrameCallback() {
-        var _this14 = this;
+        var _this16 = this;
 
         this._willUpdate = true;
         this.source.requestVideoFrameCallback(function () {
-          return _this14._videoFrameCallback();
+          return _this16._videoFrameCallback();
         });
       }
       /***
@@ -5033,7 +5159,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_upload",
       value: function _upload() {
-        var _this15 = this;
+        var _this17 = this;
 
         // set parameters that need to be set before texture uploading
         this._updateGlobalTexParameters();
@@ -5041,14 +5167,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (this.source) {
           this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this._globalParameters.internalFormat, this._globalParameters.format, this._globalParameters.type, this.source);
         } else if (this.sourceType === "fbo") {
-          this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this._globalParameters.internalFormat, this._size.width, this._size.height, 0, this._globalParameters.format, this._globalParameters.type, this.source);
+          this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this._globalParameters.internalFormat, this._size.width, this._size.height, 0, this._globalParameters.format, this._globalParameters.type, this.source || null);
         } // texture has been uploaded
 
 
         if (!this._uploaded) {
           // GPU uploading callback
           this.renderer.nextRender.add(function () {
-            return _this15._onSourceUploadedCallback && _this15._onSourceUploadedCallback();
+            return _this17._onSourceUploadedCallback && _this17._onSourceUploadedCallback();
           });
           this._uploaded = true;
         }
@@ -5077,7 +5203,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } // remember our ShaderPass objects don't have a scale property
 
 
-        var scale = this._parent.scale ? new Vec2(this._parent.scale.x, this._parent.scale.y) : new Vec2(1, 1);
+        var scale = this._parent.scale ? tempVec2.set(this._parent.scale.x, this._parent.scale.y) : tempVec2.set(1, 1);
         var parentWidth = this._parent._boundingRect.document.width * scale.x;
         var parentHeight = this._parent._boundingRect.document.height * scale.y;
         var sourceWidth = this._size.width;
@@ -5122,7 +5248,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           return;
         }
 
-        scale.sanitizeNaNValuesWith(this.scale).max(new Vec2(0.001, 0.001));
+        scale.sanitizeNaNValuesWith(this.scale).max(tempVec2.set(0.001, 0.001));
 
         if (!scale.equals(this.scale)) {
           this.scale.copy(scale);
@@ -5202,14 +5328,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "_updateTextureMatrix",
       value: function _updateTextureMatrix(sizes) {
         // calculate scale to apply to the matrix
-        var textureScale = new Vec3(sizes.parentWidth / (sizes.parentWidth - sizes.xOffset), sizes.parentHeight / (sizes.parentHeight - sizes.yOffset), 1); // apply texture scale
+        var textureScale = tempVec3.set(sizes.parentWidth / (sizes.parentWidth - sizes.xOffset), sizes.parentHeight / (sizes.parentHeight - sizes.yOffset), 1); // apply texture scale
 
         textureScale.x /= this.scale.x;
-        textureScale.y /= this.scale.y; // translate texture to center it
+        textureScale.y /= this.scale.y; // translate and scale texture to center it
+        // equivalent (but faster) than applying those steps to an identity matrix:
+        // translate from [(1 - textureScale.x) / 2 + this.offset.x, (1 - textureScale.y) / 2 + this.offset.y, 0]
+        // then apply a scale of [textureScale.x, textureScale.y, 1]
 
-        var textureTranslation = new Mat4([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, (1 - textureScale.x) / 2 + this.offset.x, (1 - textureScale.y) / 2 + this.offset.y, 0, 1]); // scale texture
-
-        this._textureMatrix.matrix = textureTranslation.scale(textureScale); // update the texture matrix uniform
+        this._textureMatrix.matrix = textureTranslation.setFromArray([textureScale.x, 0, 0, 0, 0, textureScale.y, 0, 0, 0, 0, 1, 0, (1 - textureScale.x) / 2 + this.offset.x, (1 - textureScale.y) / 2 + this.offset.y, 0, 1]); // update the texture matrix uniform
 
         this._updateMatrixUniform();
       }
@@ -5220,8 +5347,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_updateMatrixUniform",
       value: function _updateMatrixUniform() {
-        this.renderer.useProgram(this._parent._program);
-        this.gl.uniformMatrix4fv(this._textureMatrix.location, false, this._textureMatrix.matrix.elements);
+        if (this._textureMatrix.isActive) {
+          this.renderer.useProgram(this._parent._program);
+          this.gl.uniformMatrix4fv(this._textureMatrix.location, false, this._textureMatrix.matrix.elements);
+        }
       }
       /***
        This calls our loading callback and set our media as texture source
@@ -5256,7 +5385,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           } // bind the texture to the plane's index unit
 
 
-          this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
+          this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture); // check for texture binding until we got one
+
+          if (!this._sampler.isTextureBound) {
+            this._sampler.isTextureBound = !!this.gl.getParameter(this.gl.TEXTURE_BINDING_2D); // force render
+
+            this._sampler.isTextureBound && this.renderer.needRender();
+          }
         }
       }
       /***
@@ -5266,7 +5401,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_draw",
       value: function _draw() {
-        // only draw if the texture is active (used in the shader)
+        if (!this._sampler.texture) {
+          this._sampler.texture = this.gl.createTexture();
+        } // only draw if the texture is active (used in the shader)
+
+
         if (this._sampler.isActive) {
           // bind the texture
           this._bindTexture(this); // if no videoFrameCallback check if the video is actually really playing
@@ -5288,11 +5427,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             this._willUpdate = false;
           }
 
-          this._forceUpdate = false; // if parent program uniform is shared, update the texture matrix uniform
-
-          if (this._parent && this._parent.shareProgram) {
-            this._updateMatrixUniform();
-          }
+          this._forceUpdate = false;
         } // set parameters that need to be set after texture uploading
 
 
@@ -5397,7 +5532,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      returns :
    @this: our TextureLoader element
    ***/
-  // TODO create a new Image or Video element for each of this sources (allows to set crossorigin before src to avois CORS issues)?
   // TODO load assets with a web worker?
 
 
@@ -5475,7 +5609,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_sourceLoaded",
       value: function _sourceLoaded(source, texture, callback) {
-        var _this16 = this;
+        var _this18 = this;
 
         // execute only once
         if (!texture._sourceLoaded) {
@@ -5486,7 +5620,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             // increment plane texture loader
             this._increment && this._increment();
             this.renderer.nextRender.add(function () {
-              return _this16._parent._onLoadingCallback && _this16._parent._onLoadingCallback(texture);
+              return _this18._parent._onLoadingCallback && _this18._parent._onLoadingCallback(texture);
             });
           }
         } // execute callback
@@ -5541,7 +5675,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function _createImage(source) {
         var image = new Image();
         image.crossOrigin = this.crossOrigin;
-        image.src = source;
+
+        if (typeof source === "string") {
+          image.src = source;
+        } else {
+          image.src = source.src;
+          image.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+        }
+
         return image;
       }
       /***
@@ -5555,9 +5696,16 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_createVideo",
       value: function _createVideo(source) {
-        var video = document.createElement('video');
+        var video = document.createElement("video");
         video.crossOrigin = this.crossOrigin;
-        video.src = source;
+
+        if (typeof source === "string") {
+          video.src = source;
+        } else {
+          video.src = source.src;
+          video.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+        }
+
         return video;
       }
       /***
@@ -5628,32 +5776,23 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
         var errorCallback = arguments.length > 3 ? arguments[3] : undefined;
 
-        if (typeof source === "string") {
-          source = this._createImage(source);
-        }
+        var image = this._createImage(source);
 
-        source.crossOrigin = this.crossOrigin; // merge texture options with its parent textures options if needed
+        var options = Object.assign(textureOptions, {}); // merge texture options with its parent textures options if needed
 
         if (this._parent) {
-          textureOptions = Object.assign(textureOptions, this._parent._texturesOptions);
-        } // check for cache
+          options = Object.assign(options, this._parent._texturesOptions);
+        }
 
+        options.loader = this;
+        options.sampler = image.getAttribute("data-sampler") || options.sampler; // check for cache
 
-        var cachedTexture = this.renderer.cache.getTextureFromSource(source);
+        var cachedTexture = this.renderer.cache.getTextureFromSource(image);
 
         if (cachedTexture) {
-          var _texture = new Texture(this.renderer, {
-            loader: this,
-            fromTexture: cachedTexture,
-            sampler: textureOptions.sampler || source.getAttribute("data-sampler"),
-            premultiplyAlpha: textureOptions.premultiplyAlpha,
-            anisotropy: textureOptions.anisotropy,
-            generateMipmap: textureOptions.generateMipmap,
-            wrapS: textureOptions.wrapS,
-            wrapT: textureOptions.wrapT,
-            minFilter: textureOptions.minFilter,
-            magFilter: textureOptions.magFilter
-          }); // execute sucess callback directly
+          options.fromTexture = cachedTexture;
+
+          var _texture = new Texture(this.renderer, options); // execute sucess callback directly
 
 
           if (successCallback) {
@@ -5661,44 +5800,34 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           } // if there's a parent (PlaneTextureLoader) add texture and source to it
 
 
-          this._parent && this._addToParent(_texture, source, "image"); // that's all!
+          this._parent && this._addToParent(_texture, image, "image"); // that's all!
 
           return;
         } // create a new texture that will use our image later
 
 
-        var texture = new Texture(this.renderer, {
-          loader: this,
-          sampler: textureOptions.sampler || source.getAttribute("data-sampler"),
-          premultiplyAlpha: textureOptions.premultiplyAlpha,
-          anisotropy: textureOptions.anisotropy,
-          generateMipmap: textureOptions.generateMipmap,
-          wrapS: textureOptions.wrapS,
-          wrapT: textureOptions.wrapT,
-          minFilter: textureOptions.minFilter,
-          magFilter: textureOptions.magFilter
-        }); // add a new entry in our elements array
+        var texture = new Texture(this.renderer, options); // add a new entry in our elements array
 
-        var el = this._addElement(source, texture, successCallback, errorCallback); // If the image is in the cache of the browser,
+        var el = this._addElement(image, texture, successCallback, errorCallback); // If the image is in the cache of the browser,
         // the 'load' event might have been triggered
         // before we registered the event handler.
 
 
-        if (source.complete) {
-          this._sourceLoaded(source, texture, successCallback);
-        } else if (source.decode) {
-          source.decode().then(this._sourceLoaded.bind(this, source, texture, successCallback))["catch"](function () {
+        if (image.complete) {
+          this._sourceLoaded(image, texture, successCallback);
+        } else if (image.decode) {
+          image.decode().then(this._sourceLoaded.bind(this, image, texture, successCallback))["catch"](function () {
             // fallback to classic load & error events
-            source.addEventListener('load', el.load, false);
-            source.addEventListener('error', el.error, false);
+            image.addEventListener('load', el.load, false);
+            image.addEventListener('error', el.error, false);
           });
         } else {
-          source.addEventListener('load', el.load, false);
-          source.addEventListener('error', el.error, false);
+          image.addEventListener('load', el.load, false);
+          image.addEventListener('error', el.error, false);
         } // if there's a parent (PlaneTextureLoader) add texture and source to it
 
 
-        this._parent && this._addToParent(texture, source, "image");
+        this._parent && this._addToParent(texture, image, "image");
       }
       /***
        This method loads an array of images by calling loadImage() for each one of them
@@ -5733,53 +5862,44 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
         var errorCallback = arguments.length > 3 ? arguments[3] : undefined;
 
-        if (typeof source === "string") {
-          source = this._createVideo(source);
-        }
+        var video = this._createVideo(source);
 
-        source.preload = true;
-        source.muted = true;
-        source.loop = true;
-        source.playsinline = true;
-        source.crossOrigin = this.crossOrigin; // merge texture options with its parent textures options if needed
+        video.preload = true;
+        video.muted = true;
+        video.loop = true;
+        video.setAttribute("playsinline", "");
+        video.crossOrigin = this.crossOrigin;
+        var options = Object.assign(textureOptions, {}); // merge texture options with its parent textures options if needed
 
         if (this._parent) {
-          textureOptions = Object.assign(textureOptions, this._parent._texturesOptions);
-        } // create a new texture that will use our video later
+          options = Object.assign(textureOptions, this._parent._texturesOptions);
+        }
+
+        options.loader = this;
+        options.sampler = video.getAttribute("data-sampler") || options.sampler; // create a new texture that will use our video later
+
+        var texture = new Texture(this.renderer, options); // add a new entry in our elements array
+
+        var el = this._addElement(video, texture, successCallback, errorCallback); // handle our loaded data event inside the texture and tell our plane when the video is ready to play
 
 
-        var texture = new Texture(this.renderer, {
-          loader: this,
-          sampler: textureOptions.sampler || source.getAttribute("data-sampler"),
-          premultiplyAlpha: textureOptions.premultiplyAlpha,
-          anisotropy: textureOptions.anisotropy,
-          generateMipmap: textureOptions.generateMipmap,
-          wrapS: textureOptions.wrapS,
-          wrapT: textureOptions.wrapT,
-          minFilter: textureOptions.minFilter,
-          magFilter: textureOptions.magFilter
-        }); // add a new entry in our elements array
-
-        var el = this._addElement(source, texture, successCallback, errorCallback); // handle our loaded data event inside the texture and tell our plane when the video is ready to play
-
-
-        source.addEventListener('canplaythrough', el.load, false);
-        source.addEventListener('error', el.error, false); // If the video is in the cache of the browser,
+        video.addEventListener('canplaythrough', el.load, false);
+        video.addEventListener('error', el.error, false); // If the video is in the cache of the browser,
         // the 'canplaythrough' event might have been triggered
         // before we registered the event handler.
 
-        if (source.readyState >= source.HAVE_FUTURE_DATA && successCallback) {
-          this._sourceLoaded(source, texture, successCallback);
+        if (video.readyState >= video.HAVE_FUTURE_DATA && successCallback) {
+          this._sourceLoaded(video, texture, successCallback);
         } // start loading our video
 
 
-        source.load(); // if there's a parent (PlaneTextureLoader) add texture and source to it
+        video.load(); // if there's a parent (PlaneTextureLoader) add texture and source to it
 
-        this._addToParent && this._addToParent(texture, source, "video"); // if requestVideoFrameCallback exist, use it to update our video texture
+        this._addToParent && this._addToParent(texture, video, "video"); // if requestVideoFrameCallback exist, use it to update our video texture
 
         if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
           el.videoFrameCallback = texture._videoFrameCallback.bind(texture);
-          texture._videoFrameCallbackID = source.requestVideoFrameCallback(el.videoFrameCallback);
+          texture._videoFrameCallbackID = video.requestVideoFrameCallback(el.videoFrameCallback);
         }
       }
       /***
@@ -5812,24 +5932,16 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function loadCanvas(source) {
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
+        var options = Object.assign(textureOptions, {}); // merge texture options with its parent textures options if needed
 
-        // merge texture options with its parent textures options if needed
         if (this._parent) {
-          textureOptions = Object.assign(textureOptions, this._parent._texturesOptions);
-        } // create a new texture that will use our source later
+          options = Object.assign(textureOptions, this._parent._texturesOptions);
+        }
 
+        options.loader = this;
+        options.sampler = source.getAttribute("data-sampler") || options.sampler; // create a new texture that will use our source later
 
-        var texture = new Texture(this.renderer, {
-          loader: this,
-          sampler: textureOptions.sampler || source.getAttribute("data-sampler"),
-          premultiplyAlpha: textureOptions.premultiplyAlpha,
-          anisotropy: textureOptions.anisotropy,
-          generateMipmap: textureOptions.generateMipmap,
-          wrapS: textureOptions.wrapS,
-          wrapT: textureOptions.wrapT,
-          minFilter: textureOptions.minFilter,
-          magFilter: textureOptions.magFilter
-        }); // add a new entry in our elements array
+        var texture = new Texture(this.renderer, options); // add a new entry in our elements array
 
         this._addElement(source, texture, successCallback, null); // canvas are directly loaded
 
@@ -5916,7 +6028,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _super = _createSuper(PlaneTextureLoader);
 
     function PlaneTextureLoader(renderer, parent) {
-      var _this17;
+      var _this19;
 
       var _ref7 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
           _ref7$sourcesLoaded = _ref7.sourcesLoaded,
@@ -5930,20 +6042,20 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       _classCallCheck(this, PlaneTextureLoader);
 
-      _this17 = _super.call(this, renderer, parent.crossOrigin);
-      _this17.type = "PlaneTextureLoader";
-      _this17._parent = parent;
+      _this19 = _super.call(this, renderer, parent.crossOrigin);
+      _this19.type = "PlaneTextureLoader";
+      _this19._parent = parent;
 
-      if (_this17._parent.type !== "Plane" && _this17._parent.type !== "PingPongPlane" && _this17._parent.type !== "ShaderPass") {
-        throwWarning(_this17.type + ": Wrong parent type assigned to this loader");
-        _this17._parent = null;
+      if (_this19._parent.type !== "Plane" && _this19._parent.type !== "PingPongPlane" && _this19._parent.type !== "ShaderPass") {
+        throwWarning(_this19.type + ": Wrong parent type assigned to this loader");
+        _this19._parent = null;
       }
 
-      _this17.sourcesLoaded = sourcesLoaded;
-      _this17.sourcesToLoad = sourcesToLoad;
-      _this17.complete = complete;
-      _this17.onComplete = onComplete;
-      return _this17;
+      _this19.sourcesLoaded = sourcesLoaded;
+      _this19.sourcesToLoad = sourcesToLoad;
+      _this19.complete = complete;
+      _this19.onComplete = onComplete;
+      return _this19;
     }
     /*** TRACK LOADING ***/
 
@@ -5957,14 +6069,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     _createClass(PlaneTextureLoader, [{
       key: "_setLoaderSize",
       value: function _setLoaderSize(size) {
-        var _this18 = this;
+        var _this20 = this;
 
         this.sourcesToLoad = size;
 
         if (this.sourcesToLoad === 0) {
           this.complete = true;
           this.renderer.nextRender.add(function () {
-            return _this18.onComplete && _this18.onComplete();
+            return _this20.onComplete && _this20.onComplete();
           });
         }
       }
@@ -5975,14 +6087,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_increment",
       value: function _increment() {
-        var _this19 = this;
+        var _this21 = this;
 
         this.sourcesLoaded++;
 
         if (this.sourcesLoaded >= this.sourcesToLoad && !this.complete) {
           this.complete = true;
           this.renderer.nextRender.add(function () {
-            return _this19.onComplete && _this19.onComplete();
+            return _this21.onComplete && _this21.onComplete();
           });
         }
       }
@@ -6051,8 +6163,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      params:
    @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
    @type (string): Object type (should be either "Plane" or "ShaderPass")
-     @shareProgram (bool): Whether the mesh should share its program with other meshes. Results in only one program compilation for multiple meshes, but all their uniforms need to be updated at runtime
-   @vertexShaderID (string, optional): the vertex shader script ID. If not specified, will look for a data attribute data-vs-id on the plane HTML element.
+     @vertexShaderID (string, optional): the vertex shader script ID. If not specified, will look for a data attribute data-vs-id on the plane HTML element.
    @fragmentShaderID (string, optional): the fragment shader script ID. If not specified, will look for a data attribute data-fs-id on the plane HTML element.
    @vertexShader (string, optional): the vertex shader as a string. Will look for a vertexShaderID if not specified.
    @fragmentShader (string, optional): the fragment shader as a string. Will look for a fragmentShaderID if not specified.
@@ -6071,13 +6182,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
   var Mesh = /*#__PURE__*/function () {
     function Mesh(renderer) {
-      var _this20 = this;
+      var _this22 = this;
 
       var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "Mesh";
 
       var _ref8 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-          _ref8$shareProgram = _ref8.shareProgram,
-          shareProgram = _ref8$shareProgram === void 0 ? false : _ref8$shareProgram,
           vertexShaderID = _ref8.vertexShaderID,
           fragmentShaderID = _ref8.fragmentShaderID,
           vertexShader = _ref8.vertexShader,
@@ -6108,8 +6217,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         throwError(this.type + ": Curtains not passed as first argument or Curtains Renderer is missing", renderer); // no renderer, we can't use the renderer nextRender method
 
         setTimeout(function () {
-          if (_this20._onErrorCallback) {
-            _this20._onErrorCallback();
+          if (_this22._onErrorCallback) {
+            _this22._onErrorCallback();
           }
         }, 0);
       }
@@ -6121,16 +6230,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (!this.renderer.production) throwError(this.type + ": Unable to create a " + this.type + " because the Renderer WebGl context is not defined"); // we should assume there's still no renderer here, so no nextRender method
 
         setTimeout(function () {
-          if (_this20._onErrorCallback) {
-            _this20._onErrorCallback();
+          if (_this22._onErrorCallback) {
+            _this22._onErrorCallback();
           }
         }, 0);
       }
 
       this._canDraw = false;
-      this.renderOrder = renderOrder; // whether to share programs or not (could enhance performance if a lot of planes use the same shaders)
-
-      this.shareProgram = shareProgram; // depth test
+      this.renderOrder = renderOrder; // depth test
 
       this._depthTest = depthTest; // face culling
 
@@ -6197,7 +6304,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderer.onSceneChange();
       } else {
         this.renderer.nextRender.add(function () {
-          return _this20._onErrorCallback && _this20._onErrorCallback();
+          return _this22._onErrorCallback && _this22._onErrorCallback();
         });
       }
     }
@@ -6205,7 +6312,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     _createClass(Mesh, [{
       key: "_initMesh",
       value: function _initMesh() {
-        var _this21 = this;
+        var _this23 = this;
 
         this.uuid = generateUUID(); // our Loader Class that will handle all medias loading process
 
@@ -6215,9 +6322,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           // will change if there's any texture to load on init
           complete: false,
           onComplete: function onComplete() {
-            _this21._onReadyCallback && _this21._onReadyCallback();
+            _this23._onReadyCallback && _this23._onReadyCallback();
 
-            _this21.renderer.needRender();
+            _this23.renderer.needRender();
           }
         });
         this.images = [];
@@ -6377,7 +6484,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "loadSource",
       value: function loadSource(source) {
-        var _this22 = this;
+        var _this24 = this;
 
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
@@ -6385,8 +6492,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.loader.loadSource(source, Object.assign(this._texturesOptions, textureOptions), function (texture) {
           successCallback && successCallback(texture);
         }, function (source, error) {
-          if (!_this22.renderer.production) {
-            throwWarning(_this22.type + ": this HTML tag could not be converted into a texture:", source.tagName);
+          if (!_this24.renderer.production) {
+            throwWarning(_this24.type + ": this HTML tag could not be converted into a texture:", source.tagName);
           }
 
           errorCallback && errorCallback(source, error);
@@ -6404,7 +6511,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "loadImage",
       value: function loadImage(source) {
-        var _this23 = this;
+        var _this25 = this;
 
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
@@ -6412,8 +6519,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.loader.loadImage(source, Object.assign(this._texturesOptions, textureOptions), function (texture) {
           successCallback && successCallback(texture);
         }, function (source, error) {
-          if (!_this23.renderer.production) {
-            throwWarning(_this23.type + ": There has been an error:\n", error, "\nwhile loading this image:\n", source);
+          if (!_this25.renderer.production) {
+            throwWarning(_this25.type + ": There has been an error:\n", error, "\nwhile loading this image:\n", source);
           }
 
           errorCallback && errorCallback(source, error);
@@ -6431,7 +6538,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "loadVideo",
       value: function loadVideo(source) {
-        var _this24 = this;
+        var _this26 = this;
 
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
@@ -6439,8 +6546,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.loader.loadVideo(source, Object.assign(this._texturesOptions, textureOptions), function (texture) {
           successCallback && successCallback(texture);
         }, function (source, error) {
-          if (!_this24.renderer.production) {
-            throwWarning(_this24.type + ": There has been an error:\n", error, "\nwhile loading this video:\n", source);
+          if (!_this26.renderer.production) {
+            throwWarning(_this26.type + ": There has been an error:\n", error, "\nwhile loading this video:\n", source);
           }
 
           errorCallback && errorCallback(source, error);
@@ -6533,7 +6640,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "playVideos",
       value: function playVideos() {
-        var _this25 = this;
+        var _this27 = this;
 
         for (var i = 0; i < this.textures.length; i++) {
           var texture = this.textures[i];
@@ -6544,7 +6651,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
             if (playPromise !== undefined) {
               playPromise["catch"](function (error) {
-                if (!_this25.renderer.production) throwWarning(_this25.type + ": Could not play the video : ", error);
+                if (!_this27.renderer.production) throwWarning(_this27.type + ": Could not play the video : ", error);
               });
             }
           }
@@ -6560,7 +6667,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "_draw",
       value: function _draw() {
         // enable/disable depth test
-        this.renderer.setDepth(this._depthTest); // face culling
+        this.renderer.setDepthTest(this._depthTest); // face culling
 
         this.renderer.setFaceCulling(this.cullFace); // update all uniforms set up by the user
 
@@ -6579,6 +6686,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         for (var i = 0; i < this.textures.length; i++) {
           // draw (bind and maybe update) our texture
           this.textures[i]._draw();
+
+          if (!this.textures[i]._sampler.isTextureBound) {
+            return;
+          }
         } // the draw call!
 
 
@@ -6749,8 +6860,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    returns:
    @this: our BasePlane element
    ***/
-  // TODO raycasting inside mouseToPlaneCoords for Plane objects when transformed
+  // avoid reinstancing those during runtime
 
+
+  var tempVec2a = new Vec2();
+  var tempVec2b = new Vec2();
 
   var DOMMesh = /*#__PURE__*/function (_Mesh) {
     _inherits(DOMMesh, _Mesh);
@@ -6758,12 +6872,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _super2 = _createSuper(DOMMesh);
 
     function DOMMesh(renderer, htmlElement) {
-      var _this26;
+      var _this28;
 
       var type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "DOMMesh";
 
       var _ref9 = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {},
-          shareProgram = _ref9.shareProgram,
           widthSegments = _ref9.widthSegments,
           heightSegments = _ref9.heightSegments,
           renderOrder = _ref9.renderOrder,
@@ -6782,8 +6895,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       // handling HTML shaders scripts
       vertexShaderID = vertexShaderID || htmlElement && htmlElement.getAttribute("data-vs-id");
       fragmentShaderID = fragmentShaderID || htmlElement && htmlElement.getAttribute("data-fs-id");
-      _this26 = _super2.call(this, renderer, type, {
-        shareProgram: shareProgram,
+      _this28 = _super2.call(this, renderer, type, {
         widthSegments: widthSegments,
         heightSegments: heightSegments,
         renderOrder: renderOrder,
@@ -6798,16 +6910,16 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         crossOrigin: crossOrigin
       }); // our HTML element
 
-      _this26.htmlElement = htmlElement;
+      _this28.htmlElement = htmlElement;
 
-      if (!_this26.htmlElement || _this26.htmlElement.length === 0) {
-        if (!_this26.renderer.production) throwWarning(_this26.type + ": The HTML element you specified does not currently exists in the DOM");
+      if (!_this28.htmlElement || _this28.htmlElement.length === 0) {
+        if (!_this28.renderer.production) throwWarning(_this28.type + ": The HTML element you specified does not currently exists in the DOM");
       } // set plane sizes
 
 
-      _this26._setDocumentSizes();
+      _this28._setDocumentSizes();
 
-      return _this26;
+      return _this28;
     }
     /*** PLANE SIZES ***/
 
@@ -6860,7 +6972,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "resize",
       value: function resize() {
-        var _this27 = this;
+        var _this29 = this;
 
         // reset plane dimensions
         this._setDocumentSizes(); // if this is a Plane object we need to update its perspective and positions
@@ -6869,6 +6981,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (this.type === "Plane") {
           // reset perspective
           this.setPerspective(this.camera.fov, this.camera.near, this.camera.far); // apply new position
+
+          this._setWorldSizes();
 
           this._applyWorldPositions();
         } // resize all textures
@@ -6880,7 +6994,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
         this.renderer.nextRender.add(function () {
-          return _this27._onAfterResizeCallback && _this27._onAfterResizeCallback();
+          return _this29._onAfterResizeCallback && _this29._onAfterResizeCallback();
         });
       }
       /*** INTERACTION ***/
@@ -6898,9 +7012,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "mouseToPlaneCoords",
       value: function mouseToPlaneCoords(mouseCoordinates) {
         // remember our ShaderPass objects don't have a scale property
-        var scale = this.scale ? this.scale : new Vec2(1, 1); // we need to adjust our plane document bounding rect to it's webgl scale
+        var scale = this.scale ? this.scale : tempVec2b.set(1, 1); // we need to adjust our plane document bounding rect to it's webgl scale
 
-        var scaleAdjustment = new Vec2((this._boundingRect.document.width - this._boundingRect.document.width * scale.x) / 2, (this._boundingRect.document.height - this._boundingRect.document.height * scale.y) / 2); // also we need to divide by pixel ratio
+        var scaleAdjustment = tempVec2a.set((this._boundingRect.document.width - this._boundingRect.document.width * scale.x) / 2, (this._boundingRect.document.height - this._boundingRect.document.height * scale.y) / 2); // also we need to divide by pixel ratio
 
         var planeBoundingRect = {
           width: this._boundingRect.document.width * scale.x / this.renderer.pixelRatio,
@@ -6909,7 +7023,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           left: (this._boundingRect.document.left + scaleAdjustment.x) / this.renderer.pixelRatio
         }; // mouse position conversion from document to plane space
 
-        return new Vec2((mouseCoordinates.x - planeBoundingRect.left) / planeBoundingRect.width * 2 - 1, 1 - (mouseCoordinates.y - planeBoundingRect.top) / planeBoundingRect.height * 2);
+        return tempVec2a.set((mouseCoordinates.x - planeBoundingRect.left) / planeBoundingRect.width * 2 - 1, 1 - (mouseCoordinates.y - planeBoundingRect.top) / planeBoundingRect.height * 2);
       }
       /*** EVENTS ***/
 
@@ -6992,9 +7106,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (fov !== this.fov) {
           this.fov = fov;
           this.setPosition();
-          this.setCSSPerspective();
           this._shouldUpdate = true;
         }
+
+        this.setCSSPerspective();
       }
       /***
        Sets the camera near plane value
@@ -7099,7 +7214,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "setPosition",
       value: function setPosition() {
-        this.position.set(0, 0, Math.tan(Math.PI / 180 * 0.5 * this.fov) * 2.0); // update matrices
+        this.position.set(0, 0, 1); // update matrices
 
         this.worldMatrix.setFromArray([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, this.position.x, this.position.y, this.position.z, 1]);
         this.viewMatrix = this.viewMatrix.copy(this.worldMatrix).getInverse();
@@ -7107,12 +7222,40 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        Sets a CSSPerspective property based on width, height, pixelRatio and fov
        Used to translate planes along the Z axis using pixel units as CSS would do
+       Taken from: https://stackoverflow.com/questions/22421439/convert-field-of-view-value-to-css3d-perspective-value
        ***/
 
     }, {
       key: "setCSSPerspective",
       value: function setCSSPerspective() {
-        this.CSSPerspective = Math.pow(Math.pow(this.width / (2 * this.pixelRatio), 2) + Math.pow(this.height / (2 * this.pixelRatio), 2), 0.5) / (this.position.z * 0.5);
+        this.CSSPerspective = Math.pow(Math.pow(this.width / (2 * this.pixelRatio), 2) + Math.pow(this.height / (2 * this.pixelRatio), 2), 0.5) / Math.tan(this.fov * 0.5 * Math.PI / 180);
+      }
+      /***
+       Returns visible width / height at a given z-depth from our camera parameters
+         Taken from: https://discourse.threejs.org/t/functions-to-calculate-the-visible-width-height-at-a-given-z-depth-from-a-perspective-camera/269
+       ***/
+
+    }, {
+      key: "getScreenRatiosFromFov",
+      value: function getScreenRatiosFromFov() {
+        var depth = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+        // compensate for cameras not positioned at z=0
+        var cameraOffset = this.position.z;
+
+        if (depth < cameraOffset) {
+          depth -= cameraOffset;
+        } else {
+          depth += cameraOffset;
+        } // vertical fov in radians
+
+
+        var vFOV = this.fov * Math.PI / 180; // Math.abs to ensure the result is always positive
+
+        var height = 2 * Math.tan(vFOV / 2) * Math.abs(depth);
+        return {
+          width: height * this.width / this.height,
+          height: height
+        };
       }
       /***
        Updates the camera projection matrix
@@ -7347,7 +7490,28 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      returns :
    @this: our Plane
    ***/
+  // avoid reinstancing those during runtime
 
+
+  var tempScale = new Vec2(); // positions
+
+  var tempWorldPos1 = new Vec3();
+  var tempWorldPos2 = new Vec3(); // frustum culling
+
+  var tempCorner1 = new Vec3();
+  var tempCorner2 = new Vec3();
+  var tempCorner3 = new Vec3();
+  var tempCorner4 = new Vec3();
+  var tempCulledCorner1 = new Vec3();
+  var tempCulledCorner2 = new Vec3(); // raycasting
+
+  var identityQuat = new Quat();
+  var defaultTransformOrigin = new Vec3(0.5, 0.5, 0);
+  var tempRayDirection = new Vec3();
+  var tempNormals = new Vec3();
+  var tempRotatedOrigin = new Vec3();
+  var tempRaycast = new Vec3();
+  var castedMouseCoords = new Vec2();
 
   var Plane = /*#__PURE__*/function (_DOMMesh) {
     _inherits(Plane, _DOMMesh);
@@ -7355,10 +7519,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _super3 = _createSuper(Plane);
 
     function Plane(renderer, htmlElement) {
-      var _this28;
+      var _this30;
 
       var _ref11 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-          shareProgram = _ref11.shareProgram,
           widthSegments = _ref11.widthSegments,
           heightSegments = _ref11.heightSegments,
           _ref11$renderOrder = _ref11.renderOrder,
@@ -7394,8 +7557,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       _classCallCheck(this, Plane);
 
-      _this28 = _super3.call(this, renderer, htmlElement, "Plane", {
-        shareProgram: shareProgram,
+      _this30 = _super3.call(this, renderer, htmlElement, "Plane", {
         widthSegments: widthSegments,
         heightSegments: heightSegments,
         renderOrder: renderOrder,
@@ -7409,45 +7571,45 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         texturesOptions: texturesOptions,
         crossOrigin: crossOrigin
       });
-      _this28.index = _this28.renderer.planes.length; // used for FBOs
+      _this30.index = _this30.renderer.planes.length; // used for FBOs
 
-      _this28.target = null; // use frustum culling or not
+      _this30.target = null; // use frustum culling or not
 
-      _this28.alwaysDraw = alwaysDraw; // should draw is set to true by default, we'll check it later
+      _this30.alwaysDraw = alwaysDraw; // should draw is set to true by default, we'll check it later
 
-      _this28._shouldDraw = true;
-      _this28.visible = visible; // if the plane has transparency
+      _this30._shouldDraw = true;
+      _this30.visible = visible; // if the plane has transparency
 
-      _this28._transparent = transparent; // draw check margins in pixels
+      _this30._transparent = transparent; // draw check margins in pixels
       // positive numbers means it can be displayed even when outside the viewport
       // negative numbers means it can be hidden even when inside the viewport
 
-      _this28.drawCheckMargins = drawCheckMargins; // if we decide to load all sources on init or let the user do it manually
+      _this30.drawCheckMargins = drawCheckMargins; // if we decide to load all sources on init or let the user do it manually
 
-      _this28.autoloadSources = autoloadSources; // if we should watch scroll
+      _this30.autoloadSources = autoloadSources; // if we should watch scroll
 
-      _this28.watchScroll = watchScroll; // define if we should update the plane's matrices when called in the draw loop
+      _this30.watchScroll = watchScroll; // define if we should update the plane's matrices when called in the draw loop
 
-      _this28._updateMVMatrix = false; // init camera
+      _this30._updateMVMatrix = false; // init camera
 
-      _this28.camera = new Camera({
+      _this30.camera = new Camera({
         fov: fov,
-        width: _this28.renderer._boundingRect.width,
-        height: _this28.renderer._boundingRect.height,
-        pixelRatio: _this28.renderer.pixelRatio
+        width: _this30.renderer._boundingRect.width,
+        height: _this30.renderer._boundingRect.height,
+        pixelRatio: _this30.renderer.pixelRatio
       }); // if program is valid, go on
 
-      if (_this28._program.compiled) {
+      if (_this30._program.compiled) {
         // init our plane
-        _this28._initPlane(); // add our plane to the scene stack and the renderer array
+        _this30._initPlane(); // add our plane to the scene stack and the renderer array
 
 
-        _this28.renderer.scene.addPlane(_assertThisInitialized(_this28));
+        _this30.renderer.scene.addPlane(_assertThisInitialized(_this30));
 
-        _this28.renderer.planes.push(_assertThisInitialized(_this28));
+        _this30.renderer.planes.push(_assertThisInitialized(_this30));
       }
 
-      return _this28;
+      return _this30;
     }
     /*** RESTORING CONTEXT ***/
 
@@ -7468,6 +7630,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
         this.setPerspective(this.camera.fov, this.camera.near, this.camera.far);
+
+        this._setWorldSizes();
 
         this._applyWorldPositions(); // add the plane to our draw stack again as it have been emptied
 
@@ -7509,17 +7673,36 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_initTransformValues",
       value: function _initTransformValues() {
-        this.rotation = new Vec3(); // initial quaternion
+        var _this31 = this;
+
+        this.rotation = new Vec3();
+        this.rotation.onChange(function () {
+          return _this31._applyRotation();
+        }); // initial quaternion
 
         this.quaternion = new Quat(); // translation in viewport coordinates
 
-        this.relativeTranslation = new Vec3(); // translation in webgl coordinates
+        this.relativeTranslation = new Vec3();
+        this.relativeTranslation.onChange(function () {
+          return _this31._setTranslation();
+        }); // translation in webgl coordinates
 
         this._translation = new Vec3(); // scale is a Vec3 with z always equal to 1
 
-        this.scale = new Vec3(1, 1, 1); // set plane transform origin to center
+        this.scale = new Vec3(1);
+        this.scale.onChange(function () {
+          _this31.scale.z = 1;
+
+          _this31._applyScale();
+        }); // set plane transform origin to center
 
         this.transformOrigin = new Vec3(0.5, 0.5, 0);
+        this.transformOrigin.onChange(function () {
+          // set transformation origin relative to world space as well
+          _this31._setWorldTransformOrigin();
+
+          _this31._updateMVMatrix = true;
+        });
       }
       /***
        Reset our plane transformation values and HTML element if specified (and valid)
@@ -7530,7 +7713,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "resetPlane",
       value: function resetPlane(htmlElement) {
-        this._initTransformValues();
+        this._initTransformValues(); // reset transformation origin relative to world space as well
+
+
+        this._setWorldTransformOrigin();
 
         if (htmlElement !== null && !!htmlElement) {
           this.htmlElement = htmlElement;
@@ -7564,6 +7750,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this._initMatrices(); // apply our css positions
 
 
+        this._setWorldSizes();
+
         this._applyWorldPositions();
       }
       /***
@@ -7573,51 +7761,29 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_initMatrices",
       value: function _initMatrices() {
-        // create our model view and projection matrix
+        // create our matrices, they will be set after
+        var matrix = new Mat4();
         this._matrices = {
-          mvMatrix: {
+          world: {
+            // world matrix (global transformation)
+            matrix: matrix
+          },
+          modelView: {
+            // model view matrix (world matrix multiplied by camera view matrix)
             name: "uMVMatrix",
-            matrix: new Mat4(),
+            matrix: matrix,
             location: this.gl.getUniformLocation(this._program.program, "uMVMatrix")
           },
-          pMatrix: {
+          projection: {
+            // camera projection matrix
             name: "uPMatrix",
-            matrix: new Mat4(),
-            // will be set after
+            matrix: matrix,
             location: this.gl.getUniformLocation(this._program.program, "uPMatrix")
+          },
+          modelViewProjection: {
+            // model view projection matrix (model view matrix multiplied by projection)
+            matrix: matrix
           }
-        };
-      }
-      /***
-       Set our plane dimensions and positions relative to clip spaces
-       ***/
-
-    }, {
-      key: "_setWorldSizes",
-      value: function _setWorldSizes() {
-        // dimensions and positions of our plane in the document and clip spaces
-        // don't forget translations in webgl space are referring to the center of our plane and canvas
-        var planeCenter = {
-          x: this._boundingRect.document.width / 2 + this._boundingRect.document.left,
-          y: this._boundingRect.document.height / 2 + this._boundingRect.document.top
-        };
-        var containerCenter = {
-          x: this.renderer._boundingRect.width / 2 + this.renderer._boundingRect.left,
-          y: this.renderer._boundingRect.height / 2 + this.renderer._boundingRect.top
-        }; // our plane clip space informations
-
-        this._boundingRect.world = {
-          width: this._boundingRect.document.width / this.renderer._boundingRect.width,
-          height: this._boundingRect.document.height / this.renderer._boundingRect.height,
-          top: (containerCenter.y - planeCenter.y) / this.renderer._boundingRect.height,
-          left: (planeCenter.x - containerCenter.x) / this.renderer._boundingRect.height
-        }; // since our vertices values range from -1 to 1
-        // we need to scale them under the hood relatively to our canvas
-        // to display an accurately sized plane
-
-        this._boundingRect.world.scale = {
-          x: this.renderer._boundingRect.width / this.renderer._boundingRect.height * this._boundingRect.world.width / 2,
-          y: this._boundingRect.world.height / 2
         };
       }
       /*** PLANES PERSPECTIVES, SCALES AND ROTATIONS ***/
@@ -7630,10 +7796,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_setPerspectiveMatrix",
       value: function _setPerspectiveMatrix() {
-        // update our matrix uniform only if we share programs or if we actually have updated its values
-        if (this.shareProgram || !this.shareProgram && this.camera._shouldUpdate) {
+        // update our matrix uniform if we actually have updated its values
+        if (this.camera._shouldUpdate) {
           this.renderer.useProgram(this._program);
-          this.gl.uniformMatrix4fv(this._matrices.pMatrix.location, false, this._matrices.pMatrix.matrix.elements);
+          this.gl.uniformMatrix4fv(this._matrices.projection.location, false, this._matrices.projection.matrix.elements);
         } // reset camera shouldUpdate flag
 
 
@@ -7657,7 +7823,19 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this.camera.forceUpdate();
         }
 
-        this._matrices.pMatrix.matrix = this.camera.projectionMatrix; // if camera settings changed update the mvMatrix as well cause we need to update z translation based on new fov
+        this._matrices.projection.matrix = this.camera.projectionMatrix;
+
+        if (this.camera._shouldUpdate) {
+          // we changed the fov, update world sizes and world positions
+          this._setWorldSizes();
+
+          this._applyWorldPositions(); // translation along the Z axis is dependant of camera CSSPerspective
+          // we're computing it here because it changes when the fov changes
+
+
+          this._translation.z = this.relativeTranslation.z / this.camera.CSSPerspective;
+        } // if camera settings changed update the mvMatrix as well cause we need to update z translation based on new fov
+
 
         this._updateMVMatrix = this.camera._shouldUpdate;
       }
@@ -7671,37 +7849,106 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "_setMVMatrix",
       value: function _setMVMatrix() {
         if (this._updateMVMatrix) {
-          // translation
-          // along the Z axis it's based on the relativeTranslation.z, CSSPerspective and camera Z position values
-          // we're computing it here because it will change when our fov changes
-          this._translation.z = -((1 - this.relativeTranslation.z / this.camera.CSSPerspective) / this.camera.position.z); // get transformation origin relative to world space
+          // compose our world transformation matrix from custom origin
+          this._matrices.world.matrix = this._matrices.world.matrix.composeFromOrigin(this._translation, this.quaternion, this.scale, this._boundingRect.world.transformOrigin); // we need to scale our planes, from a square to a right sized rectangle
+          // we're doing this after our transformation matrix because this scale transformation always have the same origin
 
-          var origin = new Vec3((this.transformOrigin.x * 2 - 1) * // between -1 and 1
-          this._boundingRect.world.scale.x, -(this.transformOrigin.y * 2 - 1) // between -1 and 1
-          * this._boundingRect.world.scale.y, this.transformOrigin.z); // get our transformation matrix
+          this._matrices.world.matrix.scale({
+            x: this._boundingRect.world.width,
+            y: this._boundingRect.world.height,
+            z: 1
+          }); // our model view matrix is our world matrix multiplied with our camera view matrix
+          // in our case we're just subtracting the camera Z position to our world matrix
 
-          var transformFromOrigin = new Mat4().composeFromOrigin(this._translation, this.quaternion, this.scale, origin); // now scale our plane according to its world bounding rect
 
-          var scaleMatrix = new Mat4([this._boundingRect.world.scale.x, 0, 0, 0, 0, this._boundingRect.world.scale.y, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]); // we've got our model view matrix
+          this._matrices.modelView.matrix.copy(this._matrices.world.matrix);
 
-          this._matrices.mvMatrix.matrix = transformFromOrigin.multiply(scaleMatrix); // this is the result of our projection matrix * our mv matrix, useful for bounding box calculations and frustum culling
+          this._matrices.modelView.matrix.elements[14] -= this.camera.position.z; // our modelViewProjection matrix, useful for bounding box calculations and frustum culling
+          // this is the result of our projection matrix multiplied by our modelView matrix
 
-          this._matrices.mVPMatrix = this._matrices.pMatrix.matrix.multiply(this._matrices.mvMatrix.matrix); // check if we should draw the plane but only if everything has been initialized
+          this._matrices.modelViewProjection.matrix = this._matrices.projection.matrix.multiply(this._matrices.modelView.matrix); // check if we should draw the plane but only if everything has been initialized
 
           if (!this.alwaysDraw) {
             this._shouldDrawCheck();
-          }
-        } // update our matrix uniform only if we share programs or if we actually have updated its values
+          } // update our matrix uniform
 
 
-        if (this.shareProgram || !this.shareProgram && this._updateMVMatrix) {
           this.renderer.useProgram(this._program);
-          this.gl.uniformMatrix4fv(this._matrices.mvMatrix.location, false, this._matrices.mvMatrix.matrix.elements);
+          this.gl.uniformMatrix4fv(this._matrices.modelView.location, false, this._matrices.modelView.matrix.elements);
         } // reset our flag
 
 
         this._updateMVMatrix = false;
       }
+      /*** SCREEN TO WORLD CALCS ***/
+
+      /***
+       Convert our transform origin point from plane space to world space
+       ***/
+
+    }, {
+      key: "_setWorldTransformOrigin",
+      value: function _setWorldTransformOrigin() {
+        // set transformation origin relative to world space as well
+        this._boundingRect.world.transformOrigin = new Vec3((this.transformOrigin.x * 2 - 1) * // between -1 and 1
+        this._boundingRect.world.width, -(this.transformOrigin.y * 2 - 1) // between -1 and 1
+        * this._boundingRect.world.height, this.transformOrigin.z);
+      }
+      /***
+       This function takes pixel values along X and Y axis and convert them to world space coordinates
+         params :
+       @vector (Vec3): position to convert on X, Y and Z axes
+         returns :
+       @worldPosition: plane's position in WebGL space
+       ***/
+
+    }, {
+      key: "_documentToWorldSpace",
+      value: function _documentToWorldSpace(vector) {
+        return tempWorldPos2.set(vector.x * this.renderer.pixelRatio / this.renderer._boundingRect.width * this._boundingRect.world.ratios.width, -(vector.y * this.renderer.pixelRatio / this.renderer._boundingRect.height) * this._boundingRect.world.ratios.height, vector.z);
+      }
+      /***
+       Set our plane dimensions relative to clip spaces
+       ***/
+
+    }, {
+      key: "_setWorldSizes",
+      value: function _setWorldSizes() {
+        var ratios = this.camera.getScreenRatiosFromFov(); // our plane world informations
+        // since our vertices values range from -1 to 1, it is supposed to draw a square
+        // we need to scale them under the hood relatively to our canvas
+        // to display an accurately sized plane
+
+        this._boundingRect.world = {
+          width: this._boundingRect.document.width / this.renderer._boundingRect.width * ratios.width / 2,
+          height: this._boundingRect.document.height / this.renderer._boundingRect.height * ratios.height / 2,
+          ratios: ratios
+        }; // set transformation origin relative to world space as well
+
+        this._setWorldTransformOrigin();
+      }
+      /***
+       Set our plane position relative to clip spaces
+       ***/
+
+    }, {
+      key: "_setWorldPosition",
+      value: function _setWorldPosition() {
+        // dimensions and positions of our plane in the document and clip spaces
+        // don't forget translations in webgl space are referring to the center of our plane and canvas
+        var planeCenter = {
+          x: this._boundingRect.document.width / 2 + this._boundingRect.document.left,
+          y: this._boundingRect.document.height / 2 + this._boundingRect.document.top
+        };
+        var containerCenter = {
+          x: this.renderer._boundingRect.width / 2 + this.renderer._boundingRect.left,
+          y: this.renderer._boundingRect.height / 2 + this.renderer._boundingRect.top
+        };
+        this._boundingRect.world.top = (containerCenter.y - planeCenter.y) / this.renderer._boundingRect.height * this._boundingRect.world.ratios.height;
+        this._boundingRect.world.left = (planeCenter.x - containerCenter.x) / this.renderer._boundingRect.width * this._boundingRect.world.ratios.width;
+      }
+      /*** TRANSFORMATIONS ***/
+
       /***
        This will set our plane scale
        used internally but can be used externally as well
@@ -7720,18 +7967,28 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           return;
         }
 
-        scale.sanitizeNaNValuesWith(this.scale).max(new Vec2(0.001, 0.001)); // only apply if values changed
+        scale.sanitizeNaNValuesWith(this.scale).max(tempScale.set(0.001, 0.001)); // only apply if values changed
 
         if (scale.x !== this.scale.x || scale.y !== this.scale.y) {
-          this.scale.set(scale.x, scale.y, 1); // adjust textures size
+          this.scale.set(scale.x, scale.y, 1);
 
-          for (var i = 0; i < this.textures.length; i++) {
-            this.textures[i].resize();
-          } // we should update the plane mvMatrix
-
-
-          this._updateMVMatrix = true;
+          this._applyScale();
         }
+      }
+      /***
+       This will apply our scale and tells our model view matrix to update
+       ***/
+
+    }, {
+      key: "_applyScale",
+      value: function _applyScale() {
+        // adjust textures size
+        for (var i = 0; i < this.textures.length; i++) {
+          this.textures[i].resize();
+        } // we should update the plane mvMatrix
+
+
+        this._updateMVMatrix = true;
       }
       /***
        This will set our plane rotation
@@ -7755,10 +8012,20 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         if (!rotation.equals(this.rotation)) {
           this.rotation.copy(rotation);
-          this.quaternion.setFromVec3(this.rotation); // we should update the plane mvMatrix
 
-          this._updateMVMatrix = true;
+          this._applyRotation();
         }
+      }
+      /***
+       This will apply our rotation and tells our model view matrix to update
+       ***/
+
+    }, {
+      key: "_applyRotation",
+      value: function _applyRotation() {
+        this.quaternion.setFromVec3(this.rotation); // we should update the plane mvMatrix
+
+        this._updateMVMatrix = true;
       }
       /***
        This will set our plane transform origin
@@ -7783,7 +8050,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         origin.sanitizeNaNValuesWith(this.transformOrigin);
 
         if (!origin.equals(this.transformOrigin)) {
-          this.transformOrigin.copy(origin);
+          this.transformOrigin.copy(origin); // set transformation origin relative to world space as well
+
+          this._setWorldTransformOrigin();
+
           this._updateMVMatrix = true;
         }
       }
@@ -7795,32 +8065,17 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "_setTranslation",
       value: function _setTranslation() {
         // avoid unnecessary calculations if we don't have a users set relative position
-        var worldPosition = new Vec3();
+        var worldPosition = tempWorldPos1.set(0, 0, 0);
 
         if (!this.relativeTranslation.equals(worldPosition)) {
           worldPosition = this._documentToWorldSpace(this.relativeTranslation);
         }
 
-        this._translation.set(this._boundingRect.world.left + worldPosition.x, this._boundingRect.world.top + worldPosition.y, this._translation.z); // we should update the plane mvMatrix
+        this._translation.set(this._boundingRect.world.left + worldPosition.x, this._boundingRect.world.top + worldPosition.y, //this._translation.z,
+        this.relativeTranslation.z / this.camera.CSSPerspective); // we should update the plane mvMatrix
 
 
         this._updateMVMatrix = true;
-      }
-      /***
-       This function takes pixel values along X and Y axis and convert them to clip space coordinates, and then apply the corresponding translation
-       TODO deprecated and will be removed soon
-         params :
-       @translation (Vec3): translation to apply on X, Y and Z axes
-       ***/
-
-    }, {
-      key: "setRelativePosition",
-      value: function setRelativePosition(translation) {
-        if (!this.renderer.production) {
-          throwWarning(this.type + ": setRelativePosition() is deprecated, use setRelativeTranslation() instead");
-        }
-
-        this.setRelativeTranslation(translation);
       }
       /***
        This function takes pixel values along X and Y axis and convert them to clip space coordinates, and then apply the corresponding translation
@@ -7848,22 +8103,51 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       This function takes pixel values along X and Y axis and convert them to clip space coordinates
-         params :
-       @vector (Vec3): position to convert on X, Y and Z axes
-         returns :
-       @worldPosition: plane's position in WebGL space
+       This function uses our plane HTML Element bounding rectangle values and convert them to the world clip space coordinates, and then apply the corresponding translation
        ***/
 
     }, {
-      key: "_documentToWorldSpace",
-      value: function _documentToWorldSpace(vector) {
-        var worldPosition = new Vec3(vector.x / (this.renderer._boundingRect.width / this.renderer.pixelRatio) * (this.renderer._boundingRect.width / this.renderer._boundingRect.height), -vector.y / (this.renderer._boundingRect.height / this.renderer.pixelRatio), vector.z);
-        return worldPosition;
-      }
-    }, {
-      key: "_getIntersection",
+      key: "_applyWorldPositions",
+      value: function _applyWorldPositions() {
+        // set our plane sizes and positions relative to the world clipspace
+        this._setWorldPosition(); // set the translation values
 
+
+        this._setTranslation();
+      }
+      /***
+       This function updates the plane position based on its CSS positions and transformations values.
+       Useful if the HTML element has been moved while the container size has not changed.
+       ***/
+
+    }, {
+      key: "updatePosition",
+      value: function updatePosition() {
+        // set the new plane sizes and positions relative to document by triggering getBoundingClientRect()
+        this._setDocumentSizes(); // apply them
+
+
+        this._applyWorldPositions();
+      }
+      /***
+       This function updates the plane position based on the Curtains class scroll manager values
+         params:
+       @lastXDelta (float): last scroll value along X axis
+       @lastYDelta (float): last scroll value along Y axis
+       ***/
+
+    }, {
+      key: "updateScrollPosition",
+      value: function updateScrollPosition(lastXDelta, lastYDelta) {
+        // actually update the plane position only if last X delta or last Y delta is not equal to 0
+        if (lastXDelta || lastYDelta) {
+          // set new positions based on our delta without triggering reflow
+          this._boundingRect.document.top += lastYDelta * this.renderer.pixelRatio;
+          this._boundingRect.document.left += lastXDelta * this.renderer.pixelRatio; // apply them
+
+          this._applyWorldPositions();
+        }
+      }
       /*** FRUSTUM CULLING (DRAW CHECK) ***/
 
       /***
@@ -7874,6 +8158,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
          returns:
        @intersection (Vec3 class object): intersection between our plane and the camera near plane
        ***/
+
+    }, {
+      key: "_getIntersection",
       value: function _getIntersection(refPoint, secondPoint) {
         // direction vector to add
         var direction = secondPoint.clone().sub(refPoint); // copy our corner refpoint
@@ -7904,54 +8191,56 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "_getNearPlaneIntersections",
       value: function _getNearPlaneIntersections(corners, mvpCorners, clippedCorners) {
         // rebuild the clipped corners based on non clipped ones
+        var mVPMatrix = this._matrices.modelViewProjection.matrix;
+
         if (clippedCorners.length === 1) {
           // we will have 5 corners to check so we'll need to push a new entry in our mvpCorners array
           if (clippedCorners[0] === 0) {
             // top left is culled
             // get intersection iterating from top right
-            mvpCorners[0] = this._getIntersection(mvpCorners[1], new Vec3(0.95, 1, 0).applyMat4(this._matrices.mVPMatrix)); // get intersection iterating from bottom left
+            mvpCorners[0] = this._getIntersection(mvpCorners[1], tempCulledCorner1.set(0.95, 1, 0).applyMat4(mVPMatrix)); // get intersection iterating from bottom left
 
-            mvpCorners.push(this._getIntersection(mvpCorners[3], new Vec3(-1, -0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+            mvpCorners.push(this._getIntersection(mvpCorners[3], tempCulledCorner2.set(-1, -0.95, 0).applyMat4(mVPMatrix)));
           } else if (clippedCorners[0] === 1) {
             // top right is culled
             // get intersection iterating from top left
-            mvpCorners[1] = this._getIntersection(mvpCorners[0], new Vec3(-0.95, 1, 0).applyMat4(this._matrices.mVPMatrix)); // get intersection iterating from bottom right
+            mvpCorners[1] = this._getIntersection(mvpCorners[0], tempCulledCorner1.set(-0.95, 1, 0).applyMat4(mVPMatrix)); // get intersection iterating from bottom right
 
-            mvpCorners.push(this._getIntersection(mvpCorners[2], new Vec3(1, -0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+            mvpCorners.push(this._getIntersection(mvpCorners[2], tempCulledCorner2.set(1, -0.95, 0).applyMat4(mVPMatrix)));
           } else if (clippedCorners[0] === 2) {
             // bottom right is culled
             // get intersection iterating from bottom left
-            mvpCorners[2] = this._getIntersection(mvpCorners[3], new Vec3(-0.95, -1, 0).applyMat4(this._matrices.mVPMatrix)); // get intersection iterating from top right
+            mvpCorners[2] = this._getIntersection(mvpCorners[3], tempCulledCorner1.set(-0.95, -1, 0).applyMat4(mVPMatrix)); // get intersection iterating from top right
 
-            mvpCorners.push(this._getIntersection(mvpCorners[1], new Vec3(1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+            mvpCorners.push(this._getIntersection(mvpCorners[1], tempCulledCorner2.set(1, 0.95, 0).applyMat4(mVPMatrix)));
           } else if (clippedCorners[0] === 3) {
             // bottom left is culled
             // get intersection iterating from bottom right
-            mvpCorners[3] = this._getIntersection(mvpCorners[2], new Vec3(0.95, -1, 0).applyMat4(this._matrices.mVPMatrix)); // get intersection iterating from top left
+            mvpCorners[3] = this._getIntersection(mvpCorners[2], tempCulledCorner1.set(0.95, -1, 0).applyMat4(mVPMatrix)); // get intersection iterating from top left
 
-            mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(-1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+            mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner2.set(-1, 0.95, 0).applyMat4(mVPMatrix)));
           }
         } else if (clippedCorners.length === 2) {
           if (clippedCorners[0] === 0 && clippedCorners[1] === 1) {
             // top part of the plane is culled by near plane
             // find intersection using bottom corners
-            mvpCorners[0] = this._getIntersection(mvpCorners[3], new Vec3(-1, -0.95, 0).applyMat4(this._matrices.mVPMatrix));
-            mvpCorners[1] = this._getIntersection(mvpCorners[2], new Vec3(1, -0.95, 0).applyMat4(this._matrices.mVPMatrix));
+            mvpCorners[0] = this._getIntersection(mvpCorners[3], tempCulledCorner1.set(-1, -0.95, 0).applyMat4(mVPMatrix));
+            mvpCorners[1] = this._getIntersection(mvpCorners[2], tempCulledCorner2.set(1, -0.95, 0).applyMat4(mVPMatrix));
           } else if (clippedCorners[0] === 1 && clippedCorners[1] === 2) {
             // right part of the plane is culled by near plane
             // find intersection using left corners
-            mvpCorners[1] = this._getIntersection(mvpCorners[0], new Vec3(-0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
-            mvpCorners[2] = this._getIntersection(mvpCorners[3], new Vec3(-0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
+            mvpCorners[1] = this._getIntersection(mvpCorners[0], tempCulledCorner1.set(-0.95, 1, 0).applyMat4(mVPMatrix));
+            mvpCorners[2] = this._getIntersection(mvpCorners[3], tempCulledCorner2.set(-0.95, -1, 0).applyMat4(mVPMatrix));
           } else if (clippedCorners[0] === 2 && clippedCorners[1] === 3) {
             // bottom part of the plane is culled by near plane
             // find intersection using top corners
-            mvpCorners[2] = this._getIntersection(mvpCorners[1], new Vec3(1, 0.95, 0).applyMat4(this._matrices.mVPMatrix));
-            mvpCorners[3] = this._getIntersection(mvpCorners[0], new Vec3(-1, 0.95, 0).applyMat4(this._matrices.mVPMatrix));
+            mvpCorners[2] = this._getIntersection(mvpCorners[1], tempCulledCorner1.set(1, 0.95, 0).applyMat4(mVPMatrix));
+            mvpCorners[3] = this._getIntersection(mvpCorners[0], tempCulledCorner2.set(-1, 0.95, 0).applyMat4(mVPMatrix));
           } else if (clippedCorners[0] === 0 && clippedCorners[1] === 3) {
             // left part of the plane is culled by near plane
             // find intersection using right corners
-            mvpCorners[0] = this._getIntersection(mvpCorners[1], new Vec3(0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
-            mvpCorners[3] = this._getIntersection(mvpCorners[2], new Vec3(0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
+            mvpCorners[0] = this._getIntersection(mvpCorners[1], tempCulledCorner1.set(0.95, 1, 0).applyMat4(mVPMatrix));
+            mvpCorners[3] = this._getIntersection(mvpCorners[2], tempCulledCorner2.set(0.95, -1, 0).applyMat4(mVPMatrix));
           }
         } else if (clippedCorners.length === 3) {
           // get the corner that is not clipped
@@ -7968,30 +8257,30 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
           if (nonClippedCorner === 0) {
             // from top left corner to right
-            mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(-0.95, 1, 0).applyMat4(this._matrices.mVPMatrix))); // from top left corner to bottom
+            mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner1.set(-0.95, 1, 0).applyMat4(mVPMatrix))); // from top left corner to bottom
 
-            mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(-1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+            mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner2.set(-1, 0.95, 0).applyMat4(mVPMatrix)));
           } else if (nonClippedCorner === 1) {
             // from top right corner to left
-            mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(0.95, 1, 0).applyMat4(this._matrices.mVPMatrix))); // from top right corner to bottom
+            mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner1.set(0.95, 1, 0).applyMat4(mVPMatrix))); // from top right corner to bottom
 
-            mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+            mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner2.set(1, 0.95, 0).applyMat4(mVPMatrix)));
           } else if (nonClippedCorner === 2) {
             // from bottom right corner to left
-            mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(0.95, -1, 0).applyMat4(this._matrices.mVPMatrix))); // from bottom right corner to top
+            mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner1.set(0.95, -1, 0).applyMat4(mVPMatrix))); // from bottom right corner to top
 
-            mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(1, -0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+            mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner2.set(1, -0.95, 0).applyMat4(mVPMatrix)));
           } else if (nonClippedCorner === 3) {
             // from bottom left corner to right
-            mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(-0.95, -1, 0).applyMat4(this._matrices.mVPMatrix))); // from bottom left corner to top
+            mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner1.set(-0.95, -1, 0).applyMat4(mVPMatrix))); // from bottom left corner to top
 
-            mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(-1 - 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+            mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner2.set(-1 - 0.95, 0).applyMat4(mVPMatrix)));
           }
         } else {
           // all 4 corners are culled! artificially apply wrong coords to force plane culling
-          for (var _i9 = 0; _i9 < corners.length; _i9++) {
-            mvpCorners[_i9][0] = 10000;
-            mvpCorners[_i9][1] = 10000;
+          for (var _i8 = 0; _i8 < corners.length; _i8++) {
+            mvpCorners[_i8][0] = 10000;
+            mvpCorners[_i8][1] = 10000;
           }
         }
 
@@ -8008,10 +8297,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        @boundingRectangle (obj): an object containing our plane WebGL element 4 corners coordinates: top left corner is [-1, 1] and bottom right corner is [1, -1]
        ***/
       value: function _getWorldCoords() {
-        var corners = [new Vec3(-1, 1, 0), // plane's top left corner
-        new Vec3(1, 1, 0), // plane's top right corner
-        new Vec3(1, -1, 0), // plane's bottom right corner
-        new Vec3(-1, -1, 0) // plane's bottom left corner
+        var corners = [tempCorner1.set(-1, 1, 0), // plane's top left corner
+        tempCorner2.set(1, 1, 0), // plane's top right corner
+        tempCorner3.set(1, -1, 0), // plane's bottom right corner
+        tempCorner4.set(-1, -1, 0) // plane's bottom left corner
         ]; // corners with model view projection matrix applied
 
         var mvpCorners = []; // eventual clipped corners
@@ -8019,7 +8308,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var clippedCorners = []; // we are going to get our plane's four corners relative to our model view projection matrix
 
         for (var i = 0; i < corners.length; i++) {
-          var mvpCorner = corners[i].applyMat4(this._matrices.mVPMatrix);
+          var mvpCorner = corners[i].applyMat4(this._matrices.modelViewProjection.matrix);
           mvpCorners.push(mvpCorner); // Z position is > 1 or < -1 means the corner is clipped
 
           if (Math.abs(mvpCorner.z) > 1) {
@@ -8039,8 +8328,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var minY = Infinity;
         var maxY = -Infinity;
 
-        for (var _i10 = 0; _i10 < mvpCorners.length; _i10++) {
-          var corner = mvpCorners[_i10];
+        for (var _i9 = 0; _i9 < mvpCorners.length; _i9++) {
+          var corner = mvpCorners[_i9];
 
           if (corner.x < minX) {
             minX = corner.x;
@@ -8107,7 +8396,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "getWebGLBoundingRect",
       value: function getWebGLBoundingRect() {
-        if (!this._matrices.mVPMatrix) {
+        if (!this._matrices.modelViewProjection) {
           return this._boundingRect.document;
         } else if (!this._boundingRect.worldToDocument || this.alwaysDraw) {
           this._computeWebGLBoundingRect();
@@ -8141,7 +8430,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_shouldDrawCheck",
       value: function _shouldDrawCheck() {
-        var _this29 = this;
+        var _this32 = this;
 
         // get plane bounding rect
         var actualPlaneBounds = this._getWebGLDrawRect(); // if we decide to draw the plane only when visible inside the canvas
@@ -8153,14 +8442,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             this._shouldDraw = false; // callback for leaving view
 
             this.renderer.nextRender.add(function () {
-              return _this29._onLeaveViewCallback && _this29._onLeaveViewCallback();
+              return _this32._onLeaveViewCallback && _this32._onLeaveViewCallback();
             });
           }
         } else {
           if (!this._shouldDraw) {
             // callback for entering view
             this.renderer.nextRender.add(function () {
-              return _this29._onReEnterViewCallback && _this29._onReEnterViewCallback();
+              return _this32._onReEnterViewCallback && _this32._onReEnterViewCallback();
             });
           }
 
@@ -8176,55 +8465,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function isDrawn() {
         return this._canDraw && this.visible && (this._shouldDraw || this.alwaysDraw);
       }
-      /***
-       This function uses our plane HTML Element bounding rectangle values and convert them to the world clip space coordinates, and then apply the corresponding translation
-       ***/
-
-    }, {
-      key: "_applyWorldPositions",
-      value: function _applyWorldPositions() {
-        // set our plane sizes and positions relative to the world clipspace
-        this._setWorldSizes(); // set the translation values
-
-
-        this._setTranslation();
-      }
-      /***
-       This function updates the plane position based on its CSS positions and transformations values.
-       Useful if the HTML element has been moved while the container size has not changed.
-       ***/
-
-    }, {
-      key: "updatePosition",
-      value: function updatePosition() {
-        // set the new plane sizes and positions relative to document by triggering getBoundingClientRect()
-        this._setDocumentSizes(); // apply them
-
-
-        this._applyWorldPositions();
-      }
-      /***
-       This function updates the plane position based on the Curtains class scroll manager values
-         params:
-       @lastXDelta (float): last scroll value along X axis
-       @lastYDelta (float): last scroll value along Y axis
-       ***/
-
-    }, {
-      key: "updateScrollPosition",
-      value: function updateScrollPosition(lastXDelta, lastYDelta) {
-        // actually update the plane position only if last X delta or last Y delta is not equal to 0
-        if (lastXDelta || lastYDelta) {
-          // set new positions based on our delta without triggering reflow
-          this._boundingRect.document.top += lastYDelta * this.renderer.pixelRatio;
-          this._boundingRect.document.left += lastXDelta * this.renderer.pixelRatio; // apply them
-
-          this._applyWorldPositions();
-        }
-      }
-    }, {
-      key: "enableDepthTest",
-
       /*** DEPTH AND RENDER ORDER ***/
 
       /***
@@ -8232,22 +8472,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
          params :
        @shouldEnableDepthTest (bool): enable/disable depth test for that plane
        ***/
-      value: function enableDepthTest(shouldEnableDepthTest) {
-        this._depthTest = shouldEnableDepthTest;
-      }
-      /***
-       This function puts the plane at the end of the draw stack, allowing it to overlap any other plane
-       TODO deprecated and should be removed!
-       ***/
 
     }, {
-      key: "moveToFront",
-      value: function moveToFront() {
-        if (!this.renderer.production) {
-          throwWarning(this.type + ": moveToFront() is deprecated, please use setRenderOrder() instead");
-        }
-
-        this.setRenderOrder();
+      key: "enableDepthTest",
+      value: function enableDepthTest(shouldEnableDepthTest) {
+        this._depthTest = shouldEnableDepthTest;
       }
       /*** SOURCES ***/
 
@@ -8277,8 +8506,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
           var videosArray = [];
 
-          for (var _i11 = 0; _i11 < this.htmlElement.getElementsByTagName("video").length; _i11++) {
-            videosArray.push(this.htmlElement.getElementsByTagName("video")[_i11]);
+          for (var _i10 = 0; _i10 < this.htmlElement.getElementsByTagName("video").length; _i10++) {
+            videosArray.push(this.htmlElement.getElementsByTagName("video")[_i10]);
           }
 
           if (videosArray.length > 0) {
@@ -8288,8 +8517,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
           var canvasesArray = [];
 
-          for (var _i12 = 0; _i12 < this.htmlElement.getElementsByTagName("canvas").length; _i12++) {
-            canvasesArray.push(this.htmlElement.getElementsByTagName("canvas")[_i12]);
+          for (var _i11 = 0; _i11 < this.htmlElement.getElementsByTagName("canvas").length; _i11++) {
+            canvasesArray.push(this.htmlElement.getElementsByTagName("canvas")[_i11]);
           }
 
           if (canvasesArray.length > 0) {
@@ -8338,6 +8567,69 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           if ((this.alwaysDraw || this._shouldDraw) && this.visible) {
             this._draw();
           }
+        }
+      }
+      /*** INTERACTION ***/
+
+      /***
+       This function takes the mouse position relative to the document and returns it relative to our plane
+       It ranges from -1 to 1 on both axis
+         params :
+       @mouseCoordinates (Vec2 object): coordinates of the mouse
+         returns :
+       @mousePosition (Vec2 object): the mouse position relative to our plane in WebGL space coordinates
+       ***/
+
+    }, {
+      key: "mouseToPlaneCoords",
+      value: function mouseToPlaneCoords(mouseCoordinates) {
+        identityQuat.setAxisOrder(this.quaternion.axisOrder); // plane has no rotation and transform origin is set to default, no need for real raycasting
+
+        if (identityQuat.equals(this.quaternion) && defaultTransformOrigin.equals(this.transformOrigin)) {
+          return _get(_getPrototypeOf(Plane.prototype), "mouseToPlaneCoords", this).call(this, mouseCoordinates);
+        } else {
+          // raycasting
+          // based on https://people.cs.clemson.edu/~dhouse/courses/405/notes/raycast.pdf
+          // convert mouse position to 3d normalised device coordinates (from [-1, -1] to [1, 1])
+          var worldMouse = {
+            x: 2 * (mouseCoordinates.x / (this.renderer._boundingRect.width / this.renderer.pixelRatio)) - 1,
+            y: 2 * (1 - mouseCoordinates.y / (this.renderer._boundingRect.height / this.renderer.pixelRatio)) - 1
+          };
+          var rayOrigin = this.camera.position.clone(); // ray direction based on normalised coordinates and plane translation
+
+          var rayDirection = tempRayDirection.set(worldMouse.x, worldMouse.y, -0.5); // unproject ray direction
+
+          rayDirection.unproject(this.camera);
+          rayDirection.sub(rayOrigin).normalize(); // plane normals (could also be [0, 0, 1], makes no difference, raycasting lands the same result for both face)
+
+          var planeNormals = tempNormals.set(0, 0, -1); // apply plane quaternion to plane normals
+
+          planeNormals.applyQuat(this.quaternion).normalize();
+          var result = tempRaycast.set(0, 0, 0);
+          var denominator = planeNormals.dot(rayDirection);
+
+          if (Math.abs(denominator) >= 0.0001) {
+            var inverseViewMatrix = this._matrices.world.matrix.getInverse().multiply(this.camera.viewMatrix); // get the plane's center coordinates
+            // start with our transform origin point
+
+
+            var planeOrigin = this._boundingRect.world.transformOrigin.clone().add(this._translation); // rotate our transform origin about world center
+
+
+            var rotatedOrigin = tempRotatedOrigin.set(this._translation.x - planeOrigin.x, this._translation.y - planeOrigin.y, this._translation.z - planeOrigin.z);
+            rotatedOrigin.applyQuat(this.quaternion); // add it to our plane origin
+
+            planeOrigin.add(rotatedOrigin); // distance from ray origin to plane
+
+            var distance = planeNormals.dot(planeOrigin.clone().sub(rayOrigin)) / denominator;
+            result.copy(rayOrigin.add(rayDirection.multiplyScalar(distance)));
+            result.applyMat4(inverseViewMatrix);
+          } else {
+            // no intersection!
+            result.set(Infinity, Infinity, Infinity);
+          }
+
+          return castedMouseCoords.set(result.x, result.y);
         }
       }
       /*** EVENTS ***/
@@ -8662,10 +8954,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _super4 = _createSuper(ShaderPass);
 
     function ShaderPass(renderer) {
-      var _this30;
+      var _this33;
 
       var _ref13 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          shareProgram = _ref13.shareProgram,
           widthSegments = _ref13.widthSegments,
           heightSegments = _ref13.heightSegments,
           renderOrder = _ref13.renderOrder,
@@ -8690,12 +8981,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       widthSegments = 1;
       heightSegments = 1; // always cull back face
 
-      cullFace = "back"; // never share a program between shader passes
+      cullFace = "back"; // use the renderer container as our HTML element to create a DOMMesh object
 
-      shareProgram = false; // use the renderer container as our HTML element to create a DOMMesh object
-
-      _this30 = _super4.call(this, renderer, renderer.container, "ShaderPass", {
-        shareProgram: shareProgram,
+      _this33 = _super4.call(this, renderer, renderer.container, "ShaderPass", {
         widthSegments: widthSegments,
         heightSegments: heightSegments,
         renderOrder: renderOrder,
@@ -8710,34 +8998,34 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         crossOrigin: crossOrigin
       }); // default to scene pass
 
-      _this30._isScenePass = true;
-      _this30.index = _this30.renderer.shaderPasses.length;
-      _this30.renderOrder = 0;
-      _this30._depth = depth;
-      _this30._shouldClear = clear;
-      _this30.target = renderTarget;
+      _this33._isScenePass = true;
+      _this33.index = _this33.renderer.shaderPasses.length;
+      _this33.renderOrder = 0;
+      _this33._depth = depth;
+      _this33._shouldClear = clear;
+      _this33.target = renderTarget;
 
-      if (_this30.target) {
+      if (_this33.target) {
         // if there's a target defined it's not a scene pass
-        _this30._isScenePass = false; // inherit clear param
+        _this33._isScenePass = false; // inherit clear param
 
-        _this30._shouldClear = _this30.target._shouldClear;
+        _this33._shouldClear = _this33.target._shouldClear;
       } // if the program is valid, go on
 
 
-      if (_this30._program.compiled) {
-        _this30._initShaderPass(); // add shader pass to our renderer shaderPasses array
+      if (_this33._program.compiled) {
+        _this33._initShaderPass(); // add shader pass to our renderer shaderPasses array
 
 
-        _this30.renderer.shaderPasses.push(_assertThisInitialized(_this30)); // wait one tick before adding our shader pass to the scene to avoid flickering black screen for one frame
+        _this33.renderer.shaderPasses.push(_assertThisInitialized(_this33)); // wait one tick before adding our shader pass to the scene to avoid flickering black screen for one frame
 
 
-        _this30.renderer.nextRender.add(function () {
-          _this30.renderer.scene.addShaderPass(_assertThisInitialized(_this30));
+        _this33.renderer.nextRender.add(function () {
+          _this33.renderer.scene.addShaderPass(_assertThisInitialized(_this33));
         });
       }
 
-      return _this30;
+      return _this33;
     }
     /*** RESTORING CONTEXT ***/
 
@@ -8876,12 +9164,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _super5 = _createSuper(PingPongPlane);
 
     function PingPongPlane(curtains, htmlElement) {
-      var _this31;
+      var _this34;
 
       var _ref14 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
           _ref14$sampler = _ref14.sampler,
           sampler = _ref14$sampler === void 0 ? "uPingPongTexture" : _ref14$sampler,
-          shareProgram = _ref14.shareProgram,
           widthSegments = _ref14.widthSegments,
           heightSegments = _ref14.heightSegments,
           renderOrder = _ref14.renderOrder,
@@ -8908,8 +9195,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       depthTest = false;
       autoloadSources = false; // create our plane
 
-      _this31 = _super5.call(this, curtains, htmlElement, {
-        shareProgram: shareProgram,
+      _this34 = _super5.call(this, curtains, htmlElement, {
         widthSegments: widthSegments,
         heightSegments: heightSegments,
         renderOrder: renderOrder,
@@ -8931,53 +9217,86 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         fov: fov
       }); // remove from stack, update type to PingPongPlane and then stack again
 
-      _this31.renderer.scene.removePlane(_assertThisInitialized(_this31));
+      _this34.renderer.scene.removePlane(_assertThisInitialized(_this34));
 
-      _this31.type = "PingPongPlane";
+      _this34.type = "PingPongPlane";
 
-      _this31.renderer.scene.addPlane(_assertThisInitialized(_this31)); // create 2 render targets
+      _this34.renderer.scene.addPlane(_assertThisInitialized(_this34)); // create 2 render targets
 
 
-      _this31.readPass = new RenderTarget(curtains, {
+      _this34.readPass = new RenderTarget(curtains, {
         depth: false,
         clear: false,
         texturesOptions: texturesOptions
       });
-      _this31.writePass = new RenderTarget(curtains, {
+      _this34.writePass = new RenderTarget(curtains, {
         depth: false,
         clear: false,
         texturesOptions: texturesOptions
       }); // create a texture where we'll draw
 
-      var texture = _this31.createTexture({
-        sampler: sampler,
-        fromTexture: _this31.readPass.getTexture()
-      }); // override onRender and onAfterRender callbacks
+      _this34.createTexture({
+        sampler: sampler
+      }); // wait for both render targets textures to be ready and force a copy of the current target texture
+      // even if the swap already began
+      // this seems to fix some erratic bugs
 
 
-      _this31._onRenderCallback = function () {
+      var nbPassesReady = 0;
+
+      _this34.readPass.getTexture().onSourceUploaded(function () {
+        nbPassesReady++;
+
+        _this34._checkIfReady(nbPassesReady);
+      });
+
+      _this34.writePass.getTexture().onSourceUploaded(function () {
+        nbPassesReady++;
+
+        _this34._checkIfReady(nbPassesReady);
+      }); // directly assign a render target
+
+
+      _this34.setRenderTarget(_this34.readPass); // override onRender and onAfterRender callbacks
+
+
+      _this34._onRenderCallback = function () {
         // update the render target
-        _this31.writePass && _this31.setRenderTarget(_this31.writePass);
-        _this31._onPingPongRenderCallback && _this31._onPingPongRenderCallback();
-      };
-
-      _this31._onAfterRenderCallback = function () {
-        // swap FBOs and update texture
-        if (_this31.readPass && _this31.writePass && _this31.textures[0]) {
-          _this31._swapPasses();
+        if (_this34.readPass && _this34.writePass && _this34.textures[0] && _this34.textures[0]._uploaded) {
+          _this34.setRenderTarget(_this34.writePass);
         }
 
-        _this31._onPingPongAfterRenderCallback && _this31._onPingPongAfterRenderCallback();
+        _this34._onPingPongRenderCallback && _this34._onPingPongRenderCallback();
       };
 
-      return _this31;
+      _this34._onAfterRenderCallback = function () {
+        // swap FBOs and update texture
+        if (_this34.readPass && _this34.writePass && _this34.textures[0] && _this34.textures[0]._uploaded) {
+          _this34._swapPasses();
+        }
+
+        _this34._onPingPongAfterRenderCallback && _this34._onPingPongAfterRenderCallback();
+      };
+
+      return _this34;
     }
     /***
-     After each draw call, we'll swap the 2 render targets and copy the read pass texture again
+     Copy the current target texture once both render targets textures have been uploaded
      ***/
 
 
     _createClass(PingPongPlane, [{
+      key: "_checkIfReady",
+      value: function _checkIfReady(loadedTextures) {
+        if (loadedTextures === 2) {
+          this.textures[0].copy(this.target.getTexture());
+        }
+      }
+      /***
+       After each draw call, we'll swap the 2 render targets and copy the read pass texture again
+       ***/
+
+    }, {
       key: "_swapPasses",
       value: function _swapPasses() {
         // swap read and write passes
@@ -9041,40 +9360,22 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "remove",
       value: function remove() {
-        // first we want to stop drawing it
-        this._canDraw = false;
         this.target = null; // force unbinding frame buffer
 
-        this.renderer.bindFrameBuffer(null); // manually dispose the frame buffers (do not delete their textures)
+        this.renderer.bindFrameBuffer(null);
 
-        if (this.writePass._frameBuffer) {
-          this.gl.deleteFramebuffer(this.writePass._frameBuffer);
-          this.writePass._frameBuffer = null;
+        if (this.writePass) {
+          this.writePass.remove();
+          this.writePass = null;
         }
 
-        if (this.writePass._depthBuffer) {
-          this.gl.deleteRenderbuffer(this.writePass._depthBuffer);
-          this.writePass._depthBuffer = null;
-        }
-
-        this.renderer.removeRenderTarget(this.writePass);
-
-        if (this.readPass._frameBuffer) {
-          this.gl.deleteFramebuffer(this.readPass._frameBuffer);
-          this.readPass._frameBuffer = null;
-        }
-
-        if (this.readPass._depthBuffer) {
-          this.gl.deleteRenderbuffer(this.readPass._depthBuffer);
-          this.readPass._depthBuffer = null;
-        }
-
-        this.renderer.removeRenderTarget(this.readPass); // delete all the webgl bindings
-
-        this._dispose(); // finally remove plane
+        if (this.readPass) {
+          this.readPass.remove();
+          this.readPass = null;
+        } // call original remove method
 
 
-        this.renderer.removePlane(this);
+        _get(_getPrototypeOf(PingPongPlane.prototype), "remove", this).call(this);
       }
     }]);
 
@@ -9091,47 +9392,80 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    ***/
 
 
-  var FXAAPass = function FXAAPass(curtains) {
-    var _this32 = this;
+  var FXAAPass = /*#__PURE__*/function (_ShaderPass) {
+    _inherits(FXAAPass, _ShaderPass);
 
-    var _ref15 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-        renderOrder = _ref15.renderOrder,
-        depthTest = _ref15.depthTest,
-        texturesOptions = _ref15.texturesOptions,
-        crossOrigin = _ref15.crossOrigin,
-        depth = _ref15.depth,
-        clear = _ref15.clear,
-        renderTarget = _ref15.renderTarget;
+    var _super6 = _createSuper(FXAAPass);
 
-    _classCallCheck(this, FXAAPass);
+    function FXAAPass(curtains) {
+      var _this35;
 
-    // taken from https://github.com/spite/Wagner/blob/master/fragment-shaders/fxaa-fs.glsl
-    var fragmentShader = "\n            precision mediump float;\n            \n            varying vec3 vVertexPosition;\n            varying vec2 vTextureCoord;\n        \n            uniform sampler2D uRenderTexture;\n            \n            uniform vec2 uResolution;\n            \n            #define FXAA_REDUCE_MIN   (1.0/128.0)\n            #define FXAA_REDUCE_MUL   (1.0/8.0)\n            #define FXAA_SPAN_MAX     8.0\n            \n            void main() {\n                vec2 res = 1.0 / uResolution;\n            \n                vec3 rgbNW = texture2D(uRenderTexture, (vTextureCoord.xy + vec2(-1.0, -1.0) * res)).xyz;\n                vec3 rgbNE = texture2D(uRenderTexture, (vTextureCoord.xy + vec2(1.0, -1.0) * res)).xyz;\n                vec3 rgbSW = texture2D(uRenderTexture, (vTextureCoord.xy + vec2(-1.0, 1.0) * res)).xyz;\n                vec3 rgbSE = texture2D(uRenderTexture, (vTextureCoord.xy + vec2(1.0, 1.0) * res)).xyz;\n                vec4 rgbaM = texture2D(uRenderTexture, vTextureCoord.xy * res);\n                vec3 rgbM = rgbaM.xyz;\n                vec3 luma = vec3(0.299, 0.587, 0.114);\n            \n                float lumaNW = dot(rgbNW, luma);\n                float lumaNE = dot(rgbNE, luma);\n                float lumaSW = dot(rgbSW, luma);\n                float lumaSE = dot(rgbSE, luma);\n                float lumaM  = dot(rgbM,  luma);\n                float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));\n                float lumaMax = max(lumaM, max(max(lumaNW, lumaNE) , max(lumaSW, lumaSE)));\n            \n                vec2 dir;\n                dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));\n                dir.y = ((lumaNW + lumaSW) - (lumaNE + lumaSE));\n            \n                float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);\n            \n                float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);\n                dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX),\n                      max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),\n                            dir * rcpDirMin)) * res;\n                vec4 rgbA = (1.0/2.0) * (\n                texture2D(uRenderTexture, vTextureCoord.xy + dir * (1.0/3.0 - 0.5)) +\n                texture2D(uRenderTexture, vTextureCoord.xy + dir * (2.0/3.0 - 0.5)));\n                vec4 rgbB = rgbA * (1.0/2.0) + (1.0/4.0) * (\n                texture2D(uRenderTexture, vTextureCoord.xy + dir * (0.0/3.0 - 0.5)) +\n                texture2D(uRenderTexture, vTextureCoord.xy + dir * (3.0/3.0 - 0.5)));\n                float lumaB = dot(rgbB, vec4(luma, 0.0));\n            \n                if ((lumaB < lumaMin) || (lumaB > lumaMax)) {\n                    gl_FragColor = rgbA;\n                } else {\n                    gl_FragColor = rgbB;\n                }\n            }\n        ";
-    var renderer = curtains.renderer || curtains;
-    var uniforms = {
-      resolution: {
-        name: "uResolution",
-        type: "2f",
-        value: [renderer._boundingRect.width, renderer._boundingRect.height]
+      var _ref15 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          renderOrder = _ref15.renderOrder,
+          depthTest = _ref15.depthTest,
+          texturesOptions = _ref15.texturesOptions,
+          crossOrigin = _ref15.crossOrigin,
+          depth = _ref15.depth,
+          clear = _ref15.clear,
+          renderTarget = _ref15.renderTarget;
+
+      _classCallCheck(this, FXAAPass);
+
+      // taken from https://github.com/spite/Wagner/blob/master/fragment-shaders/fxaa-fs.glsl
+      var fragmentShader = "\n            precision mediump float;\n            \n            varying vec3 vVertexPosition;\n            varying vec2 vTextureCoord;\n        \n            uniform sampler2D uRenderTexture;\n            \n            uniform vec2 uResolution;\n            \n            #define FXAA_REDUCE_MIN   (1.0/128.0)\n            #define FXAA_REDUCE_MUL   (1.0/8.0)\n            #define FXAA_SPAN_MAX     8.0\n            \n            void main() {\n                vec2 res = 1.0 / uResolution;\n            \n                vec3 rgbNW = texture2D(uRenderTexture, (vTextureCoord.xy + vec2(-1.0, -1.0) * res)).xyz;\n                vec3 rgbNE = texture2D(uRenderTexture, (vTextureCoord.xy + vec2(1.0, -1.0) * res)).xyz;\n                vec3 rgbSW = texture2D(uRenderTexture, (vTextureCoord.xy + vec2(-1.0, 1.0) * res)).xyz;\n                vec3 rgbSE = texture2D(uRenderTexture, (vTextureCoord.xy + vec2(1.0, 1.0) * res)).xyz;\n                vec4 rgbaM = texture2D(uRenderTexture, vTextureCoord.xy * res);\n                vec3 rgbM = rgbaM.xyz;\n                vec3 luma = vec3(0.299, 0.587, 0.114);\n            \n                float lumaNW = dot(rgbNW, luma);\n                float lumaNE = dot(rgbNE, luma);\n                float lumaSW = dot(rgbSW, luma);\n                float lumaSE = dot(rgbSE, luma);\n                float lumaM  = dot(rgbM,  luma);\n                float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));\n                float lumaMax = max(lumaM, max(max(lumaNW, lumaNE) , max(lumaSW, lumaSE)));\n            \n                vec2 dir;\n                dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));\n                dir.y = ((lumaNW + lumaSW) - (lumaNE + lumaSE));\n            \n                float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);\n            \n                float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);\n                dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX),\n                      max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),\n                            dir * rcpDirMin)) * res;\n                vec4 rgbA = (1.0/2.0) * (\n                texture2D(uRenderTexture, vTextureCoord.xy + dir * (1.0/3.0 - 0.5)) +\n                texture2D(uRenderTexture, vTextureCoord.xy + dir * (2.0/3.0 - 0.5)));\n                vec4 rgbB = rgbA * (1.0/2.0) + (1.0/4.0) * (\n                texture2D(uRenderTexture, vTextureCoord.xy + dir * (0.0/3.0 - 0.5)) +\n                texture2D(uRenderTexture, vTextureCoord.xy + dir * (3.0/3.0 - 0.5)));\n                float lumaB = dot(rgbB, vec4(luma, 0.0));\n            \n                if ((lumaB < lumaMin) || (lumaB > lumaMax)) {\n                    gl_FragColor = rgbA;\n                } else {\n                    gl_FragColor = rgbB;\n                }\n            }\n        ";
+      var uniforms = {
+        resolution: {
+          name: "uResolution",
+          type: "2f",
+          value: [0, 0] // will be updated after having called super()
+
+        }
+      };
+      _this35 = _super6.call(this, curtains, {
+        fragmentShader: fragmentShader,
+        uniforms: uniforms,
+        // Mesh params
+        renderOrder: renderOrder,
+        depthTest: depthTest,
+        texturesOptions: texturesOptions,
+        crossOrigin: crossOrigin,
+        depth: depth,
+        clear: clear,
+        renderTarget: renderTarget
+      }); // update the resolution uniform
+
+      _this35.uniforms.resolution.value = [_this35.renderer._boundingRect.width, _this35.renderer._boundingRect.height]; // override onAfterResize callback
+
+      _this35._onAfterResizeCallback = function () {
+        // update the resolution uniform
+        _this35.uniforms.resolution.value = [_this35.renderer._boundingRect.width, _this35.renderer._boundingRect.height];
+        _this35._onFXAAPassAfterResizeCallback && _this35._onFXAAPassAfterResizeCallback();
+      };
+
+      return _this35;
+    }
+    /***
+     This is called each time the FXAAPass has been resized
+       params :
+     @callback (function) : a function to execute
+       returns :
+     @this: our FXAAPass to handle chaining
+     ***/
+
+
+    _createClass(FXAAPass, [{
+      key: "onAfterResize",
+      value: function onAfterResize(callback) {
+        if (callback) {
+          this._onFXAAPassAfterResizeCallback = callback;
+        }
+
+        return this;
       }
-    };
-    this.pass = new ShaderPass(curtains, {
-      // Mesh params
-      renderOrder: renderOrder,
-      depthTest: depthTest,
-      fragmentShader: fragmentShader,
-      uniforms: uniforms,
-      texturesOptions: texturesOptions,
-      crossOrigin: crossOrigin,
-      // ShaderPass specific params
-      depth: depth,
-      clear: clear,
-      renderTarget: renderTarget
-    });
-    this.pass.onAfterResize(function () {
-      _this32.pass.uniforms.resolution.value = [_this32.pass.renderer._boundingRect.width, _this32.pass.renderer._boundingRect.height];
-    });
-  };
+    }]);
+
+    return FXAAPass;
+  }(ShaderPass);
 
   exports.Curtains = Curtains;
   exports.FXAAPass = FXAAPass;
