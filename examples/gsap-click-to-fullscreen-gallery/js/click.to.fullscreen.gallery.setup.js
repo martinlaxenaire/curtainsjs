@@ -202,7 +202,7 @@ window.addEventListener("load", () => {
 
         // set texture offset
         const texture = plane.textures[0];
-        texture.setOffset(new Vec2(0, (1 - texture.scale.y) * 0.5 * parallaxEffect));
+        texture.offset.y = (1 - texture.scale.y) * 0.5 * parallaxEffect;
     }
 
     /*** GALLERY ***/

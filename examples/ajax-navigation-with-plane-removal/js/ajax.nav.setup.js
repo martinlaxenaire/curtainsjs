@@ -6,6 +6,14 @@ const curtains = new Curtains({
     pixelRatio: Math.min(1.5, window.devicePixelRatio) // limit pixel ratio for performance
 });
 
+
+let images = [
+    "../medias/plane-small-texture-1.jpg",
+    "../medias/plane-small-texture-2.jpg",
+    "../medias/plane-small-texture-3.jpg",
+    "../medias/plane-small-texture-4.jpg",
+];
+
 let textures = [];
 
 curtains.onError(() => {
@@ -28,12 +36,6 @@ curtains.onError(() => {
 
 function preloadTextures() {
     let percentLoaded = 0;
-    let images = [
-        "../medias/plane-small-texture-1.jpg",
-        "../medias/plane-small-texture-2.jpg",
-        "../medias/plane-small-texture-3.jpg",
-        "../medias/plane-small-texture-4.jpg",
-    ];
 
     const loaderEl = document.getElementById("loader-inner");
 
@@ -142,10 +144,8 @@ window.addEventListener("load", () => {
     };
 
 
-    // handle all the planes
-    function handlePlanes(index) {
-        const plane = planes[index];
-
+    // add the right texture to the plane
+    function assignTexture(plane) {
         // set the right texture
         const planeImage = plane.htmlElement.querySelector("img");
         const planeTexture = textures.find((element) => element.source && element.source.src === planeImage.src);
@@ -154,6 +154,31 @@ window.addEventListener("load", () => {
         if(planeTexture) {
             // exactly the same as planeTexture.addParent(plane)
             plane.addTexture(planeTexture);
+        }
+    }
+
+
+    // handle all the planes
+    function handlePlanes(index) {
+        const plane = planes[index];
+
+        // if the textures are already created, proceed
+        if(textures.length === images.length) {
+            assignTexture(plane);
+        }
+        else {
+            // it's also possible that the planes were created before the textures sources were loaded
+            // so we'll use our nextRender method with its keep parameter to true to act as a setInterval
+            // once our textures are ready, cancel the nextRender call by setting the keep flag to false
+            const waitForTexture = curtains.nextRender(() => {
+                if(textures.length === images.length) {
+                    // textures are ready, stop executing the callback
+                    waitForTexture.keep = false;
+
+                    // assign the texture
+                    assignTexture(plane);
+                }
+            }, true);
         }
 
         plane.onRender(() => {

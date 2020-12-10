@@ -133,8 +133,8 @@ window.addEventListener("load", () => {
         }).onRender(() => {
 
             // scale plane and its texture
-            plane.setScale(new Vec2(1, 1 + Math.abs(scrollEffect) / 300));
-            plane.textures[0].setScale(new Vec2(1, 1 + Math.abs(scrollEffect) / 150));
+            plane.scale.y = 1 + Math.abs(scrollEffect) / 300;
+            plane.textures[0].scale.y = 1 + Math.abs(scrollEffect) / 150;
         }).onReEnterView(() => {
             // plane is drawn again
             planeDrawn++;
@@ -156,7 +156,7 @@ window.addEventListener("load", () => {
         const parallaxEffect = (planeOffsetTop - windowHeight / 2) / windowHeight;
 
         // apply the parallax effect
-        planes[index].setRelativeTranslation(new Vec3(0, parallaxEffect * (windowHeight / 4)));
+        planes[index].relativeTranslation.y = parallaxEffect * windowHeight / 4;
     }
 
 

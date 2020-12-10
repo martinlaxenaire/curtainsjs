@@ -145,16 +145,17 @@ window.addEventListener("load", () => {
     function handlePlanes(index) {
         const plane = planes[index];
 
-        // check if our plane is defined and use it
+        // set transform origin
         setPlaneTransformOrigin(plane);
 
-        plane.setRotation(new Vec3(0, 0, (index / planeElements.length) * Math.PI * 2));
+        // set initial rotation based on plane index
+        plane.rotation.z = (index / planeElements.length) * Math.PI * 2;
 
         plane.onReady(() => {
 
         }).onRender(() => {
             // update rotation based on rotation effect
-            plane.setRotation(new Vec3(0, 0, plane.rotation.z + rotationEffect / 100));
+            plane.rotation.z += rotationEffect / 100;
         }).onAfterResize(() => {
             setPlaneTransformOrigin(plane);
         });

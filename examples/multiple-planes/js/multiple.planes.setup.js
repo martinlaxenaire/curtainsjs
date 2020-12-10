@@ -95,9 +95,9 @@ window.addEventListener("load", () => {
     const params = {
         vertexShader: vs,
         fragmentShader: fs,
-        shareProgram: true, // share planes program to improve plane creation speed
         widthSegments: 10,
         heightSegments: 10,
+        fov: 45,
         drawCheckMargins: {
             top: 100,
             right: 0,

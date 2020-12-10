@@ -146,12 +146,20 @@ window.addEventListener("load", () => {
             // apply new parallax values after resize
             applyPlanesParallax(index);
         }).onRender(() => {
+            // new way: we just have to change the rotation and scale properties directly!
             // apply the rotation
-            plane.setRotation(new Vec3(0, 0, scrollEffect / 750));
+            plane.rotation.z = Math.abs(scrollEffect) / 750;
 
             // scale plane and its texture
+            plane.scale.y = 1 + Math.abs(scrollEffect) / 300;
+            plane.textures[0].scale.y = 1 + Math.abs(scrollEffect) / 150;
+
+            /*
+            // old way: using setRotation and setScale
+            plane.setRotation(new Vec3(0, 0, scrollEffect / 750));
             plane.setScale(new Vec2(1, 1 + Math.abs(scrollEffect) / 300));
             plane.textures[0].setScale(new Vec2(1, 1 + Math.abs(scrollEffect) / 150));
+            */
 
             // update the uniform
             plane.uniforms.scrollEffect.value = scrollEffect;
@@ -175,6 +183,11 @@ window.addEventListener("load", () => {
         const parallaxEffect = (planeOffsetTop - sceneBoundingRect.height / 2) / sceneBoundingRect.height;
 
         // apply the parallax effect
+        planes[index].relativeTranslation.y = parallaxEffect * sceneBoundingRect.height / 4;
+
+        /*
+        // old way using setRelativeTranslation
         planes[index].setRelativeTranslation(new Vec3(0, parallaxEffect * (sceneBoundingRect.height / 4)));
+         */
     }
 });

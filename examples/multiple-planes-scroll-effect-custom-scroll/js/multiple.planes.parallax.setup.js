@@ -140,7 +140,6 @@ window.addEventListener("load", () => {
     const params = {
         vertexShader: vs,
         fragmentShader: fs,
-        shareProgram: true, // share planes program to improve plane creation speed
         widthSegments: 10,
         heightSegments: 10,
         uniforms: {
@@ -179,12 +178,20 @@ window.addEventListener("load", () => {
             // apply new parallax values after resize
             applyPlanesParallax(index);
         }).onRender(() => {
+            // new way: we just have to change the rotation and scale properties directly!
             // apply the rotation
-            plane.setRotation(new Vec3(0, 0, scrollEffect / 750));
+            plane.rotation.z = Math.abs(scrollEffect) / 750;
 
             // scale plane and its texture
+            plane.scale.y = 1 + Math.abs(scrollEffect) / 300;
+            plane.textures[0].scale.y = 1 + Math.abs(scrollEffect) / 150;
+
+            /*
+            // old way: using setRotation and setScale
+            plane.setRotation(new Vec3(0, 0, scrollEffect / 750));
             plane.setScale(new Vec2(1, 1 + Math.abs(scrollEffect) / 300));
             plane.textures[0].setScale(new Vec2(1, 1 + Math.abs(scrollEffect) / 150));
+            */
         }).onReEnterView(() => {
             // plane is drawn again
             planeDrawn++;
@@ -210,6 +217,11 @@ window.addEventListener("load", () => {
         const parallaxEffect = (planeOffsetTop - sceneBoundingRect.height / 2) / sceneBoundingRect.height;
 
         // apply the parallax effect
+        planes[index].relativeTranslation.y = parallaxEffect * sceneBoundingRect.height / 4;
+
+        /*
+        // old way using setRelativeTranslation
         planes[index].setRelativeTranslation(new Vec3(0, parallaxEffect * (sceneBoundingRect.height / 4)));
+         */
     }
 });
