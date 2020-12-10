@@ -726,9 +726,6 @@ export class Renderer {
     render() {
         if(!this.gl) return;
 
-        // clear scene first
-        this.clear();
-
         // reset attributes buffer state
         this.state.currentGeometryID = null;
 
