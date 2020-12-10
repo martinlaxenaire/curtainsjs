@@ -410,8 +410,10 @@ export class Texture {
     _setTextureUniforms() {
         // check if our texture is used in our program shaders
         // if so, get its uniform locations and bind it to our program
-        for(let i = 0; i < this._parent._program.activeUniforms.textures.length; i++) {
-            if(this._parent._program.activeUniforms.textures[i] === this._sampler.name) {
+        const activeUniforms = this._parent._program.activeUniforms;
+
+        for(let i = 0; i < activeUniforms.textures.length; i++) {
+            if(activeUniforms.textures[i] === this._sampler.name) {
                 // this texture is active
                 this._sampler.isActive = true;
 
@@ -422,7 +424,10 @@ export class Texture {
                 this._sampler.location = this.gl.getUniformLocation(this._parent._program.program, this._sampler.name);
 
                 // set texture matrix uniform location only if active
-                const isTextureMatrixActive = this._parent._program.activeUniforms.textureMatrices.find(textureMatrix => textureMatrix === this._textureMatrix.name);
+                const isTextureMatrixActive = activeUniforms.textureMatrices.find(textureMatrix =>
+                    textureMatrix === this._textureMatrix.name
+                );
+                
                 if(isTextureMatrixActive) {
                     this._textureMatrix.isActive = true;
                     this._textureMatrix.location = this.gl.getUniformLocation(this._parent._program.program, this._textureMatrix.name);
