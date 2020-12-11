@@ -133,7 +133,7 @@ export class Renderer {
             forceBufferUpdate: false,
 
             // if we're using depth test or not
-            setDepth: null,
+            depthTest: null,
             // face culling
             cullFace: null,
 
@@ -175,7 +175,7 @@ export class Renderer {
         this.setBlendFunc();
 
         // enable depth by default
-        this.setDepth(true);
+        this.setDepthTest(true);
 
         // texture cache
         this.cache = new CacheManager();
@@ -327,7 +327,7 @@ export class Renderer {
         this.setBlendFunc();
 
         // enable depth by default
-        this.setDepth(true);
+        this.setDepthTest(true);
 
         // clear texture and programs cache
         this.cache.clear();
@@ -527,14 +527,14 @@ export class Renderer {
      params:
      @setDepth (boolean): if we should enable or disable the depth test
      ***/
-    setDepth(setDepth) {
-        if(setDepth && !this.state.depthTest) {
-            this.state.depthTest = setDepth;
+    setDepthTest(depthTest) {
+        if(depthTest && !this.state.depthTest) {
+            this.state.depthTest = depthTest;
             // enable depth test
             this.gl.enable(this.gl.DEPTH_TEST);
         }
-        else if(!setDepth && this.state.depthTest) {
-            this.state.depthTest = setDepth;
+        else if(!depthTest && this.state.depthTest) {
+            this.state.depthTest = depthTest;
             // disable depth test
             this.gl.disable(this.gl.DEPTH_TEST);
         }

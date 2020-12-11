@@ -16,12 +16,13 @@ import {throwWarning} from '../utils/utils.js';
  @this: our BasePlane element
  ***/
 
-// TODO raycasting inside mouseToPlaneCoords for Plane objects when transformed
+// avoid reinstancing those during runtime
+const tempVec2a = new Vec2();
+const tempVec2b = new Vec2();
 
 export class DOMMesh extends Mesh {
     constructor(renderer, htmlElement, type = "DOMMesh", {
         // Mesh params
-        shareProgram,
         widthSegments,
         heightSegments,
         renderOrder,
@@ -40,7 +41,6 @@ export class DOMMesh extends Mesh {
         fragmentShaderID = fragmentShaderID || htmlElement && htmlElement.getAttribute("data-fs-id");
 
         super(renderer, type, {
-            shareProgram,
             widthSegments,
             heightSegments,
             renderOrder,
@@ -125,6 +125,7 @@ export class DOMMesh extends Mesh {
             this.setPerspective(this.camera.fov, this.camera.near, this.camera.far);
 
             // apply new position
+            this._setWorldSizes();
             this._applyWorldPositions();
         }
 
@@ -153,10 +154,10 @@ export class DOMMesh extends Mesh {
      ***/
     mouseToPlaneCoords(mouseCoordinates) {
         // remember our ShaderPass objects don't have a scale property
-        const scale = this.scale ? this.scale : new Vec2(1, 1);
+        const scale = this.scale ? this.scale : tempVec2b.set(1, 1);
 
         // we need to adjust our plane document bounding rect to it's webgl scale
-        const scaleAdjustment = new Vec2(
+        const scaleAdjustment = tempVec2a.set(
             (this._boundingRect.document.width - this._boundingRect.document.width * scale.x) / 2,
             (this._boundingRect.document.height - this._boundingRect.document.height * scale.y) / 2,
         );
@@ -170,7 +171,7 @@ export class DOMMesh extends Mesh {
         };
 
         // mouse position conversion from document to plane space
-        return new Vec2(
+        return tempVec2a.set(
             (((mouseCoordinates.x - planeBoundingRect.left) / planeBoundingRect.width) * 2) - 1,
             1 - (((mouseCoordinates.y - planeBoundingRect.top) / planeBoundingRect.height) * 2)
         );

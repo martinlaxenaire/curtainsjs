@@ -24,7 +24,6 @@ import {Texture} from '../core/Texture.js';
 export class ShaderPass extends DOMMesh {
     constructor(renderer, {
         // Mesh params
-        shareProgram,
         widthSegments,
         heightSegments,
         renderOrder,
@@ -50,12 +49,8 @@ export class ShaderPass extends DOMMesh {
         // always cull back face
         cullFace = "back";
 
-        // never share a program between shader passes
-        shareProgram = false;
-
         // use the renderer container as our HTML element to create a DOMMesh object
         super(renderer, renderer.container, "ShaderPass", {
-            shareProgram,
             widthSegments,
             heightSegments,
             renderOrder,

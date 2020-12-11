@@ -97,7 +97,6 @@ window.addEventListener("load", () => {
     const params = {
         vertexShader: vs,
         fragmentShader: fs,
-        //shareProgram: true, // share planes program to improve plane creation speed
         widthSegments: 10,
         heightSegments: 10,
         drawCheckMargins: {
@@ -200,11 +199,6 @@ window.addEventListener("load", () => {
     const shaderPassParams = {
         fragmentShader: shaderPassFs, // we'll be using the lib default vertex shader
         uniforms: {
-            timer: {
-                name: "uTimer",
-                type: "1f",
-                value: 0,
-            },
             displacement: {
                 name: "uDisplacement",
                 type: "1f",
@@ -235,7 +229,6 @@ window.addEventListener("load", () => {
             console.log("shader pass is ready");
         }).onRender(() => {
             // update the uniforms
-            shaderPass.uniforms.timer.value++;
             shaderPass.uniforms.displacement.value = planesDeformations / 60;
         }).onError(() => {
             console.log('shader pass error');

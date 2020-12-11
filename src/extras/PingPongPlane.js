@@ -23,7 +23,6 @@ export class PingPongPlane extends Plane {
         sampler = "uPingPongTexture",
 
         // Plane params
-        shareProgram,
         widthSegments,
         heightSegments,
         renderOrder, // does not have much sense
@@ -50,7 +49,6 @@ export class PingPongPlane extends Plane {
 
         // create our plane
         super(curtains, htmlElement, {
-            shareProgram,
             widthSegments,
             heightSegments,
             renderOrder,
@@ -91,27 +89,55 @@ export class PingPongPlane extends Plane {
         });
 
         // create a texture where we'll draw
-        const texture = this.createTexture({
+        this.createTexture({
             sampler: sampler,
-            fromTexture: this.readPass.getTexture()
         });
+
+        // wait for both render targets textures to be ready and force a copy of the current target texture
+        // even if the swap already began
+        // this seems to fix some erratic bugs
+        let nbPassesReady = 0;
+
+        this.readPass.getTexture().onSourceUploaded(() => {
+            nbPassesReady++;
+            this._checkIfReady(nbPassesReady);
+        });
+
+        this.writePass.getTexture().onSourceUploaded(() => {
+            nbPassesReady++;
+            this._checkIfReady(nbPassesReady);
+        });
+
+        // directly assign a render target
+        this.setRenderTarget(this.readPass);
 
         // override onRender and onAfterRender callbacks
         this._onRenderCallback = () => {
             // update the render target
-            this.writePass && this.setRenderTarget(this.writePass);
+            if(this.readPass && this.writePass && this.textures[0] && this.textures[0]._uploaded) {
+                this.setRenderTarget(this.writePass);
+            }
 
             this._onPingPongRenderCallback && this._onPingPongRenderCallback();
         };
 
         this._onAfterRenderCallback = () => {
             // swap FBOs and update texture
-            if(this.readPass && this.writePass && this.textures[0]) {
+            if(this.readPass && this.writePass && this.textures[0] && this.textures[0]._uploaded) {
                 this._swapPasses();
             }
 
             this._onPingPongAfterRenderCallback && this._onPingPongAfterRenderCallback();
         };
+    }
+
+    /***
+     Copy the current target texture once both render targets textures have been uploaded
+     ***/
+    _checkIfReady(loadedTextures) {
+        if(loadedTextures === 2) {
+            this.textures[0].copy(this.target.getTexture());
+        }
     }
 
     /***
@@ -177,38 +203,21 @@ export class PingPongPlane extends Plane {
      Override the regular remove method to remove the 2 render targets
      ***/
     remove() {
-        // first we want to stop drawing it
-        this._canDraw = false;
-
         this.target = null;
         // force unbinding frame buffer
         this.renderer.bindFrameBuffer(null);
 
-        // manually dispose the frame buffers (do not delete their textures)
-        if(this.writePass._frameBuffer) {
-            this.gl.deleteFramebuffer(this.writePass._frameBuffer);
-            this.writePass._frameBuffer = null;
+        if(this.writePass) {
+            this.writePass.remove();
+            this.writePass = null;
         }
-        if(this.writePass._depthBuffer) {
-            this.gl.deleteRenderbuffer(this.writePass._depthBuffer);
-            this.writePass._depthBuffer = null;
-        }
-        this.renderer.removeRenderTarget(this.writePass);
 
-        if(this.readPass._frameBuffer) {
-            this.gl.deleteFramebuffer(this.readPass._frameBuffer);
-            this.readPass._frameBuffer = null;
+        if(this.readPass) {
+            this.readPass.remove();
+            this.readPass = null;
         }
-        if(this.readPass._depthBuffer) {
-            this.gl.deleteRenderbuffer(this.readPass._depthBuffer);
-            this.readPass._depthBuffer = null;
-        }
-        this.renderer.removeRenderTarget(this.readPass);
 
-        // delete all the webgl bindings
-        this._dispose();
-
-        // finally remove plane
-        this.renderer.removePlane(this);
+        // call original remove method
+        super.remove();
     }
 }

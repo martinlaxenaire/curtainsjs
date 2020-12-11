@@ -98,7 +98,7 @@ export class PlaneTextureLoader extends TextureLoader {
         }
         else if(sourceType === "canvas") {
             const parentAssetArray = this._parent["canvases"];
-            const isInParent = parentAssetArray.find((element) => element.isEqualNode(source));
+            const isInParent = parentAssetArray.find((element) => element.isSameNode(source));
             !isInParent && parentAssetArray.push(source);
         }
     }

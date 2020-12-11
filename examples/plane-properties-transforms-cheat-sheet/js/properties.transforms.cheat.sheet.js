@@ -1,4 +1,4 @@
-import {Curtains, Plane, Vec2, Vec3} from '../../../src/index.mjs';
+import {Curtains, Plane} from '../../../src/index.mjs';
 
 window.addEventListener("load", () => {
 
@@ -162,7 +162,7 @@ window.addEventListener("load", () => {
                         max: 2,
                         step: 0.05,
                         onChange: (value) => {
-                            plane.setTransformOrigin(new Vec3(value, plane.transformOrigin.y, plane.transformOrigin.z));
+                            plane.transformOrigin.x = value;
                             curtains.needRender();
                             updatePlaneBBoxViewer();
                         },
@@ -172,7 +172,7 @@ window.addEventListener("load", () => {
                         max: 2,
                         step: 0.05,
                         onChange: (value) => {
-                            plane.setTransformOrigin(new Vec3(plane.transformOrigin.x, value, plane.transformOrigin.z));
+                            plane.transformOrigin.y = value;
                             curtains.needRender();
                             updatePlaneBBoxViewer();
                         }
@@ -182,7 +182,7 @@ window.addEventListener("load", () => {
                         max: 2,
                         step: 0.05,
                         onChange: (value) => {
-                            plane.setTransformOrigin(new Vec3(plane.transformOrigin.x, plane.transformOrigin.y, value));
+                            plane.transformOrigin.z = value;
                             curtains.needRender();
                             updatePlaneBBoxViewer();
                         }
@@ -195,7 +195,7 @@ window.addEventListener("load", () => {
                         max: curtains.getBoundingRect().width,
                         step: 20,
                         onChange: (value) => {
-                            plane.setRelativeTranslation(new Vec3(value, plane.relativeTranslation.y, plane.relativeTranslation.z));
+                            plane.relativeTranslation.x = value;
                             curtains.needRender();
                             updatePlaneBBoxViewer();
                         }
@@ -205,7 +205,7 @@ window.addEventListener("load", () => {
                         max: curtains.getBoundingRect().height,
                         step: 20,
                         onChange: (value) => {
-                            plane.setRelativeTranslation(new Vec3(plane.relativeTranslation.x, value, plane.relativeTranslation.z));
+                            plane.relativeTranslation.y = value;
                             curtains.needRender();
                             updatePlaneBBoxViewer();
                         }
@@ -215,7 +215,7 @@ window.addEventListener("load", () => {
                         max: 1000,
                         step: 20,
                         onChange: (value) => {
-                            plane.setRelativeTranslation(new Vec3(plane.relativeTranslation.x, plane.relativeTranslation.y, value));
+                            plane.relativeTranslation.z = value;
                             curtains.needRender();
                             updatePlaneBBoxViewer();
                         }
@@ -228,7 +228,7 @@ window.addEventListener("load", () => {
                         max: Math.PI,
                         step: 0.05,
                         onChange: (value) => {
-                            plane.setRotation(new Vec3(value, plane.rotation.y, plane.rotation.z));
+                            plane.rotation.x = value;
                             curtains.needRender();
                             updatePlaneBBoxViewer();
                         }
@@ -238,7 +238,7 @@ window.addEventListener("load", () => {
                         max: Math.PI,
                         step: 0.05,
                         onChange: (value) => {
-                            plane.setRotation(new Vec3(plane.rotation.x, value, plane.rotation.z));
+                            plane.rotation.y = value;
                             curtains.needRender();
                             updatePlaneBBoxViewer();
                         }
@@ -248,7 +248,7 @@ window.addEventListener("load", () => {
                         max: Math.PI,
                         step: 0.05,
                         onChange: (value) => {
-                            plane.setRotation(new Vec3(plane.rotation.x, plane.rotation.y, value));
+                            plane.rotation.z = value;
                             curtains.needRender();
                             updatePlaneBBoxViewer();
                         }
@@ -261,7 +261,7 @@ window.addEventListener("load", () => {
                         max: 2,
                         step: 0.05,
                         onChange: (value) => {
-                            plane.setScale(new Vec2(value, plane.scale.y));
+                            plane.scale.x = value;
                             curtains.needRender();
                             updatePlaneBBoxViewer();
                         }
@@ -271,7 +271,7 @@ window.addEventListener("load", () => {
                         max: 2,
                         step: 0.05,
                         onChange: (value) => {
-                            plane.setScale(new Vec2(plane.scale.x, value));
+                            plane.scale.y = value;
                             curtains.needRender();
                             updatePlaneBBoxViewer();
                         }

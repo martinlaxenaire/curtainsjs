@@ -11,7 +11,7 @@ import {ShaderPass} from "../framebuffers/ShaderPass.js";
  returns :
  @this: our FXAAPass element
  ***/
-export class FXAAPass {
+export class FXAAPass extends ShaderPass {
     constructor(curtains, {
         // Mesh params
         renderOrder,
@@ -85,36 +85,60 @@ export class FXAAPass {
             }
         `;
 
-        const renderer = curtains.renderer || curtains;
-
         const uniforms = {
             resolution: {
                 name: "uResolution",
                 type: "2f",
-                value: [renderer._boundingRect.width, renderer._boundingRect.height],
+                value: [0, 0], // will be updated after having called super()
             }
         };
 
-        this.pass = new ShaderPass(curtains, {
+        super(curtains, {
+            fragmentShader,
+            uniforms,
+
             // Mesh params
             renderOrder,
             depthTest,
-            fragmentShader,
-            uniforms,
             texturesOptions,
             crossOrigin,
-
-            // ShaderPass specific params
             depth,
             clear,
             renderTarget,
         });
 
-        this.pass.onAfterResize(() => {
-            this.pass.uniforms.resolution.value = [
-                this.pass.renderer._boundingRect.width,
-                this.pass.renderer._boundingRect.height
+        // update the resolution uniform
+        this.uniforms.resolution.value = [
+            this.renderer._boundingRect.width,
+            this.renderer._boundingRect.height
+        ];
+
+        // override onAfterResize callback
+        this._onAfterResizeCallback = () => {
+            // update the resolution uniform
+            this.uniforms.resolution.value = [
+                this.renderer._boundingRect.width,
+                this.renderer._boundingRect.height
             ];
-        });
+
+            this._onFXAAPassAfterResizeCallback && this._onFXAAPassAfterResizeCallback();
+        };
+    }
+
+    /***
+     This is called each time the FXAAPass has been resized
+
+     params :
+     @callback (function) : a function to execute
+
+     returns :
+     @this: our FXAAPass to handle chaining
+     ***/
+    onAfterResize(callback) {
+        if(callback) {
+            this._onFXAAPassAfterResizeCallback = callback;
+        }
+
+        return this;
     }
 }

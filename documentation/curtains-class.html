@@ -762,6 +762,41 @@
                                 <p>
                                     Calculates a linear interpolation of the amount specified between the start and end values
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            start
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            value to lerp
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            end
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            end value to use for lerp
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            amount
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            float
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            amount of lerp
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> the linear interpolation result as a float.
                                 </p>
@@ -784,13 +819,40 @@
 
                             <li id="next-render">
                                 <p>
-                                    <strong>nextRender</strong>(callback): <span class="api-item-version">v7.0</span>
+                                    <strong>nextRender</strong>(callback, keep): <span class="api-item-version">v7.0</span><span class="api-item-warning">updated in v8.0</span>
                                 </p>
                                 <p>
                                     A function to execute on the next render call.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            callback to execute
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            keep
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                            bool
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            whether to keep executing the callback (act as a setTimeout vs setInterval). Default to false.
+                                        </span>
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>returns:</strong> the callback queue item. Useful if you need to switch its keep property from true to false once a condition is met (act as a clearInterval).
+                                </p>
                                 <p class="api-item-examples">
-                                    <strong>Examples:</strong> used in <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a> example.
+                                    <strong>Examples:</strong> used in <a href="examples/plane-properties-transforms-cheat-sheet/index.html" title="Plane properties and transformations cheat sheet" target="_blank">Plane properties and transformations cheat sheet</a> and <a href="examples/ajax-navigation-with-plane-removal/index.html" title="AJAX navigation with plane removal" target="_blank">AJAX navigation with plane removal</a> examples.
                                 </p>
                             </li>
 
@@ -922,22 +984,48 @@
 						<ul>
                             <li id="on-after-resize">
                                 <p>
-                                    <strong>onAfterResize</strong>(): <span class="api-item-version">v3.0</span>
+                                    <strong>onAfterResize</strong>(callback): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
                                     This function will be called each time the window has been resized, after everything has been updated.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Curtains object, allowing it to be chainable.
                                 </p>
                             </li>
 							<li id="on-context-lost">
 								<p>
-									<strong>onContextLost</strong>(): <span class="api-item-version">v2.0</span>
+									<strong>onContextLost</strong>(callback): <span class="api-item-version">v2.0</span>
 								</p>
 								<p>
 									This function will be called each time the WebGL context has been lost.
 								</p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
 								<p>
 									<strong>returns:</strong> your Curtains object, allowing it to be chainable.
 								</p>
@@ -947,22 +1035,48 @@
 							</li>
 							<li id="on-context-restored">
 								<p>
-									<strong>onContextRestored</strong>(): <span class="api-item-version">v2.0</span>
+									<strong>onContextRestored</strong>(callback): <span class="api-item-version">v2.0</span>
 								</p>
 								<p>
 									This function will be called each time the WebGL context has been successfully restored.
 								</p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
 								<p>
 									<strong>returns:</strong> your Curtains object, allowing it to be chainable.
 								</p>
 							</li>
 							<li id="on-error">
 								<p>
-									<strong>onError</strong>(): <span class="api-item-version">v1.7</span>
+									<strong>onError</strong>(callback): <span class="api-item-version">v1.7</span>
 								</p>
 								<p>
 									This function will be called if there's an error during the initialisation, or if the WebGL context could not be created.
 								</p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
 								<p>
 									<strong>returns:</strong> your Curtains object, allowing it to be chainable.
 								</p>
@@ -972,11 +1086,24 @@
 							</li>
 							<li id="on-render">
 								<p>
-									<strong>onRender</strong>(): <span class="api-item-version">v2.0</span>
+									<strong>onRender</strong>(callback): <span class="api-item-version">v2.0</span>
 								</p>
 								<p>
 									This function is called once at each request animation frame call. Useful if you need to update stats or tweening engine.
 								</p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
 								<p>
 									<strong>returns:</strong> your Curtains object, allowing it to be chainable.
 								</p>
@@ -986,11 +1113,24 @@
 							</li>
                             <li id="on-scroll">
                                 <p>
-                                    <strong>onScroll</strong>(): <span class="api-item-version">v4.0</span>
+                                    <strong>onScroll</strong>(callback): <span class="api-item-version">v4.0</span>
                                 </p>
                                 <p>
                                     This function is called each time a window scroll event is fired and scroll watching is active.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Curtains object, allowing it to be chainable.
                                 </p>

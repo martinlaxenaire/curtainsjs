@@ -149,9 +149,6 @@
                                             <a href="plane-class.html#scale">scale</a>
                                         </li>
                                         <li>
-                                            <a href="plane-class.html#share-program">shareProgram</a>
-                                        </li>
-                                        <li>
                                             <a href="plane-class.html#target">target</a>
                                         </li>
                                         <li>
@@ -666,17 +663,6 @@
                                     </li>
                                     <li>
                                         <span class="api-item-parameter-label">
-                                            shareProgram
-                                        </span>
-                                        <span class="api-item-parameter-type">
-                                            bool, optional
-                                        </span>
-                                        <span class="api-item-parameter-desc">
-                                            Whether this plane should share its WebGL program with other planes that share the same shaders in order to optimize its creation. Use with caution and see the Plane's <a href="plane-class.html#share-program">shareProgram</a> property to know more. Default to false.
-                                        </span>
-                                    </li>
-                                    <li>
-                                        <span class="api-item-parameter-label">
                                             visible
                                         </span>
                                         <span class="api-item-parameter-type">
@@ -1025,6 +1011,18 @@
                                 <p>
                                     A <a href="vec-3-class.html">Vec3</a> class object containing the additional translation applied to your plane along X, Y and Z axis.
                                 </p>
+                                <p>
+                                    Since <strong>v8.0</strong>, this property is reactive, which means that when you update one of the relativeTranslation vector component, the translation of the plane will automatically be updated:
+                                </p>
+                                <div class="code">
+
+                                    <div class="code-comment">
+                                        // translate our plane by 100px along X axis
+                                    </div>
+                                    <div>
+                                        plane.<span class="code-property">relativeTranslation</span>.<span class="code-property">x</span> = <span class="code-number">100</span><span class="code-var">;</span>
+                                    </div>
+                                </div>
                             </li>
                             <li id="renderer">
                                 <p>
@@ -1052,6 +1050,18 @@
                                 <p>
                                     A <a href="vec-3-class.html">Vec3</a> class object containing the rotation applied to your plane on X, Y and Z axis.
                                 </p>
+                                <p>
+                                    Since <strong>v8.0</strong>, this property is reactive, which means that when you update one of the rotation vector component, the rotation of the plane will automatically be updated:
+                                </p>
+                                <div class="code">
+
+                                    <div class="code-comment">
+                                        // rotate our plane by PI / 2 along X axis
+                                    </div>
+                                    <div>
+                                        plane.<span class="code-property">rotation</span>.<span class="code-property">x</span> = Math.PI / <span class="code-number">2</span><span class="code-var">;</span>
+                                    </div>
+                                </div>
                             </li>
                             <li id="scale">
                                 <p>
@@ -1060,21 +1070,18 @@
                                 <p>
                                     A <a href="vec-3-class.html">Vec3</a> class object containing the scale applied to your plane on X and Y axis (value along Z axis is always equal to 1).
                                 </p>
-                            </li>
-                            <li id="share-program">
                                 <p>
-                                    <strong>shareProgram</strong> (bool): <span class="api-item-version">v5.0</span><span class="api-item-warning">read only</span>
+                                    Since <strong>v8.0</strong>, this property is reactive, which means that when you update one of the scale vector component, the scale of the plane will automatically be updated:
                                 </p>
-                                <p>
-                                    Whether this plane should share its WebGL program with other planes that share the same shaders.
-                                </p>
-                                <p>
-                                    Setting this option to true to a batch of planes will speed up their creations processes by skipping shaders compilation and WebGL program creations.<br />
-                                    However the downside is that their uniforms will have to be updated before each draw calls. You can set this to true upon plane creation if you are dealing with a large number of planes that don't use many uniforms.
-                                </p>
-                                <p>
-                                    It is up to you to test performance both when creating the planes and when rendering them in order to determine if it's worth it.
-                                </p>
+                                <div class="code">
+
+                                    <div class="code-comment">
+                                        // scale our plane by 2 along X axis
+                                    </div>
+                                    <div>
+                                        plane.<span class="code-property">scale</span>.<span class="code-property">x</span> = <span class="code-number">2</span><span class="code-var">;</span>
+                                    </div>
+                                </div>
                             </li>
                             <li id="target">
                                 <p>
@@ -2286,11 +2293,24 @@
                         <ul>
                             <li id="on-after-render">
                                 <p>
-                                    <strong>onAfterRender</strong>(): <span class="api-item-version">v5.0</span>
+                                    <strong>onAfterRender</strong>(callback): <span class="api-item-version">v5.0</span>
                                 </p>
                                 <p>
                                     This function will be called just after your plane has been drawn.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2300,11 +2320,24 @@
                             </li>
                             <li id="on-after-resize">
                                 <p>
-                                    <strong>onAfterResize</strong>(): <span class="api-item-version">v3.0</span>
+                                    <strong>onAfterResize</strong>(callback): <span class="api-item-version">v3.0</span>
                                 </p>
                                 <p>
                                     This function will be called each time your plane has been resized, after everything has been updated.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2314,11 +2347,24 @@
                             </li>
                             <li id="on-error">
                                 <p>
-                                    <strong>onError</strong>(): <span class="api-item-version">v7.0</span>
+                                    <strong>onError</strong>(callback): <span class="api-item-version">v7.0</span>
                                 </p>
                                 <p>
                                     This function is called if there's an error while instancing your plane, usually because the shaders compilation failed.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2328,13 +2374,26 @@
                             </li>
                             <li id="on-leave-view">
                                 <p>
-                                    <strong>onLeaveView</strong>(): <span class="api-item-version">v2.0</span>
+                                    <strong>onLeaveView</strong>(callback): <span class="api-item-version">v2.0</span>
                                 </p>
                                 <p>
                                     This function will be triggered each time a plane leaves the Curtains container viewport area, unless <a href="plane-class.html#always-draw">alwaysDraw property</a> is set to true.<br />
                                     If alwaysDraw property is set to false, an out-of-view plane is not drawn anymore and its textures are no longer updated, but its uniforms are still updated and its onRender callback is still called.<br />
                                     You might want to pause its videos as well if it contains any.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2344,11 +2403,24 @@
                             </li>
                             <li id="on-loading">
                                 <p>
-                                    <strong>onLoading</strong>(texture): <span class="api-item-version">v1.0</span>
+                                    <strong>onLoading</strong>(callback(texture)): <span class="api-item-version">v1.0</span>
                                 </p>
                                 <p>
                                     This function will be fired each time a source element (either an image, a canvas or a video) of the plane has been loaded and is ready to display. You'll have access here to the newly created texture. Useful to handle a loader or manipulate the texture.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute, with the newly created texture passed as parameter.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2358,13 +2430,26 @@
                             </li>
                             <li id="on-ready">
                                 <p>
-                                    <strong>onReady</strong>(): <span class="api-item-version">v1.0</span>
+                                    <strong>onReady</strong>(callback): <span class="api-item-version">v1.0</span>
                                 </p>
                                 <p>
                                     This function will be called once our plane is all set up and ready to be drawn.<br />
                                     If <a href="plane-class.html#autoload-sources">autoloadSources</a> is set to true, il will be called after the images, canvas and videos are loaded. Otherwise it will be called almost right away.<br />
                                     This is where you may want to add event listener to interact with your plane or update its uniforms.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2374,11 +2459,24 @@
                             </li>
                             <li id="on-re-enter-view">
                                 <p>
-                                    <strong>onReEnterView</strong>(): <span class="api-item-version">v2.0</span>
+                                    <strong>onReEnterView</strong>(callback): <span class="api-item-version">v2.0</span>
                                 </p>
                                 <p>
                                     This function will be triggered each time a plane reenters the Curtains container viewport area, unless <a href="plane-class.html#always-draw">alwaysDraw property</a> is set to true.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>
@@ -2388,11 +2486,24 @@
                             </li>
                             <li id="on-render">
                                 <p>
-                                    <strong>onRender</strong>(): <span class="api-item-version">v1.0</span>
+                                    <strong>onRender</strong>(callback): <span class="api-item-version">v1.0</span>
                                 </p>
                                 <p>
                                     This function will be triggered for each plane at each requestAnimationFrame call. Useful to update a time uniform, change plane rotation, scale, etc.
                                 </p>
+                                <ul class="api-item-parameters">
+                                    <li>
+                                        <span class="api-item-parameter-label">
+                                            callback
+                                        </span>
+                                        <span class="api-item-parameter-type">
+                                           function
+                                        </span>
+                                        <span class="api-item-parameter-desc">
+                                            function to execute.
+                                        </span>
+                                    </li>
+                                </ul>
                                 <p>
                                     <strong>returns:</strong> your Plane object, allowing it to be chainable.
                                 </p>

@@ -31,10 +31,34 @@ import {throwWarning} from '../utils/utils.js';
  returns :
  @this: our Plane
  ***/
+
+// avoid reinstancing those during runtime
+const tempScale = new Vec2();
+
+// positions
+const tempWorldPos1 = new Vec3();
+const tempWorldPos2 = new Vec3();
+
+// frustum culling
+const tempCorner1 = new Vec3();
+const tempCorner2 = new Vec3();
+const tempCorner3 = new Vec3();
+const tempCorner4 = new Vec3();
+const tempCulledCorner1 = new Vec3();
+const tempCulledCorner2 = new Vec3();
+
+// raycasting
+const identityQuat = new Quat();
+const defaultTransformOrigin = new Vec3(0.5, 0.5, 0);
+const tempRayDirection = new Vec3();
+const tempNormals = new Vec3();
+const tempRotatedOrigin = new Vec3();
+const tempRaycast = new Vec3();
+const castedMouseCoords = new Vec2();
+
 export class Plane extends DOMMesh {
     constructor(renderer, htmlElement, {
         // Mesh params
-        shareProgram,
         widthSegments,
         heightSegments,
         renderOrder = 0,
@@ -63,7 +87,6 @@ export class Plane extends DOMMesh {
         fov = 50,
     } = {}) {
         super(renderer, htmlElement, "Plane", {
-            shareProgram,
             widthSegments,
             heightSegments,
             renderOrder,
@@ -143,6 +166,7 @@ export class Plane extends DOMMesh {
         // set our initial perspective matrix
         this.setPerspective(this.camera.fov, this.camera.near, this.camera.far);
 
+        this._setWorldSizes();
         this._applyWorldPositions();
 
         // add the plane to our draw stack again as it have been emptied
@@ -180,21 +204,32 @@ export class Plane extends DOMMesh {
      ***/
     _initTransformValues() {
         this.rotation = new Vec3();
+        this.rotation.onChange(() => this._applyRotation());
 
         // initial quaternion
         this.quaternion = new Quat();
 
         // translation in viewport coordinates
         this.relativeTranslation = new Vec3();
+        this.relativeTranslation.onChange(() => this._setTranslation());
 
         // translation in webgl coordinates
         this._translation = new Vec3();
 
         // scale is a Vec3 with z always equal to 1
-        this.scale = new Vec3(1, 1, 1);
+        this.scale = new Vec3(1);
+        this.scale.onChange(() => {
+            this.scale.z = 1;
+            this._applyScale();
+        });
 
         // set plane transform origin to center
         this.transformOrigin = new Vec3(0.5, 0.5, 0);
+        this.transformOrigin.onChange(() => {
+            // set transformation origin relative to world space as well
+            this._setWorldTransformOrigin();
+            this._updateMVMatrix = true;
+        });
     }
 
 
@@ -206,6 +241,9 @@ export class Plane extends DOMMesh {
      ***/
     resetPlane(htmlElement) {
         this._initTransformValues();
+
+        // reset transformation origin relative to world space as well
+        this._setWorldTransformOrigin();
 
         if(htmlElement !== null && !!htmlElement) {
             this.htmlElement = htmlElement;
@@ -239,6 +277,7 @@ export class Plane extends DOMMesh {
         this._initMatrices();
 
         // apply our css positions
+        this._setWorldSizes();
         this._applyWorldPositions();
     }
 
@@ -247,55 +286,31 @@ export class Plane extends DOMMesh {
      Init our plane model view and projection matrices and set their uniform locations
      ***/
     _initMatrices() {
-        // create our model view and projection matrix
+        // create our matrices, they will be set after
+        const matrix = new Mat4();
         this._matrices = {
-            mvMatrix: {
+            world: {
+                // world matrix (global transformation)
+                matrix: matrix,
+            },
+            modelView: {
+                // model view matrix (world matrix multiplied by camera view matrix)
                 name: "uMVMatrix",
-                matrix: new Mat4(),
+                matrix: matrix,
                 location: this.gl.getUniformLocation(this._program.program, "uMVMatrix"),
             },
-            pMatrix: {
+            projection: {
+                // camera projection matrix
                 name: "uPMatrix",
-                matrix: new Mat4(), // will be set after
+                matrix: matrix,
                 location: this.gl.getUniformLocation(this._program.program, "uPMatrix"),
+            },
+            modelViewProjection: {
+                // model view projection matrix (model view matrix multiplied by projection)
+                matrix: matrix,
             }
         };
     }
-
-
-    /***
-     Set our plane dimensions and positions relative to clip spaces
-     ***/
-    _setWorldSizes() {
-        // dimensions and positions of our plane in the document and clip spaces
-        // don't forget translations in webgl space are referring to the center of our plane and canvas
-        const planeCenter = {
-            x: (this._boundingRect.document.width / 2) + this._boundingRect.document.left,
-            y: (this._boundingRect.document.height / 2) + this._boundingRect.document.top,
-        };
-
-        const containerCenter = {
-            x: (this.renderer._boundingRect.width / 2) + this.renderer._boundingRect.left,
-            y: (this.renderer._boundingRect.height / 2) + this.renderer._boundingRect.top,
-        };
-
-        // our plane clip space informations
-        this._boundingRect.world = {
-            width: this._boundingRect.document.width / this.renderer._boundingRect.width,
-            height: this._boundingRect.document.height / this.renderer._boundingRect.height,
-            top: (containerCenter.y - planeCenter.y) / this.renderer._boundingRect.height,
-            left: (planeCenter.x - containerCenter.x) / this.renderer._boundingRect.height,
-        };
-
-        // since our vertices values range from -1 to 1
-        // we need to scale them under the hood relatively to our canvas
-        // to display an accurately sized plane
-        this._boundingRect.world.scale = {
-            x: (this.renderer._boundingRect.width / this.renderer._boundingRect.height) * this._boundingRect.world.width / 2,
-            y: this._boundingRect.world.height / 2,
-        };
-    }
-
 
 
     /*** PLANES PERSPECTIVES, SCALES AND ROTATIONS ***/
@@ -305,10 +320,10 @@ export class Plane extends DOMMesh {
      used internally at each draw call if needed
      ***/
     _setPerspectiveMatrix() {
-        // update our matrix uniform only if we share programs or if we actually have updated its values
-        if(this.shareProgram || !this.shareProgram && this.camera._shouldUpdate) {
+        // update our matrix uniform if we actually have updated its values
+        if(this.camera._shouldUpdate) {
             this.renderer.useProgram(this._program);
-            this.gl.uniformMatrix4fv(this._matrices.pMatrix.location, false, this._matrices.pMatrix.matrix.elements);
+            this.gl.uniformMatrix4fv(this._matrices.projection.location, false, this._matrices.projection.matrix.elements);
         }
 
         // reset camera shouldUpdate flag
@@ -333,7 +348,17 @@ export class Plane extends DOMMesh {
             this.camera.forceUpdate();
         }
 
-        this._matrices.pMatrix.matrix = this.camera.projectionMatrix;
+        this._matrices.projection.matrix = this.camera.projectionMatrix;
+
+        if(this.camera._shouldUpdate) {
+            // we changed the fov, update world sizes and world positions
+            this._setWorldSizes();
+            this._applyWorldPositions();
+
+            // translation along the Z axis is dependant of camera CSSPerspective
+            // we're computing it here because it changes when the fov changes
+            this._translation.z = this.relativeTranslation.z / this.camera.CSSPerspective;
+        }
 
         // if camera settings changed update the mvMatrix as well cause we need to update z translation based on new fov
         this._updateMVMatrix = this.camera._shouldUpdate;
@@ -347,53 +372,119 @@ export class Plane extends DOMMesh {
      ***/
     _setMVMatrix() {
         if(this._updateMVMatrix) {
-            // translation
-            // along the Z axis it's based on the relativeTranslation.z, CSSPerspective and camera Z position values
-            // we're computing it here because it will change when our fov changes
-            this._translation.z = -((1 - (this.relativeTranslation.z / this.camera.CSSPerspective)) / this.camera.position.z);
+            // compose our world transformation matrix from custom origin
+            this._matrices.world.matrix = this._matrices.world.matrix.composeFromOrigin(this._translation, this.quaternion, this.scale, this._boundingRect.world.transformOrigin);
 
-            // get transformation origin relative to world space
-            const origin = new Vec3(
-                (this.transformOrigin.x * 2 - 1) // between -1 and 1
-                * this._boundingRect.world.scale.x,
-                -(this.transformOrigin.y * 2 - 1) // between -1 and 1
-                * this._boundingRect.world.scale.y,
-                this.transformOrigin.z
-            );
+            // we need to scale our planes, from a square to a right sized rectangle
+            // we're doing this after our transformation matrix because this scale transformation always have the same origin
+            this._matrices.world.matrix.scale({
+                x: this._boundingRect.world.width,
+                y: this._boundingRect.world.height,
+                z: 1
+            });
 
-            // get our transformation matrix
-            let transformFromOrigin = new Mat4().composeFromOrigin(this._translation, this.quaternion, this.scale, origin);
 
-            // now scale our plane according to its world bounding rect
-            const scaleMatrix = new Mat4([
-                this._boundingRect.world.scale.x, 0, 0, 0,
-                0, this._boundingRect.world.scale.y, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1
-            ]);
+            // our model view matrix is our world matrix multiplied with our camera view matrix
+            // in our case we're just subtracting the camera Z position to our world matrix
+            this._matrices.modelView.matrix.copy(this._matrices.world.matrix);
+            this._matrices.modelView.matrix.elements[14] -= this.camera.position.z;
 
-            // we've got our model view matrix
-            this._matrices.mvMatrix.matrix = transformFromOrigin.multiply(scaleMatrix);
-
-            // this is the result of our projection matrix * our mv matrix, useful for bounding box calculations and frustum culling
-            this._matrices.mVPMatrix = this._matrices.pMatrix.matrix.multiply(this._matrices.mvMatrix.matrix);
+            // our modelViewProjection matrix, useful for bounding box calculations and frustum culling
+            // this is the result of our projection matrix multiplied by our modelView matrix
+            this._matrices.modelViewProjection.matrix = this._matrices.projection.matrix.multiply(this._matrices.modelView.matrix);
 
             // check if we should draw the plane but only if everything has been initialized
             if(!this.alwaysDraw) {
                 this._shouldDrawCheck();
             }
-        }
 
-        // update our matrix uniform only if we share programs or if we actually have updated its values
-        if(this.shareProgram || !this.shareProgram && this._updateMVMatrix) {
+            // update our matrix uniform
             this.renderer.useProgram(this._program);
-            this.gl.uniformMatrix4fv(this._matrices.mvMatrix.location, false, this._matrices.mvMatrix.matrix.elements);
+            this.gl.uniformMatrix4fv(this._matrices.modelView.location, false, this._matrices.modelView.matrix.elements);
         }
 
         // reset our flag
         this._updateMVMatrix = false;
     }
 
+
+    /*** SCREEN TO WORLD CALCS ***/
+
+    /***
+     Convert our transform origin point from plane space to world space
+     ***/
+    _setWorldTransformOrigin() {
+        // set transformation origin relative to world space as well
+        this._boundingRect.world.transformOrigin = new Vec3(
+            (this.transformOrigin.x * 2 - 1) // between -1 and 1
+            * this._boundingRect.world.width,
+            -(this.transformOrigin.y * 2 - 1) // between -1 and 1
+            * this._boundingRect.world.height,
+            this.transformOrigin.z
+        );
+    }
+
+
+    /***
+     This function takes pixel values along X and Y axis and convert them to world space coordinates
+
+     params :
+     @vector (Vec3): position to convert on X, Y and Z axes
+
+     returns :
+     @worldPosition: plane's position in WebGL space
+     ***/
+    _documentToWorldSpace(vector) {
+        return tempWorldPos2.set(
+            (vector.x * this.renderer.pixelRatio / this.renderer._boundingRect.width) * this._boundingRect.world.ratios.width,
+            -(vector.y * this.renderer.pixelRatio / this.renderer._boundingRect.height) * this._boundingRect.world.ratios.height,
+            vector.z,
+        );
+    }
+
+    /***
+     Set our plane dimensions relative to clip spaces
+     ***/
+    _setWorldSizes() {
+        const ratios = this.camera.getScreenRatiosFromFov();
+
+        // our plane world informations
+        // since our vertices values range from -1 to 1, it is supposed to draw a square
+        // we need to scale them under the hood relatively to our canvas
+        // to display an accurately sized plane
+        this._boundingRect.world = {
+            width: (this._boundingRect.document.width / this.renderer._boundingRect.width) * ratios.width / 2,
+            height: (this._boundingRect.document.height / this.renderer._boundingRect.height) * ratios.height / 2,
+            ratios
+        };
+
+        // set transformation origin relative to world space as well
+        this._setWorldTransformOrigin();
+    }
+
+
+    /***
+     Set our plane position relative to clip spaces
+     ***/
+    _setWorldPosition() {
+        // dimensions and positions of our plane in the document and clip spaces
+        // don't forget translations in webgl space are referring to the center of our plane and canvas
+        const planeCenter = {
+            x: (this._boundingRect.document.width / 2) + this._boundingRect.document.left,
+            y: (this._boundingRect.document.height / 2) + this._boundingRect.document.top,
+        };
+
+        const containerCenter = {
+            x: (this.renderer._boundingRect.width / 2) + this.renderer._boundingRect.left,
+            y: (this.renderer._boundingRect.height / 2) + this.renderer._boundingRect.top,
+        };
+
+        this._boundingRect.world.top = ((containerCenter.y - planeCenter.y) / this.renderer._boundingRect.height) * this._boundingRect.world.ratios.height;
+        this._boundingRect.world.left = ((planeCenter.x - containerCenter.x) / this.renderer._boundingRect.width) * this._boundingRect.world.ratios.width;
+    }
+
+
+    /*** TRANSFORMATIONS ***/
 
     /***
      This will set our plane scale
@@ -411,20 +502,28 @@ export class Plane extends DOMMesh {
             return;
         }
 
-        scale.sanitizeNaNValuesWith(this.scale).max(new Vec2(0.001, 0.001));
+        scale.sanitizeNaNValuesWith(this.scale).max(tempScale.set(0.001, 0.001));
 
         // only apply if values changed
         if(scale.x !== this.scale.x || scale.y !== this.scale.y) {
             this.scale.set(scale.x, scale.y, 1);
 
-            // adjust textures size
-            for(let i = 0; i < this.textures.length; i++) {
-                this.textures[i].resize();
-            }
-
-            // we should update the plane mvMatrix
-            this._updateMVMatrix = true;
+            this._applyScale();
         }
+    }
+
+
+    /***
+     This will apply our scale and tells our model view matrix to update
+     ***/
+    _applyScale() {
+        // adjust textures size
+        for(let i = 0; i < this.textures.length; i++) {
+            this.textures[i].resize();
+        }
+
+        // we should update the plane mvMatrix
+        this._updateMVMatrix = true;
     }
 
 
@@ -450,11 +549,17 @@ export class Plane extends DOMMesh {
         if(!rotation.equals(this.rotation)) {
             this.rotation.copy(rotation);
 
-            this.quaternion.setFromVec3(this.rotation);
-
-            // we should update the plane mvMatrix
-            this._updateMVMatrix = true;
+            this._applyRotation();
         }
+    }
+
+    /***
+     This will apply our rotation and tells our model view matrix to update
+     ***/
+    _applyRotation() {
+        this.quaternion.setFromVec3(this.rotation);
+        // we should update the plane mvMatrix
+        this._updateMVMatrix = true;
     }
 
 
@@ -481,6 +586,9 @@ export class Plane extends DOMMesh {
         if(!origin.equals(this.transformOrigin)) {
             this.transformOrigin.copy(origin);
 
+            // set transformation origin relative to world space as well
+            this._setWorldTransformOrigin();
+
             this._updateMVMatrix = true;
         }
     }
@@ -491,7 +599,7 @@ export class Plane extends DOMMesh {
      ***/
     _setTranslation() {
         // avoid unnecessary calculations if we don't have a users set relative position
-        let worldPosition = new Vec3();
+        let worldPosition = tempWorldPos1.set(0, 0, 0);
         if(!this.relativeTranslation.equals(worldPosition)) {
             worldPosition = this._documentToWorldSpace(this.relativeTranslation);
         }
@@ -499,27 +607,12 @@ export class Plane extends DOMMesh {
         this._translation.set(
             this._boundingRect.world.left + worldPosition.x,
             this._boundingRect.world.top + worldPosition.y,
-            this._translation.z,
+            //this._translation.z,
+            this.relativeTranslation.z / this.camera.CSSPerspective
         );
 
         // we should update the plane mvMatrix
         this._updateMVMatrix = true;
-    }
-
-
-    /***
-     This function takes pixel values along X and Y axis and convert them to clip space coordinates, and then apply the corresponding translation
-     TODO deprecated and will be removed soon
-
-     params :
-     @translation (Vec3): translation to apply on X, Y and Z axes
-     ***/
-    setRelativePosition(translation) {
-        if(!this.renderer.production) {
-            throwWarning(this.type + ": setRelativePosition() is deprecated, use setRelativeTranslation() instead");
-        }
-
-        this.setRelativeTranslation(translation);
     }
 
 
@@ -550,23 +643,48 @@ export class Plane extends DOMMesh {
 
 
     /***
-     This function takes pixel values along X and Y axis and convert them to clip space coordinates
-
-     params :
-     @vector (Vec3): position to convert on X, Y and Z axes
-
-     returns :
-     @worldPosition: plane's position in WebGL space
+     This function uses our plane HTML Element bounding rectangle values and convert them to the world clip space coordinates, and then apply the corresponding translation
      ***/
-    _documentToWorldSpace(vector) {
-        const worldPosition = new Vec3(
-            vector.x / (this.renderer._boundingRect.width / this.renderer.pixelRatio) * (this.renderer._boundingRect.width / this.renderer._boundingRect.height),
-            -vector.y / (this.renderer._boundingRect.height / this.renderer.pixelRatio),
-            vector.z,
-        );
+    _applyWorldPositions() {
+        // set our plane sizes and positions relative to the world clipspace
+        this._setWorldPosition();
 
-        return worldPosition;
-    };
+        // set the translation values
+        this._setTranslation();
+    }
+
+
+    /***
+     This function updates the plane position based on its CSS positions and transformations values.
+     Useful if the HTML element has been moved while the container size has not changed.
+     ***/
+    updatePosition() {
+        // set the new plane sizes and positions relative to document by triggering getBoundingClientRect()
+        this._setDocumentSizes();
+
+        // apply them
+        this._applyWorldPositions();
+    }
+
+
+    /***
+     This function updates the plane position based on the Curtains class scroll manager values
+
+     params:
+     @lastXDelta (float): last scroll value along X axis
+     @lastYDelta (float): last scroll value along Y axis
+     ***/
+    updateScrollPosition(lastXDelta, lastYDelta) {
+        // actually update the plane position only if last X delta or last Y delta is not equal to 0
+        if(lastXDelta || lastYDelta) {
+            // set new positions based on our delta without triggering reflow
+            this._boundingRect.document.top += lastYDelta * this.renderer.pixelRatio;
+            this._boundingRect.document.left += lastXDelta * this.renderer.pixelRatio;
+
+            // apply them
+            this._applyWorldPositions();
+        }
+    }
 
 
     /*** FRUSTUM CULLING (DRAW CHECK) ***/
@@ -613,66 +731,67 @@ export class Plane extends DOMMesh {
      ***/
     _getNearPlaneIntersections(corners, mvpCorners, clippedCorners) {
         // rebuild the clipped corners based on non clipped ones
+        const mVPMatrix = this._matrices.modelViewProjection.matrix;
 
         if(clippedCorners.length === 1) {
             // we will have 5 corners to check so we'll need to push a new entry in our mvpCorners array
             if(clippedCorners[0] === 0) {
                 // top left is culled
                 // get intersection iterating from top right
-                mvpCorners[0] = this._getIntersection(mvpCorners[1], new Vec3(0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[0] = this._getIntersection(mvpCorners[1], tempCulledCorner1.set(0.95, 1, 0).applyMat4(mVPMatrix));
 
                 // get intersection iterating from bottom left
-                mvpCorners.push(this._getIntersection(mvpCorners[3], new Vec3(-1, -0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[3], tempCulledCorner2.set(-1, -0.95, 0).applyMat4(mVPMatrix)));
             }
             else if(clippedCorners[0] === 1) {
                 // top right is culled
                 // get intersection iterating from top left
-                mvpCorners[1] = this._getIntersection(mvpCorners[0], new Vec3(-0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[1] = this._getIntersection(mvpCorners[0], tempCulledCorner1.set(-0.95, 1, 0).applyMat4(mVPMatrix));
 
                 // get intersection iterating from bottom right
-                mvpCorners.push(this._getIntersection(mvpCorners[2], new Vec3(1, -0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[2], tempCulledCorner2.set(1, -0.95, 0).applyMat4(mVPMatrix)));
             }
             else if(clippedCorners[0] === 2) {
                 // bottom right is culled
                 // get intersection iterating from bottom left
-                mvpCorners[2] = this._getIntersection(mvpCorners[3], new Vec3(-0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[2] = this._getIntersection(mvpCorners[3], tempCulledCorner1.set(-0.95, -1, 0).applyMat4(mVPMatrix));
 
                 // get intersection iterating from top right
-                mvpCorners.push(this._getIntersection(mvpCorners[1], new Vec3(1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[1], tempCulledCorner2.set(1, 0.95, 0).applyMat4(mVPMatrix)));
             }
             else if(clippedCorners[0] === 3) {
                 // bottom left is culled
                 // get intersection iterating from bottom right
-                mvpCorners[3] = this._getIntersection(mvpCorners[2], new Vec3(0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[3] = this._getIntersection(mvpCorners[2], tempCulledCorner1.set(0.95, -1, 0).applyMat4(mVPMatrix));
 
                 // get intersection iterating from top left
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3( -1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner2.set( -1, 0.95, 0).applyMat4(mVPMatrix)));
             }
         }
         else if(clippedCorners.length === 2) {
             if(clippedCorners[0] === 0 && clippedCorners[1] === 1) {
                 // top part of the plane is culled by near plane
                 // find intersection using bottom corners
-                mvpCorners[0] = this._getIntersection(mvpCorners[3], new Vec3(-1, -0.95, 0).applyMat4(this._matrices.mVPMatrix));
-                mvpCorners[1] = this._getIntersection(mvpCorners[2], new Vec3( 1, -0.95, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[0] = this._getIntersection(mvpCorners[3], tempCulledCorner1.set(-1, -0.95, 0).applyMat4(mVPMatrix));
+                mvpCorners[1] = this._getIntersection(mvpCorners[2], tempCulledCorner2.set( 1, -0.95, 0).applyMat4(mVPMatrix));
             }
             else if(clippedCorners[0] === 1 && clippedCorners[1] === 2) {
                 // right part of the plane is culled by near plane
                 // find intersection using left corners
-                mvpCorners[1] = this._getIntersection(mvpCorners[0], new Vec3(-0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
-                mvpCorners[2] = this._getIntersection(mvpCorners[3], new Vec3(-0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[1] = this._getIntersection(mvpCorners[0], tempCulledCorner1.set(-0.95, 1, 0).applyMat4(mVPMatrix));
+                mvpCorners[2] = this._getIntersection(mvpCorners[3], tempCulledCorner2.set(-0.95, -1, 0).applyMat4(mVPMatrix));
             }
             else if(clippedCorners[0] === 2 && clippedCorners[1] === 3) {
                 // bottom part of the plane is culled by near plane
                 // find intersection using top corners
-                mvpCorners[2] = this._getIntersection(mvpCorners[1], new Vec3(1, 0.95, 0).applyMat4(this._matrices.mVPMatrix));
-                mvpCorners[3] = this._getIntersection(mvpCorners[0], new Vec3(-1, 0.95, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[2] = this._getIntersection(mvpCorners[1], tempCulledCorner1.set(1, 0.95, 0).applyMat4(mVPMatrix));
+                mvpCorners[3] = this._getIntersection(mvpCorners[0], tempCulledCorner2.set(-1, 0.95, 0).applyMat4(mVPMatrix));
             }
             else if(clippedCorners[0] === 0 && clippedCorners[1] === 3) {
                 // left part of the plane is culled by near plane
                 // find intersection using right corners
-                mvpCorners[0] = this._getIntersection(mvpCorners[1], new Vec3(0.95, 1, 0).applyMat4(this._matrices.mVPMatrix));
-                mvpCorners[3] = this._getIntersection(mvpCorners[2], new Vec3(0.95, -1, 0).applyMat4(this._matrices.mVPMatrix));
+                mvpCorners[0] = this._getIntersection(mvpCorners[1], tempCulledCorner1.set(0.95, 1, 0).applyMat4(mVPMatrix));
+                mvpCorners[3] = this._getIntersection(mvpCorners[2], tempCulledCorner2.set(0.95, -1, 0).applyMat4(mVPMatrix));
             }
         }
         else if(clippedCorners.length === 3) {
@@ -690,27 +809,27 @@ export class Plane extends DOMMesh {
             ];
             if(nonClippedCorner === 0) {
                 // from top left corner to right
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(-0.95, 1, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner1.set(-0.95, 1, 0).applyMat4(mVPMatrix)));
                 // from top left corner to bottom
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(-1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner2.set(-1, 0.95, 0).applyMat4(mVPMatrix)));
             }
             else if(nonClippedCorner === 1) {
                 // from top right corner to left
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(0.95, 1, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner1.set(0.95, 1, 0).applyMat4(mVPMatrix)));
                 // from top right corner to bottom
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(1, 0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner2.set(1, 0.95, 0).applyMat4(mVPMatrix)));
             }
             else if(nonClippedCorner === 2) {
                 // from bottom right corner to left
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(0.95, -1, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner1.set(0.95, -1, 0).applyMat4(mVPMatrix)));
                 // from bottom right corner to top
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(1,-0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner2.set(1,-0.95, 0).applyMat4(mVPMatrix)));
             }
             else if(nonClippedCorner === 3) {
                 // from bottom left corner to right
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(-0.95, -1, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner1.set(-0.95, -1, 0).applyMat4(mVPMatrix)));
                 // from bottom left corner to top
-                mvpCorners.push(this._getIntersection(mvpCorners[0], new Vec3(-1 -0.95, 0).applyMat4(this._matrices.mVPMatrix)));
+                mvpCorners.push(this._getIntersection(mvpCorners[0], tempCulledCorner2.set(-1 -0.95, 0).applyMat4(mVPMatrix)));
             }
         }
         else {
@@ -735,10 +854,10 @@ export class Plane extends DOMMesh {
      ***/
     _getWorldCoords() {
         const corners = [
-            new Vec3(-1, 1, 0), // plane's top left corner
-            new Vec3(1, 1, 0), // plane's top right corner
-            new Vec3(1, -1, 0), // plane's bottom right corner
-            new Vec3(-1, -1, 0), // plane's bottom left corner
+            tempCorner1.set(-1, 1, 0), // plane's top left corner
+            tempCorner2.set(1, 1, 0), // plane's top right corner
+            tempCorner3.set(1, -1, 0), // plane's bottom right corner
+            tempCorner4.set(-1, -1, 0), // plane's bottom left corner
         ];
 
         // corners with model view projection matrix applied
@@ -748,7 +867,7 @@ export class Plane extends DOMMesh {
 
         // we are going to get our plane's four corners relative to our model view projection matrix
         for(let i = 0; i < corners.length; i++) {
-            const mvpCorner = corners[i].applyMat4(this._matrices.mVPMatrix);
+            const mvpCorner = corners[i].applyMat4(this._matrices.modelViewProjection.matrix);
             mvpCorners.push(mvpCorner);
 
             // Z position is > 1 or < -1 means the corner is clipped
@@ -838,7 +957,7 @@ export class Plane extends DOMMesh {
      @boundingRectangle (obj): an object containing our plane WebGL element bounding rectangle (width, height, top, bottom, right and left properties)
      ***/
     getWebGLBoundingRect() {
-        if(!this._matrices.mVPMatrix) {
+        if(!this._matrices.modelViewProjection) {
             return this._boundingRect.document;
         }
         else if(!this._boundingRect.worldToDocument || this.alwaysDraw) {
@@ -907,51 +1026,6 @@ export class Plane extends DOMMesh {
     }
 
 
-    /***
-     This function uses our plane HTML Element bounding rectangle values and convert them to the world clip space coordinates, and then apply the corresponding translation
-     ***/
-    _applyWorldPositions() {
-        // set our plane sizes and positions relative to the world clipspace
-        this._setWorldSizes();
-
-        // set the translation values
-        this._setTranslation();
-    }
-
-
-    /***
-     This function updates the plane position based on its CSS positions and transformations values.
-     Useful if the HTML element has been moved while the container size has not changed.
-     ***/
-    updatePosition() {
-        // set the new plane sizes and positions relative to document by triggering getBoundingClientRect()
-        this._setDocumentSizes();
-
-        // apply them
-        this._applyWorldPositions();
-    }
-
-
-    /***
-     This function updates the plane position based on the Curtains class scroll manager values
-
-     params:
-     @lastXDelta (float): last scroll value along X axis
-     @lastYDelta (float): last scroll value along Y axis
-     ***/
-    updateScrollPosition(lastXDelta, lastYDelta) {
-        // actually update the plane position only if last X delta or last Y delta is not equal to 0
-        if(lastXDelta || lastYDelta) {
-            // set new positions based on our delta without triggering reflow
-            this._boundingRect.document.top += lastYDelta * this.renderer.pixelRatio;
-            this._boundingRect.document.left += lastXDelta * this.renderer.pixelRatio;
-
-            // apply them
-            this._applyWorldPositions();
-        }
-    };
-
-
     /*** DEPTH AND RENDER ORDER ***/
 
     /***
@@ -962,18 +1036,6 @@ export class Plane extends DOMMesh {
      ***/
     enableDepthTest(shouldEnableDepthTest) {
         this._depthTest = shouldEnableDepthTest;
-    }
-
-
-    /***
-     This function puts the plane at the end of the draw stack, allowing it to overlap any other plane
-     TODO deprecated and should be removed!
-     ***/
-    moveToFront() {
-        if(!this.renderer.production) {
-            throwWarning(this.type + ": moveToFront() is deprecated, please use setRenderOrder() instead");
-        }
-        this.setRenderOrder();
     }
 
 
@@ -1058,6 +1120,95 @@ export class Plane extends DOMMesh {
             if((this.alwaysDraw || this._shouldDraw) && this.visible) {
                 this._draw();
             }
+        }
+    }
+
+
+    /*** INTERACTION ***/
+
+    /***
+     This function takes the mouse position relative to the document and returns it relative to our plane
+     It ranges from -1 to 1 on both axis
+
+     params :
+     @mouseCoordinates (Vec2 object): coordinates of the mouse
+
+     returns :
+     @mousePosition (Vec2 object): the mouse position relative to our plane in WebGL space coordinates
+     ***/
+    mouseToPlaneCoords(mouseCoordinates) {
+        identityQuat.setAxisOrder(this.quaternion.axisOrder);
+
+        // plane has no rotation and transform origin is set to default, no need for real raycasting
+        if(identityQuat.equals(this.quaternion) && defaultTransformOrigin.equals(this.transformOrigin)) {
+            return super.mouseToPlaneCoords(mouseCoordinates);
+        }
+        else {
+            // raycasting
+            // based on https://people.cs.clemson.edu/~dhouse/courses/405/notes/raycast.pdf
+
+            // convert mouse position to 3d normalised device coordinates (from [-1, -1] to [1, 1])
+            const worldMouse = {
+                x: 2 * (mouseCoordinates.x / (this.renderer._boundingRect.width / this.renderer.pixelRatio)) - 1,
+                y: 2 * (1 - (mouseCoordinates.y / (this.renderer._boundingRect.height / this.renderer.pixelRatio))) - 1
+            };
+
+            const rayOrigin = this.camera.position.clone();
+
+            // ray direction based on normalised coordinates and plane translation
+            const rayDirection = tempRayDirection.set(
+                worldMouse.x,
+                worldMouse.y,
+                -0.5,
+            );
+
+            // unproject ray direction
+            rayDirection.unproject(this.camera);
+            rayDirection.sub(rayOrigin).normalize();
+
+
+            // plane normals (could also be [0, 0, 1], makes no difference, raycasting lands the same result for both face)
+            const planeNormals = tempNormals.set(0, 0, -1);
+
+            // apply plane quaternion to plane normals
+            planeNormals.applyQuat(this.quaternion).normalize();
+
+            const result = tempRaycast.set(0, 0, 0);
+
+            const denominator = planeNormals.dot(rayDirection);
+
+            if(Math.abs(denominator) >= 0.0001) {
+                const inverseViewMatrix = this._matrices.world.matrix.getInverse().multiply(this.camera.viewMatrix);
+
+                // get the plane's center coordinates
+                // start with our transform origin point
+                const planeOrigin = this._boundingRect.world.transformOrigin.clone().add(this._translation);
+
+                // rotate our transform origin about world center
+                const rotatedOrigin = tempRotatedOrigin.set(
+                    this._translation.x - planeOrigin.x,
+                    this._translation.y - planeOrigin.y,
+                    this._translation.z - planeOrigin.z,
+                );
+                rotatedOrigin.applyQuat(this.quaternion);
+
+                // add it to our plane origin
+                planeOrigin.add(rotatedOrigin);
+
+                // distance from ray origin to plane
+                const distance = planeNormals.dot(planeOrigin.clone().sub(rayOrigin)) / denominator;
+                result.copy(
+                    rayOrigin.add(rayDirection.multiplyScalar(distance))
+                );
+
+                result.applyMat4(inverseViewMatrix);
+            }
+            else {
+                // no intersection!
+                result.set(Infinity, Infinity, Infinity);
+            }
+
+            return castedMouseCoords.set(result.x, result.y);
         }
     }
 

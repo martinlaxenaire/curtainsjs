@@ -14,8 +14,8 @@ import {throwError} from '../utils/utils.js';
  - draw the planes from the first render target created, ordered by their renderOrder then indexes (first added first drawn) order
  - draw the planes from the second render target created, etc.
  - draw the render passes content (depth buffer is cleared after each pass)
- - draw the transparent planes ordered by renderOrder, Z positions, program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
- - draw the opaque planes ordered by renderOrder, program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
+ - draw the transparent planes ordered by renderOrder, Z positions, geometry IDs and then indexes (first added first drawn)
+ - draw the opaque planes ordered by renderOrder, geometry IDs and then indexes (first added first drawn)
  - draw the scene passes content
 
  params:
@@ -153,7 +153,7 @@ export class Scene {
 
 
     /***
-     Rebuilds our regular stack (transparent or opaque) with our plane added, ordered by program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
+     Rebuilds our regular stack (transparent or opaque) with our plane added, geometry IDs and then indexes (first added first drawn)
 
      params:
      @plane (Plane object): plane to add to our stack
@@ -165,25 +165,13 @@ export class Scene {
         // get all planes that have same transparency
         const planeStack = this.renderer.planes.filter(el => el.type !== "PingPongPlane" && !el.target && el._transparent === plane._transparent && el.uuid !== plane.uuid);
 
-        // find first one that match this geometry
+        // find if there's already a plane with the same geometry with a findLastIndex function
         let siblingPlaneIndex = -1;
 
-        if(plane.shareProgram) {
-            // if plane shares its program, find if there's already a plane with that program with a findLastIndex function
-            for(let i = planeStack.length - 1; i >= 0; i--) {
-                if(planeStack[i]._program.id === plane._program.id) {
-                    siblingPlaneIndex = i + 1;
-                    break;
-                }
-            }
-        }
-        else {
-            // else find if there's already a plane with the same geometry with a findLastIndex function
-            for(let i = planeStack.length - 1; i >= 0; i--) {
-                if(planeStack[i]._geometry.definition.id === plane._geometry.definition.id) {
-                    siblingPlaneIndex = i + 1;
-                    break;
-                }
+        for(let i = planeStack.length - 1; i >= 0; i--) {
+            if(planeStack[i]._geometry.definition.id === plane._geometry.definition.id) {
+                siblingPlaneIndex = i + 1;
+                break;
             }
         }
 
@@ -208,10 +196,10 @@ export class Scene {
      This function will add a plane into one of our 4 stacks : pingPong, renderTargets, transparent and opaque
      - pingPong is just a simple array (ordered by order of creation)
      - renderTargets array is ordered by render target creation order, planes renderOrder value and then planes indexes (order of creation)
-     - transparent array is ordered by renderOrder, Z positions, program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
-     - opaque array is ordered by renderOrder, program IDs if programs are shared, geometry IDs and then indexes (first added first drawn)
+     - transparent array is ordered by renderOrder, Z positions, geometry IDs and then indexes (first added first drawn)
+     - opaque array is ordered by renderOrder, geometry IDs and then indexes (first added first drawn)
 
-     This is done to improve speed, notably when using shared programs, and reduce GL calls
+     This is done to improve speed and reduce GL calls
 
      params:
      @plane (Plane object): plane to add to our scene

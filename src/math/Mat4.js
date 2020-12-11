@@ -207,29 +207,77 @@ export class Mat4 {
      ***/
     scale(vector) {
         let a = this.elements;
-        let result = new Mat4();
 
-        result.elements[0] = vector.x * a[0 * 4 + 0];
-        result.elements[1] = vector.x * a[0 * 4 + 1];
-        result.elements[2] = vector.x * a[0 * 4 + 2];
-        result.elements[3] = vector.x * a[0 * 4 + 3];
-        result.elements[4] = vector.y * a[1 * 4 + 0];
-        result.elements[5] = vector.y * a[1 * 4 + 1];
-        result.elements[6] = vector.y * a[1 * 4 + 2];
-        result.elements[7] = vector.y * a[1 * 4 + 3];
-        result.elements[8] = vector.z * a[2 * 4 + 0];
-        result.elements[9] = vector.z * a[2 * 4 + 1];
-        result.elements[10] = vector.z * a[2 * 4 + 2];
-        result.elements[11] = vector.z * a[2 * 4 + 3];
+        a[0] *= vector.x;
+        a[1] *= vector.x;
+        a[2] *= vector.x;
+        a[3] *= vector.x;
+        a[4] *= vector.y;
+        a[5] *= vector.y;
+        a[6] *= vector.y;
+        a[7] *= vector.y;
+        a[8] *= vector.z;
+        a[9] *= vector.z;
+        a[10] *= vector.z;
+        a[11] *= vector.z;
 
-        if(a !== result.elements) {
-            result.elements[12] = a[12];
-            result.elements[13] = a[13];
-            result.elements[14] = a[14];
-            result.elements[15] = a[15];
-        }
+        return this;
+    }
 
-        return result;
+
+    /***
+     Creates a matrix from a quaternion rotation, vector translation and vector scale
+     Equivalent for applying translation, rotation and scale matrices but much faster
+     Source code from: http://glmatrix.net/docs/mat4.js.html
+
+     params :
+     @translation (Vec3 class object): translation vector
+     @quaternion (Quat class object): rotation quaternion
+     @scale (Vec3 class object): scale vector
+
+     returns :
+     @this (Mat4 class object): matrix after transformations
+     ***/
+    compose(translation, quaternion, scale) {
+        let matrix = this.elements;
+
+        // Quaternion math
+        const x = quaternion.elements[0], y = quaternion.elements[1], z = quaternion.elements[2], w = quaternion.elements[3];
+
+        const x2 = x + x;
+        const y2 = y + y;
+        const z2 = z + z;
+        const xx = x * x2;
+        const xy = x * y2;
+        const xz = x * z2;
+        const yy = y * y2;
+        const yz = y * z2;
+        const zz = z * z2;
+        const wx = w * x2;
+        const wy = w * y2;
+        const wz = w * z2;
+        const sx = scale.x;
+        const sy = scale.y;
+        const sz = scale.z;
+
+        matrix[0] = (1 - (yy + zz)) * sx;
+        matrix[1] = (xy + wz) * sx;
+        matrix[2] = (xz - wy) * sx;
+        matrix[3] = 0;
+        matrix[4] = (xy - wz) * sy;
+        matrix[5] = (1 - (xx + zz)) * sy;
+        matrix[6] = (yz + wx) * sy;
+        matrix[7] = 0;
+        matrix[8] = (xz + wy) * sz;
+        matrix[9] = (yz - wx) * sz;
+        matrix[10] = (1 - (xx + yy)) * sz;
+        matrix[11] = 0;
+        matrix[12] = translation.x;
+        matrix[13] = translation.y;
+        matrix[14] = translation.z;
+        matrix[15] = 1;
+
+        return this;
     }
 
 

@@ -30,6 +30,13 @@ import {generateUUID, throwError, throwWarning, isPowerOf2} from '../utils/utils
  returns:
  @this: our newly created Texture class object
  ***/
+
+// avoid reinstancing those during runtime
+const tempVec2 = new Vec2();
+const tempVec3 = new Vec3();
+
+const textureTranslation = new Mat4();
+
 export class Texture {
     constructor(renderer, {
         isFBOTexture = false,
@@ -106,12 +113,14 @@ export class Texture {
 
         // prepare texture sampler
         this._sampler = {
-            isActive: false
+            isActive: false,
+            isTextureBound: false,
         };
 
         // we will always declare a texture matrix
         this._textureMatrix = {
-            matrix: new Mat4()
+            matrix: new Mat4(),
+            isActive: false
         };
 
         // actual size will be set later on
@@ -120,8 +129,11 @@ export class Texture {
             height: 0,
         };
 
-        this.scale = new Vec2(1, 1);
+        this.scale = new Vec2(1);
+        this.scale.onChange(() => this.resize());
+
         this.offset = new Vec2();
+        this.offset.onChange(() => this.resize());
 
         // source loading and GPU uploading flags
         this._loader = loader;
@@ -340,12 +352,6 @@ export class Texture {
             this._setTextureUniforms();
 
             if(this._copyOnInit) {
-                // avoid lazy initialization bugs that affect mostly PingPongPlanes
-                if(!this._copiedFrom._sampler.texture) {
-                    this._sampler.texture = this.gl.createTexture();
-                    this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
-                }
-
                 // wait for original texture to be ready before copying it
                 const waitForOriginalTexture = this.renderer.nextRender.add(() => {
                     if(this._copiedFrom._canDraw) {
@@ -405,8 +411,10 @@ export class Texture {
     _setTextureUniforms() {
         // check if our texture is used in our program shaders
         // if so, get its uniform locations and bind it to our program
-        for(let i = 0; i < this._parent._program.activeTextures.length; i++) {
-            if(this._parent._program.activeTextures[i] === this._sampler.name) {
+        const activeUniforms = this._parent._program.activeUniforms;
+
+        for(let i = 0; i < activeUniforms.textures.length; i++) {
+            if(activeUniforms.textures[i] === this._sampler.name) {
                 // this texture is active
                 this._sampler.isActive = true;
 
@@ -415,8 +423,16 @@ export class Texture {
 
                 // set our texture sampler uniform
                 this._sampler.location = this.gl.getUniformLocation(this._parent._program.program, this._sampler.name);
-                // texture matrix uniform
-                this._textureMatrix.location = this.gl.getUniformLocation(this._parent._program.program, this._textureMatrix.name);
+
+                // set texture matrix uniform location only if active
+                const isTextureMatrixActive = activeUniforms.textureMatrices.find(textureMatrix =>
+                    textureMatrix === this._textureMatrix.name
+                );
+
+                if(isTextureMatrixActive) {
+                    this._textureMatrix.isActive = true;
+                    this._textureMatrix.location = this.gl.getUniformLocation(this._parent._program.program, this._textureMatrix.name);
+                }
 
                 // tell the shader we bound the texture to our indexed texture unit
                 this.gl.uniform1i(this._sampler.location, this.index);
@@ -858,7 +874,7 @@ export class Texture {
             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this._globalParameters.internalFormat, this._globalParameters.format, this._globalParameters.type, this.source);
         }
         else if(this.sourceType === "fbo") {
-            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this._globalParameters.internalFormat, this._size.width, this._size.height, 0, this._globalParameters.format, this._globalParameters.type, this.source);
+            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this._globalParameters.internalFormat, this._size.width, this._size.height, 0, this._globalParameters.format, this._globalParameters.type, this.source || null);
         }
 
         // texture has been uploaded
@@ -894,7 +910,7 @@ export class Texture {
         }
 
         // remember our ShaderPass objects don't have a scale property
-        const scale = this._parent.scale ? new Vec2(this._parent.scale.x, this._parent.scale.y) : new Vec2(1, 1);
+        const scale = this._parent.scale ? tempVec2.set(this._parent.scale.x, this._parent.scale.y) : tempVec2.set(1, 1);
 
         const parentWidth  = this._parent._boundingRect.document.width * scale.x;
         const parentHeight = this._parent._boundingRect.document.height * scale.y;
@@ -942,7 +958,7 @@ export class Texture {
             return;
         }
 
-        scale.sanitizeNaNValuesWith(this.scale).max(new Vec2(0.001, 0.001));
+        scale.sanitizeNaNValuesWith(this.scale).max(tempVec2.set(0.001, 0.001));
 
         if(!scale.equals(this.scale)) {
             this.scale.copy(scale);
@@ -1022,7 +1038,7 @@ export class Texture {
      ***/
     _updateTextureMatrix(sizes) {
         // calculate scale to apply to the matrix
-        let textureScale = new Vec3(
+        const textureScale = tempVec3.set(
             sizes.parentWidth / (sizes.parentWidth - sizes.xOffset),
             sizes.parentHeight / (sizes.parentHeight - sizes.yOffset),
             1
@@ -1032,16 +1048,16 @@ export class Texture {
         textureScale.x /= this.scale.x;
         textureScale.y /= this.scale.y;
 
-        // translate texture to center it
-        const textureTranslation = new Mat4([
-            1, 0, 0, 0,
-            0, 1, 0, 0,
+        // translate and scale texture to center it
+        // equivalent (but faster) than applying those steps to an identity matrix:
+        // translate from [(1 - textureScale.x) / 2 + this.offset.x, (1 - textureScale.y) / 2 + this.offset.y, 0]
+        // then apply a scale of [textureScale.x, textureScale.y, 1]
+        this._textureMatrix.matrix = textureTranslation.setFromArray([
+            textureScale.x, 0, 0, 0,
+            0, textureScale.y, 0, 0,
             0, 0, 1, 0,
             (1 - textureScale.x) / 2 + this.offset.x, (1 - textureScale.y) / 2 + this.offset.y, 0, 1
         ]);
-
-        // scale texture
-        this._textureMatrix.matrix = textureTranslation.scale(textureScale);
 
         // update the texture matrix uniform
         this._updateMatrixUniform();
@@ -1052,8 +1068,10 @@ export class Texture {
      This updates our textures matrix GL uniform
      ***/
     _updateMatrixUniform() {
-        this.renderer.useProgram(this._parent._program);
-        this.gl.uniformMatrix4fv(this._textureMatrix.location, false, this._textureMatrix.matrix.elements);
+        if(this._textureMatrix.isActive) {
+            this.renderer.useProgram(this._parent._program);
+            this.gl.uniformMatrix4fv(this._textureMatrix.location, false, this._textureMatrix.matrix.elements);
+        }
     }
 
 
@@ -1089,6 +1107,14 @@ export class Texture {
 
             // bind the texture to the plane's index unit
             this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
+
+            // check for texture binding until we got one
+            if(!this._sampler.isTextureBound) {
+                this._sampler.isTextureBound = !!this.gl.getParameter(this.gl.TEXTURE_BINDING_2D);
+
+                // force render
+                this._sampler.isTextureBound && this.renderer.needRender();
+            }
         }
     }
 
@@ -1097,6 +1123,10 @@ export class Texture {
      This is called to draw the texture
      ***/
     _draw() {
+        if(!this._sampler.texture) {
+            this._sampler.texture = this.gl.createTexture();
+        }
+
         // only draw if the texture is active (used in the shader)
         if(this._sampler.isActive) {
             // bind the texture
@@ -1119,11 +1149,6 @@ export class Texture {
             }
 
             this._forceUpdate = false;
-
-            // if parent program uniform is shared, update the texture matrix uniform
-            if(this._parent && this._parent.shareProgram) {
-                this._updateMatrixUniform();
-            }
         }
 
         // set parameters that need to be set after texture uploading

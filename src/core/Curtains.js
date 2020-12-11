@@ -3,6 +3,8 @@ import {ScrollManager} from "../utils/ScrollManager.js";
 import {throwWarning, lerp} from "../utils/utils.js";
 
 
+const version = "8.0";
+
 /***
  Here we create our Curtains object
 
@@ -158,7 +160,7 @@ export class Curtains {
         this.container.appendChild(this.canvas);
 
         // watermark
-        console.log("curtains.js - v7.3");
+        console.log("curtains.js - v" + version);
 
         // start rendering
         this._animationFrameID = null;
@@ -247,9 +249,13 @@ export class Curtains {
 
      params:
      @callback (function): callback to execute on next frame
+     @keep (bool): whether to keep calling that callback on each rendering call or not (act as a setInterval). Default to false
+
+     returns:
+     @queueItem: the queue item. Allows to keep a track of it and set its keep property to false when needed
      ***/
-    nextRender(callback) {
-        this.renderer.nextRender.add(callback);
+    nextRender(callback, keep = false) {
+        return this.renderer.nextRender.add(callback, keep);
     }
 
     /***

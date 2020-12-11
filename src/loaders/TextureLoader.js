@@ -15,7 +15,6 @@ import {throwError} from "../utils/utils.js";
  @this: our TextureLoader element
  ***/
 
-// TODO create a new Image or Video element for each of this sources (allows to set crossorigin before src to avois CORS issues)?
 // TODO load assets with a web worker?
 
 export class TextureLoader {
@@ -166,7 +165,13 @@ export class TextureLoader {
     _createImage(source) {
         const image = new Image();
         image.crossOrigin = this.crossOrigin;
-        image.src = source;
+        if(typeof source === "string") {
+            image.src = source;
+        }
+        else {
+            image.src = source.src;
+            image.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+        }
 
         return image;
     }
@@ -182,9 +187,15 @@ export class TextureLoader {
      @video (HTML video element): an HTML video element
      ***/
     _createVideo(source) {
-        const video = document.createElement('video');
+        const video = document.createElement("video");
         video.crossOrigin = this.crossOrigin;
-        video.src = source;
+        if(typeof source === "string") {
+            video.src = source;
+        }
+        else {
+            video.src = source.src;
+            video.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+        }
 
         return video;
     }
@@ -263,34 +274,23 @@ export class TextureLoader {
         successCallback,
         errorCallback
     ) {
-        if(typeof source === "string") {
-            source = this._createImage(source);
-        }
+        const image = this._createImage(source);
 
-        source.crossOrigin = this.crossOrigin;
-
+        let options = Object.assign(textureOptions, {});
         // merge texture options with its parent textures options if needed
         if(this._parent) {
-            textureOptions = Object.assign(textureOptions, this._parent._texturesOptions);
+            options = Object.assign(options, this._parent._texturesOptions);
         }
 
+        options.loader = this;
+        options.sampler = image.getAttribute("data-sampler") || options.sampler;
+
         // check for cache
-        const cachedTexture = this.renderer.cache.getTextureFromSource(source);
+        const cachedTexture = this.renderer.cache.getTextureFromSource(image);
 
         if(cachedTexture) {
-            const texture = new Texture(this.renderer, {
-                loader: this,
-                fromTexture: cachedTexture,
-
-                sampler: textureOptions.sampler || source.getAttribute("data-sampler"),
-                premultiplyAlpha: textureOptions.premultiplyAlpha,
-                anisotropy: textureOptions.anisotropy,
-                generateMipmap: textureOptions.generateMipmap,
-                wrapS: textureOptions.wrapS,
-                wrapT: textureOptions.wrapT,
-                minFilter: textureOptions.minFilter,
-                magFilter: textureOptions.magFilter,
-            });
+            options.fromTexture = cachedTexture;
+            const texture = new Texture(this.renderer, options);
 
             // execute sucess callback directly
             if(successCallback) {
@@ -298,70 +298,38 @@ export class TextureLoader {
             }
 
             // if there's a parent (PlaneTextureLoader) add texture and source to it
-            this._parent && this._addToParent(texture, source, "image");
+            this._parent && this._addToParent(texture, image, "image");
 
             // that's all!
             return;
         }
 
         // create a new texture that will use our image later
-        const texture = new Texture(this.renderer, {
-            loader: this,
-
-            sampler: textureOptions.sampler || source.getAttribute("data-sampler"),
-            premultiplyAlpha: textureOptions.premultiplyAlpha,
-            anisotropy: textureOptions.anisotropy,
-            generateMipmap: textureOptions.generateMipmap,
-            wrapS: textureOptions.wrapS,
-            wrapT: textureOptions.wrapT,
-            minFilter: textureOptions.minFilter,
-            magFilter: textureOptions.magFilter,
-        });
+        const texture = new Texture(this.renderer, options);
 
         // add a new entry in our elements array
-        const el = this._addElement(source, texture, successCallback, errorCallback);
+        const el = this._addElement(image, texture, successCallback, errorCallback);
 
         // If the image is in the cache of the browser,
         // the 'load' event might have been triggered
         // before we registered the event handler.
-        if(source.complete) {
-            this._sourceLoaded(source, texture, successCallback);
+        if(image.complete) {
+            this._sourceLoaded(image, texture, successCallback);
         }
-        else if(source.decode) {
-            source.decode().then(this._sourceLoaded.bind(this, source, texture, successCallback)).catch(() => {
+        else if(image.decode) {
+            image.decode().then(this._sourceLoaded.bind(this, image, texture, successCallback)).catch(() => {
                 // fallback to classic load & error events
-                //source.addEventListener('load', el.load, false);
-                //source.addEventListener('error', el.error, false);
-                this._loadImageAsync(source)
-                    .then(image => {
-                        el.load();
-                    })
-                    .catch(error => {
-                        el.error(error);
-                    });
+                image.addEventListener('load', el.load, false);
+                image.addEventListener('error', el.error, false);
             });
         }
         else {
-            //source.addEventListener('load', el.load, false);
-            //source.addEventListener('error', el.error, false);
-            this._loadImageAsync(source)
-                .then(image => {
-                    el.load();
-                })
-                .catch(error => {
-                    el.error(error);
-                });
+            image.addEventListener('load', el.load, false);
+            image.addEventListener('error', el.error, false);
         }
 
         // if there's a parent (PlaneTextureLoader) add texture and source to it
-        this._parent && this._addToParent(texture, source,  "image");
-    }
-
-    async _loadImageAsync(source) {
-        return await new Promise((resolve, reject) => {
-            source.addEventListener('load', () => resolve(source), false);
-            source.addEventListener('error', reject, false);
-        });
+        this._parent && this._addToParent(texture, image,  "image");
     }
 
 
@@ -402,59 +370,51 @@ export class TextureLoader {
         successCallback,
         errorCallback
     ) {
-        if(typeof source === "string") {
-            source = this._createVideo(source);
-        }
+        const video = this._createVideo(source);
 
-        source.preload = true;
-        source.muted = true;
-        source.loop = true;
-        source.playsinline = true;
+        video.preload = true;
+        video.muted = true;
+        video.loop = true;
+        video.setAttribute("playsinline", "");
 
-        source.crossOrigin = this.crossOrigin;
+        video.crossOrigin = this.crossOrigin;
 
+        let options = Object.assign(textureOptions, {});
         // merge texture options with its parent textures options if needed
         if(this._parent) {
-            textureOptions = Object.assign(textureOptions, this._parent._texturesOptions);
+            options = Object.assign(textureOptions, this._parent._texturesOptions);
         }
 
+        options.loader = this;
+        options.sampler = video.getAttribute("data-sampler") || options.sampler;
+
         // create a new texture that will use our video later
-        const texture = new Texture(this.renderer, {
-            loader: this,
-            sampler: textureOptions.sampler || source.getAttribute("data-sampler"),
-            premultiplyAlpha: textureOptions.premultiplyAlpha,
-            anisotropy: textureOptions.anisotropy,
-            generateMipmap: textureOptions.generateMipmap,
-            wrapS: textureOptions.wrapS,
-            wrapT: textureOptions.wrapT,
-            minFilter: textureOptions.minFilter,
-            magFilter: textureOptions.magFilter,
-        });
+        const texture = new Texture(this.renderer, options);
 
         // add a new entry in our elements array
-        const el = this._addElement(source, texture, successCallback, errorCallback);
+        const el = this._addElement(video, texture, successCallback, errorCallback);
 
         // handle our loaded data event inside the texture and tell our plane when the video is ready to play
-        source.addEventListener('canplaythrough', el.load, false);
-        source.addEventListener('error', el.error, false);
+        video.addEventListener('canplaythrough', el.load, false);
+        video.addEventListener('error', el.error, false);
 
         // If the video is in the cache of the browser,
         // the 'canplaythrough' event might have been triggered
         // before we registered the event handler.
-        if(source.readyState >= source.HAVE_FUTURE_DATA && successCallback) {
-            this._sourceLoaded(source, texture, successCallback);
+        if(video.readyState >= video.HAVE_FUTURE_DATA && successCallback) {
+            this._sourceLoaded(video, texture, successCallback);
         }
 
         // start loading our video
-        source.load();
+        video.load();
 
         // if there's a parent (PlaneTextureLoader) add texture and source to it
-        this._addToParent && this._addToParent(texture, source, "video");
+        this._addToParent && this._addToParent(texture, video, "video");
 
         // if requestVideoFrameCallback exist, use it to update our video texture
         if('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
             el.videoFrameCallback = texture._videoFrameCallback.bind(texture);
-            texture._videoFrameCallbackID = source.requestVideoFrameCallback(el.videoFrameCallback);
+            texture._videoFrameCallbackID = video.requestVideoFrameCallback(el.videoFrameCallback);
         }
     }
 
@@ -494,23 +454,17 @@ export class TextureLoader {
         textureOptions = {},
         successCallback
     ) {
+        let options = Object.assign(textureOptions, {});
         // merge texture options with its parent textures options if needed
         if(this._parent) {
-            textureOptions = Object.assign(textureOptions, this._parent._texturesOptions);
+            options = Object.assign(textureOptions, this._parent._texturesOptions);
         }
 
+        options.loader = this;
+        options.sampler = source.getAttribute("data-sampler") || options.sampler;
+
         // create a new texture that will use our source later
-        const texture = new Texture(this.renderer, {
-            loader: this,
-            sampler: textureOptions.sampler || source.getAttribute("data-sampler"),
-            premultiplyAlpha: textureOptions.premultiplyAlpha,
-            anisotropy: textureOptions.anisotropy,
-            generateMipmap: textureOptions.generateMipmap,
-            wrapS: textureOptions.wrapS,
-            wrapT: textureOptions.wrapT,
-            minFilter: textureOptions.minFilter,
-            magFilter: textureOptions.magFilter,
-        });
+        const texture = new Texture(this.renderer, options);
 
         // add a new entry in our elements array
         this._addElement(source, texture, successCallback, null);

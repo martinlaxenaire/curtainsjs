@@ -179,26 +179,17 @@
                                     </li>
                                 </ul>
                             </li>
-                        </ul>
-
-                        <h2>Renamed methods</h2>
-
-                        <p>
-                            Here's a list of all the methods that have been renamed:
-                        </p>
-
-                        <ul class="main-classes-list">
                             <li>
                                 <h3>Plane class:</h3>
                                 <ul class="internal-classes-list">
                                     <li>
-                                        <strong>planeResize():</strong> has been renamed to <a href="plane-class.html#resize">resize()</a>.<span class="api-item-version">v7.0</span>
+                                        <strong>setRelativePosition():</strong> you should use the <a href="plane-class.html#set-relative-translation">setRelativeTranslation()</a> method instead.<span class="api-item-version">v8.0</span>
                                     </li>
                                     <li>
-                                        <strong>setRelativePosition():</strong> has been renamed to <a href="plane-class.html#set-relative-translation">setRelativeTranslation()</a>.<span class="api-item-version">v7.0</span>
+                                        <strong>moveToFront():</strong> you should use the <a href="plane-class.html#set-render-order">setRenderOrder()</a> method instead.<span class="api-item-version">v8.0</span>
                                     </li>
                                     <li>
-                                        <strong>moveToFront():</strong> has been renamed to <a href="plane-class.html#set-render-order">setRenderOrder()</a>.<span class="api-item-version">v7.3</span>
+                                        <strong>planeResize():</strong> you should use the <a href="plane-class.html#resize">resize()</a> method instead.<span class="api-item-version">v7.3</span>
                                     </li>
                                 </ul>
                             </li>
@@ -206,7 +197,7 @@
                                 <h3>Texture class:</h3>
                                 <ul class="internal-classes-list">
                                     <li>
-                                        <strong>setFromTexture():</strong> has been renamed to <a href="texture-class.html#copy">copy()</a>.<span class="api-item-version">v7.0</span>
+                                        <strong>setFromTexture():</strong> you should use the <a href="texture-class.html#copy">copy()</a> method instead.<span class="api-item-version">v7.3</span>
                                     </li>
                                 </ul>
                             </li>
@@ -225,6 +216,9 @@
                                     <li>
                                         <h4>Creation:</h4>
                                         <ul class="internal-classes-list">
+                                            <li>
+                                                <strong>shareProgram:</strong> this option is deprecated and has been removed.<span class="api-item-version">v8.0</span>
+                                            </li>
                                             <li>
                                                 <strong>uniforms:</strong> value property now accepts <a href="vec-2-class.html">Vec2</a>, <a href="vec-3-class.html">Vec3</a>, <a href="mat-4-class.html">Mat4</a> and <a href="quat-class.html">Quat</a> class objects.<span class="api-item-version">v7.0</span>
                                             </li>
