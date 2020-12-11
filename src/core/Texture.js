@@ -125,8 +125,8 @@ export class Texture {
 
         // actual size will be set later on
         this._size = {
-            width: 0,
-            height: 0,
+            width: 1,
+            height: 1,
         };
 
         this.scale = new Vec2(1);
@@ -156,6 +156,9 @@ export class Texture {
 
         // is it set from an existing texture?
         if(fromTexture) {
+            // always create a gl texture
+            this._sampler.texture = this.gl.createTexture();
+
             this._copyOnInit = true;
             this._copiedFrom = fromTexture;
 
@@ -346,7 +349,7 @@ export class Texture {
             if(this._copyOnInit) {
                 // wait for original texture to be ready before copying it
                 const waitForOriginalTexture = this.renderer.nextRender.add(() => {
-                    if(this._copiedFrom._canDraw) {
+                    if(this._copiedFrom._canDraw && this._copiedFrom._uploaded) {
                         this.copy(this._copiedFrom);
                         waitForOriginalTexture.keep = false;
                     }
@@ -484,7 +487,6 @@ export class Texture {
 
         // keep a track from the original one
         this._copiedFrom = texture;
-
 
         // update its texture matrix if needed and we're good to go!
         if(this._parent && this._parent._program && (!this._canDraw || !this._textureMatrix.matrix)) {
@@ -1123,10 +1125,6 @@ export class Texture {
      This is called to draw the texture
      ***/
     _draw() {
-        if(!this._sampler.texture) {
-            this._sampler.texture = this.gl.createTexture();
-        }
-
         // only draw if the texture is active (used in the shader)
         if(this._sampler.isActive) {
             // bind the texture

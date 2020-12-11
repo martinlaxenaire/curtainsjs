@@ -89,7 +89,7 @@ export class PingPongPlane extends Plane {
         });
 
         // create a texture where we'll draw
-        this.createTexture({
+        const texture = this.createTexture({
             sampler: sampler,
         });
 
@@ -133,10 +133,13 @@ export class PingPongPlane extends Plane {
 
     /***
      Copy the current target texture once both render targets textures have been uploaded
+     Wait for next tick to be sure our texture is correctly initiated
      ***/
     _checkIfReady(loadedTextures) {
         if(loadedTextures === 2) {
-            this.textures[0].copy(this.target.getTexture());
+            this.renderer.nextRender.add(() => {
+                this.textures[0].copy(this.target.getTexture());
+            });
         }
     }
 
