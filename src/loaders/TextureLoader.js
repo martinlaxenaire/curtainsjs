@@ -330,17 +330,38 @@ export class TextureLoader {
         else if(source.decode) {
             source.decode().then(this._sourceLoaded.bind(this, source, texture, successCallback)).catch(() => {
                 // fallback to classic load & error events
-                source.addEventListener('load', el.load, false);
-                source.addEventListener('error', el.error, false);
+                //source.addEventListener('load', el.load, false);
+                //source.addEventListener('error', el.error, false);
+                this._loadImageAsync(source)
+                    .then(image => {
+                        el.load();
+                    })
+                    .catch(error => {
+                        el.error(error);
+                    });
             });
         }
         else {
-            source.addEventListener('load', el.load, false);
-            source.addEventListener('error', el.error, false);
+            //source.addEventListener('load', el.load, false);
+            //source.addEventListener('error', el.error, false);
+            this._loadImageAsync(source)
+                .then(image => {
+                    el.load();
+                })
+                .catch(error => {
+                    el.error(error);
+                });
         }
 
         // if there's a parent (PlaneTextureLoader) add texture and source to it
         this._parent && this._addToParent(texture, source,  "image");
+    }
+
+    async _loadImageAsync(source) {
+        return await new Promise((resolve, reject) => {
+            source.addEventListener('load', () => resolve(source), false);
+            source.addEventListener('error', reject, false);
+        });
     }
 
 

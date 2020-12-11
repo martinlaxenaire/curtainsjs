@@ -196,6 +196,11 @@ export class Scene {
         // sort by indexes
         planeStack.sort((a, b) => a.index - b.index);
 
+        if(plane.shareProgram) {
+            // sort by indexes
+            planeStack.sort((a, b) => a._program.id - b._program.id);
+        }
+
         return planeStack;
     }
 
