@@ -125,8 +125,8 @@ export class Texture {
 
         // actual size will be set later on
         this._size = {
-            width: 0,
-            height: 0,
+            width: 1,
+            height: 1,
         };
 
         this.scale = new Vec2(1);
@@ -156,6 +156,9 @@ export class Texture {
 
         // is it set from an existing texture?
         if(fromTexture) {
+            // always create a gl texture
+            this._sampler.texture = this.gl.createTexture();
+
             this._copyOnInit = true;
             this._copiedFrom = fromTexture;
 
@@ -340,21 +343,13 @@ export class Texture {
                 return;
             }
 
-            if(!this.source) {
-                // set its size based on parent element size for now
-                this._size = {
-                    width: this._parent._boundingRect.document.width,
-                    height: this._parent._boundingRect.document.height,
-                };
-            }
-
             // set uniform
             this._setTextureUniforms();
 
             if(this._copyOnInit) {
                 // wait for original texture to be ready before copying it
                 const waitForOriginalTexture = this.renderer.nextRender.add(() => {
-                    if(this._copiedFrom._canDraw) {
+                    if(this._copiedFrom._canDraw && this._copiedFrom._uploaded) {
                         this.copy(this._copiedFrom);
                         waitForOriginalTexture.keep = false;
                     }
@@ -364,7 +359,14 @@ export class Texture {
                 return;
             }
 
-            if(this._parent.loader) {
+            if(!this.source) {
+                // set its size based on parent element size for now
+                this._size = {
+                    width: this._parent._boundingRect.document.width,
+                    height: this._parent._boundingRect.document.height,
+                };
+            }
+            else if(this._parent.loader) {
                 // we're adding a parent to a texture that already has a source
                 // it means the source should have been loaded before the parent was set
                 // add it to the right asset array if needed
@@ -1123,10 +1125,6 @@ export class Texture {
      This is called to draw the texture
      ***/
     _draw() {
-        if(!this._sampler.texture) {
-            this._sampler.texture = this.gl.createTexture();
-        }
-
         // only draw if the texture is active (used in the shader)
         if(this._sampler.isActive) {
             // bind the texture
