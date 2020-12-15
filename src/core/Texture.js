@@ -115,6 +115,7 @@ export class Texture {
         this._sampler = {
             isActive: false,
             isTextureBound: false,
+            texture: this.gl.createTexture(), // always create a gl texture
         };
 
         // we will always declare a texture matrix
@@ -156,9 +157,6 @@ export class Texture {
 
         // is it set from an existing texture?
         if(fromTexture) {
-            // always create a gl texture
-            this._sampler.texture = this.gl.createTexture();
-
             this._copyOnInit = true;
             this._copiedFrom = fromTexture;
 
@@ -193,9 +191,6 @@ export class Texture {
      Init our texture object
      ***/
     _initTexture() {
-        // create our WebGL texture
-        this._sampler.texture = this.gl.createTexture();
-
         // bind the texture the target (TEXTURE_2D) of the active texture unit.
         this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
 
