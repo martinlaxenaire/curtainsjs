@@ -170,7 +170,7 @@ export class TextureLoader {
         }
         else {
             image.src = source.src;
-            image.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+            source.hasAttribute("data-sampler") && image.setAttribute("data-sampler", source.getAttribute("data-sampler"));
         }
 
         return image;
@@ -194,7 +194,7 @@ export class TextureLoader {
         }
         else {
             video.src = source.src;
-            video.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+            source.hasAttribute("data-sampler") && video.setAttribute("data-sampler", source.getAttribute("data-sampler"));
         }
 
         return video;
