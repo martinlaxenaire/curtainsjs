@@ -1717,7 +1717,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return ScrollManager;
   }();
 
-  var version = "8.0";
+  var version = "8.0.1";
   /***
    Here we create our Curtains object
        params:
@@ -4430,7 +4430,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       this._sampler = {
         isActive: false,
-        isTextureBound: false
+        isTextureBound: false,
+        texture: this.gl.createTexture() // always create a gl texture
+
       }; // we will always declare a texture matrix
 
       this._textureMatrix = {
@@ -4439,8 +4441,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }; // actual size will be set later on
 
       this._size = {
-        width: 0,
-        height: 0
+        width: 1,
+        height: 1
       };
       this.scale = new Vec2(1);
       this.scale.onChange(function () {
@@ -4502,15 +4504,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_initTexture",
       value: function _initTexture() {
-        // create our WebGL texture
-        this._sampler.texture = this.gl.createTexture(); // bind the texture the target (TEXTURE_2D) of the active texture unit.
-
+        // bind the texture the target (TEXTURE_2D) of the active texture unit.
         this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
 
         if (this.sourceType === "empty") {
-          // avoid flipY on non DOM elements
-          this._globalParameters.flipY = false;
-
+          // update global parameters before drawing an empty texture
           this._updateGlobalTexParameters(); // draw a black plane before the real texture's content has been loaded
 
 
@@ -4660,7 +4658,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           if (this._copyOnInit) {
             // wait for original texture to be ready before copying it
             var waitForOriginalTexture = this.renderer.nextRender.add(function () {
-              if (_this13._copiedFrom._canDraw) {
+              if (_this13._copiedFrom._canDraw && _this13._copiedFrom._uploaded) {
                 _this13.copy(_this13._copiedFrom);
 
                 waitForOriginalTexture.keep = false;
@@ -4870,9 +4868,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         // binding the texture is enough
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
-        this.resize(); // force flipY now that we have a source
-
-        this._globalParameters.flipY = true; // upload our webgl texture only if it is an image
+        this.resize(); // upload our webgl texture only if it is an image
         // canvas and video textures will be updated anyway in the rendering loop
         // thanks to the shouldUpdate and _willUpdate flags
 
@@ -4903,16 +4899,16 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (this.renderer.state.unpackAlignment !== this._globalParameters.unpackAlignment) {
           this.gl.pixelStorei(this.gl.UNPACK_ALIGNMENT, this._globalParameters.unpackAlignment);
           this.renderer.state.unpackAlignment = this._globalParameters.unpackAlignment;
-        } // flip Y
+        } // flip Y only if source is not empty
 
 
-        if (this.renderer.state.flipY !== this._globalParameters.flipY) {
+        if (this.renderer.state.flipY !== this._globalParameters.flipY && this.sourceType !== "empty") {
           this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, this._globalParameters.flipY);
           this.renderer.state.flipY = this._globalParameters.flipY;
-        } // premultiplied alpha
+        } // premultiplied alpha only if source is not empty
 
 
-        if (this.renderer.state.premultiplyAlpha !== this._globalParameters.premultiplyAlpha) {
+        if (this.renderer.state.premultiplyAlpha !== this._globalParameters.premultiplyAlpha && this.sourceType !== "empty") {
           this.gl.pixelStorei(this.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this._globalParameters.premultiplyAlpha);
           this.renderer.state.premultiplyAlpha = this._globalParameters.premultiplyAlpha;
         } // floating point textures
@@ -5401,11 +5397,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_draw",
       value: function _draw() {
-        if (!this._sampler.texture) {
-          this._sampler.texture = this.gl.createTexture();
-        } // only draw if the texture is active (used in the shader)
-
-
+        // only draw if the texture is active (used in the shader)
         if (this._sampler.isActive) {
           // bind the texture
           this._bindTexture(this); // if no videoFrameCallback check if the video is actually really playing
@@ -5680,7 +5672,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           image.src = source;
         } else {
           image.src = source.src;
-          image.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+          source.hasAttribute("data-sampler") && image.setAttribute("data-sampler", source.getAttribute("data-sampler"));
         }
 
         return image;
@@ -5703,7 +5695,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           video.src = source;
         } else {
           video.src = source.src;
-          video.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+          source.hasAttribute("data-sampler") && video.setAttribute("data-sampler", source.getAttribute("data-sampler"));
         }
 
         return video;
@@ -9235,7 +9227,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         texturesOptions: texturesOptions
       }); // create a texture where we'll draw
 
-      _this34.createTexture({
+      var texture = _this34.createTexture({
         sampler: sampler
       }); // wait for both render targets textures to be ready and force a copy of the current target texture
       // even if the swap already began
@@ -9282,14 +9274,19 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }
     /***
      Copy the current target texture once both render targets textures have been uploaded
+     Wait for next tick to be sure our texture is correctly initiated
      ***/
 
 
     _createClass(PingPongPlane, [{
       key: "_checkIfReady",
       value: function _checkIfReady(loadedTextures) {
+        var _this35 = this;
+
         if (loadedTextures === 2) {
-          this.textures[0].copy(this.target.getTexture());
+          this.renderer.nextRender.add(function () {
+            _this35.textures[0].copy(_this35.target.getTexture());
+          });
         }
       }
       /***
@@ -9398,7 +9395,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _super6 = _createSuper(FXAAPass);
 
     function FXAAPass(curtains) {
-      var _this35;
+      var _this36;
 
       var _ref15 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
           renderOrder = _ref15.renderOrder,
@@ -9421,7 +9418,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         }
       };
-      _this35 = _super6.call(this, curtains, {
+      _this36 = _super6.call(this, curtains, {
         fragmentShader: fragmentShader,
         uniforms: uniforms,
         // Mesh params
@@ -9434,15 +9431,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         renderTarget: renderTarget
       }); // update the resolution uniform
 
-      _this35.uniforms.resolution.value = [_this35.renderer._boundingRect.width, _this35.renderer._boundingRect.height]; // override onAfterResize callback
+      _this36.uniforms.resolution.value = [_this36.renderer._boundingRect.width, _this36.renderer._boundingRect.height]; // override onAfterResize callback
 
-      _this35._onAfterResizeCallback = function () {
+      _this36._onAfterResizeCallback = function () {
         // update the resolution uniform
-        _this35.uniforms.resolution.value = [_this35.renderer._boundingRect.width, _this35.renderer._boundingRect.height];
-        _this35._onFXAAPassAfterResizeCallback && _this35._onFXAAPassAfterResizeCallback();
+        _this36.uniforms.resolution.value = [_this36.renderer._boundingRect.width, _this36.renderer._boundingRect.height];
+        _this36._onFXAAPassAfterResizeCallback && _this36._onFXAAPassAfterResizeCallback();
       };
 
-      return _this35;
+      return _this36;
     }
     /***
      This is called each time the FXAAPass has been resized

@@ -1,5 +1,24 @@
 # Changelog
 
+## v8.0.1 (??/12/2020)
+
+#### Bug Fixes:
+
+###### core/Texture.js
+
+- wait for original texture to be uploaded before copying it on init.
+- only apply flipY and premultiplyAlpha when texture source is not empty anymore (avoid warnings).
+
+###### extras/PingPongPlane.js
+
+- fixed erratic behavior when sometimes the FBO swapping wasn't working [#67](https://github.com/martinlaxenaire/curtainsjs/issues/67).
+
+###### loaders/TextureLoader.js
+
+- fixed texture sampler name bug when media element has no data-sampler attribute
+
+---
+
 ## v8.0.0 (10/12/2020)
 
 #### Enhancements:

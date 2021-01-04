@@ -3,7 +3,7 @@ import {ScrollManager} from "../utils/ScrollManager.js";
 import {throwWarning, lerp} from "../utils/utils.js";
 
 
-const version = "8.0";
+const version = "8.0.1";
 
 /***
  Here we create our Curtains object
