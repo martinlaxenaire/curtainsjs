@@ -163,17 +163,24 @@ export class TextureLoader {
      @image (HTML image element): an HTML image element
      ***/
     _createImage(source) {
-        const image = new Image();
-        image.crossOrigin = this.crossOrigin;
-        if(typeof source === "string") {
-            image.src = source;
+        // create a new image element if the source specified is a string
+        // or if the crossorigin attribute is not specified (avoid potential CORS errors)
+        if(typeof source === "string" || source.getAttribute("crossOrigin") === null) {
+            const image = new Image();
+            image.crossOrigin = this.crossOrigin;
+            if(typeof source === "string") {
+                image.src = source;
+            }
+            else {
+                image.src = source.src;
+                source.hasAttribute("data-sampler") && image.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+            }
+            return image;
         }
         else {
-            image.src = source.src;
-            source.hasAttribute("data-sampler") && image.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+            // else return source directly to avoid reloading the image
+            return source;
         }
-
-        return image;
     }
 
 
@@ -187,17 +194,24 @@ export class TextureLoader {
      @video (HTML video element): an HTML video element
      ***/
     _createVideo(source) {
-        const video = document.createElement("video");
-        video.crossOrigin = this.crossOrigin;
-        if(typeof source === "string") {
-            video.src = source;
+        // create a new video element if the source specified is a string
+        // or if the crossorigin attribute is not specified (avoid potential CORS errors)
+        if(typeof source === "string" || source.getAttribute("crossOrigin") === null) {
+            const video = document.createElement("video");
+            video.crossOrigin = this.crossOrigin;
+            if(typeof source === "string") {
+                video.src = source;
+            }
+            else {
+                video.src = source.src;
+                source.hasAttribute("data-sampler") && video.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+            }
+            return video;
         }
         else {
-            video.src = source.src;
-            source.hasAttribute("data-sampler") && video.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+            // else return source directly to avoid reloading the video
+            return source;
         }
-
-        return video;
     }
 
 
