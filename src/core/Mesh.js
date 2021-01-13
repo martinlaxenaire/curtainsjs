@@ -457,7 +457,7 @@ export class Mesh {
      Once the video has started playing we set an interval and update a new frame to our our texture at a 30FPS rate
      ***/
     playVideos() {
-        // avoid looping on textures is the plane has been removed
+        // avoid looping on textures if the plane has been removed
         if(this.textures) {
             for (let i = 0; i < this.textures.length; i++) {
                 const texture = this.textures[i];
