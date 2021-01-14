@@ -155,7 +155,7 @@ The library is split into classes modules. Most of them are used internally by t
     <div class="plane">
     
         <!-- image that will be used as texture by our plane -->
-        <img src="path/to/my-image.jpg" />
+        <img src="path/to/my-image.jpg" crossorigin="" />
     </div>
     
 </body>
