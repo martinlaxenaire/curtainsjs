@@ -457,21 +457,18 @@ export class Mesh {
      Once the video has started playing we set an interval and update a new frame to our our texture at a 30FPS rate
      ***/
     playVideos() {
-        // avoid looping on textures if the plane has been removed
-        if(this.textures) {
-            for (let i = 0; i < this.textures.length; i++) {
-                const texture = this.textures[i];
+        for (let i = 0; i < this.textures.length; i++) {
+            const texture = this.textures[i];
 
-                if (texture.sourceType === "video") {
-                    const playPromise = texture.source.play();
+            if (texture.sourceType === "video") {
+                const playPromise = texture.source.play();
 
-                    // In browsers that don’t yet support this functionality,
-                    // playPromise won’t be defined.
-                    if (playPromise !== undefined) {
-                        playPromise.catch((error) => {
-                            if (!this.renderer.production) throwWarning(this.type + ": Could not play the video : ", error);
-                        });
-                    }
+                // In browsers that don’t yet support this functionality,
+                // playPromise won’t be defined.
+                if (playPromise !== undefined) {
+                    playPromise.catch((error) => {
+                        if (!this.renderer.production) throwWarning(this.type + ": Could not play the video : ", error);
+                    });
                 }
             }
         }
@@ -665,7 +662,7 @@ export class Mesh {
             for(let i = 0; i < this.textures.length; i++) {
                 this.textures[i]._dispose();
             }
-            this.textures = null;
+            this.textures = [];
         }
     }
 }
