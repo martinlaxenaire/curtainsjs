@@ -107,8 +107,9 @@ export class CacheManager {
      @source (HTML element) : html image, video or canvas element (only images for now)
      ***/
     getTextureFromSource(source) {
+        const src = typeof source === "string" ? source : source.src;
         // return the texture if the source is the same and if it's not the same texture
-        return this.textures.find(element => element.source && element.source.src === source.src && element.uuid !== element.uuid);
+        return this.textures.find(element => element.source && element.source.src === src);
     }
 
     /***
