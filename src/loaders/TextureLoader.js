@@ -165,7 +165,7 @@ export class TextureLoader {
     _createImage(source) {
         // create a new image element if the source specified is a string
         // or if the crossorigin attribute is not specified (avoid potential CORS errors)
-        if(typeof source === "string" || source.getAttribute("crossOrigin") === null) {
+        if(typeof source === "string" || !source.hasAttribute("crossOrigin")) {
             const image = new Image();
             image.crossOrigin = this.crossOrigin;
             if(typeof source === "string") {
@@ -288,21 +288,20 @@ export class TextureLoader {
         successCallback,
         errorCallback
     ) {
-        const image = this._createImage(source);
+        // check for cache
+        const cachedTexture = this.renderer.cache.getTextureFromSource(source);
 
-        let options = Object.assign(textureOptions, {});
+        let options = Object.assign({}, textureOptions);
         // merge texture options with its parent textures options if needed
         if(this._parent) {
             options = Object.assign(options, this._parent._texturesOptions);
         }
 
         options.loader = this;
-        options.sampler = image.getAttribute("data-sampler") || options.sampler;
-
-        // check for cache
-        const cachedTexture = this.renderer.cache.getTextureFromSource(image);
 
         if(cachedTexture) {
+            options.sampler = typeof source !== "string" && source.hasAttribute("data-sampler") ? source.getAttribute("data-sampler") : options.sampler;
+
             options.fromTexture = cachedTexture;
             const texture = new Texture(this.renderer, options);
 
@@ -312,11 +311,15 @@ export class TextureLoader {
             }
 
             // if there's a parent (PlaneTextureLoader) add texture and source to it
-            this._parent && this._addToParent(texture, image, "image");
+            this._parent && this._addToParent(texture, cachedTexture.source, "image");
 
             // that's all!
             return;
         }
+
+        const image = this._createImage(source);
+
+        options.sampler = image.hasAttribute("data-sampler") ? image.getAttribute("data-sampler") : options.sampler;
 
         // create a new texture that will use our image later
         const texture = new Texture(this.renderer, options);
@@ -393,14 +396,14 @@ export class TextureLoader {
 
         video.crossOrigin = this.crossOrigin;
 
-        let options = Object.assign(textureOptions, {});
+        let options = Object.assign({}, textureOptions);
         // merge texture options with its parent textures options if needed
         if(this._parent) {
             options = Object.assign(textureOptions, this._parent._texturesOptions);
         }
 
         options.loader = this;
-        options.sampler = video.getAttribute("data-sampler") || options.sampler;
+        options.sampler = video.hasAttribute("data-sampler") ? video.getAttribute("data-sampler") : options.sampler;
 
         // create a new texture that will use our video later
         const texture = new Texture(this.renderer, options);
@@ -468,14 +471,14 @@ export class TextureLoader {
         textureOptions = {},
         successCallback
     ) {
-        let options = Object.assign(textureOptions, {});
+        let options = Object.assign({}, textureOptions);
         // merge texture options with its parent textures options if needed
         if(this._parent) {
             options = Object.assign(textureOptions, this._parent._texturesOptions);
         }
 
         options.loader = this;
-        options.sampler = source.getAttribute("data-sampler") || options.sampler;
+        options.sampler = source.hasAttribute("data-sampler") ? source.getAttribute("data-sampler") : options.sampler;
 
         // create a new texture that will use our source later
         const texture = new Texture(this.renderer, options);
