@@ -513,7 +513,7 @@ export class Texture {
         const cachedTexture = this.renderer.cache.getTextureFromSource(source);
 
         // if we have a cached texture, just copy it
-        if(cachedTexture) {
+        if(cachedTexture && cachedTexture.uuid !== this.uuid) {
             // force texture uploaded callback
             if(!this._uploaded) {
                 // GPU uploading callback
