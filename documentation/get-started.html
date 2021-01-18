@@ -1592,6 +1592,9 @@
 							<h2>Performance tips</h2>
 							<ul>
                                 <li>
+                                    If you experience a small sync latency between planes and DOM elements on mobile while scrolling, here's a <a href="https://github.com/martinlaxenaire/curtainsjs/discussions/75" title="Solve mobile scroll sync latency issue between DOM and WebGL elements" target="_blank" rel="noopener noreferrer">GitHub discussion</a> explaining how to solve it.
+                                </li>
+                                <li>
                                     Try to use only one global request animation frame loop and one scroll event listener in your application. You could either hook to the library <a href="curtains-class.html#on-render">onRender()</a> and <a href="curtains-class.html#on-scroll">onScroll()</a> events or handle this by yourself by not instancing them in the first place thanks to the init params.
                                 </li>
                                 <li>
