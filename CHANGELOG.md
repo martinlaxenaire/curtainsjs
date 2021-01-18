@@ -1,5 +1,29 @@
 # Changelog
 
+## v8.0.2 (01/18/2020)
+
+#### Bug Fixes:
+
+###### core/Mesh.js
+
+- fixed textures array looping errors if the plane has been removed beforehand.
+
+###### loaders/TextureLoader.js
+
+- avoid loading the source twice if its crossorigin attribute has been specified.
+- fixed texture sampler name bug when media element has no data-sampler attribute
+- try to load image from cache before anything else
+
+###### utils/CacheManager.js
+
+- fixed getTextureFromSource()
+
+###### examples
+
+- updated the examples to add crossorigin attributes.
+
+---
+
 ## v8.0.1 (01/04/2020)
 
 #### Bug Fixes:
@@ -12,10 +36,6 @@
 ###### extras/PingPongPlane.js
 
 - fixed erratic behavior when sometimes the FBO swapping wasn't working [#67](https://github.com/martinlaxenaire/curtainsjs/issues/67).
-
-###### loaders/TextureLoader.js
-
-- fixed texture sampler name bug when media element has no data-sampler attribute
 
 ---
 

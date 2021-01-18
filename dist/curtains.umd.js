@@ -713,9 +713,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "getTextureFromSource",
       value: function getTextureFromSource(source) {
-        // return the texture if the source is the same and if it's not the same texture
+        var src = typeof source === "string" ? source : source.src; // return the texture if the source is the same and if it's not the same texture
+
         return this.textures.find(function (element) {
-          return element.source && element.source.src === source.src && element.uuid !== element.uuid;
+          return element.source && element.source.src === src;
         });
       }
       /***
@@ -1717,7 +1718,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return ScrollManager;
   }();
 
-  var version = "8.0.1";
+  var version = "8.0.2";
   /***
    Here we create our Curtains object
        params:
@@ -4823,7 +4824,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         var cachedTexture = this.renderer.cache.getTextureFromSource(source); // if we have a cached texture, just copy it
 
-        if (cachedTexture) {
+        if (cachedTexture && cachedTexture.uuid !== this.uuid) {
           // force texture uploaded callback
           if (!this._uploaded) {
             // GPU uploading callback
@@ -5665,17 +5666,24 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_createImage",
       value: function _createImage(source) {
-        var image = new Image();
-        image.crossOrigin = this.crossOrigin;
+        // create a new image element if the source specified is a string
+        // or if the crossorigin attribute is not specified (avoid potential CORS errors)
+        if (typeof source === "string" || !source.hasAttribute("crossOrigin")) {
+          var image = new Image();
+          image.crossOrigin = this.crossOrigin;
 
-        if (typeof source === "string") {
-          image.src = source;
+          if (typeof source === "string") {
+            image.src = source;
+          } else {
+            image.src = source.src;
+            source.hasAttribute("data-sampler") && image.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+          }
+
+          return image;
         } else {
-          image.src = source.src;
-          source.hasAttribute("data-sampler") && image.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+          // else return source directly to avoid reloading the image
+          return source;
         }
-
-        return image;
       }
       /***
        Create a video HTML element based on a video source url
@@ -5688,17 +5696,24 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_createVideo",
       value: function _createVideo(source) {
-        var video = document.createElement("video");
-        video.crossOrigin = this.crossOrigin;
+        // create a new video element if the source specified is a string
+        // or if the crossorigin attribute is not specified (avoid potential CORS errors)
+        if (typeof source === "string" || source.getAttribute("crossOrigin") === null) {
+          var video = document.createElement("video");
+          video.crossOrigin = this.crossOrigin;
 
-        if (typeof source === "string") {
-          video.src = source;
+          if (typeof source === "string") {
+            video.src = source;
+          } else {
+            video.src = source.src;
+            source.hasAttribute("data-sampler") && video.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+          }
+
+          return video;
         } else {
-          video.src = source.src;
-          source.hasAttribute("data-sampler") && video.setAttribute("data-sampler", source.getAttribute("data-sampler"));
+          // else return source directly to avoid reloading the video
+          return source;
         }
-
-        return video;
       }
       /***
        This method loads one source
@@ -5767,21 +5782,18 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
         var errorCallback = arguments.length > 3 ? arguments[3] : undefined;
-
-        var image = this._createImage(source);
-
-        var options = Object.assign(textureOptions, {}); // merge texture options with its parent textures options if needed
+        // check for cache
+        var cachedTexture = this.renderer.cache.getTextureFromSource(source);
+        var options = Object.assign({}, textureOptions); // merge texture options with its parent textures options if needed
 
         if (this._parent) {
           options = Object.assign(options, this._parent._texturesOptions);
         }
 
         options.loader = this;
-        options.sampler = image.getAttribute("data-sampler") || options.sampler; // check for cache
-
-        var cachedTexture = this.renderer.cache.getTextureFromSource(image);
 
         if (cachedTexture) {
+          options.sampler = typeof source !== "string" && source.hasAttribute("data-sampler") ? source.getAttribute("data-sampler") : options.sampler;
           options.fromTexture = cachedTexture;
 
           var _texture = new Texture(this.renderer, options); // execute sucess callback directly
@@ -5792,11 +5804,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           } // if there's a parent (PlaneTextureLoader) add texture and source to it
 
 
-          this._parent && this._addToParent(_texture, image, "image"); // that's all!
+          this._parent && this._addToParent(_texture, cachedTexture.source, "image"); // that's all!
 
           return;
-        } // create a new texture that will use our image later
+        }
 
+        var image = this._createImage(source);
+
+        options.sampler = image.hasAttribute("data-sampler") ? image.getAttribute("data-sampler") : options.sampler; // create a new texture that will use our image later
 
         var texture = new Texture(this.renderer, options); // add a new entry in our elements array
 
@@ -5861,14 +5876,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         video.loop = true;
         video.setAttribute("playsinline", "");
         video.crossOrigin = this.crossOrigin;
-        var options = Object.assign(textureOptions, {}); // merge texture options with its parent textures options if needed
+        var options = Object.assign({}, textureOptions); // merge texture options with its parent textures options if needed
 
         if (this._parent) {
           options = Object.assign(textureOptions, this._parent._texturesOptions);
         }
 
         options.loader = this;
-        options.sampler = video.getAttribute("data-sampler") || options.sampler; // create a new texture that will use our video later
+        options.sampler = video.hasAttribute("data-sampler") ? video.getAttribute("data-sampler") : options.sampler; // create a new texture that will use our video later
 
         var texture = new Texture(this.renderer, options); // add a new entry in our elements array
 
@@ -5924,14 +5939,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function loadCanvas(source) {
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
-        var options = Object.assign(textureOptions, {}); // merge texture options with its parent textures options if needed
+        var options = Object.assign({}, textureOptions); // merge texture options with its parent textures options if needed
 
         if (this._parent) {
           options = Object.assign(textureOptions, this._parent._texturesOptions);
         }
 
         options.loader = this;
-        options.sampler = source.getAttribute("data-sampler") || options.sampler; // create a new texture that will use our source later
+        options.sampler = source.hasAttribute("data-sampler") ? source.getAttribute("data-sampler") : options.sampler; // create a new texture that will use our source later
 
         var texture = new Texture(this.renderer, options); // add a new entry in our elements array
 
@@ -6833,7 +6848,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             this.textures[i]._dispose();
           }
 
-          this.textures = null;
+          this.textures = [];
         }
       }
     }]);
