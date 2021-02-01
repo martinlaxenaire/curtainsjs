@@ -1,5 +1,25 @@
 # Changelog
 
+## v8.0.3 (02/01/2020)
+
+#### Bug Fixes:
+
+###### loaders/TextureLoader.js
+
+- fixed parent onReady callback not fired when texture is using a cached source.
+
+###### examples
+
+- Fixed GSAP and Locomotive scroll examples.
+
+#### Enhancements:
+
+###### examples
+
+- Updated GSAP version to remove security issue.
+
+---
+
 ## v8.0.2 (01/18/2020)
 
 #### Bug Fixes:

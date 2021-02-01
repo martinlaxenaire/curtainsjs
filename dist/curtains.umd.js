@@ -1718,7 +1718,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return ScrollManager;
   }();
 
-  var version = "8.0.2";
+  var version = "8.0.3";
   /***
    Here we create our Curtains object
        params:
@@ -5796,12 +5796,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           options.sampler = typeof source !== "string" && source.hasAttribute("data-sampler") ? source.getAttribute("data-sampler") : options.sampler;
           options.fromTexture = cachedTexture;
 
-          var _texture = new Texture(this.renderer, options); // execute sucess callback directly
+          var _texture = new Texture(this.renderer, options); // execute source loaded callback directly
 
 
-          if (successCallback) {
-            successCallback(_texture);
-          } // if there's a parent (PlaneTextureLoader) add texture and source to it
+          this._sourceLoaded(cachedTexture.source, _texture, successCallback); // if there's a parent (PlaneTextureLoader) add texture and source to it
 
 
           this._parent && this._addToParent(_texture, cachedTexture.source, "image"); // that's all!
