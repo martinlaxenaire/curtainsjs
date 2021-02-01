@@ -305,10 +305,8 @@ export class TextureLoader {
             options.fromTexture = cachedTexture;
             const texture = new Texture(this.renderer, options);
 
-            // execute sucess callback directly
-            if(successCallback) {
-                successCallback(texture);
-            }
+            // execute source loaded callback directly
+            this._sourceLoaded(cachedTexture.source, texture, successCallback);
 
             // if there's a parent (PlaneTextureLoader) add texture and source to it
             this._parent && this._addToParent(texture, cachedTexture.source, "image");
