@@ -332,7 +332,7 @@ export class Mesh {
      @errorCallback (function): callback to execute on source loading error
      ***/
     loadSource(source, textureOptions = {}, successCallback, errorCallback) {
-        this.loader.loadSource(source, Object.assign(this._texturesOptions, textureOptions), (texture) => {
+        this.loader.loadSource(source, Object.assign(textureOptions, this._texturesOptions), (texture) => {
             successCallback && successCallback(texture);
         }, (source, error) => {
             if(!this.renderer.production) {
@@ -354,7 +354,7 @@ export class Mesh {
      @errorCallback (function): callback to execute on source loading error
      ***/
     loadImage(source, textureOptions = {}, successCallback, errorCallback) {
-        this.loader.loadImage(source, Object.assign(this._texturesOptions, textureOptions), (texture) => {
+        this.loader.loadImage(source, Object.assign(textureOptions, this._texturesOptions), (texture) => {
             successCallback && successCallback(texture);
         }, (source, error) => {
             if(!this.renderer.production) {
@@ -376,7 +376,7 @@ export class Mesh {
      @errorCallback (function): callback to execute on source loading error
      ***/
     loadVideo(source, textureOptions = {}, successCallback, errorCallback) {
-        this.loader.loadVideo(source, Object.assign(this._texturesOptions, textureOptions), (texture) => {
+        this.loader.loadVideo(source, Object.assign(textureOptions, this._texturesOptions), (texture) => {
             successCallback && successCallback(texture);
         }, (source, error) => {
             if(!this.renderer.production) {
@@ -397,7 +397,7 @@ export class Mesh {
      @successCallback (function): callback to execute on source loading success
      ***/
     loadCanvas(source, textureOptions = {}, successCallback) {
-        this.loader.loadCanvas(source, Object.assign(this._texturesOptions, textureOptions), (texture) => {
+        this.loader.loadCanvas(source, Object.assign(textureOptions, this._texturesOptions), (texture) => {
             successCallback && successCallback(texture);
         });
     }
