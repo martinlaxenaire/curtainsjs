@@ -248,7 +248,7 @@ export class Plane extends DOMMesh {
         if(htmlElement !== null && !!htmlElement) {
             this.htmlElement = htmlElement;
 
-            this.updatePosition();
+            this.resize();
         }
         else if(!htmlElement && !this.renderer.production) {
             throwWarning(this.type + ": You are trying to reset a plane with a HTML element that does not exist. The old HTML element will be kept instead.");
