@@ -43,7 +43,7 @@ export class Mesh {
         heightSegments = 1,
 
         // render order
-        renderOrder,
+        renderOrder = 0,
 
         // drawing
         depthTest = true,
@@ -504,7 +504,8 @@ export class Mesh {
             // draw (bind and maybe update) our texture
             this.textures[i]._draw();
 
-            if(!this.textures[i]._sampler.isTextureBound) {
+            // do not draw mesh if one of the active texture is not bound yet
+            if(this.textures[i]._sampler.isActive && !this.textures[i]._sampler.isTextureBound) {
                 return;
             }
         }
