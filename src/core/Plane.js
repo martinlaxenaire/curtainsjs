@@ -61,7 +61,7 @@ export class Plane extends DOMMesh {
         // Mesh params
         widthSegments,
         heightSegments,
-        renderOrder = 0,
+        renderOrder,
         depthTest,
         cullFace,
         uniforms,
