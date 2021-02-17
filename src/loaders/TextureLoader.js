@@ -107,11 +107,11 @@ export class TextureLoader {
 
                 this.renderer.nextRender.add(() => this._parent._onLoadingCallback && this._parent._onLoadingCallback(texture));
             }
-        }
 
-        // execute callback
-        if(callback) {
-            callback(texture);
+            // execute callback
+            if(callback) {
+                callback(texture);
+            }
         }
     }
 
