@@ -1718,7 +1718,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return ScrollManager;
   }();
 
-  var version = "8.0.3";
+  var version = "8.0.4";
   /***
    Here we create our Curtains object
        params:
@@ -4404,7 +4404,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         // global gl context parameters
         unpackAlignment: 4,
         flipY: !isFBOTexture,
-        premultiplyAlpha: premultiplyAlpha,
+        premultiplyAlpha: false,
+        shouldPremultiplyAlpha: premultiplyAlpha,
         // texImage2D properties
         floatingPoint: floatingPoint,
         type: this.gl.UNSIGNED_BYTE,
@@ -4509,7 +4510,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
 
         if (this.sourceType === "empty") {
-          // update global parameters before drawing an empty texture
+          // avoid flipY on non DOM elements
+          this._globalParameters.flipY = false; // update global parameters before drawing an empty texture
+
           this._updateGlobalTexParameters(); // draw a black plane before the real texture's content has been loaded
 
 
@@ -4869,7 +4872,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         // binding the texture is enough
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
-        this.resize(); // upload our webgl texture only if it is an image
+        this.resize();
+        this._globalParameters.flipY = true;
+        this._globalParameters.premultiplyAlpha = this._globalParameters.shouldPremultiplyAlpha; // upload our webgl texture only if it is an image
         // canvas and video textures will be updated anyway in the rendering loop
         // thanks to the shouldUpdate and _willUpdate flags
 
@@ -4903,13 +4908,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } // flip Y only if source is not empty
 
 
-        if (this.renderer.state.flipY !== this._globalParameters.flipY && this.sourceType !== "empty") {
+        if (this.renderer.state.flipY !== this._globalParameters.flipY) {
           this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, this._globalParameters.flipY);
           this.renderer.state.flipY = this._globalParameters.flipY;
         } // premultiplied alpha only if source is not empty
 
 
-        if (this.renderer.state.premultiplyAlpha !== this._globalParameters.premultiplyAlpha && this.sourceType !== "empty") {
+        if (this.renderer.state.premultiplyAlpha !== this._globalParameters.premultiplyAlpha) {
           this.gl.pixelStorei(this.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this._globalParameters.premultiplyAlpha);
           this.renderer.state.premultiplyAlpha = this._globalParameters.premultiplyAlpha;
         } // floating point textures
@@ -5615,12 +5620,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             this.renderer.nextRender.add(function () {
               return _this18._parent._onLoadingCallback && _this18._parent._onLoadingCallback(texture);
             });
+          } // execute callback
+
+
+          if (callback) {
+            callback(texture);
           }
-        } // execute callback
-
-
-        if (callback) {
-          callback(texture);
         }
       }
       /***
@@ -6202,7 +6207,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           widthSegments = _ref8$widthSegments === void 0 ? 1 : _ref8$widthSegments,
           _ref8$heightSegments = _ref8.heightSegments,
           heightSegments = _ref8$heightSegments === void 0 ? 1 : _ref8$heightSegments,
-          renderOrder = _ref8.renderOrder,
+          _ref8$renderOrder = _ref8.renderOrder,
+          renderOrder = _ref8$renderOrder === void 0 ? 0 : _ref8$renderOrder,
           _ref8$depthTest = _ref8.depthTest,
           depthTest = _ref8$depthTest === void 0 ? true : _ref8$depthTest,
           _ref8$cullFace = _ref8.cullFace,
@@ -6494,7 +6500,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
         var errorCallback = arguments.length > 3 ? arguments[3] : undefined;
-        this.loader.loadSource(source, Object.assign(this._texturesOptions, textureOptions), function (texture) {
+        this.loader.loadSource(source, Object.assign(textureOptions, this._texturesOptions), function (texture) {
           successCallback && successCallback(texture);
         }, function (source, error) {
           if (!_this24.renderer.production) {
@@ -6521,7 +6527,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
         var errorCallback = arguments.length > 3 ? arguments[3] : undefined;
-        this.loader.loadImage(source, Object.assign(this._texturesOptions, textureOptions), function (texture) {
+        this.loader.loadImage(source, Object.assign(textureOptions, this._texturesOptions), function (texture) {
           successCallback && successCallback(texture);
         }, function (source, error) {
           if (!_this25.renderer.production) {
@@ -6548,7 +6554,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
         var errorCallback = arguments.length > 3 ? arguments[3] : undefined;
-        this.loader.loadVideo(source, Object.assign(this._texturesOptions, textureOptions), function (texture) {
+        this.loader.loadVideo(source, Object.assign(textureOptions, this._texturesOptions), function (texture) {
           successCallback && successCallback(texture);
         }, function (source, error) {
           if (!_this26.renderer.production) {
@@ -6571,7 +6577,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function loadCanvas(source) {
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
-        this.loader.loadCanvas(source, Object.assign(this._texturesOptions, textureOptions), function (texture) {
+        this.loader.loadCanvas(source, Object.assign(textureOptions, this._texturesOptions), function (texture) {
           successCallback && successCallback(texture);
         });
       }
@@ -6690,9 +6696,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         for (var i = 0; i < this.textures.length; i++) {
           // draw (bind and maybe update) our texture
-          this.textures[i]._draw();
+          this.textures[i]._draw(); // do not draw mesh if one of the active texture is not bound yet
 
-          if (!this.textures[i]._sampler.isTextureBound) {
+
+          if (this.textures[i]._sampler.isActive && !this.textures[i]._sampler.isTextureBound) {
             return;
           }
         } // the draw call!
@@ -7529,8 +7536,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       var _ref11 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
           widthSegments = _ref11.widthSegments,
           heightSegments = _ref11.heightSegments,
-          _ref11$renderOrder = _ref11.renderOrder,
-          renderOrder = _ref11$renderOrder === void 0 ? 0 : _ref11$renderOrder,
+          renderOrder = _ref11.renderOrder,
           depthTest = _ref11.depthTest,
           cullFace = _ref11.cullFace,
           uniforms = _ref11.uniforms,
@@ -7725,7 +7731,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         if (htmlElement !== null && !!htmlElement) {
           this.htmlElement = htmlElement;
-          this.updatePosition();
+          this.resize();
         } else if (!htmlElement && !this.renderer.production) {
           throwWarning(this.type + ": You are trying to reset a plane with a HTML element that does not exist. The old HTML element will be kept instead.");
         }
@@ -9005,7 +9011,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       _this33._isScenePass = true;
       _this33.index = _this33.renderer.shaderPasses.length;
-      _this33.renderOrder = 0;
       _this33._depth = depth;
       _this33._shouldClear = clear;
       _this33.target = renderTarget;

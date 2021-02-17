@@ -1,8 +1,45 @@
 # Changelog
 
+## v8.0.4 (02/17/2020)
+
+#### Bug Fixes:
+
+###### core/Mesh.js
+
+- fixed mesh's texturesOptions being overriden when using a mesh load method.
+- fixed mesh not being drawn when a non active texture is not bound.
+
+###### core/Plane.js
+
+- fixed resetPlane() resizing when a new HTML element is passed.
+
+###### loaders/TextureLoader.js
+
+- fixed successCallback fired multiple times for video textures.
+
+#### Enhancements:
+
+###### core/Texture.js
+
+- removed Firefox Y-flip and premultiplyAlpha warning.
+
+---
+
 ## v8.0.3 (02/01/2020)
 
 #### Bug Fixes:
+
+###### core/Mesh.js
+
+- setted renderOrder default property to 0.
+
+###### core/Plane.js
+
+- removed renderOrder default property to 0.
+
+###### framebuffers/ShaderPass.js
+
+- fixed renderOrder property when initial value is different from 0.
 
 ###### loaders/TextureLoader.js
 

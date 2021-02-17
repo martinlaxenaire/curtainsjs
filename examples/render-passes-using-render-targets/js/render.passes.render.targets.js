@@ -187,7 +187,6 @@ window.addEventListener("load", () => {
     const rgbPass = new ShaderPass(curtains, {
         fragmentShader: rgbFs,
         renderTarget: rgbTarget,
-        depthTest: false, // we need to disable the depth test to display that shader pass on top of the first one
         uniforms: {
             scrollEffect: {
                 name: "uScrollEffect",
