@@ -80,7 +80,8 @@ export class Texture {
             // global gl context parameters
             unpackAlignment: 4,
             flipY: !isFBOTexture,
-            premultiplyAlpha,
+            premultiplyAlpha: false,
+            shouldPremultiplyAlpha: premultiplyAlpha,
 
             // texImage2D properties
             floatingPoint: floatingPoint,
@@ -195,6 +196,8 @@ export class Texture {
         this.gl.bindTexture(this.gl.TEXTURE_2D, this._sampler.texture);
 
         if(this.sourceType === "empty") {
+            // avoid flipY on non DOM elements
+            this._globalParameters.flipY = false;
             // update global parameters before drawing an empty texture
             this._updateGlobalTexParameters();
 
@@ -567,6 +570,9 @@ export class Texture {
 
         this.resize();
 
+        this._globalParameters.flipY = true;
+        this._globalParameters.premultiplyAlpha = this._globalParameters.shouldPremultiplyAlpha;
+
         // upload our webgl texture only if it is an image
         // canvas and video textures will be updated anyway in the rendering loop
         // thanks to the shouldUpdate and _willUpdate flags
@@ -599,13 +605,13 @@ export class Texture {
         }
 
         // flip Y only if source is not empty
-        if(this.renderer.state.flipY !== this._globalParameters.flipY && this.sourceType !== "empty") {
+        if(this.renderer.state.flipY !== this._globalParameters.flipY) {
             this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, this._globalParameters.flipY);
             this.renderer.state.flipY = this._globalParameters.flipY;
         }
 
         // premultiplied alpha only if source is not empty
-        if(this.renderer.state.premultiplyAlpha !== this._globalParameters.premultiplyAlpha && this.sourceType !== "empty") {
+        if(this.renderer.state.premultiplyAlpha !== this._globalParameters.premultiplyAlpha) {
             this.gl.pixelStorei(this.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this._globalParameters.premultiplyAlpha);
             this.renderer.state.premultiplyAlpha = this._globalParameters.premultiplyAlpha;
         }
