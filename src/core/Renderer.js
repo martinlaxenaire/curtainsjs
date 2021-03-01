@@ -134,6 +134,8 @@ export class Renderer {
 
             // if we're using depth test or not
             depthTest: null,
+            // blending
+            blending: null,
             // face culling
             cullFace: null,
 
@@ -175,6 +177,7 @@ export class Renderer {
         this.setBlendFunc();
 
         // enable depth by default
+        this.setDepthFunc();
         this.setDepthTest(true);
 
         // texture cache
@@ -327,6 +330,7 @@ export class Renderer {
         this.setBlendFunc();
 
         // enable depth by default
+        this.setDepthFunc();
         this.setDepthTest(true);
 
         // clear texture and programs cache
@@ -540,8 +544,37 @@ export class Renderer {
         }
     }
 
+    /***
+     Called to set the depth buffer behavior
+     Only available option is gl.LEQUAL at the moment
+     (see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc)
+     ***/
+    setDepthFunc() {
+        this.gl.depthFunc(this.gl.LEQUAL);
+    }
 
-    /*** BLEND FUNC ***/
+
+    /*** BLENDING ***/
+
+    /***
+     Whether we should enable or disable the blending state
+     Used to draw transparent planes
+
+     params:
+     @enableBlending (boolean): if we should enable or disable the blending (default to false)
+     ***/
+    setBlending(enableBlending = false) {
+        if(enableBlending && !this.state.blending) {
+            this.state.blending = enableBlending;
+            // enable blending
+            this.gl.enable(this.gl.BLEND);
+        }
+        else if(!enableBlending && this.state.blending) {
+            this.state.blending = enableBlending;
+            // disable blending
+            this.gl.disable(this.gl.BLEND);
+        }
+    }
 
     /***
      Called to set the blending function (transparency)
