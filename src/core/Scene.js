@@ -451,11 +451,19 @@ export class Scene {
         // then draw the content of our render targets render passes
         this.drawRenderPasses();
 
-        // draw the transparent planes
-        this.drawStack("transparent");
+        // disable blending for the opaque planes
+        this.renderer.setBlending(false);
 
-        // then the opaque ones
+        // loop on our stacked planes
         this.drawStack("opaque");
+
+        // set blending and draw transparents planes only if we have some
+        if(this.stacks.transparent.length) {
+            this.renderer.setBlending(true);
+
+            // draw the transparent planes
+            this.drawStack("transparent");
+        }
 
         // now draw the render targets scene passes
         this.drawScenePasses();
