@@ -583,11 +583,18 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.drawStack("renderTargets"); // then draw the content of our render targets render passes
 
-        this.drawRenderPasses(); // draw the transparent planes
+        this.drawRenderPasses(); // disable blending for the opaque planes
 
-        this.drawStack("transparent"); // then the opaque ones
+        this.renderer.setBlending(false); // loop on our stacked planes
 
-        this.drawStack("opaque"); // now draw the render targets scene passes
+        this.drawStack("opaque"); // set blending and draw transparents planes only if we have some
+
+        if (this.stacks.transparent.length) {
+          this.renderer.setBlending(true); // draw the transparent planes
+
+          this.drawStack("transparent");
+        } // now draw the render targets scene passes
+
 
         this.drawScenePasses();
       }
@@ -947,6 +954,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           forceBufferUpdate: false,
           // if we're using depth test or not
           depthTest: null,
+          // blending
+          blending: null,
           // face culling
           cullFace: null,
           // current frame buffer ID
@@ -986,6 +995,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.setBlendFunc(); // enable depth by default
 
+        this.setDepthFunc();
         this.setDepthTest(true); // texture cache
 
         this.cache = new CacheManager(); // init our scene
@@ -1139,6 +1149,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         this.setBlendFunc(); // enable depth by default
 
+        this.setDepthFunc();
         this.setDepthTest(true); // clear texture and programs cache
 
         this.cache.clear(); // reset draw stacks
@@ -1350,8 +1361,41 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this.gl.disable(this.gl.DEPTH_TEST);
         }
       }
-      /*** BLEND FUNC ***/
+      /***
+       Called to set the depth buffer behavior
+       Only available option is gl.LEQUAL at the moment
+       (see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc)
+       ***/
 
+    }, {
+      key: "setDepthFunc",
+      value: function setDepthFunc() {
+        this.gl.depthFunc(this.gl.LEQUAL);
+      }
+      /*** BLENDING ***/
+
+      /***
+       Whether we should enable or disable the blending state
+       Used to draw transparent planes
+         params:
+       @enableBlending (boolean): if we should enable or disable the blending (default to false)
+       ***/
+
+    }, {
+      key: "setBlending",
+      value: function setBlending() {
+        var enableBlending = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+        if (enableBlending && !this.state.blending) {
+          this.state.blending = enableBlending; // enable blending
+
+          this.gl.enable(this.gl.BLEND);
+        } else if (!enableBlending && this.state.blending) {
+          this.state.blending = enableBlending; // disable blending
+
+          this.gl.disable(this.gl.BLEND);
+        }
+      }
       /***
        Called to set the blending function (transparency)
        ***/
@@ -1718,7 +1762,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return ScrollManager;
   }();
 
-  var version = "8.0.4";
+  var version = "8.0.5";
   /***
    Here we create our Curtains object
        params:
@@ -2816,6 +2860,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      returns:
    @this: our newly created Program
    ***/
+  // store programs id
+
+  var id = 0;
 
   var Program = /*#__PURE__*/function () {
     function Program(renderer) {
@@ -2933,14 +2980,16 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this.vertexShader = existingProgram.vertexShader;
           this.fragmentShader = existingProgram.fragmentShader; // copy active textures as well
 
-          this.activeTextures = existingProgram.activeTextures;
+          this.activeUniforms = existingProgram.activeUniforms;
           this.createProgram();
         } else {
           // compile the new shaders and create a new program
           this.useNewShaders();
 
           if (this.compiled) {
-            this.createProgram();
+            this.createProgram(); // add it to our program manager programs list
+
+            this.renderer.cache.addProgram(this);
           }
         }
       }
@@ -2954,7 +3003,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "createProgram",
       value: function createProgram() {
         // set program id and type
-        this.id = this.renderer.cache.programs.length; // we need to create a new shader program
+        id++;
+        this.id = id; // we need to create a new shader program
 
         this.program = this.gl.createProgram(); // if shaders are valid, go on
 
@@ -3000,10 +3050,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
               this.activeUniforms.textureMatrices.push(activeUniform.name);
             }
           }
-        } // add it to our program manager programs list
-
-
-        this.renderer.cache.addProgram(this);
+        }
       }
       /*** UNIFORMS ***/
 

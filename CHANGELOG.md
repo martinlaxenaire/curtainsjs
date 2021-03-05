@@ -1,5 +1,26 @@
 # Changelog
 
+## v8.0.5 (03/05/2020)
+
+#### Bug Fixes:
+
+###### core/Scene.js
+
+- changed opaque/transparent stack orders and disable/enable blending when needed to better handle transparent planes.
+
+###### core/Program.js
+
+- only add Program to Renderer cache when it's a new one.
+
+#### Enhancements:
+
+###### core/Renderer.js
+
+- Added blending property to state object and setBlending() method to enable/disable blending.
+- Changed depth function default value to gl.LEQUAL.
+
+---
+
 ## v8.0.4 (02/17/2020)
 
 #### Bug Fixes:
