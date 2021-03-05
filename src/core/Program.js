@@ -23,6 +23,10 @@ import shaderPassFS from '../shaders/shaderpass.fragment.glsl.js';
  returns:
  @this: our newly created Program
  ***/
+
+// store programs id
+let id = 0;
+
 export class Program {
     constructor(renderer, {
         parent,
@@ -144,7 +148,7 @@ export class Program {
             this.fragmentShader = existingProgram.fragmentShader;
 
             // copy active textures as well
-            this.activeTextures = existingProgram.activeTextures;
+            this.activeUniforms = existingProgram.activeUniforms;
 
             this.createProgram();
         }
@@ -153,6 +157,9 @@ export class Program {
             this.useNewShaders();
             if(this.compiled) {
                 this.createProgram();
+
+                // add it to our program manager programs list
+                this.renderer.cache.addProgram(this);
             }
         }
     }
@@ -165,7 +172,8 @@ export class Program {
      ***/
     createProgram() {
         // set program id and type
-        this.id = this.renderer.cache.programs.length;
+        id++;
+        this.id = id;
 
         // we need to create a new shader program
         this.program = this.gl.createProgram();
@@ -217,9 +225,6 @@ export class Program {
                 }
             }
         }
-
-        // add it to our program manager programs list
-        this.renderer.cache.addProgram(this);
     }
 
 
