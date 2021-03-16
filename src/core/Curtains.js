@@ -3,7 +3,7 @@ import {ScrollManager} from "../utils/ScrollManager.js";
 import {throwWarning, lerp} from "../utils/utils.js";
 
 
-const version = "8.0.5";
+const version = "8.1.0";
 
 /***
  Here we create our Curtains object
@@ -192,6 +192,7 @@ export class Curtains {
             production: this.production,
 
             onError: () => this._onRendererError(),
+            onSuccess: () => this._onRendererSuccess(),
             onContextLost: () => this._onRendererContextLost(),
             onContextRestored: () => this._onRendererContextRestored(),
             onDisposed: () => this._onRendererDisposed(),
@@ -538,6 +539,33 @@ export class Curtains {
                 this._onErrorCallback();
             }
             this.errors = true;
+        }, 0);
+    }
+
+
+    /***
+     This is called when the WebGL context has been successfully created
+
+     params:
+     @callback (function): a function to execute
+
+     returns:
+     @this: our Curtains element to handle chaining
+     ***/
+    onSuccess(callback) {
+        if(callback) {
+            this._onSuccessCallback = callback;
+        }
+
+        return this;
+    }
+
+    /***
+     This triggers the onSuccess callback and is called by the renderer when the context has been successfully created
+     ***/
+    _onRendererSuccess() {
+        setTimeout(() => {
+            this._onSuccessCallback && this._onSuccessCallback();
         }, 0);
     }
 

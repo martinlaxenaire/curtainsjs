@@ -16,6 +16,7 @@ import {throwWarning} from '../utils/utils.js';
  @Curtainsparams see Curtains class object
 
  @onError (function): called when there has been an error while initiating the WebGL context
+ @onSuccess (function): called when the WebGL context has been successfully created
  @onContextLost (function): called when the WebGL context is lost
  @onContextRestored (function): called when the WebGL context is restored
  @onSceneChange (function): called every time an object has been added/removed from the scene
@@ -41,6 +42,7 @@ export class Renderer {
 
         // callbacks passed by the Curtains class object on instantiation
         onError,
+        onSuccess,
         onContextLost,
         onContextRestored,
         onDisposed,
@@ -65,6 +67,7 @@ export class Renderer {
 
         // callbacks
         this.onError = onError;
+        this.onSuccess = onSuccess;
         this.onContextLost = onContextLost;
         this.onContextRestored = onContextRestored;
         this.onDisposed = onDisposed;
@@ -108,6 +111,9 @@ export class Renderer {
             }
 
             return;
+        }
+        else if(this.onSuccess) {
+            this.onSuccess();
         }
 
         this.initRenderer();
