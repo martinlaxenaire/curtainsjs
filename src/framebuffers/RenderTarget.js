@@ -40,7 +40,10 @@ export class RenderTarget {
             throwError(this.type + ": Renderer not passed as first argument", renderer);
         }
         else if(!renderer.gl) {
-            throwError(this.type + ": Renderer WebGL context is undefined", renderer);
+            if(!renderer.production) throwError(this.type + ": Unable to create a " + this.type + " because the Renderer WebGL context is not defined");
+
+            // return if no gl context
+            return;
         }
         this.renderer = renderer;
         this.gl = this.renderer.gl;

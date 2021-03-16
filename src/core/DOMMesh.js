@@ -55,6 +55,11 @@ export class DOMMesh extends Mesh {
             crossOrigin,
         });
 
+        // return if no gl context
+        if(!this.gl) {
+            return;
+        }
+
         // our HTML element
         this.htmlElement = htmlElement;
 

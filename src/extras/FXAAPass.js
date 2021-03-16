@@ -107,6 +107,11 @@ export class FXAAPass extends ShaderPass {
             renderTarget,
         });
 
+        // return if no gl context
+        if(!this.gl) {
+            return;
+        }
+
         // update the resolution uniform
         this.uniforms.resolution.value = [
             this.renderer._boundingRect.width,

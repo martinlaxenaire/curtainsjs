@@ -71,7 +71,7 @@ export class Mesh {
         this.gl = this.renderer.gl;
 
         if(!this.gl) {
-            if(!this.renderer.production) throwError(this.type + ": Unable to create a " + this.type + " because the Renderer WebGl context is not defined");
+            if(!this.renderer.production) throwError(this.type + ": Unable to create a " + this.type + " because the Renderer WebGL context is not defined");
 
             // we should assume there's still no renderer here, so no nextRender method
             setTimeout(() => {
@@ -79,6 +79,9 @@ export class Mesh {
                     this._onErrorCallback();
                 }
             }, 0);
+
+            // return if no gl context
+            return;
         }
 
         this._canDraw = false;

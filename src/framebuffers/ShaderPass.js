@@ -65,6 +65,11 @@ export class ShaderPass extends DOMMesh {
             crossOrigin
         });
 
+        // return if no gl context
+        if(!this.gl) {
+            return;
+        }
+
         // default to scene pass
         this._isScenePass = true;
 

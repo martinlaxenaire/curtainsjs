@@ -26,6 +26,9 @@ export class Geometry {
         }
         else if(!renderer.gl) {
             throwError(this.type + ": Renderer WebGL context is undefined", renderer);
+
+            // return if no gl context
+            return;
         }
         this.renderer = renderer;
         this.gl = this.renderer.gl;

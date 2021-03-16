@@ -70,6 +70,11 @@ export class PingPongPlane extends Plane {
             fov,
         });
 
+        // return if no gl context
+        if(!this.gl) {
+            return;
+        }
+
         // remove from stack, update type to PingPongPlane and then stack again
         this.renderer.scene.removePlane(this);
         this.type = "PingPongPlane";

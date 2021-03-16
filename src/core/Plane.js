@@ -101,6 +101,11 @@ export class Plane extends DOMMesh {
             crossOrigin,
         });
 
+        // return if no gl context
+        if(!this.gl) {
+            return;
+        }
+
         this.index = this.renderer.planes.length;
 
         // used for FBOs
