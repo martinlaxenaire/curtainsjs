@@ -130,10 +130,10 @@ export class TextureLoader {
 
         if(typeof source === "string") {
             // from https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#Supported_image_formats
-            if(source.match(/\.(jpeg|jpg|jfif|pjpeg|pjp|gif|bmp|png|webp|svg)$/) !== null) {
+            if(source.match(/\.(jpeg|jpg|jfif|pjpeg|pjp|gif|bmp|png|webp|svg|avif|apng)$/) !== null) {
                 sourceType = "image";
             }
-            else if(source.match(/\.(webm|mp4|ogg|mov)$/) !== null) {
+            else if(source.match(/\.(webm|mp4|mpg|mpeg|avi|ogg|ogm|ogv|mov|av1)$/) !== null) {
                 sourceType = "video";
             }
         }
