@@ -120,7 +120,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       if (!renderer || renderer.type !== "Renderer") {
         throwError(this.type + ": Renderer not passed as first argument", renderer);
       } else if (!renderer.gl) {
-        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
+        throwError(this.type + ": Renderer WebGL context is undefined", renderer); // return if no gl context
+
+        return;
       }
 
       this.renderer = renderer;
@@ -847,6 +849,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
      params:
    @Curtainsparams see Curtains class object
      @onError (function): called when there has been an error while initiating the WebGL context
+   @onSuccess (function): called when the WebGL context has been successfully created
    @onContextLost (function): called when the WebGL context is lost
    @onContextRestored (function): called when the WebGL context is restored
    @onSceneChange (function): called every time an object has been added/removed from the scene
@@ -869,6 +872,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           renderingScale = _ref.renderingScale,
           production = _ref.production,
           onError = _ref.onError,
+          onSuccess = _ref.onSuccess,
           onContextLost = _ref.onContextLost,
           onContextRestored = _ref.onContextRestored,
           onDisposed = _ref.onDisposed,
@@ -891,6 +895,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       this.production = production; // callbacks
 
       this.onError = onError;
+      this.onSuccess = onSuccess;
       this.onContextLost = onContextLost;
       this.onContextRestored = onContextRestored;
       this.onDisposed = onDisposed; // keep sync between Curtains objects arrays and renderer objects arrays
@@ -928,6 +933,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
 
         return;
+      } else if (this.onSuccess) {
+        this.onSuccess();
       }
 
       this.initRenderer();
@@ -1762,7 +1769,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return ScrollManager;
   }();
 
-  var version = "8.0.5";
+  var version = "8.1.0";
   /***
    Here we create our Curtains object
        params:
@@ -1949,6 +1956,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           production: this.production,
           onError: function onError() {
             return _this7._onRendererError();
+          },
+          onSuccess: function onSuccess() {
+            return _this7._onRendererSuccess();
           },
           onContextLost: function onContextLost() {
             return _this7._onRendererContextLost();
@@ -2338,6 +2348,36 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }, 0);
       }
       /***
+       This is called when the WebGL context has been successfully created
+         params:
+       @callback (function): a function to execute
+         returns:
+       @this: our Curtains element to handle chaining
+       ***/
+
+    }, {
+      key: "onSuccess",
+      value: function onSuccess(callback) {
+        if (callback) {
+          this._onSuccessCallback = callback;
+        }
+
+        return this;
+      }
+      /***
+       This triggers the onSuccess callback and is called by the renderer when the context has been successfully created
+       ***/
+
+    }, {
+      key: "_onRendererSuccess",
+      value: function _onRendererSuccess() {
+        var _this11 = this;
+
+        setTimeout(function () {
+          _this11._onSuccessCallback && _this11._onSuccessCallback();
+        }, 0);
+      }
+      /***
        This is called once our context has been lost
          params:
        @callback (function): a function to execute
@@ -2474,7 +2514,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       if (!renderer || renderer.type !== "Renderer") {
         throwError(this.type + ": Renderer not passed as first argument", renderer);
       } else if (!renderer.gl) {
-        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
+        throwError(this.type + ": Renderer WebGL context is undefined", renderer); // return if no gl context
+
+        return;
       }
 
       this.renderer = renderer;
@@ -2878,7 +2920,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       if (!renderer || renderer.type !== "Renderer") {
         throwError(this.type + ": Renderer not passed as first argument", renderer);
       } else if (!renderer.gl) {
-        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
+        throwError(this.type + ": Renderer WebGL context is undefined", renderer); // return if no gl context
+
+        return;
       }
 
       this.renderer = renderer;
@@ -3123,7 +3167,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       if (!renderer || renderer.type !== "Renderer") {
         throwError(this.type + ": Renderer not passed as first argument", renderer);
       } else if (!renderer.gl) {
-        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
+        throwError(this.type + ": Renderer WebGL context is undefined", renderer); // return if no gl context
+
+        return;
       }
 
       this.renderer = renderer;
@@ -4409,7 +4455,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
   var Texture = /*#__PURE__*/function () {
     function Texture(renderer) {
-      var _this11 = this;
+      var _this12 = this;
 
       var _ref6 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
           _ref6$isFBOTexture = _ref6.isFBOTexture,
@@ -4440,7 +4486,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       if (!renderer || renderer.type !== "Renderer") {
         throwError(this.type + ": Renderer not passed as first argument", renderer);
       } else if (!renderer.gl) {
-        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
+        if (!renderer.production) throwError(this.type + ": Unable to create a " + this.type + " because the Renderer WebGL context is not defined"); // return if no gl context
+
+        return;
       }
 
       this.renderer = renderer;
@@ -4474,7 +4522,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       // if it's not, type will change when the source will be loaded
 
 
-      this.sourceType = isFBOTexture ? "fbo" : "empty";
+      this.sourceType = isFBOTexture ? "fbo" : "empty"; // whether to use cache for image textures
+
+      this._useCache = true;
       this._samplerName = sampler; // prepare texture sampler
 
       this._sampler = {
@@ -4495,11 +4545,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       };
       this.scale = new Vec2(1);
       this.scale.onChange(function () {
-        return _this11.resize();
+        return _this12.resize();
       });
       this.offset = new Vec2();
       this.offset.onChange(function () {
-        return _this11.resize();
+        return _this12.resize();
       }); // source loading and GPU uploading flags
 
       this._loader = loader;
@@ -4606,7 +4656,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_restoreContext",
       value: function _restoreContext() {
-        var _this12 = this;
+        var _this13 = this;
 
         // avoid binding that texture before reseting it
         this._canDraw = false;
@@ -4641,8 +4691,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } else {
           // wait for the original texure to be ready before attempting to restore the copy
           var queue = this.renderer.nextRender.add(function () {
-            if (_this12._copiedFrom._canDraw) {
-              _this12._restoreFromTexture(); // remove from callback queue
+            if (_this13._copiedFrom._canDraw) {
+              _this13._restoreFromTexture(); // remove from callback queue
 
 
               queue.keep = false;
@@ -4687,7 +4737,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_setParent",
       value: function _setParent() {
-        var _this13 = this;
+        var _this14 = this;
 
         // prepare texture sampler
         this._sampler.name = this._samplerName || "uSampler" + this.index; // we will always declare a texture matrix
@@ -4709,8 +4759,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           if (this._copyOnInit) {
             // wait for original texture to be ready before copying it
             var waitForOriginalTexture = this.renderer.nextRender.add(function () {
-              if (_this13._copiedFrom._canDraw && _this13._copiedFrom._uploaded) {
-                _this13.copy(_this13._copiedFrom);
+              if (_this14._copiedFrom._canDraw && _this14._copiedFrom._uploaded) {
+                _this14.copy(_this14._copiedFrom);
 
                 waitForOriginalTexture.keep = false;
               }
@@ -4769,7 +4819,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_setTextureUniforms",
       value: function _setTextureUniforms() {
-        var _this14 = this;
+        var _this15 = this;
 
         // check if our texture is used in our program shaders
         // if so, get its uniform locations and bind it to our program
@@ -4785,7 +4835,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             this._sampler.location = this.gl.getUniformLocation(this._parent._program.program, this._sampler.name); // set texture matrix uniform location only if active
 
             var isTextureMatrixActive = activeUniforms.textureMatrices.find(function (textureMatrix) {
-              return textureMatrix === _this14._textureMatrix.name;
+              return textureMatrix === _this15._textureMatrix.name;
             });
 
             if (isTextureMatrixActive) {
@@ -4817,7 +4867,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
         this._globalParameters = texture._globalParameters;
-        this.parameters = texture.parameters;
         this._state = texture._state; // copy source
 
         this._size = texture._size; // trigger loaded callback if needed
@@ -4861,55 +4910,67 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "setSource",
       value: function setSource(source) {
-        var _this15 = this;
+        var _this16 = this;
 
         // fire callback during load (useful for a loader)
         if (!this._sourceLoaded) {
           // texture source loaded callback
           this.renderer.nextRender.add(function () {
-            return _this15._onSourceLoadedCallback && _this15._onSourceLoadedCallback();
+            return _this16._onSourceLoadedCallback && _this16._onSourceLoadedCallback();
           });
+        } // get new source type based on source tag
+
+
+        var sourceType = source.tagName.toUpperCase() === "IMG" ? "image" : source.tagName.toLowerCase(); // somehow if the texture type changes from image to video or canvas, the cache won't work anymore
+
+        if (sourceType === "video" || sourceType === "canvas") {
+          this._useCache = false;
         } // check for cache
 
 
-        var cachedTexture = this.renderer.cache.getTextureFromSource(source); // if we have a cached texture, just copy it
+        if (this._useCache) {
+          var cachedTexture = this.renderer.cache.getTextureFromSource(source); // if we have a cached texture, just copy it
 
-        if (cachedTexture && cachedTexture.uuid !== this.uuid) {
-          // force texture uploaded callback
-          if (!this._uploaded) {
-            // GPU uploading callback
-            this.renderer.nextRender.add(function () {
-              return _this15._onSourceUploadedCallback && _this15._onSourceUploadedCallback();
-            });
-            this._uploaded = true;
-          }
+          if (cachedTexture && cachedTexture.uuid !== this.uuid) {
+            // force texture uploaded callback
+            if (!this._uploaded) {
+              // GPU uploading callback
+              this.renderer.nextRender.add(function () {
+                return _this16._onSourceUploadedCallback && _this16._onSourceUploadedCallback();
+              });
+              this._uploaded = true;
+            }
 
-          this.copy(cachedTexture);
-          this.resize();
-          return;
-        } // no cached texture, proceed normally
-
-
-        this.source = source;
-
-        if (this.sourceType === "empty") {
-          if (source.tagName.toUpperCase() === "IMG") {
-            this.sourceType = "image";
-          } else if (source.tagName.toUpperCase() === "VIDEO") {
-            this.sourceType = "video"; // a video should be updated by default
-            // _willUpdate property will be set to true if the video has data to draw
-
-            this.shouldUpdate = true;
-          } else if (source.tagName.toUpperCase() === "CANVAS") {
-            this.sourceType = "canvas"; // a canvas could change each frame so we need to update it by default
-
-            this._willUpdate = true;
-            this.shouldUpdate = true;
-          } else if (!this.renderer.production) {
-            throwWarning(this.type + ": this HTML tag could not be converted into a texture:", source.tagName);
+            this.copy(cachedTexture);
+            this.resize();
+            return;
           }
         }
 
+        if (this.sourceType === "empty" || this.sourceType !== sourceType) {
+          if (sourceType === "video") {
+            // a video should be updated by default
+            this._willUpdate = false;
+            this.shouldUpdate = true;
+          } else if (sourceType === "canvas") {
+            // a canvas could change each frame so we need to update it by default
+            this._willUpdate = true;
+            this.shouldUpdate = true;
+          } else if (sourceType === "image") {
+            this._willUpdate = false;
+            this.shouldUpdate = false;
+          } else {
+            if (!this.renderer.production) {
+              throwWarning(this.type + ": this HTML tag could not be converted into a texture:", source.tagName);
+            }
+
+            return;
+          }
+        } // set new source
+
+
+        this.source = source;
+        this.sourceType = sourceType;
         this._size = {
           width: this.source.naturalWidth || this.source.width || this.source.videoWidth,
           height: this.source.naturalHeight || this.source.height || this.source.videoHeight
@@ -4998,7 +5059,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function _updateTexParameters() {
         // be sure we're updating the right texture
         if (this.index && this.renderer.state.activeTexture !== this.index) {
-          this._bindTexture(this);
+          this._bindTexture();
         } // wrapS
 
 
@@ -5192,11 +5253,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_videoFrameCallback",
       value: function _videoFrameCallback() {
-        var _this16 = this;
+        var _this17 = this;
 
         this._willUpdate = true;
         this.source.requestVideoFrameCallback(function () {
-          return _this16._videoFrameCallback();
+          return _this17._videoFrameCallback();
         });
       }
       /***
@@ -5208,7 +5269,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_upload",
       value: function _upload() {
-        var _this17 = this;
+        var _this18 = this;
 
         // set parameters that need to be set before texture uploading
         this._updateGlobalTexParameters();
@@ -5223,7 +5284,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (!this._uploaded) {
           // GPU uploading callback
           this.renderer.nextRender.add(function () {
-            return _this17._onSourceUploadedCallback && _this17._onSourceUploadedCallback();
+            return _this18._onSourceUploadedCallback && _this18._onSourceUploadedCallback();
           });
           this._uploaded = true;
         }
@@ -5453,7 +5514,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         // only draw if the texture is active (used in the shader)
         if (this._sampler.isActive) {
           // bind the texture
-          this._bindTexture(this); // if no videoFrameCallback check if the video is actually really playing
+          this._bindTexture(); // if no videoFrameCallback check if the video is actually really playing
 
 
           if (this.sourceType === "video" && this.source && !this._videoFrameCallbackID && this.source.readyState >= this.source.HAVE_CURRENT_DATA && !this.source.paused) {
@@ -5593,7 +5654,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       if (!renderer || renderer.type !== "Renderer") {
         throwError(this.type + ": Renderer not passed as first argument", renderer);
       } else if (!renderer.gl) {
-        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
+        throwError(this.type + ": Renderer WebGL context is undefined", renderer); // return if no gl context
+
+        return;
       } // renderer and webgl context
 
 
@@ -5654,7 +5717,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_sourceLoaded",
       value: function _sourceLoaded(source, texture, callback) {
-        var _this18 = this;
+        var _this19 = this;
 
         // execute only once
         if (!texture._sourceLoaded) {
@@ -5665,7 +5728,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             // increment plane texture loader
             this._increment && this._increment();
             this.renderer.nextRender.add(function () {
-              return _this18._parent._onLoadingCallback && _this18._parent._onLoadingCallback(texture);
+              return _this19._parent._onLoadingCallback && _this19._parent._onLoadingCallback(texture);
             });
           } // execute callback
 
@@ -5690,9 +5753,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         if (typeof source === "string") {
           // from https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#Supported_image_formats
-          if (source.match(/\.(jpeg|jpg|jfif|pjpeg|pjp|gif|bmp|png|webp|svg)$/) !== null) {
+          if (source.match(/\.(jpeg|jpg|jfif|pjpeg|pjp|gif|bmp|png|webp|svg|avif|apng)$/) !== null) {
             sourceType = "image";
-          } else if (source.match(/\.(webm|mp4|ogg|mov)$/) !== null) {
+          } else if (source.match(/\.(webm|mp4|mpg|mpeg|avi|ogg|ogm|ogv|mov|av1)$/) !== null) {
             sourceType = "video";
           }
         } else {
@@ -6085,7 +6148,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _super = _createSuper(PlaneTextureLoader);
 
     function PlaneTextureLoader(renderer, parent) {
-      var _this19;
+      var _this20;
 
       var _ref7 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
           _ref7$sourcesLoaded = _ref7.sourcesLoaded,
@@ -6099,20 +6162,20 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       _classCallCheck(this, PlaneTextureLoader);
 
-      _this19 = _super.call(this, renderer, parent.crossOrigin);
-      _this19.type = "PlaneTextureLoader";
-      _this19._parent = parent;
+      _this20 = _super.call(this, renderer, parent.crossOrigin);
+      _this20.type = "PlaneTextureLoader";
+      _this20._parent = parent;
 
-      if (_this19._parent.type !== "Plane" && _this19._parent.type !== "PingPongPlane" && _this19._parent.type !== "ShaderPass") {
-        throwWarning(_this19.type + ": Wrong parent type assigned to this loader");
-        _this19._parent = null;
+      if (_this20._parent.type !== "Plane" && _this20._parent.type !== "PingPongPlane" && _this20._parent.type !== "ShaderPass") {
+        throwWarning(_this20.type + ": Wrong parent type assigned to this loader");
+        _this20._parent = null;
       }
 
-      _this19.sourcesLoaded = sourcesLoaded;
-      _this19.sourcesToLoad = sourcesToLoad;
-      _this19.complete = complete;
-      _this19.onComplete = onComplete;
-      return _this19;
+      _this20.sourcesLoaded = sourcesLoaded;
+      _this20.sourcesToLoad = sourcesToLoad;
+      _this20.complete = complete;
+      _this20.onComplete = onComplete;
+      return _this20;
     }
     /*** TRACK LOADING ***/
 
@@ -6126,14 +6189,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     _createClass(PlaneTextureLoader, [{
       key: "_setLoaderSize",
       value: function _setLoaderSize(size) {
-        var _this20 = this;
+        var _this21 = this;
 
         this.sourcesToLoad = size;
 
         if (this.sourcesToLoad === 0) {
           this.complete = true;
           this.renderer.nextRender.add(function () {
-            return _this20.onComplete && _this20.onComplete();
+            return _this21.onComplete && _this21.onComplete();
           });
         }
       }
@@ -6144,14 +6207,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_increment",
       value: function _increment() {
-        var _this21 = this;
+        var _this22 = this;
 
         this.sourcesLoaded++;
 
         if (this.sourcesLoaded >= this.sourcesToLoad && !this.complete) {
           this.complete = true;
           this.renderer.nextRender.add(function () {
-            return _this21.onComplete && _this21.onComplete();
+            return _this22.onComplete && _this22.onComplete();
           });
         }
       }
@@ -6239,7 +6302,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
   var Mesh = /*#__PURE__*/function () {
     function Mesh(renderer) {
-      var _this22 = this;
+      var _this23 = this;
 
       var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "Mesh";
 
@@ -6275,8 +6338,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         throwError(this.type + ": Curtains not passed as first argument or Curtains Renderer is missing", renderer); // no renderer, we can't use the renderer nextRender method
 
         setTimeout(function () {
-          if (_this22._onErrorCallback) {
-            _this22._onErrorCallback();
+          if (_this23._onErrorCallback) {
+            _this23._onErrorCallback();
           }
         }, 0);
       }
@@ -6285,13 +6348,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       this.gl = this.renderer.gl;
 
       if (!this.gl) {
-        if (!this.renderer.production) throwError(this.type + ": Unable to create a " + this.type + " because the Renderer WebGl context is not defined"); // we should assume there's still no renderer here, so no nextRender method
+        if (!this.renderer.production) throwError(this.type + ": Unable to create a " + this.type + " because the Renderer WebGL context is not defined"); // we should assume there's still no renderer here, so no nextRender method
 
         setTimeout(function () {
-          if (_this22._onErrorCallback) {
-            _this22._onErrorCallback();
+          if (_this23._onErrorCallback) {
+            _this23._onErrorCallback();
           }
-        }, 0);
+        }, 0); // return if no gl context
+
+        return;
       }
 
       this._canDraw = false;
@@ -6308,7 +6373,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       this.textures = []; // default textures options depends on the type of Mesh and WebGL context
 
-      texturesOptions = Object.assign({
+      this._texturesOptions = Object.assign({
         premultiplyAlpha: false,
         anisotropy: 1,
         floatingPoint: "none",
@@ -6318,7 +6383,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         minFilter: this.gl.LINEAR,
         magFilter: this.gl.LINEAR
       }, texturesOptions);
-      this._texturesOptions = texturesOptions;
       this.crossOrigin = crossOrigin; // handling shaders
 
       if (!vertexShader && vertexShaderID && document.getElementById(vertexShaderID)) {
@@ -6362,7 +6426,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderer.onSceneChange();
       } else {
         this.renderer.nextRender.add(function () {
-          return _this22._onErrorCallback && _this22._onErrorCallback();
+          return _this23._onErrorCallback && _this23._onErrorCallback();
         });
       }
     }
@@ -6370,7 +6434,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     _createClass(Mesh, [{
       key: "_initMesh",
       value: function _initMesh() {
-        var _this23 = this;
+        var _this24 = this;
 
         this.uuid = generateUUID(); // our Loader Class that will handle all medias loading process
 
@@ -6380,9 +6444,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           // will change if there's any texture to load on init
           complete: false,
           onComplete: function onComplete() {
-            _this23._onReadyCallback && _this23._onReadyCallback();
+            _this24._onReadyCallback && _this24._onReadyCallback();
 
-            _this23.renderer.needRender();
+            _this24.renderer.needRender();
           }
         });
         this.images = [];
@@ -6542,7 +6606,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "loadSource",
       value: function loadSource(source) {
-        var _this24 = this;
+        var _this25 = this;
 
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
@@ -6550,8 +6614,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.loader.loadSource(source, Object.assign(textureOptions, this._texturesOptions), function (texture) {
           successCallback && successCallback(texture);
         }, function (source, error) {
-          if (!_this24.renderer.production) {
-            throwWarning(_this24.type + ": this HTML tag could not be converted into a texture:", source.tagName);
+          if (!_this25.renderer.production) {
+            throwWarning(_this25.type + ": this HTML tag could not be converted into a texture:", source.tagName);
           }
 
           errorCallback && errorCallback(source, error);
@@ -6569,7 +6633,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "loadImage",
       value: function loadImage(source) {
-        var _this25 = this;
+        var _this26 = this;
 
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
@@ -6577,8 +6641,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.loader.loadImage(source, Object.assign(textureOptions, this._texturesOptions), function (texture) {
           successCallback && successCallback(texture);
         }, function (source, error) {
-          if (!_this25.renderer.production) {
-            throwWarning(_this25.type + ": There has been an error:\n", error, "\nwhile loading this image:\n", source);
+          if (!_this26.renderer.production) {
+            throwWarning(_this26.type + ": There has been an error:\n", error, "\nwhile loading this image:\n", source);
           }
 
           errorCallback && errorCallback(source, error);
@@ -6596,7 +6660,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "loadVideo",
       value: function loadVideo(source) {
-        var _this26 = this;
+        var _this27 = this;
 
         var textureOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var successCallback = arguments.length > 2 ? arguments[2] : undefined;
@@ -6604,8 +6668,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.loader.loadVideo(source, Object.assign(textureOptions, this._texturesOptions), function (texture) {
           successCallback && successCallback(texture);
         }, function (source, error) {
-          if (!_this26.renderer.production) {
-            throwWarning(_this26.type + ": There has been an error:\n", error, "\nwhile loading this video:\n", source);
+          if (!_this27.renderer.production) {
+            throwWarning(_this27.type + ": There has been an error:\n", error, "\nwhile loading this video:\n", source);
           }
 
           errorCallback && errorCallback(source, error);
@@ -6698,7 +6762,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "playVideos",
       value: function playVideos() {
-        var _this27 = this;
+        var _this28 = this;
 
         for (var i = 0; i < this.textures.length; i++) {
           var texture = this.textures[i];
@@ -6709,7 +6773,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
             if (playPromise !== undefined) {
               playPromise["catch"](function (error) {
-                if (!_this27.renderer.production) throwWarning(_this27.type + ": Could not play the video : ", error);
+                if (!_this28.renderer.production) throwWarning(_this28.type + ": Could not play the video : ", error);
               });
             }
           }
@@ -6931,7 +6995,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _super2 = _createSuper(DOMMesh);
 
     function DOMMesh(renderer, htmlElement) {
-      var _this28;
+      var _this29;
 
       var type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "DOMMesh";
 
@@ -6954,7 +7018,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       // handling HTML shaders scripts
       vertexShaderID = vertexShaderID || htmlElement && htmlElement.getAttribute("data-vs-id");
       fragmentShaderID = fragmentShaderID || htmlElement && htmlElement.getAttribute("data-fs-id");
-      _this28 = _super2.call(this, renderer, type, {
+      _this29 = _super2.call(this, renderer, type, {
         widthSegments: widthSegments,
         heightSegments: heightSegments,
         renderOrder: renderOrder,
@@ -6967,18 +7031,23 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         fragmentShader: fragmentShader,
         texturesOptions: texturesOptions,
         crossOrigin: crossOrigin
-      }); // our HTML element
+      }); // return if no gl context
 
-      _this28.htmlElement = htmlElement;
+      if (!_this29.gl) {
+        return _possibleConstructorReturn(_this29);
+      } // our HTML element
 
-      if (!_this28.htmlElement || _this28.htmlElement.length === 0) {
-        if (!_this28.renderer.production) throwWarning(_this28.type + ": The HTML element you specified does not currently exists in the DOM");
+
+      _this29.htmlElement = htmlElement;
+
+      if (!_this29.htmlElement || _this29.htmlElement.length === 0) {
+        if (!_this29.renderer.production) throwWarning(_this29.type + ": The HTML element you specified does not currently exists in the DOM");
       } // set plane sizes
 
 
-      _this28._setDocumentSizes();
+      _this29._setDocumentSizes();
 
-      return _this28;
+      return _this29;
     }
     /*** PLANE SIZES ***/
 
@@ -7031,7 +7100,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "resize",
       value: function resize() {
-        var _this29 = this;
+        var _this30 = this;
 
         // reset plane dimensions
         this._setDocumentSizes(); // if this is a Plane object we need to update its perspective and positions
@@ -7053,7 +7122,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
         this.renderer.nextRender.add(function () {
-          return _this29._onAfterResizeCallback && _this29._onAfterResizeCallback();
+          return _this30._onAfterResizeCallback && _this30._onAfterResizeCallback();
         });
       }
       /*** INTERACTION ***/
@@ -7578,7 +7647,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _super3 = _createSuper(Plane);
 
     function Plane(renderer, htmlElement) {
-      var _this30;
+      var _this31;
 
       var _ref11 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
           widthSegments = _ref11.widthSegments,
@@ -7615,7 +7684,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       _classCallCheck(this, Plane);
 
-      _this30 = _super3.call(this, renderer, htmlElement, "Plane", {
+      _this31 = _super3.call(this, renderer, htmlElement, "Plane", {
         widthSegments: widthSegments,
         heightSegments: heightSegments,
         renderOrder: renderOrder,
@@ -7628,46 +7697,51 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         fragmentShader: fragmentShader,
         texturesOptions: texturesOptions,
         crossOrigin: crossOrigin
-      });
-      _this30.index = _this30.renderer.planes.length; // used for FBOs
+      }); // return if no gl context
 
-      _this30.target = null; // use frustum culling or not
+      if (!_this31.gl) {
+        return _possibleConstructorReturn(_this31);
+      }
 
-      _this30.alwaysDraw = alwaysDraw; // should draw is set to true by default, we'll check it later
+      _this31.index = _this31.renderer.planes.length; // used for FBOs
 
-      _this30._shouldDraw = true;
-      _this30.visible = visible; // if the plane has transparency
+      _this31.target = null; // use frustum culling or not
 
-      _this30._transparent = transparent; // draw check margins in pixels
+      _this31.alwaysDraw = alwaysDraw; // should draw is set to true by default, we'll check it later
+
+      _this31._shouldDraw = true;
+      _this31.visible = visible; // if the plane has transparency
+
+      _this31._transparent = transparent; // draw check margins in pixels
       // positive numbers means it can be displayed even when outside the viewport
       // negative numbers means it can be hidden even when inside the viewport
 
-      _this30.drawCheckMargins = drawCheckMargins; // if we decide to load all sources on init or let the user do it manually
+      _this31.drawCheckMargins = drawCheckMargins; // if we decide to load all sources on init or let the user do it manually
 
-      _this30.autoloadSources = autoloadSources; // if we should watch scroll
+      _this31.autoloadSources = autoloadSources; // if we should watch scroll
 
-      _this30.watchScroll = watchScroll; // define if we should update the plane's matrices when called in the draw loop
+      _this31.watchScroll = watchScroll; // define if we should update the plane's matrices when called in the draw loop
 
-      _this30._updateMVMatrix = false; // init camera
+      _this31._updateMVMatrix = false; // init camera
 
-      _this30.camera = new Camera({
+      _this31.camera = new Camera({
         fov: fov,
-        width: _this30.renderer._boundingRect.width,
-        height: _this30.renderer._boundingRect.height,
-        pixelRatio: _this30.renderer.pixelRatio
+        width: _this31.renderer._boundingRect.width,
+        height: _this31.renderer._boundingRect.height,
+        pixelRatio: _this31.renderer.pixelRatio
       }); // if program is valid, go on
 
-      if (_this30._program.compiled) {
+      if (_this31._program.compiled) {
         // init our plane
-        _this30._initPlane(); // add our plane to the scene stack and the renderer array
+        _this31._initPlane(); // add our plane to the scene stack and the renderer array
 
 
-        _this30.renderer.scene.addPlane(_assertThisInitialized(_this30));
+        _this31.renderer.scene.addPlane(_assertThisInitialized(_this31));
 
-        _this30.renderer.planes.push(_assertThisInitialized(_this30));
+        _this31.renderer.planes.push(_assertThisInitialized(_this31));
       }
 
-      return _this30;
+      return _this31;
     }
     /*** RESTORING CONTEXT ***/
 
@@ -7731,35 +7805,35 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_initTransformValues",
       value: function _initTransformValues() {
-        var _this31 = this;
+        var _this32 = this;
 
         this.rotation = new Vec3();
         this.rotation.onChange(function () {
-          return _this31._applyRotation();
+          return _this32._applyRotation();
         }); // initial quaternion
 
         this.quaternion = new Quat(); // translation in viewport coordinates
 
         this.relativeTranslation = new Vec3();
         this.relativeTranslation.onChange(function () {
-          return _this31._setTranslation();
+          return _this32._setTranslation();
         }); // translation in webgl coordinates
 
         this._translation = new Vec3(); // scale is a Vec3 with z always equal to 1
 
         this.scale = new Vec3(1);
         this.scale.onChange(function () {
-          _this31.scale.z = 1;
+          _this32.scale.z = 1;
 
-          _this31._applyScale();
+          _this32._applyScale();
         }); // set plane transform origin to center
 
         this.transformOrigin = new Vec3(0.5, 0.5, 0);
         this.transformOrigin.onChange(function () {
           // set transformation origin relative to world space as well
-          _this31._setWorldTransformOrigin();
+          _this32._setWorldTransformOrigin();
 
-          _this31._updateMVMatrix = true;
+          _this32._updateMVMatrix = true;
         });
       }
       /***
@@ -8488,7 +8562,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "_shouldDrawCheck",
       value: function _shouldDrawCheck() {
-        var _this32 = this;
+        var _this33 = this;
 
         // get plane bounding rect
         var actualPlaneBounds = this._getWebGLDrawRect(); // if we decide to draw the plane only when visible inside the canvas
@@ -8500,14 +8574,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             this._shouldDraw = false; // callback for leaving view
 
             this.renderer.nextRender.add(function () {
-              return _this32._onLeaveViewCallback && _this32._onLeaveViewCallback();
+              return _this33._onLeaveViewCallback && _this33._onLeaveViewCallback();
             });
           }
         } else {
           if (!this._shouldDraw) {
             // callback for entering view
             this.renderer.nextRender.add(function () {
-              return _this32._onReEnterViewCallback && _this32._onReEnterViewCallback();
+              return _this33._onReEnterViewCallback && _this33._onReEnterViewCallback();
             });
           }
 
@@ -8769,7 +8843,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       if (!renderer || renderer.type !== "Renderer") {
         throwError(this.type + ": Renderer not passed as first argument", renderer);
       } else if (!renderer.gl) {
-        throwError(this.type + ": Renderer WebGL context is undefined", renderer);
+        if (!renderer.production) throwError(this.type + ": Unable to create a " + this.type + " because the Renderer WebGL context is not defined"); // return if no gl context
+
+        return;
       }
 
       this.renderer = renderer;
@@ -9012,7 +9088,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _super4 = _createSuper(ShaderPass);
 
     function ShaderPass(renderer) {
-      var _this33;
+      var _this34;
 
       var _ref13 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
           widthSegments = _ref13.widthSegments,
@@ -9041,7 +9117,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       cullFace = "back"; // use the renderer container as our HTML element to create a DOMMesh object
 
-      _this33 = _super4.call(this, renderer, renderer.container, "ShaderPass", {
+      _this34 = _super4.call(this, renderer, renderer.container, "ShaderPass", {
         widthSegments: widthSegments,
         heightSegments: heightSegments,
         renderOrder: renderOrder,
@@ -9054,35 +9130,40 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         fragmentShader: fragmentShader,
         texturesOptions: texturesOptions,
         crossOrigin: crossOrigin
-      }); // default to scene pass
+      }); // return if no gl context
 
-      _this33._isScenePass = true;
-      _this33.index = _this33.renderer.shaderPasses.length;
-      _this33._depth = depth;
-      _this33._shouldClear = clear;
-      _this33.target = renderTarget;
+      if (!_this34.gl) {
+        return _possibleConstructorReturn(_this34);
+      } // default to scene pass
 
-      if (_this33.target) {
+
+      _this34._isScenePass = true;
+      _this34.index = _this34.renderer.shaderPasses.length;
+      _this34._depth = depth;
+      _this34._shouldClear = clear;
+      _this34.target = renderTarget;
+
+      if (_this34.target) {
         // if there's a target defined it's not a scene pass
-        _this33._isScenePass = false; // inherit clear param
+        _this34._isScenePass = false; // inherit clear param
 
-        _this33._shouldClear = _this33.target._shouldClear;
+        _this34._shouldClear = _this34.target._shouldClear;
       } // if the program is valid, go on
 
 
-      if (_this33._program.compiled) {
-        _this33._initShaderPass(); // add shader pass to our renderer shaderPasses array
+      if (_this34._program.compiled) {
+        _this34._initShaderPass(); // add shader pass to our renderer shaderPasses array
 
 
-        _this33.renderer.shaderPasses.push(_assertThisInitialized(_this33)); // wait one tick before adding our shader pass to the scene to avoid flickering black screen for one frame
+        _this34.renderer.shaderPasses.push(_assertThisInitialized(_this34)); // wait one tick before adding our shader pass to the scene to avoid flickering black screen for one frame
 
 
-        _this33.renderer.nextRender.add(function () {
-          _this33.renderer.scene.addShaderPass(_assertThisInitialized(_this33));
+        _this34.renderer.nextRender.add(function () {
+          _this34.renderer.scene.addShaderPass(_assertThisInitialized(_this34));
         });
       }
 
-      return _this33;
+      return _this34;
     }
     /*** RESTORING CONTEXT ***/
 
@@ -9221,7 +9302,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _super5 = _createSuper(PingPongPlane);
 
     function PingPongPlane(curtains, htmlElement) {
-      var _this34;
+      var _this35;
 
       var _ref14 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
           _ref14$sampler = _ref14.sampler,
@@ -9252,7 +9333,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       depthTest = false;
       autoloadSources = false; // create our plane
 
-      _this34 = _super5.call(this, curtains, htmlElement, {
+      _this35 = _super5.call(this, curtains, htmlElement, {
         widthSegments: widthSegments,
         heightSegments: heightSegments,
         renderOrder: renderOrder,
@@ -9272,27 +9353,32 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         autoloadSources: autoloadSources,
         watchScroll: watchScroll,
         fov: fov
-      }); // remove from stack, update type to PingPongPlane and then stack again
+      }); // return if no gl context
 
-      _this34.renderer.scene.removePlane(_assertThisInitialized(_this34));
-
-      _this34.type = "PingPongPlane";
-
-      _this34.renderer.scene.addPlane(_assertThisInitialized(_this34)); // create 2 render targets
+      if (!_this35.gl) {
+        return _possibleConstructorReturn(_this35);
+      } // remove from stack, update type to PingPongPlane and then stack again
 
 
-      _this34.readPass = new RenderTarget(curtains, {
+      _this35.renderer.scene.removePlane(_assertThisInitialized(_this35));
+
+      _this35.type = "PingPongPlane";
+
+      _this35.renderer.scene.addPlane(_assertThisInitialized(_this35)); // create 2 render targets
+
+
+      _this35.readPass = new RenderTarget(curtains, {
         depth: false,
         clear: false,
         texturesOptions: texturesOptions
       });
-      _this34.writePass = new RenderTarget(curtains, {
+      _this35.writePass = new RenderTarget(curtains, {
         depth: false,
         clear: false,
         texturesOptions: texturesOptions
       }); // create a texture where we'll draw
 
-      var texture = _this34.createTexture({
+      var texture = _this35.createTexture({
         sampler: sampler
       }); // wait for both render targets textures to be ready and force a copy of the current target texture
       // even if the swap already began
@@ -9301,41 +9387,41 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       var nbPassesReady = 0;
 
-      _this34.readPass.getTexture().onSourceUploaded(function () {
+      _this35.readPass.getTexture().onSourceUploaded(function () {
         nbPassesReady++;
 
-        _this34._checkIfReady(nbPassesReady);
+        _this35._checkIfReady(nbPassesReady);
       });
 
-      _this34.writePass.getTexture().onSourceUploaded(function () {
+      _this35.writePass.getTexture().onSourceUploaded(function () {
         nbPassesReady++;
 
-        _this34._checkIfReady(nbPassesReady);
+        _this35._checkIfReady(nbPassesReady);
       }); // directly assign a render target
 
 
-      _this34.setRenderTarget(_this34.readPass); // override onRender and onAfterRender callbacks
+      _this35.setRenderTarget(_this35.readPass); // override onRender and onAfterRender callbacks
 
 
-      _this34._onRenderCallback = function () {
+      _this35._onRenderCallback = function () {
         // update the render target
-        if (_this34.readPass && _this34.writePass && _this34.textures[0] && _this34.textures[0]._uploaded) {
-          _this34.setRenderTarget(_this34.writePass);
+        if (_this35.readPass && _this35.writePass && _this35.textures[0] && _this35.textures[0]._uploaded) {
+          _this35.setRenderTarget(_this35.writePass);
         }
 
-        _this34._onPingPongRenderCallback && _this34._onPingPongRenderCallback();
+        _this35._onPingPongRenderCallback && _this35._onPingPongRenderCallback();
       };
 
-      _this34._onAfterRenderCallback = function () {
+      _this35._onAfterRenderCallback = function () {
         // swap FBOs and update texture
-        if (_this34.readPass && _this34.writePass && _this34.textures[0] && _this34.textures[0]._uploaded) {
-          _this34._swapPasses();
+        if (_this35.readPass && _this35.writePass && _this35.textures[0] && _this35.textures[0]._uploaded) {
+          _this35._swapPasses();
         }
 
-        _this34._onPingPongAfterRenderCallback && _this34._onPingPongAfterRenderCallback();
+        _this35._onPingPongAfterRenderCallback && _this35._onPingPongAfterRenderCallback();
       };
 
-      return _this34;
+      return _this35;
     }
     /***
      Copy the current target texture once both render targets textures have been uploaded
@@ -9346,11 +9432,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     _createClass(PingPongPlane, [{
       key: "_checkIfReady",
       value: function _checkIfReady(loadedTextures) {
-        var _this35 = this;
+        var _this36 = this;
 
         if (loadedTextures === 2) {
           this.renderer.nextRender.add(function () {
-            _this35.textures[0].copy(_this35.target.getTexture());
+            _this36.textures[0].copy(_this36.target.getTexture());
           });
         }
       }
@@ -9460,7 +9546,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     var _super6 = _createSuper(FXAAPass);
 
     function FXAAPass(curtains) {
-      var _this36;
+      var _this37;
 
       var _ref15 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
           renderOrder = _ref15.renderOrder,
@@ -9483,7 +9569,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         }
       };
-      _this36 = _super6.call(this, curtains, {
+      _this37 = _super6.call(this, curtains, {
         fragmentShader: fragmentShader,
         uniforms: uniforms,
         // Mesh params
@@ -9494,17 +9580,22 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         depth: depth,
         clear: clear,
         renderTarget: renderTarget
-      }); // update the resolution uniform
+      }); // return if no gl context
 
-      _this36.uniforms.resolution.value = [_this36.renderer._boundingRect.width, _this36.renderer._boundingRect.height]; // override onAfterResize callback
+      if (!_this37.gl) {
+        return _possibleConstructorReturn(_this37);
+      } // update the resolution uniform
 
-      _this36._onAfterResizeCallback = function () {
+
+      _this37.uniforms.resolution.value = [_this37.renderer._boundingRect.width, _this37.renderer._boundingRect.height]; // override onAfterResize callback
+
+      _this37._onAfterResizeCallback = function () {
         // update the resolution uniform
-        _this36.uniforms.resolution.value = [_this36.renderer._boundingRect.width, _this36.renderer._boundingRect.height];
-        _this36._onFXAAPassAfterResizeCallback && _this36._onFXAAPassAfterResizeCallback();
+        _this37.uniforms.resolution.value = [_this37.renderer._boundingRect.width, _this37.renderer._boundingRect.height];
+        _this37._onFXAAPassAfterResizeCallback && _this37._onFXAAPassAfterResizeCallback();
       };
 
-      return _this36;
+      return _this37;
     }
     /***
      This is called each time the FXAAPass has been resized

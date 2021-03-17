@@ -102,7 +102,8 @@ export class Mesh {
         // textures
         this.textures = [];
         // default textures options depends on the type of Mesh and WebGL context
-        texturesOptions = Object.assign({
+
+        this._texturesOptions = Object.assign({
             premultiplyAlpha: false,
             anisotropy: 1,
 
@@ -115,7 +116,6 @@ export class Mesh {
             magFilter: this.gl.LINEAR,
         }, texturesOptions);
 
-        this._texturesOptions = texturesOptions;
         this.crossOrigin = crossOrigin;
 
         // handling shaders

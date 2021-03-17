@@ -1,5 +1,33 @@
 # Changelog
 
+## v8.1.0 (03/17/2020)
+
+#### Bug Fixes:
+
+###### all
+
+- Improved failed WebGL context handling (do not break whole javascript execution anymore when WebGL context creation fails).
+
+###### core/Texture.js
+
+- Fixed erratic setSource cache behavior when a texture source changes from image to video/canvas
+
+#### Enhancements:
+
+###### core/Curtains.js
+
+- Added an onSuccess callback fired when the WebGL context has been successfully created.
+
+###### core/Renderer.js
+
+- Added onSuccess callback support.
+
+###### loaders/TextureLoader.js
+
+- Updated accepted media file formats list.
+
+---
+
 ## v8.0.5 (03/05/2020)
 
 #### Bug Fixes:
