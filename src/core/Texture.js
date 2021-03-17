@@ -113,6 +113,9 @@ export class Texture {
         // if it's not, type will change when the source will be loaded
         this.sourceType = isFBOTexture ? "fbo" : "empty";
 
+        // whether to use cache for image textures
+        this._useCache = true;
+
         this._samplerName = sampler;
 
         // prepare texture sampler
@@ -458,7 +461,7 @@ export class Texture {
 
         // copy states
         this._globalParameters = texture._globalParameters;
-        this.parameters = texture.parameters;
+        //this.parameters = texture.parameters;
         this._state = texture._state;
 
         // copy source
@@ -515,49 +518,63 @@ export class Texture {
             this.renderer.nextRender.add(() => this._onSourceLoadedCallback && this._onSourceLoadedCallback());
         }
 
-        // check for cache
-        const cachedTexture = this.renderer.cache.getTextureFromSource(source);
+        // get new source type based on source tag
+        const sourceType = source.tagName.toUpperCase() === "IMG" ? "image" : source.tagName.toLowerCase();
 
-        // if we have a cached texture, just copy it
-        if(cachedTexture && cachedTexture.uuid !== this.uuid) {
-            // force texture uploaded callback
-            if(!this._uploaded) {
-                // GPU uploading callback
-                this.renderer.nextRender.add(() => this._onSourceUploadedCallback && this._onSourceUploadedCallback());
-
-                this._uploaded = true;
-            }
-
-            this.copy(cachedTexture);
-
-            this.resize();
-
-            return;
+        // somehow if the texture type changes from image to video or canvas, the cache won't work anymore
+        if(sourceType === "video" || sourceType === "canvas") {
+            this._useCache = false;
         }
 
-        // no cached texture, proceed normally
-        this.source = source;
+        // check for cache
+        if(this._useCache) {
+            const cachedTexture = this.renderer.cache.getTextureFromSource(source);
 
-        if(this.sourceType === "empty") {
-            if(source.tagName.toUpperCase() === "IMG") {
-                this.sourceType = "image";
+            // if we have a cached texture, just copy it
+            if (cachedTexture && cachedTexture.uuid !== this.uuid) {
+                // force texture uploaded callback
+                if (!this._uploaded) {
+                    // GPU uploading callback
+                    this.renderer.nextRender.add(() => this._onSourceUploadedCallback && this._onSourceUploadedCallback());
+
+                    this._uploaded = true;
+                }
+
+                this.copy(cachedTexture);
+
+                this.resize();
+
+                return;
             }
-            else if(source.tagName.toUpperCase() === "VIDEO") {
-                this.sourceType = "video";
+        }
+
+        if(this.sourceType === "empty" || this.sourceType !== sourceType) {
+            if(sourceType === "video") {
                 // a video should be updated by default
-                // _willUpdate property will be set to true if the video has data to draw
+                this._willUpdate = false;
                 this.shouldUpdate = true;
             }
-            else if(source.tagName.toUpperCase() === "CANVAS") {
-                this.sourceType = "canvas";
+            else if(sourceType === "canvas") {
                 // a canvas could change each frame so we need to update it by default
                 this._willUpdate = true;
                 this.shouldUpdate = true;
             }
-            else if(!this.renderer.production) {
-                throwWarning(this.type + ": this HTML tag could not be converted into a texture:", source.tagName);
+            else if(sourceType === "image") {
+                this._willUpdate = false;
+                this.shouldUpdate = false;
+            }
+            else {
+                if(!this.renderer.production) {
+                    throwWarning(this.type + ": this HTML tag could not be converted into a texture:", source.tagName);
+                }
+
+                return;
             }
         }
+
+        // set new source
+        this.source = source;
+        this.sourceType = sourceType;
 
         this._size = {
             width: this.source.naturalWidth || this.source.width || this.source.videoWidth,
@@ -654,7 +671,7 @@ export class Texture {
     _updateTexParameters() {
         // be sure we're updating the right texture
         if(this.index && this.renderer.state.activeTexture !== this.index) {
-            this._bindTexture(this);
+            this._bindTexture();
         }
 
         // wrapS
@@ -1128,7 +1145,7 @@ export class Texture {
         // only draw if the texture is active (used in the shader)
         if(this._sampler.isActive) {
             // bind the texture
-            this._bindTexture(this);
+            this._bindTexture();
 
             // if no videoFrameCallback check if the video is actually really playing
             if(this.sourceType === "video" && this.source && !this._videoFrameCallbackID && this.source.readyState >= this.source.HAVE_CURRENT_DATA && !this.source.paused) {
