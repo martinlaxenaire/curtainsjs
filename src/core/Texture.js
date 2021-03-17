@@ -461,7 +461,6 @@ export class Texture {
 
         // copy states
         this._globalParameters = texture._globalParameters;
-        //this.parameters = texture.parameters;
         this._state = texture._state;
 
         // copy source
