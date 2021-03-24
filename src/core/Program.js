@@ -207,7 +207,7 @@ export class Program {
         this.gl.deleteShader(this.fragmentShader);
 
         // store active textures (those that are used in the shaders) to avoid binding unused textures
-        if(!this.activeUniforms) {
+        if(!this.activeUniforms || !this.activeAttributes) {
             this.activeUniforms = {
                 textures: [],
                 textureMatrices: [],
@@ -226,6 +226,16 @@ export class Program {
                     // if it's a texture matrix add it to our activeUniforms textureMatrices array
                     this.activeUniforms.textureMatrices.push(activeUniform.name);
                 }
+            }
+
+            this.activeAttributes = [];
+
+            // check for program active attributes to avoid binding attribute buffer if attribute is unused
+            const numAttributes = this.gl.getProgramParameter(this.program, this.gl.ACTIVE_ATTRIBUTES);
+            for(let i = 0; i < numAttributes; i++) {
+                const activeAttribute = this.gl.getActiveAttrib(this.program, i);
+                // push attribute name
+                this.activeAttributes.push(activeAttribute.name);
             }
         }
     }

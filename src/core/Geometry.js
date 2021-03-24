@@ -74,10 +74,12 @@ export class Geometry {
             vertexPosition: {
                 name: "aVertexPosition",
                 size: 3,
+                isActive: false,
             },
             textureCoord: {
                 name: "aTextureCoord",
                 size: 3,
+                isActive: false,
             }
         };
     }
@@ -107,7 +109,7 @@ export class Geometry {
      Use VertexArrayObjects whenever possible
      ***/
     setProgram(program) {
-        this.program = program.program;
+        this.program = program;
         this.initAttributes();
 
         // use vertex array objects if available
@@ -129,7 +131,15 @@ export class Geometry {
     initAttributes() {
         // loop through our attributes and create buffers and attributes locations
         for(const key in this.attributes) {
-            this.attributes[key].location = this.gl.getAttribLocation(this.program, this.attributes[key].name);
+            // is this attribute active in our program?
+            this.attributes[key].isActive = this.program.activeAttributes.includes(this.attributes[key].name);
+
+            // if attribute is not active, no need to go further
+            if(!this.attributes[key].isActive) {
+                return;
+            }
+
+            this.attributes[key].location = this.gl.getAttribLocation(this.program.program, this.attributes[key].name);
             this.attributes[key].buffer = this.gl.createBuffer();
             this.attributes[key].numberOfItems = this.definition.width * this.definition.height * this.attributes[key].size * 2;
         }
@@ -219,6 +229,8 @@ export class Geometry {
 
         // loop through our attributes
         for(const key in this.attributes) {
+            if(!this.attributes[key].isActive) return;
+
             // bind attribute buffer
             this.gl.enableVertexAttribArray(this.attributes[key].location);
 
@@ -249,6 +261,8 @@ export class Geometry {
         else {
             // loop through our attributes to bind the buffers and set the attribute pointer
             for(const key in this.attributes) {
+                if(!this.attributes[key].isActive) return;
+
                 this.gl.enableVertexAttribArray(this.attributes[key].location);
                 this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
                 this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
@@ -284,6 +298,8 @@ export class Geometry {
         }
 
         for(const key in this.attributes) {
+            if(!this.attributes[key].isActive) return;
+
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
             this.gl.bufferData(this.gl.ARRAY_BUFFER, 1, this.gl.STATIC_DRAW);
             this.gl.deleteBuffer(this.attributes[key].buffer);
