@@ -1054,34 +1054,26 @@ export class Plane extends DOMMesh {
         // load plane sources
         let loaderSize = 0;
         if(this.autoloadSources) {
+            const images = this.htmlElement.getElementsByTagName("img");
+            const videos = this.htmlElement.getElementsByTagName("video");
+            const canvases = this.htmlElement.getElementsByTagName("canvas");
+
             // load images
-            const imagesArray = [];
-            for(let i = 0; i < this.htmlElement.getElementsByTagName("img").length; i++) {
-                imagesArray.push(this.htmlElement.getElementsByTagName("img")[i]);
-            }
-            if(imagesArray.length > 0) {
-                this.loadImages(imagesArray);
+            if(images.length) {
+                this.loadImages(images);
             }
 
             // load videos
-            const videosArray = [];
-            for(let i = 0; i < this.htmlElement.getElementsByTagName("video").length; i++) {
-                videosArray.push(this.htmlElement.getElementsByTagName("video")[i]);
-            }
-            if(videosArray.length > 0) {
-                this.loadVideos(videosArray);
+            if(videos.length) {
+                this.loadVideos(images);
             }
 
             // load canvases
-            const canvasesArray = [];
-            for(let i = 0; i < this.htmlElement.getElementsByTagName("canvas").length; i++) {
-                canvasesArray.push(this.htmlElement.getElementsByTagName("canvas")[i]);
-            }
-            if(canvasesArray.length > 0) {
-                this.loadCanvases(canvasesArray);
+            if(canvases.length) {
+                this.loadCanvases(images);
             }
 
-            loaderSize = imagesArray.length + videosArray.length + canvasesArray.length;
+            loaderSize = images.length + videos.length + canvases.length;
         }
 
         this.loader._setLoaderSize(loaderSize);
