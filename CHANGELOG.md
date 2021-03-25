@@ -1,5 +1,35 @@
 # Changelog
 
+## v8.1.1 (03/25/2020)
+
+#### Bug Fixes:
+
+###### core/Texture.js
+
+- Fixed context restoration (recreate GL texture).
+
+###### core/ShaderPass.js
+
+- Fixed context restoration (correctly restack in our Scene manager).
+
+#### Enhancements:
+
+###### core/Program.js
+
+- Added a activeAttributes property and keep track of active attributes used in the program.
+
+###### core/Geometry.js
+
+- Only create and bind program active attributes buffers to avoid warnings.
+
+---
+
+###### core/Plane.js
+
+- Cleaned up initial sources loading.
+
+---
+
 ## v8.1.0 (03/17/2020)
 
 #### Bug Fixes:

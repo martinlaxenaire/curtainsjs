@@ -1769,7 +1769,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return ScrollManager;
   }();
 
-  var version = "8.1.0";
+  var version = "8.1.1";
   /***
    Here we create our Curtains object
        params:
@@ -3022,9 +3022,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (existingProgram) {
           // we need to create a new program but we don't have to re compile the shaders
           this.vertexShader = existingProgram.vertexShader;
-          this.fragmentShader = existingProgram.fragmentShader; // copy active textures as well
+          this.fragmentShader = existingProgram.fragmentShader; // copy active uniforms and attributes as well
 
           this.activeUniforms = existingProgram.activeUniforms;
+          this.activeAttributes = existingProgram.activeAttributes;
           this.createProgram();
         } else {
           // compile the new shaders and create a new program
@@ -3073,7 +3074,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.gl.deleteShader(this.vertexShader);
         this.gl.deleteShader(this.fragmentShader); // store active textures (those that are used in the shaders) to avoid binding unused textures
 
-        if (!this.activeUniforms) {
+        if (!this.activeUniforms || !this.activeAttributes) {
           this.activeUniforms = {
             textures: [],
             textureMatrices: []
@@ -3093,6 +3094,16 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
               // if it's a texture matrix add it to our activeUniforms textureMatrices array
               this.activeUniforms.textureMatrices.push(activeUniform.name);
             }
+          }
+
+          this.activeAttributes = []; // check for program active attributes to avoid binding attribute buffer if attribute is unused
+
+          var numAttributes = this.gl.getProgramParameter(this.program, this.gl.ACTIVE_ATTRIBUTES);
+
+          for (var _i8 = 0; _i8 < numAttributes; _i8++) {
+            var activeAttribute = this.gl.getActiveAttrib(this.program, _i8); // push attribute name
+
+            this.activeAttributes.push(activeAttribute.name);
           }
         }
       }
@@ -3215,11 +3226,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.attributes = {
           vertexPosition: {
             name: "aVertexPosition",
-            size: 3
+            size: 3,
+            isActive: false
           },
           textureCoord: {
             name: "aTextureCoord",
-            size: 3
+            size: 3,
+            isActive: false
           }
         };
       }
@@ -3251,7 +3264,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "setProgram",
       value: function setProgram(program) {
-        this.program = program.program;
+        this.program = program;
         this.initAttributes(); // use vertex array objects if available
 
         if (this.renderer._isWebGL2) {
@@ -3273,7 +3286,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function initAttributes() {
         // loop through our attributes and create buffers and attributes locations
         for (var key in this.attributes) {
-          this.attributes[key].location = this.gl.getAttribLocation(this.program, this.attributes[key].name);
+          // is this attribute active in our program?
+          this.attributes[key].isActive = this.program.activeAttributes.includes(this.attributes[key].name); // if attribute is not active, no need to go further
+
+          if (!this.attributes[key].isActive) {
+            return;
+          }
+
+          this.attributes[key].location = this.gl.getAttribLocation(this.program.program, this.attributes[key].name);
           this.attributes[key].buffer = this.gl.createBuffer();
           this.attributes[key].numberOfItems = this.definition.width * this.definition.height * this.attributes[key].size * 2;
         }
@@ -3351,7 +3371,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (!this.attributes) return; // loop through our attributes
 
         for (var key in this.attributes) {
-          // bind attribute buffer
+          if (!this.attributes[key].isActive) return; // bind attribute buffer
+
           this.gl.enableVertexAttribArray(this.attributes[key].location);
           this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
           this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.attributes[key].array), this.gl.STATIC_DRAW); // set where the attribute gets its data
@@ -3378,6 +3399,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } else {
           // loop through our attributes to bind the buffers and set the attribute pointer
           for (var key in this.attributes) {
+            if (!this.attributes[key].isActive) return;
             this.gl.enableVertexAttribArray(this.attributes[key].location);
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
             this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
@@ -3414,6 +3436,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
 
         for (var key in this.attributes) {
+          if (!this.attributes[key].isActive) return;
           this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
           this.gl.bufferData(this.gl.ARRAY_BUFFER, 1, this.gl.STATIC_DRAW);
           this.gl.deleteBuffer(this.attributes[key].buffer);
@@ -4659,8 +4682,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var _this13 = this;
 
         // avoid binding that texture before reseting it
-        this._canDraw = false;
+        this._canDraw = false; // reinit sampler and texture matrix
+
+        this._sampler.texture = this.gl.createTexture();
         this._sampler.isActive = false;
+        this._sampler.isTextureBound = false;
+        this._textureMatrix.isActive = false;
 
         this._initState(); // force mip map regeneration if needed
 
@@ -8410,9 +8437,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           }
         } else {
           // all 4 corners are culled! artificially apply wrong coords to force plane culling
-          for (var _i8 = 0; _i8 < corners.length; _i8++) {
-            mvpCorners[_i8][0] = 10000;
-            mvpCorners[_i8][1] = 10000;
+          for (var _i9 = 0; _i9 < corners.length; _i9++) {
+            mvpCorners[_i9][0] = 10000;
+            mvpCorners[_i9][1] = 10000;
           }
         }
 
@@ -8460,8 +8487,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var minY = Infinity;
         var maxY = -Infinity;
 
-        for (var _i9 = 0; _i9 < mvpCorners.length; _i9++) {
-          var corner = mvpCorners[_i9];
+        for (var _i10 = 0; _i10 < mvpCorners.length; _i10++) {
+          var corner = mvpCorners[_i10];
 
           if (corner.x < minX) {
             minX = corner.x;
@@ -8624,40 +8651,25 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var loaderSize = 0;
 
         if (this.autoloadSources) {
-          // load images
-          var imagesArray = [];
+          var images = this.htmlElement.getElementsByTagName("img");
+          var videos = this.htmlElement.getElementsByTagName("video");
+          var canvases = this.htmlElement.getElementsByTagName("canvas"); // load images
 
-          for (var i = 0; i < this.htmlElement.getElementsByTagName("img").length; i++) {
-            imagesArray.push(this.htmlElement.getElementsByTagName("img")[i]);
-          }
-
-          if (imagesArray.length > 0) {
-            this.loadImages(imagesArray);
+          if (images.length) {
+            this.loadImages(images);
           } // load videos
 
 
-          var videosArray = [];
-
-          for (var _i10 = 0; _i10 < this.htmlElement.getElementsByTagName("video").length; _i10++) {
-            videosArray.push(this.htmlElement.getElementsByTagName("video")[_i10]);
-          }
-
-          if (videosArray.length > 0) {
-            this.loadVideos(videosArray);
+          if (videos.length) {
+            this.loadVideos(images);
           } // load canvases
 
 
-          var canvasesArray = [];
-
-          for (var _i11 = 0; _i11 < this.htmlElement.getElementsByTagName("canvas").length; _i11++) {
-            canvasesArray.push(this.htmlElement.getElementsByTagName("canvas")[_i11]);
+          if (canvases.length) {
+            this.loadCanvases(images);
           }
 
-          if (canvasesArray.length > 0) {
-            this.loadCanvases(canvasesArray);
-          }
-
-          loaderSize = imagesArray.length + videosArray.length + canvasesArray.length;
+          loaderSize = images.length + videos.length + canvases.length;
         }
 
         this.loader._setLoaderSize(loaderSize);
@@ -9175,13 +9187,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     _createClass(ShaderPass, [{
       key: "_programRestored",
       value: function _programRestored() {
-        // we just need to re add the shader pass to the scene stack
-        if (this._isScenePass) {
-          this.renderer.scene.stacks.scenePasses.push(this.index);
-        } else {
-          this.renderer.scene.stacks.renderPasses.push(this.index);
-        } // restore the textures
-
+        // add the shader pass to our draw stack again as it have been emptied
+        this.renderer.scene.addShaderPass(this); // restore the textures
 
         for (var i = 0; i < this.textures.length; i++) {
           this.textures[i]._parent = this;
