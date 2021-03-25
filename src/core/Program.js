@@ -150,8 +150,9 @@ export class Program {
             this.vertexShader = existingProgram.vertexShader;
             this.fragmentShader = existingProgram.fragmentShader;
 
-            // copy active textures as well
+            // copy active uniforms and attributes as well
             this.activeUniforms = existingProgram.activeUniforms;
+            this.activeAttributes = existingProgram.activeAttributes;
 
             this.createProgram();
         }
