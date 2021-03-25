@@ -278,6 +278,128 @@ window.addEventListener("load", () => {
     }
 
 
+    // vertices coordinates helper
+    const verticesHelperVs = `      
+        precision mediump float;
+        
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+        
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+        
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+        
+        uniform float uTime;
+        
+        void main() {
+            vec3 vertexPosition = aVertexPosition;
+            
+            vertexPosition.z = sin(vertexPosition.x * 3.141592 + uTime * 0.0375) * 0.05;
+            
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+            
+            // set the varyings
+            vTextureCoord = aTextureCoord;
+            vVertexPosition = vertexPosition;
+        }
+    `;
+
+    const verticesHelperFs = `        
+        precision mediump float;
+        
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+        
+        uniform sampler2D uSampler0;
+        void main() {
+            gl_FragColor = texture2D(uSampler0, vTextureCoord);
+        }
+    `;
+
+    const verticesHelperEl = document.getElementById("vertices-position-helper-plane");
+
+    if(verticesHelperEl) {
+
+        const verticesHelperPlaneParams = {
+            vertexShader: verticesHelperVs, // our vertex shader
+            fragmentShader: verticesHelperFs, // our framgent shader
+            widthSegments: 5,
+            heightSegments: 5,
+            uniforms: {
+                time: {
+                    name: "uTime",
+                    type: "1f",
+                    value: 0,
+                },
+            },
+        };
+
+        const verticesHelperPlane = new Plane(curtains, verticesHelperEl, verticesHelperPlaneParams);
+
+        verticesHelperPlane.onRender(() => {
+            verticesHelperPlane.uniforms.time.value++;
+        });
+    }
+
+
+    // texture coordinates helper
+    const textureHelperVs = `      
+        precision mediump float;
+        
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+        
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+        
+        varying vec2 vTextureCoord;
+        
+        uniform float uTime;
+        
+        void main() {            
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+            
+            // set the varyings
+            vTextureCoord = aTextureCoord;
+        }
+    `;
+
+    const textureHelperFs = `        
+        precision mediump float;
+        
+        varying vec2 vTextureCoord;
+        
+        void main() {
+            gl_FragColor = vec4(vec3(vTextureCoord.y), 1.0);
+        }
+    `;
+
+    const textureHelperEl = document.getElementById("texture-coord-helper-plane");
+
+    if(textureHelperEl) {
+
+        const textureHelperPlaneParams = {
+            vertexShader: textureHelperVs, // our vertex shader
+            fragmentShader: textureHelperFs, // our framgent shader
+            uniforms: {
+                time: {
+                    name: "uTime",
+                    type: "1f",
+                    value: 0,
+                },
+            },
+        };
+
+        const textureHelperPlane = new Plane(curtains, textureHelperEl, textureHelperPlaneParams);
+
+        textureHelperPlane.onRender(() => {
+            textureHelperPlane.uniforms.time.value++;
+        });
+    }
+
+
     // about
     const aboutElements = document.getElementsByClassName("about-curtain");
 

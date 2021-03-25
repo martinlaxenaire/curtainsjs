@@ -72,7 +72,11 @@
 
     .text-section {
         max-width: 980px;
-        margin: 0 auto;
+        margin: 100px auto 40px auto;
+    }
+
+    .text-section p {
+        font-size: 1.1em;
     }
 
     /*** canvas ***/
@@ -359,6 +363,94 @@
         display: none;
     }
 
+    /*** vertices position helper ***/
+
+    #vertices-position-helper {
+        margin: 6em 3em;
+        position: relative;
+        height: 0;
+        padding-bottom: calc((100% - 6em) * 766 / 1200);
+    }
+
+    #vertices-position-helper-plane {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+    #vertices-position-helper-plane img {
+        display: none;
+    }
+
+    .vertices-position-helper-coords {
+        position: absolute;
+        font-weight: bold;
+    }
+
+    #vertices-position-helper-plane-bottom-left {
+        bottom: -3em;
+        left: -3em;
+    }
+
+    #vertices-position-helper-plane-bottom-right {
+        bottom: -3em;
+        right: -3em;
+    }
+
+    #vertices-position-helper-plane-top-left {
+        top: -3em;
+        left: -3em;
+    }
+
+    #vertices-position-helper-plane-top-right {
+        top: -3em;
+        right: -3em;
+    }
+
+    /*** texture coord helper ***/
+
+    #texture-coord-helper {
+        margin: 6em 3em;
+        position: relative;
+        height: 0;
+        padding-bottom: calc((100% - 6em) * 766 / 1200);
+    }
+
+    #texture-coord-helper-plane {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+    .texture-coord-helper-coords {
+        position: absolute;
+        font-weight: bold;
+    }
+
+    #texture-coord-helper-plane-bottom-left {
+        bottom: -3em;
+        left: -3em;
+    }
+
+    #texture-coord-helper-plane-bottom-right {
+        bottom: -3em;
+        right: -3em;
+    }
+
+    #texture-coord-helper-plane-top-left {
+        top: -3em;
+        left: -3em;
+    }
+
+    #texture-coord-helper-plane-top-right {
+        top: -3em;
+        right: -3em;
+    }
+
     /*** about ***/
 
     #about {
@@ -369,11 +461,15 @@
 
     /*** handling errors ***/
 
-    .no-curtains .website-example-cover img, .no-curtains #basic-example img {
+    .no-curtains .website-example-cover img, .no-curtains #basic-example img, .no-curtains #vertices-position-helper-plane img {
         opacity: 1;
         display: block;
         width: 100%;
         height: auto;
+    }
+
+    .no-curtains #texture-coord-helper-plane {
+        background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(255,255,255,1) 100%);
     }
 
     .no-curtains #site-title {

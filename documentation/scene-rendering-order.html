@@ -200,18 +200,18 @@
                             </li>
 
                             <li>
-                                <h3>Transparent's stack</h3>
-                                <p>
-                                    Then it will draw all the planes that have their transparent property set to true.<br />
-                                    They are ordered by their renderOrder property, their translation along Z axis, geometry IDs and then indexes (first added first drawn).
-                                </p>
-                            </li>
-
-                            <li>
                                 <h3>Opaque's stack</h3>
                                 <p>
                                     Then it will draw all the planes that have their transparent property set to false.<br />
                                     They are ordered by their renderOrder property, geometry IDs and then indexes (first added first drawn).
+                                </p>
+                            </li>
+
+                            <li>
+                                <h3>Transparent's stack</h3>
+                                <p>
+                                    Then it will enable blending and draw all the planes that have their transparent property set to true.<br />
+                                    They are ordered by their renderOrder property, their translation along Z axis, geometry IDs and then indexes (first added first drawn).
                                 </p>
                             </li>
 
@@ -222,13 +222,6 @@
                                 </p>
                             </li>
                         </ol>
-
-
-                        <p>
-                            The order in which all the objects are drawn by curtains.js is managed by the Scene class (view <a href="https://github.com/martinlaxenaire/curtainsjs/blob/master/src/core/Scene.js" title="Scene class source code" target="_blank">source code</a>).<br />
-                            It creates a bunch of stacks that contains the objects that will be drawn in a specific order.<br />
-                            Those are the different draw calls and operations executed at each render:
-                        </p>
 
                     </div>
                 </div>

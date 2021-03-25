@@ -35,8 +35,8 @@
 		<meta name="msapplication-config" content="images/favicons/browserconfig.xml">
 		<meta name="theme-color" content="#202340">
 
-		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700" rel="stylesheet">
-		<link href="https://fonts.googleapis.com/css?family=Abril+Fatface" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=PT+Sans:400,700&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Abril+Fatface&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="style.css" type="text/css">
 	</head>
@@ -82,6 +82,9 @@
 								<li>
 									<a href="#basic-setup" title="Basic setup example">Basic setup example</a>
 								</li>
+                                <li>
+                                    <a href="#about-planes-attributes-a-vertex-positon-a-texture-coord" title="About the plane's attributes : aVertexPosition and aTextureCoord">About the plane's attributes : aVertexPosition and aTextureCoord</a>
+                                </li>
 								<li>
 									<a href="#images-uniforms-samplers" title="Textures uniform sampler names">Textures uniform sampler names</a>
 								</li>
@@ -552,6 +555,154 @@
 								Et voilà !
 							</p>
 						</div>
+
+                        <div id="about-planes-attributes-a-vertex-positon-a-texture-coord" class="text-section inner-section">
+                            <h2>About the plane's attributes : aVertexPosition and aTextureCoord</h2>
+
+                            <p>
+                                In our basic example above, we've passed the two plane's attributes <strong>aVertexPosition and aTextureCoord</strong> as <strong>vVertexPosition and vTextureCoord</strong> varyings to our fragment shader, even tho we did not really use vVertexPosition in the end. But what are those attributes and what do they mean?
+                            </p>
+
+                            <h3>aVertexPosition: the plane vertices coordinates</h3>
+
+                            <p>
+                                Those are the plane's original vertices positions. Multiplying them by the projection and model view matrices in our vertex shader correctly position our plane in the world space:
+                            </p>
+
+                            <div class="code">
+                                <div>
+                                    gl_Position = uPMatrix * uMVMatrix * <span class="code-tag">vec4</span>(aVertexPosition<span class="code-var">,</span> <span class="code-number">1.0</span>)<span class="code-var">;</span>
+                                </div>
+
+                            </div>
+
+                            <p>
+                                The plane's vertices positions are ranging from -1 to 1 on both X and Y axis (Z value is equal to 0 by default), <strong>[-1, -1] being the bottom left corner while [1, 1] is the top right corner</strong>, whatever its size, position and scale.
+                            </p>
+
+                            <p>
+                                Here is an example where we animate the plane vertices Z position using a sinusoidal function, based on its coordinates along the X axis and a time uniform:
+                            </p>
+
+                            <div class="code">
+                                <div class="code-block">
+                                    <div>
+                                        <span class="code-tag">vec3</span> vertexPosition = aVertexPosition<span class="code-var">;</span>
+                                    </div>
+                                    <div>
+                                        vertexPosition.<span class="code-property">z</span> = <span class="code-tag">sin</span>(vertexPosition.<span class="code-property">x</span> * <span class="code-number">3.141592</span> + uTime * <span class="code-number">0.0375</span>) * <span class="code-number">0.05</span><span class="code-var">;</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    gl_Position = uPMatrix * uMVMatrix * <span class="code-tag">vec4</span>(vertexPosition<span class="code-var">,</span> <span class="code-number">1.0</span>)<span class="code-var">;</span>
+                                </div>
+
+                            </div>
+
+                            <div id="vertices-position-helper">
+                                <div id="vertices-position-helper-plane">
+                                    <img src="images/plane-vertices-helper.jpg" alt="Vertices position helper plane illustration" />
+
+                                    <span class="vertices-position-helper-coords" id="vertices-position-helper-plane-bottom-left">{x: -1, y: -1}</span>
+                                    <span class="vertices-position-helper-coords" id="vertices-position-helper-plane-bottom-right">{x: 1, y: -1}</span>
+                                    <span class="vertices-position-helper-coords" id="vertices-position-helper-plane-top-left">{x: -1, y: 1}</span>
+                                    <span class="vertices-position-helper-coords" id="vertices-position-helper-plane-top-right">{x: 1, y: 1}</span>
+                                </div>
+                            </div>
+
+                            <h3>aTextureCoord: the plane texture coordinates</h3>
+
+                            <p>
+                                Those are defining the plane's texture coordinates. They are ranging from 0 to 1 on both X and Y axis, <strong>[0, 0] being the bottom left corner while [1, 1] is the top right corner</strong>.
+                            </p>
+
+                            <p>
+                                Texture coordinates could be helpful to draw geometric shapes, gradients and such.
+                            </p>
+
+                            <p>
+                                Here is an example where the RGB values of our displayed color is based on the Y component of our texture coordinates:
+                            </p>
+
+                            <div class="code">
+                                <div>
+                                    gl_FragColor = <span class="code-tag">vec4</span>(<span class="code-tag">vec3</span>(vTextureCoord.<span class="code-property">y</span>)<span class="code-var">,</span> <span class="code-number">1.0</span>)<span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <div id="texture-coord-helper">
+                                <div id="texture-coord-helper-plane">
+                                    <span class="texture-coord-helper-coords" id="texture-coord-helper-plane-bottom-left">{x: 0, y: 0}</span>
+                                    <span class="texture-coord-helper-coords" id="texture-coord-helper-plane-bottom-right">{x: 1, y: 0}</span>
+                                    <span class="texture-coord-helper-coords" id="texture-coord-helper-plane-top-left">{x: 0, y: 1}</span>
+                                    <span class="texture-coord-helper-coords" id="texture-coord-helper-plane-top-right">{x: 1, y: 1}</span>
+                                </div>
+                            </div>
+
+                            <h3>Using texture matrices to pass texture coordinates as a varying</h3>
+
+                            <p>
+                                Another thing you need to understand is that when you multiply your texture coordinates with a texture matrix, they won't necessarily be ranging from 0 to 1 on both axis any more, since they will actually be scaled to correctly map your texture:
+                            </p>
+
+                            <div class="code">
+                                <div class="code-comment">
+                                    // here vTextureCoord won't necessarily be ranging from 0 to 1 on both axis
+                                </div>
+                                <div class="code-comment">
+                                    // since it has been scaled
+                                </div>
+                                <div>
+                                    vTextureCoord = (uTextureMatrix0 * <span class="code-tag">vec4</span>(aTextureCoord<span class="code-var">,</span> <span class="code-number">0.0</span><span class="code-var">,</span> <span class="code-number">1.0</span>)).<span class="code-property">xy</span><span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <p>
+                                If you want to correctly map you texture and also get accurate texture coordinates at the same time (ie to draw geometric shapes for example), consider passing 2 varyings:
+                            </p>
+
+                            <div class="code">
+                                <div class="code-comment">
+                                    // use vOriginalTextureCoord (ranging from 0 to 1 on both axis) to draw geometric shapes
+                                </div>
+                                <div class="code-block">
+                                    vOriginalTextureCoord = aTextureCoord<span class="code-var">;</span>
+                                </div>
+                                <div class="code-comment">
+                                    // use vTextureCoord to map your uSampler0 texture
+                                </div>
+                                <div>
+                                    vTextureCoord = (uTextureMatrix0 * <span class="code-tag">vec4</span>(aTextureCoord<span class="code-var">,</span> <span class="code-number">0.0</span><span class="code-var">,</span> <span class="code-number">1.0</span>)).<span class="code-property">xy</span><span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <h3>What about gl_FragCoord then?</h3>
+
+                            <p>
+                                In some examples online, such as the one in the Book of Shaders, you'll see the texture coordinates (also called UV, or ST due to some naming conflict) being calculated using the <strong>gl_FragCoord</strong> fragment shader global variable and the resolution uniform:
+                            </p>
+
+                            <div class="code">
+                                <div class="code-comment">
+                                    // calculate UV based on gl_FragCoord and uResolution uniform
+                                </div>
+                                <div>
+                                    <span class="code-tag">vec2</span> st = gl_FragCoord.<span class="code-property">xy</span> / uResolution.<span class="code-property">xy</span><span class="code-var">;</span>
+                                </div>
+                            </div>
+
+                            <p>
+                                Here, <strong>gl_FragCoord.xy</strong> is the pixel coordinate along X and Y axis along the canvas.<br />
+                                If your plane has the same size and position as your rendering canvas, you might use this method to compute your coordinates. But if it doesn't, you'll have to take into account the plane's offset, leading to unnecessary calculations.
+                            </p>
+
+                            <p>
+                                You should therefore <strong>always use the built-in aTextureCoord attributes</strong>.
+                            </p>
+
+                        </div>
+
+
 						<div id="images-uniforms-samplers" class="text-section inner-section">
 							<h2>Textures uniforms matrices and sampler names</h2>
 							<p>
