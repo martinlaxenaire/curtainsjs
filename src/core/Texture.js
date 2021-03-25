@@ -253,7 +253,13 @@ export class Texture {
     _restoreContext() {
         // avoid binding that texture before reseting it
         this._canDraw = false;
+
+        // reinit sampler and texture matrix
+        this._sampler.texture = this.gl.createTexture();
         this._sampler.isActive = false;
+        this._sampler.isTextureBound = false;
+
+        this._textureMatrix.isActive = false;
 
         this._initState();
 

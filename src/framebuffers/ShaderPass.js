@@ -108,13 +108,8 @@ export class ShaderPass extends DOMMesh {
      Used internally to handle context restoration after the program has been successfully compiled again
      ***/
     _programRestored() {
-        // we just need to re add the shader pass to the scene stack
-        if(this._isScenePass) {
-            this.renderer.scene.stacks.scenePasses.push(this.index);
-        }
-        else {
-            this.renderer.scene.stacks.renderPasses.push(this.index);
-        }
+        // add the shader pass to our draw stack again as it have been emptied
+        this.renderer.scene.addShaderPass(this);
 
         // restore the textures
         for(let i = 0; i < this.textures.length; i++) {
