@@ -1769,7 +1769,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return ScrollManager;
   }();
 
-  var version = "8.1.1";
+  var version = "8.1.2";
   /***
    Here we create our Curtains object
        params:
@@ -8661,12 +8661,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
           if (videos.length) {
-            this.loadVideos(images);
+            this.loadVideos(videos);
           } // load canvases
 
 
           if (canvases.length) {
-            this.loadCanvases(images);
+            this.loadCanvases(canvases);
           }
 
           loaderSize = images.length + videos.length + canvases.length;

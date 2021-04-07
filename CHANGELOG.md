@@ -1,5 +1,15 @@
 # Changelog
 
+## v8.1.2 (04/07/2020)
+
+#### Bug Fixes:
+
+###### core/Plane.js
+
+- Fixed video and canvas autoloading not working since v8.1.1.
+
+---
+
 ## v8.1.1 (03/25/2020)
 
 #### Bug Fixes:
