@@ -1065,12 +1065,12 @@ export class Plane extends DOMMesh {
 
             // load videos
             if(videos.length) {
-                this.loadVideos(images);
+                this.loadVideos(videos);
             }
 
             // load canvases
             if(canvases.length) {
-                this.loadCanvases(images);
+                this.loadCanvases(canvases);
             }
 
             loaderSize = images.length + videos.length + canvases.length;
