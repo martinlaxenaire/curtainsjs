@@ -1,6 +1,26 @@
 # Changelog
 
-## v8.1.2 (04/07/2020)
+## v8.1.3 (09/??/2021)
+
+#### Bug Fixes:
+
+###### core/Texture.js
+
+- Fixed setSource() / copy() issues (force mipmaps regeneration) - [#93](https://github.com/martinlaxenaire/curtainsjs/issues/93).
+
+#### Enhancements:
+
+###### framebuffers/RenderTarget.js
+
+- Added maxWidth / maxHeight parameters
+
+###### documentation
+
+- Added back setSource() function to Texture class documentation
+
+---
+
+## v8.1.2 (04/07/2021)
 
 #### Bug Fixes:
 
@@ -10,7 +30,7 @@
 
 ---
 
-## v8.1.1 (03/25/2020)
+## v8.1.1 (03/25/2021)
 
 #### Bug Fixes:
 
@@ -40,7 +60,7 @@
 
 ---
 
-## v8.1.0 (03/17/2020)
+## v8.1.0 (03/17/2021)
 
 #### Bug Fixes:
 
@@ -68,7 +88,7 @@
 
 ---
 
-## v8.0.5 (03/05/2020)
+## v8.0.5 (03/05/2021)
 
 #### Bug Fixes:
 
@@ -89,7 +109,7 @@
 
 ---
 
-## v8.0.4 (02/17/2020)
+## v8.0.4 (02/17/2021)
 
 #### Bug Fixes:
 
@@ -114,7 +134,7 @@
 
 ---
 
-## v8.0.3 (02/01/2020)
+## v8.0.3 (02/01/2021)
 
 #### Bug Fixes:
 
@@ -146,7 +166,7 @@
 
 ---
 
-## v8.0.2 (01/18/2020)
+## v8.0.2 (01/18/2021)
 
 #### Bug Fixes:
 
@@ -170,7 +190,7 @@
 
 ---
 
-## v8.0.1 (01/04/2020)
+## v8.0.1 (01/04/2021)
 
 #### Bug Fixes:
 

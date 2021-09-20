@@ -26,6 +26,8 @@ export class RenderTarget {
         depth = false,
         clear = true,
 
+        maxWidth,
+        maxHeight,
         minWidth = 1024,
         minHeight = 1024,
 
@@ -56,6 +58,11 @@ export class RenderTarget {
         this._depth = depth;
 
         this._shouldClear = clear;
+
+        this._maxSize = {
+            width: maxWidth ? Math.min(this.renderer.state.maxTextureSize / 4, maxWidth) : this.renderer.state.maxTextureSize / 4, // enough!
+            height: maxHeight ? Math.min(this.renderer.state.maxTextureSize / 4, maxHeight) : this.renderer.state.maxTextureSize / 4,
+        };
 
         this._minSize = {
             width: minWidth * this.renderer.pixelRatio,
@@ -135,8 +142,8 @@ export class RenderTarget {
         }
         else {
             this._size = {
-                width: Math.max(this._minSize.width, this.renderer._boundingRect.width),
-                height: Math.max(this._minSize.height, this.renderer._boundingRect.height),
+                width: Math.min(this._maxSize.width, Math.max(this._minSize.width, this.renderer._boundingRect.width)),
+                height: Math.min(this._maxSize.height, Math.max(this._minSize.height, this.renderer._boundingRect.height)),
             };
         }
     }

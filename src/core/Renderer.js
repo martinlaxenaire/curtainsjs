@@ -175,6 +175,7 @@ export class Renderer {
 
         // context is not lost
         this.state.isContextLost = false;
+        this.state.maxTextureSize = this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE);
 
         // callback queue
         this.initCallbackQueueManager();
