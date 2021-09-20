@@ -469,6 +469,10 @@ export class Texture {
         this._globalParameters = texture._globalParameters;
         this._state = texture._state;
 
+        // regenerate mips if needed
+        this.parameters.generateMipmap = texture.parameters.generateMipmap;
+        this._state.generateMipmap = null;
+
         // copy source
         this._size = texture._size;
 
@@ -502,6 +506,8 @@ export class Texture {
 
             this._canDraw = true;
         }
+
+        this._updateTexParameters();
 
         // force rendering
         this.renderer.needRender();
