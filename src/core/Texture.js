@@ -466,8 +466,8 @@ export class Texture {
         }
 
         // copy states
-        this._globalParameters = texture._globalParameters;
-        this._state = texture._state;
+        this._globalParameters = Object.assign({}, texture._globalParameters);
+        this._state = Object.assign({}, texture._state);
 
         // regenerate mips if needed
         this.parameters.generateMipmap = texture.parameters.generateMipmap;
