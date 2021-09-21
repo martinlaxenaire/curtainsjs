@@ -8,11 +8,11 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
@@ -25,7 +25,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 (function (global, factory) {
-  (typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? factory(exports) : typeof define === 'function' && define.amd ? define(['exports'], factory) : (global = global || self, factory(global.window = global.window || {}));
+  (typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? factory(exports) : typeof define === 'function' && define.amd ? define(['exports'], factory) : (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.window = global.window || {}));
 })(this, function (exports) {
   'use strict';
   /***
@@ -996,7 +996,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderTargets = [];
         this.shaderPasses = []; // context is not lost
 
-        this.state.isContextLost = false; // callback queue
+        this.state.isContextLost = false;
+        this.state.maxTextureSize = this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE); // callback queue
 
         this.initCallbackQueueManager(); // set blend func
 
@@ -1769,7 +1770,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return ScrollManager;
   }();
 
-  var version = "8.1.2";
+  var version = "8.1.3";
   /***
    Here we create our Curtains object
        params:
@@ -3010,13 +3011,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
     }, {
       key: "setupProgram",
-
+      value:
       /***
        Checks whether the program has already been registered before creating it
        If yes, use the compiled shaders to create a new one with createProgram()
        If not, compile the shaders and call createProgram()
        ***/
-      value: function setupProgram() {
+      function setupProgram() {
         var existingProgram = this.renderer.cache.getProgramFromShaders(this.vsCode, this.fsCode); // we found an existing program
 
         if (existingProgram) {
@@ -3810,6 +3811,26 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
     _createClass(Vec2, [{
+      key: "x",
+      get: function get() {
+        return this._x;
+      },
+      set: function set(value) {
+        var changed = value !== this._x;
+        this._x = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+      }
+    }, {
+      key: "y",
+      get: function get() {
+        return this._y;
+      },
+      set: function set(value) {
+        var changed = value !== this._y;
+        this._y = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+      }
+    }, {
       key: "onChange",
       value: function onChange(callback) {
         if (callback) {
@@ -4041,26 +4062,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function dot(vector) {
         return this._x * vector.x + this._y * vector.y;
       }
-    }, {
-      key: "x",
-      get: function get() {
-        return this._x;
-      },
-      set: function set(value) {
-        var changed = value !== this._x;
-        this._x = value;
-        changed && this._onChangeCallback && this._onChangeCallback();
-      }
-    }, {
-      key: "y",
-      get: function get() {
-        return this._y;
-      },
-      set: function set(value) {
-        var changed = value !== this._y;
-        this._y = value;
-        changed && this._onChangeCallback && this._onChangeCallback();
-      }
     }]);
 
     return Vec2;
@@ -4098,6 +4099,36 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
     _createClass(Vec3, [{
+      key: "x",
+      get: function get() {
+        return this._x;
+      },
+      set: function set(value) {
+        var changed = value !== this._x;
+        this._x = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+      }
+    }, {
+      key: "y",
+      get: function get() {
+        return this._y;
+      },
+      set: function set(value) {
+        var changed = value !== this._y;
+        this._y = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+      }
+    }, {
+      key: "z",
+      get: function get() {
+        return this._z;
+      },
+      set: function set(value) {
+        var changed = value !== this._z;
+        this._z = value;
+        changed && this._onChangeCallback && this._onChangeCallback();
+      }
+    }, {
       key: "onChange",
       value: function onChange(callback) {
         if (callback) {
@@ -4414,36 +4445,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function unproject(camera) {
         this.applyMat4(camera.projectionMatrix.getInverse()).applyMat4(camera.worldMatrix);
         return this;
-      }
-    }, {
-      key: "x",
-      get: function get() {
-        return this._x;
-      },
-      set: function set(value) {
-        var changed = value !== this._x;
-        this._x = value;
-        changed && this._onChangeCallback && this._onChangeCallback();
-      }
-    }, {
-      key: "y",
-      get: function get() {
-        return this._y;
-      },
-      set: function set(value) {
-        var changed = value !== this._y;
-        this._y = value;
-        changed && this._onChangeCallback && this._onChangeCallback();
-      }
-    }, {
-      key: "z",
-      get: function get() {
-        return this._z;
-      },
-      set: function set(value) {
-        var changed = value !== this._z;
-        this._z = value;
-        changed && this._onChangeCallback && this._onChangeCallback();
       }
     }]);
 
@@ -4893,8 +4894,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } // copy states
 
 
-        this._globalParameters = texture._globalParameters;
-        this._state = texture._state; // copy source
+        this._globalParameters = Object.assign({}, texture._globalParameters);
+        this._state = Object.assign({}, texture._state); // regenerate mips if needed
+
+        this.parameters.generateMipmap = texture.parameters.generateMipmap;
+        this._state.generateMipmap = null; // copy source
 
         this._size = texture._size; // trigger loaded callback if needed
 
@@ -4921,7 +4925,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           this._setSize();
 
           this._canDraw = true;
-        } // force rendering
+        }
+
+        this._updateTexParameters(); // force rendering
 
 
         this.renderer.needRender();
@@ -7100,7 +7106,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
     }, {
       key: "getBoundingRect",
-
+      value:
       /*** BOUNDING BOXES GETTERS ***/
 
       /***
@@ -7108,7 +7114,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
          returns :
        @boundingRectangle (obj): an object containing our plane HTML element bounding rectangle (width, height, top, bottom, right and left properties)
        ***/
-      value: function getBoundingRect() {
+      function getBoundingRect() {
         return {
           width: this._boundingRect.document.width,
           height: this._boundingRect.document.height,
@@ -8049,8 +8055,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       key: "_setWorldTransformOrigin",
       value: function _setWorldTransformOrigin() {
         // set transformation origin relative to world space as well
-        this._boundingRect.world.transformOrigin = new Vec3((this.transformOrigin.x * 2 - 1) * // between -1 and 1
-        this._boundingRect.world.width, -(this.transformOrigin.y * 2 - 1) // between -1 and 1
+        this._boundingRect.world.transformOrigin = new Vec3((this.transformOrigin.x * 2 - 1) * this._boundingRect.world.width, -(this.transformOrigin.y * 2 - 1) // between -1 and 1
         * this._boundingRect.world.height, this.transformOrigin.z);
       }
       /***
@@ -8447,7 +8452,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
     }, {
       key: "_getWorldCoords",
-
+      value:
       /***
        Useful to get our WebGL plane bounding box in the world space
        Takes all transformations into account
@@ -8455,7 +8460,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
          returns :
        @boundingRectangle (obj): an object containing our plane WebGL element 4 corners coordinates: top left corner is [-1, 1] and bottom right corner is [1, -1]
        ***/
-      value: function _getWorldCoords() {
+      function _getWorldCoords() {
         var corners = [tempCorner1.set(-1, 1, 0), // plane's top left corner
         tempCorner2.set(1, 1, 0), // plane's top right corner
         tempCorner3.set(1, -1, 0), // plane's bottom right corner
@@ -8516,12 +8521,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
     }, {
       key: "_computeWebGLBoundingRect",
-
+      value:
       /***
        Transpose our plane corners coordinates from world space to document space
        Sets an object with the accurate plane WebGL bounding rect relative to document
        ***/
-      value: function _computeWebGLBoundingRect() {
+      function _computeWebGLBoundingRect() {
         // get our world space bouding rect
         var worldBBox = this._getWorldCoords(); // normalize worldBBox to (0 -> 1) screen coordinates with [0, 0] being the top left corner and [1, 1] being the bottom right
 
@@ -8839,6 +8844,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           depth = _ref12$depth === void 0 ? false : _ref12$depth,
           _ref12$clear = _ref12.clear,
           clear = _ref12$clear === void 0 ? true : _ref12$clear,
+          maxWidth = _ref12.maxWidth,
+          maxHeight = _ref12.maxHeight,
           _ref12$minWidth = _ref12.minWidth,
           minWidth = _ref12$minWidth === void 0 ? 1024 : _ref12$minWidth,
           _ref12$minHeight = _ref12.minHeight,
@@ -8867,6 +8874,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       this._depth = depth;
       this._shouldClear = clear;
+      this._maxSize = {
+        width: maxWidth ? Math.min(this.renderer.state.maxTextureSize / 4, maxWidth) : this.renderer.state.maxTextureSize / 4,
+        // enough!
+        height: maxHeight ? Math.min(this.renderer.state.maxTextureSize / 4, maxHeight) : this.renderer.state.maxTextureSize / 4
+      };
       this._minSize = {
         width: minWidth * this.renderer.pixelRatio,
         height: minHeight * this.renderer.pixelRatio
@@ -8939,8 +8951,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           };
         } else {
           this._size = {
-            width: Math.max(this._minSize.width, this.renderer._boundingRect.width),
-            height: Math.max(this._minSize.height, this.renderer._boundingRect.height)
+            width: Math.min(this._maxSize.width, Math.max(this._minSize.width, this.renderer._boundingRect.width)),
+            height: Math.min(this._maxSize.height, Math.max(this._minSize.height, this.renderer._boundingRect.height))
           };
         }
       }
@@ -9385,7 +9397,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         texturesOptions: texturesOptions
       }); // create a texture where we'll draw
 
-      var texture = _this35.createTexture({
+      _this35.createTexture({
         sampler: sampler
       }); // wait for both render targets textures to be ready and force a copy of the current target texture
       // even if the swap already began

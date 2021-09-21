@@ -1,6 +1,6 @@
 # Changelog
 
-## v8.1.3 (09/??/2021)
+## v8.1.3 (09/21/2021)
 
 #### Bug Fixes:
 
@@ -12,11 +12,11 @@
 
 ###### framebuffers/RenderTarget.js
 
-- Added maxWidth / maxHeight parameters
+- Added maxWidth / maxHeight parameters.
 
 ###### documentation
 
-- Added back setSource() function to Texture class documentation
+- Added back setSource() function to Texture class documentation.
 
 ---
 
