@@ -1,5 +1,13 @@
 # Changelog
 
+## v8.1.4 (11/08/2022)
+
+#### Bug Fixes:
+
+###### core/Mesh.js
+
+- Fixed wrong createTexture() object assignment - [#105](https://github.com/martinlaxenaire/curtainsjs/issues/105).
+
 ## v8.1.3 (09/21/2021)
 
 #### Bug Fixes:

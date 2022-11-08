@@ -6585,7 +6585,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function createTexture() {
         var textureOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         // create a new texture with the specified options
-        var texture = new Texture(this.renderer, Object.assign(this._texturesOptions, textureOptions)); // add the texture to the mesh
+        var texture = new Texture(this.renderer, Object.assign(textureOptions, this._texturesOptions)); // add the texture to the mesh
 
         texture.addParent(this);
         return texture;
