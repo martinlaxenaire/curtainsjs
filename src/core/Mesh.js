@@ -285,7 +285,7 @@ export class Mesh {
      ***/
     createTexture(textureOptions = {}) {
         // create a new texture with the specified options
-        const texture = new Texture(this.renderer, Object.assign(this._texturesOptions, textureOptions));
+        const texture = new Texture(this.renderer, Object.assign(textureOptions, this._texturesOptions));
         // add the texture to the mesh
         texture.addParent(this);
 
