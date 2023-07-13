@@ -1,5 +1,11 @@
 # Changelog
 
+## v8.1.5 (13/07/2023)
+
+#### Enhancements:
+
+- Added `"type": "module"` to `package.json` - [#113](https://github.com/martinlaxenaire/curtainsjs/pull/113) by [@andrewbranch](https://github.com/andrewbranch)
+
 ## v8.1.4 (11/08/2022)
 
 #### Bug Fixes:
