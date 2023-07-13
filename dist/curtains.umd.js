@@ -1770,7 +1770,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return ScrollManager;
   }();
 
-  var version = "8.1.4";
+  var version = "8.1.5";
   /***
    Here we create our Curtains object
        params:
