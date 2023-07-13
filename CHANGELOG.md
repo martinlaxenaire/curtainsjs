@@ -5,6 +5,9 @@
 #### Enhancements:
 
 - Added `"type": "module"` to `package.json` - [#113](https://github.com/martinlaxenaire/curtainsjs/pull/113) by [@andrewbranch](https://github.com/andrewbranch)
+- Changed `"main": "src/index.mjs"` to `"exports": "./src/index.mjs"` in `package.json`
+
+---
 
 ## v8.1.4 (11/08/2022)
 
@@ -13,6 +16,8 @@
 ###### core/Mesh.js
 
 - Fixed wrong createTexture() object assignment - [#105](https://github.com/martinlaxenaire/curtainsjs/issues/105).
+
+---
 
 ## v8.1.3 (09/21/2021)
 
