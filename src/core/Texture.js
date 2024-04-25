@@ -887,9 +887,16 @@ export class Texture {
      ***/
     _videoFrameCallback() {
         this._willUpdate = true;
-        if(!this.source){
-          // wait for source to load
-          window.requestAnimationFrame(() => this._videoFrameCallback());
+        if(!this.source) {
+            // wait for source to load
+            const waitForSource = this.renderer.nextRender(() => {
+                if(this.source) {
+                    // source is ready, stop executing the callback
+                    waitForSource.keep = false;
+
+                    this.source.requestVideoFrameCallback(() => this._videoFrameCallback());
+                }
+            }, true);
         } else {
           this.source.requestVideoFrameCallback(() => this._videoFrameCallback());
         }
