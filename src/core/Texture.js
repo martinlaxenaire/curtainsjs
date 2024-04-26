@@ -889,7 +889,7 @@ export class Texture {
         this._willUpdate = true;
         if(!this.source) {
             // wait for source to load
-            const waitForSource = this.renderer.nextRender(() => {
+            const waitForSource = this.renderer.nextRender.add(() => {
                 if(this.source) {
                     // source is ready, stop executing the callback
                     waitForSource.keep = false;
