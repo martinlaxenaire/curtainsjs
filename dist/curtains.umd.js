@@ -1770,7 +1770,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return ScrollManager;
   }();
 
-  var version = "8.1.5";
+  var version = "8.1.6";
   /***
    Here we create our Curtains object
        params:
@@ -5289,9 +5289,24 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var _this17 = this;
 
         this._willUpdate = true;
-        this.source.requestVideoFrameCallback(function () {
-          return _this17._videoFrameCallback();
-        });
+
+        if (!this.source) {
+          // wait for source to load
+          var waitForSource = this.renderer.nextRender.add(function () {
+            if (_this17.source) {
+              // source is ready, stop executing the callback
+              waitForSource.keep = false;
+
+              _this17.source.requestVideoFrameCallback(function () {
+                return _this17._videoFrameCallback();
+              });
+            }
+          }, true);
+        } else {
+          this.source.requestVideoFrameCallback(function () {
+            return _this17._videoFrameCallback();
+          });
+        }
       }
       /***
        This updloads our texture to the GPU

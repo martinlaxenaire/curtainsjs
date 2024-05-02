@@ -1,6 +1,20 @@
 # Changelog
 
-## v8.1.5 (13/07/2023)
+## v8.1.6 (05/02/2024)
+
+#### Bug Fixes:
+
+###### core/Texture.js
+
+- Fixed video texture source sometimes `undefined` - [#112](https://github.com/martinlaxenaire/curtainsjs/pull/112) by [@mrflix](https://github.com/mrflix)
+
+#### Dependencies
+
+- Updated @babel/traverse package - [#115](https://github.com/martinlaxenaire/curtainsjs/pull/115)
+
+---
+
+## v8.1.5 (07/13/2023)
 
 #### Enhancements:
 
