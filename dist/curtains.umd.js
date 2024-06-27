@@ -69,7 +69,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   }
   /***
    Check whether a number is power of 2
-     params:
+    params:
    @value (float): number to check
    ***/
 
@@ -79,7 +79,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   }
   /***
    Linear interpolation between two numbers
-     params:
+    params:
    @start (float): value to lerp
    @end (float): end value to use for lerp
    @amount (float): amount of lerp
@@ -92,9 +92,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   /***
    Here we create our Scene object
    The Scene will stack all the objects that will be drawn (planes and shader passes) in different arrays, and call them in the right order to be drawn.
-     Based on the concept exposed here https://webgl2fundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html
+    Based on the concept exposed here https://webgl2fundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html
    The idea is to optimize the order of the rendered object so that the WebGL calls are kept to a strict minimum
-     Here's the whole draw process order:
+    Here's the whole draw process order:
    - first we draw the ping pong planes
    - if needed, we bind the first scene pass frame buffer
    - draw all the planes that are rendered onto a render target (render pass)
@@ -104,9 +104,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    - draw the transparent planes ordered by renderOrder, Z positions, geometry IDs and then indexes (first added first drawn)
    - draw the opaque planes ordered by renderOrder, geometry IDs and then indexes (first added first drawn)
    - draw the scene passes content
-     params:
+    params:
    @renderer (Renderer class object): our renderer class object
-     returns :
+    returns :
    @this: our Scene
    ***/
 
@@ -198,7 +198,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Add a plane to our renderTargets stack
-         params:
+        params:
        @plane (Plane object): plane to add to our stack
        ***/
 
@@ -255,9 +255,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Rebuilds our regular stack (transparent or opaque) with our plane added, geometry IDs and then indexes (first added first drawn)
-         params:
+        params:
        @plane (Plane object): plane to add to our stack
-         returns:
+        returns:
        @planeStack (array): our transparent or opaque stack ready to be applied custom sorting filter
        ***/
 
@@ -294,8 +294,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        - renderTargets array is ordered by render target creation order, planes renderOrder value and then planes indexes (order of creation)
        - transparent array is ordered by renderOrder, Z positions, geometry IDs and then indexes (first added first drawn)
        - opaque array is ordered by renderOrder, geometry IDs and then indexes (first added first drawn)
-         This is done to improve speed and reduce GL calls
-         params:
+        This is done to improve speed and reduce GL calls
+        params:
        @plane (Plane object): plane to add to our scene
        ***/
 
@@ -335,7 +335,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This function will remove a plane from our scene. This just reset the plane stacks for now.
        Useful if we'd want to change the way our draw stacks work and keep the logic separated from our renderer
-         params:
+        params:
        @plane (Plane object): plane to remove from our scene
        ***/
 
@@ -364,7 +364,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Changing the position of a plane inside the correct plane stack to render it on above or behind the other planes
-         params:
+        params:
        @plane (Plane object): the plane that had its renderOrder property updated
        ***/
 
@@ -450,7 +450,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Add a shader pass to the stack
-         params:
+        params:
        @shaderPass (ShaderPass object): shaderPass to add to our scene
        ***/
 
@@ -468,7 +468,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This function will remove a shader pass from our scene. This just reset the shaderPass stacks for now.
        Useful if we'd want to change the way our draw stacks work and keep the logic separated from our renderer
-         params:
+        params:
        @shaderPass (ShaderPass object): shader pass to remove from our scene
        ***/
 
@@ -479,7 +479,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Sorts the shader pass stack by index then by renderOrder property
-         params:
+        params:
        @passStack (array): which shader pass stack (scenePasses or renderPasses) to sort
        ***/
 
@@ -608,7 +608,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    Here we create a CacheManager class object
    This will store geometries attributes arrays, textures and WebGL programs in arrays
    This helps speed up slow synchronous CPU operations such as WebGL shaders compilations, images decoding, etc.
-     returns :
+    returns :
    @this: our CacheManager class object
    ***/
 
@@ -638,7 +638,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Check if this geometry is already in our cached geometries array
-         params:
+        params:
        @definitionID (integer): the geometry ID
        ***/
 
@@ -651,7 +651,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Add a geometry to our cache if not already in it
-         params:
+        params:
        @definitionID  (integer): the geometry ID to add to our cache
        @vertices (array): vertices coordinates array to add to our cache
        @uvs (array): uvs coordinates array to add to our cache
@@ -670,10 +670,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Compare two shaders strings to detect whether they are equal or not
-         params:
+        params:
        @firstShader (string): shader code
        @secondShader (string): shader code
-         returns:
+        returns:
        @isSameShader (bool): whether both shaders are equal or not
        ***/
 
@@ -684,10 +684,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Returns a program from our cache if this program's vertex and fragment shaders code are the same as the one provided
-         params:
+        params:
        @vsCode (string): vertex shader code
        @fsCode (string): fragment shader code
-         returns:
+        returns:
        @program (Program class object or null): our program if it has been found
        ***/
 
@@ -702,7 +702,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Add a program to our cache
-         params :
+        params :
        @program (Program class object) : program to add to our cache
        ***/
 
@@ -715,7 +715,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Check if this source is already in our cached textures array
-         params :
+        params :
        @source (HTML element) : html image, video or canvas element (only images for now)
        ***/
 
@@ -730,7 +730,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Add a texture to our cache if not already in it
-         params :
+        params :
        @texture (Texture class object) : texture to add to our cache
        ***/
 
@@ -745,7 +745,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Removes a texture from the cache array
-         params :
+        params :
        @texture (Texture class object) : texture to remove from our cache
        ***/
 
@@ -764,7 +764,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   /***
    Here we create a CallbackQueueManager class object
    This allows to store callbacks in a queue array with a timeout of 0 to be executed on next render call
-     returns:
+    returns:
    @this: our CallbackQueueManager class object
    ***/
 
@@ -787,10 +787,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Adds a callback to our queue list with a timeout of 0
-         params:
+        params:
        @callback (function): the callback to execute on next render call
        @keep (bool): whether to keep calling that callback on each rendering call or not (act as a setInterval). Default to false
-         returns:
+        returns:
        @queueItem: the queue item. Allows to keep a track of it and set its keep property to false when needed
        ***/
 
@@ -846,14 +846,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    Will create a Scene class object that will keep tracks of all added objects
    Will also handle all global WebGL commands, like clearing scene, binding frame buffers, setting depth, blend func, etc.
    Will use a state object to handle all those commands and keep a track of what is being drawned to avoid redundant WebGL calls.
-     params:
+    params:
    @Curtainsparams see Curtains class object
-     @onError (function): called when there has been an error while initiating the WebGL context
+    @onError (function): called when there has been an error while initiating the WebGL context
    @onSuccess (function): called when the WebGL context has been successfully created
    @onContextLost (function): called when the WebGL context is lost
    @onContextRestored (function): called when the WebGL context is restored
    @onSceneChange (function): called every time an object has been added/removed from the scene
-     returns :
+    returns :
    @this: our Renderer
    ***/
 
@@ -940,8 +940,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       this.initRenderer();
     }
     /***
-     Set/reset our context state object
-     ***/
+       Set/reset our context state object
+       ***/
 
 
     _createClass(Renderer, [{
@@ -977,8 +977,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         };
       }
       /***
-       Add a callback queueing manager (execute functions on the next render call, see CallbackQueueManager class object)
-       ***/
+         Add a callback queueing manager (execute functions on the next render call, see CallbackQueueManager class object)
+         ***/
 
     }, {
       key: "initCallbackQueueManager",
@@ -986,8 +986,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.nextRender = new CallbackQueueManager();
       }
       /***
-       Init our renderer
-       ***/
+         Init our renderer
+         ***/
 
     }, {
       key: "initRenderer",
@@ -1018,9 +1018,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
       }
       /***
-       Get all available WebGL extensions based on WebGL used version
-       Called on init and on context restoration
-       ***/
+         Get all available WebGL extensions based on WebGL used version
+         Called on init and on context restoration
+         ***/
 
     }, {
       key: "getExtensions",
@@ -1028,30 +1028,30 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.extensions = [];
 
         if (this._isWebGL2) {
-          this.extensions['EXT_color_buffer_float'] = this.gl.getExtension('EXT_color_buffer_float');
-          this.extensions['OES_texture_float_linear'] = this.gl.getExtension('OES_texture_float_linear');
-          this.extensions['EXT_texture_filter_anisotropic'] = this.gl.getExtension('EXT_texture_filter_anisotropic');
-          this.extensions['WEBGL_lose_context'] = this.gl.getExtension('WEBGL_lose_context');
+          this.extensions["EXT_color_buffer_float"] = this.gl.getExtension("EXT_color_buffer_float");
+          this.extensions["OES_texture_float_linear"] = this.gl.getExtension("OES_texture_float_linear");
+          this.extensions["EXT_texture_filter_anisotropic"] = this.gl.getExtension("EXT_texture_filter_anisotropic");
+          this.extensions["WEBGL_lose_context"] = this.gl.getExtension("WEBGL_lose_context");
         } else {
-          this.extensions['OES_vertex_array_object'] = this.gl.getExtension('OES_vertex_array_object');
-          this.extensions['OES_texture_float'] = this.gl.getExtension('OES_texture_float');
-          this.extensions['OES_texture_float_linear'] = this.gl.getExtension('OES_texture_float_linear');
-          this.extensions['OES_texture_half_float'] = this.gl.getExtension('OES_texture_half_float');
-          this.extensions['OES_texture_half_float_linear'] = this.gl.getExtension('OES_texture_half_float_linear');
-          this.extensions['EXT_texture_filter_anisotropic'] = this.gl.getExtension('EXT_texture_filter_anisotropic');
-          this.extensions['OES_element_index_uint'] = this.gl.getExtension('OES_element_index_uint');
-          this.extensions['OES_standard_derivatives'] = this.gl.getExtension('OES_standard_derivatives');
-          this.extensions['EXT_sRGB'] = this.gl.getExtension('EXT_sRGB');
-          this.extensions['WEBGL_depth_texture'] = this.gl.getExtension('WEBGL_depth_texture');
-          this.extensions['WEBGL_draw_buffers'] = this.gl.getExtension('WEBGL_draw_buffers');
-          this.extensions['WEBGL_lose_context'] = this.gl.getExtension('WEBGL_lose_context');
+          this.extensions["OES_vertex_array_object"] = this.gl.getExtension("OES_vertex_array_object");
+          this.extensions["OES_texture_float"] = this.gl.getExtension("OES_texture_float");
+          this.extensions["OES_texture_float_linear"] = this.gl.getExtension("OES_texture_float_linear");
+          this.extensions["OES_texture_half_float"] = this.gl.getExtension("OES_texture_half_float");
+          this.extensions["OES_texture_half_float_linear"] = this.gl.getExtension("OES_texture_half_float_linear");
+          this.extensions["EXT_texture_filter_anisotropic"] = this.gl.getExtension("EXT_texture_filter_anisotropic");
+          this.extensions["OES_element_index_uint"] = this.gl.getExtension("OES_element_index_uint");
+          this.extensions["OES_standard_derivatives"] = this.gl.getExtension("OES_standard_derivatives");
+          this.extensions["EXT_sRGB"] = this.gl.getExtension("EXT_sRGB");
+          this.extensions["WEBGL_depth_texture"] = this.gl.getExtension("WEBGL_depth_texture");
+          this.extensions["WEBGL_draw_buffers"] = this.gl.getExtension("WEBGL_draw_buffers");
+          this.extensions["WEBGL_lose_context"] = this.gl.getExtension("WEBGL_lose_context");
         }
       }
       /*** HANDLING CONTEXT LOST/RESTORE ***/
 
       /***
-       Called when the WebGL context is lost
-       ***/
+         Called when the WebGL context is lost
+         ***/
 
     }, {
       key: "contextLost",
@@ -1067,8 +1067,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         });
       }
       /***
-       Call this method to restore your context
-       ***/
+         Call this method to restore your context
+         ***/
 
     }, {
       key: "restoreContext",
@@ -1077,12 +1077,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (!this.state.isActive) return;
         this.initState();
 
-        if (this.gl && this.extensions['WEBGL_lose_context']) {
-          this.extensions['WEBGL_lose_context'].restoreContext();
+        if (this.gl && this.extensions["WEBGL_lose_context"]) {
+          this.extensions["WEBGL_lose_context"].restoreContext();
         } else {
           if (!this.gl && !this.production) {
             throwWarning(this.type + ": Could not restore the context because the context is not defined");
-          } else if (!this.extensions['WEBGL_lose_context'] && !this.production) {
+          } else if (!this.extensions["WEBGL_lose_context"] && !this.production) {
             throwWarning(this.type + ": Could not restore the context because the restore context extension is not defined");
           }
 
@@ -1092,10 +1092,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Check that all objects and textures have been restored
-         returns:
-       @isRestored (bool): whether everything has been restored or not
-       ***/
+         Check that all objects and textures have been restored
+          returns:
+         @isRestored (bool): whether everything has been restored or not
+         ***/
 
     }, {
       key: "isContextexFullyRestored",
@@ -1145,8 +1145,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return isRestored;
       }
       /***
-       Called when the WebGL context is restored
-       ***/
+         Called when the WebGL context is restored
+         ***/
 
     }, {
       key: "contextRestored",
@@ -1201,8 +1201,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** SIZING ***/
 
       /***
-       Updates pixelRatio property
-       ***/
+         Updates pixelRatio property
+         ***/
 
     }, {
       key: "setPixelRatio",
@@ -1210,8 +1210,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.pixelRatio = pixelRatio;
       }
       /***
-       Set/reset container sizes and WebGL viewport sizes
-       ***/
+         Set/reset container sizes and WebGL viewport sizes
+         ***/
 
     }, {
       key: "setSize",
@@ -1229,26 +1229,21 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         // this causes wrong bounding client rect calculations, especially negative top value when it shouldn't
         // to fix this we'll use a dirty but useful workaround
         // first we check if we're on iOS Safari
-
-        var isSafari = !!navigator.userAgent.match(/Version\/[\d\.]+.*Safari/);
-        var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-        if (isSafari && iOS) {
-          // if we are on iOS Safari we'll need a custom function to retrieve our container absolute top position
-          var getTopOffset = function getTopOffset(el) {
-            var topOffset = 0;
-
-            while (el && !isNaN(el.offsetTop)) {
-              topOffset += el.offsetTop - el.scrollTop;
-              el = el.offsetParent;
-            }
-
-            return topOffset;
-          }; // use it to update our top value
-
-
-          this._boundingRect.top = getTopOffset(this.container) * this.pixelRatio;
-        }
+        // const isSafari = !!navigator.userAgent.match(/Version\/[\d\.]+.*Safari/);
+        // const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        // if(isSafari && iOS) {
+        //     // if we are on iOS Safari we'll need a custom function to retrieve our container absolute top position
+        //     function getTopOffset(el) {
+        //         let topOffset = 0;
+        //         while(el && !isNaN(el.offsetTop)) {
+        //             topOffset += el.offsetTop - el.scrollTop;
+        //             el = el.offsetParent;
+        //         }
+        //         return topOffset;
+        //     }
+        //     // use it to update our top value
+        //     this._boundingRect.top = getTopOffset(this.container) * this.pixelRatio;
+        // }
 
         this.canvas.style.width = Math.floor(this._boundingRect.width / this.pixelRatio) + "px";
         this.canvas.style.height = Math.floor(this._boundingRect.height / this.pixelRatio) + "px";
@@ -1257,9 +1252,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
       }
       /***
-       Resize all our elements: planes, shader passes and render targets
-       Their textures will be resized as well
-       ***/
+         Resize all our elements: planes, shader passes and render targets
+         Their textures will be resized as well
+         ***/
 
     }, {
       key: "resize",
@@ -1289,8 +1284,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** CLEAR SCENE ***/
 
       /***
-       Clear our WebGL scene colors and depth
-       ***/
+         Clear our WebGL scene colors and depth
+         ***/
 
     }, {
       key: "clear",
@@ -1298,8 +1293,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
       }
       /***
-       Clear our WebGL scene depth
-       ***/
+         Clear our WebGL scene depth
+         ***/
 
     }, {
       key: "clearDepth",
@@ -1307,8 +1302,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
       }
       /***
-       Clear our WebGL scene colors and depth
-       ***/
+         Clear our WebGL scene colors and depth
+         ***/
 
     }, {
       key: "clearColor",
@@ -1318,11 +1313,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** FRAME BUFFER OBJECTS ***/
 
       /***
-       Called to bind or unbind a FBO
-         params:
-       @frameBuffer (frameBuffer): if frameBuffer is not null, bind it, unbind it otherwise
-       @cancelClear (bool / undefined): if we should cancel clearing the frame buffer (typically on init & resize)
-       ***/
+         Called to bind or unbind a FBO
+          params:
+         @frameBuffer (frameBuffer): if frameBuffer is not null, bind it, unbind it otherwise
+         @cancelClear (bool / undefined): if we should cancel clearing the frame buffer (typically on init & resize)
+         ***/
 
     }, {
       key: "bindFrameBuffer",
@@ -1350,11 +1345,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** DEPTH ***/
 
       /***
-       Called to set whether the renderer will handle depth test or not
-       Depth test is enabled by default
-         params:
-       @setDepth (boolean): if we should enable or disable the depth test
-       ***/
+         Called to set whether the renderer will handle depth test or not
+         Depth test is enabled by default
+          params:
+         @setDepth (boolean): if we should enable or disable the depth test
+         ***/
 
     }, {
       key: "setDepthTest",
@@ -1370,10 +1365,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Called to set the depth buffer behavior
-       Only available option is gl.LEQUAL at the moment
-       (see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc)
-       ***/
+         Called to set the depth buffer behavior
+         Only available option is gl.LEQUAL at the moment
+         (see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc)
+         ***/
 
     }, {
       key: "setDepthFunc",
@@ -1383,11 +1378,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** BLENDING ***/
 
       /***
-       Whether we should enable or disable the blending state
-       Used to draw transparent planes
-         params:
-       @enableBlending (boolean): if we should enable or disable the blending (default to false)
-       ***/
+         Whether we should enable or disable the blending state
+         Used to draw transparent planes
+          params:
+         @enableBlending (boolean): if we should enable or disable the blending (default to false)
+         ***/
 
     }, {
       key: "setBlending",
@@ -1405,8 +1400,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Called to set the blending function (transparency)
-       ***/
+         Called to set the blending function (transparency)
+         ***/
 
     }, {
       key: "setBlendFunc",
@@ -1424,10 +1419,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** FACE CULLING ***/
 
       /***
-       Called to set whether we should cull an object face or not
-         params:
-       @cullFace (boolean): what face we should cull
-       ***/
+         Called to set whether we should cull an object face or not
+          params:
+         @cullFace (boolean): what face we should cull
+         ***/
 
     }, {
       key: "setFaceCulling",
@@ -1446,10 +1441,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Tell WebGL to use the specified program if it's not already in use
-         params:
-       @program (object): a program object
-       ***/
+         Tell WebGL to use the specified program if it's not already in use
+          params:
+         @program (object): a program object
+         ***/
 
     }, {
       key: "useProgram",
@@ -1462,10 +1457,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** PLANES ***/
 
       /***
-       Removes a Plane element (that has already been disposed) from the scene and the planes array
-         params:
-       @plane (Plane object): the plane to remove
-       ***/
+         Removes a Plane element (that has already been disposed) from the scene and the planes array
+          params:
+         @plane (Plane object): the plane to remove
+         ***/
 
     }, {
       key: "removePlane",
@@ -1486,10 +1481,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** POST PROCESSING ***/
 
       /***
-       Completely remove a RenderTarget element
-         params:
-       @renderTarget (RenderTarget object): the render target to remove
-       ***/
+         Completely remove a RenderTarget element
+          params:
+         @renderTarget (RenderTarget object): the render target to remove
+         ***/
 
     }, {
       key: "removeRenderTarget",
@@ -1528,10 +1523,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** SHADER PASSES ***/
 
       /***
-       Removes a ShaderPass element (that has already been disposed) from the scene and the shaderPasses array
-         params:
-       @shaderPass (ShaderPass object): the shader pass to remove
-       ***/
+         Removes a ShaderPass element (that has already been disposed) from the scene and the shaderPasses array
+          params:
+         @shaderPass (ShaderPass object): the shader pass to remove
+         ***/
 
     }, {
       key: "removeShaderPass",
@@ -1550,8 +1545,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.onSceneChange();
       }
       /***
-       Enables the render loop
-       ***/
+         Enables the render loop
+         ***/
 
     }, {
       key: "enableDrawing",
@@ -1559,8 +1554,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.state.drawingEnabled = true;
       }
       /***
-       Disables the render loop
-       ***/
+         Disables the render loop
+         ***/
 
     }, {
       key: "disableDrawing",
@@ -1568,8 +1563,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.state.drawingEnabled = false;
       }
       /***
-       Forces the rendering of the next frame, even if disabled
-       ***/
+         Forces the rendering of the next frame, even if disabled
+         ***/
 
     }, {
       key: "needRender",
@@ -1577,9 +1572,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.state.forceRender = true;
       }
       /***
-       Called at each draw call to render our scene and its content
-       Also execute our nextRender callback queue
-       ***/
+         Called at each draw call to render our scene and its content
+         Also execute our nextRender callback queue
+         ***/
 
     }, {
       key: "render",
@@ -1595,8 +1590,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** DISPOSING ***/
 
       /***
-       Delete all cached programs
-       ***/
+         Delete all cached programs
+         ***/
 
     }, {
       key: "deletePrograms",
@@ -1608,8 +1603,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Dispose our WebGL context and all its objects
-       ***/
+         Dispose our WebGL context and all its objects
+         ***/
 
     }, {
       key: "dispose",
@@ -1649,8 +1644,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _this6.canvas.removeEventListener("webglrestored", _this6._contextRestoredHandler, false); // lose context
 
 
-            if (_this6.gl && _this6.extensions['WEBGL_lose_context']) {
-              _this6.extensions['WEBGL_lose_context'].loseContext();
+            if (_this6.gl && _this6.extensions["WEBGL_lose_context"]) {
+              _this6.extensions["WEBGL_lose_context"].loseContext();
             } // clear canvas state
 
 
@@ -1673,14 +1668,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    Here we create a ScrollManager class object
    This keeps track of our scroll position, scroll deltas and triggers an onScroll callback
    Could either listen to the native scroll event or be hooked to any scroll (natural or virtual) scroll event
-     params:
+    params:
    @xOffset (float): scroll along X axis
    @yOffset (float): scroll along Y axis
    @lastXDelta (float): last scroll delta along X axis
    @lastYDelta (float): last scroll delta along Y axis
-     @shouldWatch (bool): if the scroll manager should listen to the scroll event or not. Default to true.
-     @onScroll (function): callback to execute each time the scroll values changed
-     returns:
+    @shouldWatch (bool): if the scroll manager should listen to the scroll event or not. Default to true.
+    @onScroll (function): callback to execute each time the scroll values changed
+    returns:
    @this: our ScrollManager class object
    ***/
 
@@ -1732,7 +1727,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        Updates the scroll manager X and Y scroll values as well as last X and Y deltas
        Internally called by the scroll handler
        Could be called externally as well if the user wants to handle the scroll by himself
-         params:
+        params:
        @x (float): scroll value along X axis
        @y (float): scroll value along Y axis
        ***/
@@ -1769,13 +1764,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     return ScrollManager;
   }();
-
-  var version = "8.1.6";
   /***
    Here we create our Curtains object
-       params:
+     params:
    @container (HTML element or string, optional): the container HTML element or ID that will hold our canvas. Could be set later if not passed as parameter here
-     (WebGL context parameters)
+    (WebGL context parameters)
    @alpha (bool, optional): whether the WebGL context should handle transparency. Default to true.
    @premultipliedAlpha (bool, optional): whether the WebGL context should handle premultiplied alpha. Default to false.
    @antialias (bool, optional): whether the WebGL context should use the default antialiasing. When using render targets, WebGL disables antialiasing, so you can safely set this to false to improve the performance. Default to true.
@@ -1783,15 +1776,16 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    @failIfMajorPerformanceCaveat (bool, optional): whether the WebGL context creation should fail in case of major performance caveat. Default to true.
    @preserveDrawingBuffer (bool, optional): whether the WebGL context should preserve the drawing buffer. Default to false.
    @stencil (bool, optional): whether the WebGL context should handle stencil. Default to false.
-     @autoResize (bool, optional): Whether the library should listen to the window resize event and actually resize the scene. Set it to false if you want to handle this by yourself using the resize() method. Default to true.
+    @autoResize (bool, optional): Whether the library should listen to the window resize event and actually resize the scene. Set it to false if you want to handle this by yourself using the resize() method. Default to true.
    @autoRender (bool, optional): Whether the library should create a request animation frame loop to render the scene. Set it to false if you want to handle this by yourself using the render() method. Default to true.
    @watchScroll (bool, optional): Whether the library should listen to the window scroll event. Set it to false if you want to handle this by yourself. Default to true.
-     @pixelRatio (float, optional): Defines the pixel ratio value. Use it to limit it on init to increase performance. Default to window.devicePixelRatio.
+    @pixelRatio (float, optional): Defines the pixel ratio value. Use it to limit it on init to increase performance. Default to window.devicePixelRatio.
    @renderingScale (float, optional): Use it to downscale your rendering canvas. May improve performance but will decrease quality. Default to 1 (minimum: 0.25, maximum: 1).
-     @production (bool, optional): Whether the library should throw useful console warnings and errors and check shaders and programs compilation status. Default to false.
-     returns :
+    @production (bool, optional): Whether the library should throw useful console warnings and errors and check shaders and programs compilation status. Default to false.
+    returns :
    @this: our Renderer
    ***/
+
 
   var Curtains = /*#__PURE__*/function () {
     function Curtains() {
@@ -1856,12 +1850,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
     }
     /***
-     Set up our Curtains container and start initializing everything
-     Called on Curtains instancing if a params container has been provided, could be call afterwards else
-     Useful with JS frameworks to init our Curtains class globally and then set the container in a canvas component afterwards to fully instantiate everything
-       params:
-     @container (HTML element or string): the container HTML element or ID that will hold our canvas
-     ***/
+       Set up our Curtains container and start initializing everything
+       Called on Curtains instancing if a params container has been provided, could be call afterwards else
+       Useful with JS frameworks to init our Curtains class globally and then set the container in a canvas component afterwards to fully instantiate everything
+        params:
+       @container (HTML element or string): the container HTML element or ID that will hold our canvas
+       ***/
 
 
     _createClass(Curtains, [{
@@ -1898,9 +1892,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this._initCurtains();
       }
       /***
-       Initialize everything that the class will need: WebGL renderer, scroll manager, sizes, listeners
-       Then starts our animation frame loop if needed
-       ***/
+         Initialize everything that the class will need: WebGL renderer, scroll manager, sizes, listeners
+         Then starts our animation frame loop if needed
+         ***/
 
     }, {
       key: "_initCurtains",
@@ -1923,8 +1917,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
         this.container.appendChild(this.canvas); // watermark
-
-        console.log("curtains.js - v" + version); // start rendering
+        //console.log("curtains.js - v" + version);
+        // start rendering
 
         this._animationFrameID = null;
 
@@ -1935,8 +1929,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** WEBGL CONTEXT ***/
 
       /***
-       Initialize the Renderer class object
-       ***/
+         Initialize the Renderer class object
+         ***/
 
     }, {
       key: "_initRenderer",
@@ -1979,8 +1973,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.canvas = this.renderer.canvas;
       }
       /***
-       Force our renderer to restore the WebGL context
-       ***/
+         Force our renderer to restore the WebGL context
+         ***/
 
     }, {
       key: "restoreContext",
@@ -1988,8 +1982,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderer.restoreContext();
       }
       /***
-       This just handles our drawing animation frame
-       ***/
+         This just handles our drawing animation frame
+         ***/
 
     }, {
       key: "_animate",
@@ -2000,8 +1994,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** RENDERING ***/
 
       /***
-       Enables rendering
-       ***/
+         Enables rendering
+         ***/
 
     }, {
       key: "enableDrawing",
@@ -2009,8 +2003,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderer.enableDrawing();
       }
       /***
-       Disables rendering
-       ***/
+         Disables rendering
+         ***/
 
     }, {
       key: "disableDrawing",
@@ -2018,8 +2012,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderer.disableDrawing();
       }
       /***
-       Forces the rendering of the next frame, even if disabled
-       ***/
+         Forces the rendering of the next frame, even if disabled
+         ***/
 
     }, {
       key: "needRender",
@@ -2027,13 +2021,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderer.needRender();
       }
       /***
-       Executes a callback on next frame
-         params:
-       @callback (function): callback to execute on next frame
-       @keep (bool): whether to keep calling that callback on each rendering call or not (act as a setInterval). Default to false
-         returns:
-       @queueItem: the queue item. Allows to keep a track of it and set its keep property to false when needed
-       ***/
+         Executes a callback on next frame
+          params:
+         @callback (function): callback to execute on next frame
+         @keep (bool): whether to keep calling that callback on each rendering call or not (act as a setInterval). Default to false
+          returns:
+         @queueItem: the queue item. Allows to keep a track of it and set its keep property to false when needed
+         ***/
 
     }, {
       key: "nextRender",
@@ -2042,8 +2036,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return this.renderer.nextRender.add(callback, keep);
       }
       /***
-       Clear our WebGL renderer colors and depth buffers
-       ***/
+         Clear our WebGL renderer colors and depth buffers
+         ***/
 
     }, {
       key: "clear",
@@ -2051,8 +2045,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderer && this.renderer.clear();
       }
       /***
-       Clear our WebGL renderer depth buffer
-       ***/
+         Clear our WebGL renderer depth buffer
+         ***/
 
     }, {
       key: "clearDepth",
@@ -2060,8 +2054,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderer && this.renderer.clearDepth();
       }
       /***
-       Clear our WebGL renderer color buffer
-       ***/
+         Clear our WebGL renderer color buffer
+         ***/
 
     }, {
       key: "clearColor",
@@ -2069,10 +2063,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderer && this.renderer.clearColor();
       }
       /***
-       Check whether the created context is WebGL2
-         return:
-       @isWebGL2 (bool): whether the created WebGL context is 2.0 or not
-       ***/
+         Check whether the created context is WebGL2
+          return:
+         @isWebGL2 (bool): whether the created WebGL context is 2.0 or not
+         ***/
 
     }, {
       key: "isWebGL2",
@@ -2080,8 +2074,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return this.gl ? this.renderer._isWebGL2 : false;
       }
       /***
-       Tells our renderer to render the scene if the drawing is enabled
-       ***/
+         Tells our renderer to render the scene if the drawing is enabled
+         ***/
 
     }, {
       key: "render",
@@ -2109,8 +2103,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** LISTENERS ***/
 
       /***
-       Adds our resize event listener if needed
-       ***/
+         Adds our resize event listener if needed
+         ***/
 
     }, {
       key: "_addListeners",
@@ -2126,8 +2120,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** SIZING ***/
 
       /***
-       Set the pixel ratio property and update everything by calling the resize() method
-       ***/
+         Set the pixel ratio property and update everything by calling the resize() method
+         ***/
 
     }, {
       key: "setPixelRatio",
@@ -2138,8 +2132,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.resize(triggerCallback);
       }
       /***
-       Set our renderer container and canvas sizes and update the scroll values
-       ***/
+         Set our renderer container and canvas sizes and update the scroll values
+         ***/
 
     }, {
       key: "_setSize",
@@ -2152,10 +2146,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Useful to get our container bounding rectangle without triggering a reflow/layout
-         returns :
-       @boundingRectangle (object): an object containing our container bounding rectangle (width, height, top and left properties)
-       ***/
+         Useful to get our container bounding rectangle without triggering a reflow/layout
+          returns :
+         @boundingRectangle (object): an object containing our container bounding rectangle (width, height, top and left properties)
+         ***/
 
     }, {
       key: "getBoundingRect",
@@ -2163,10 +2157,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return this.renderer._boundingRect;
       }
       /***
-       Resize our container and the renderer
-         params:
-       @triggerCallback (bool): Whether we should trigger onAfterResize callback
-       ***/
+         Resize our container and the renderer
+          params:
+         @triggerCallback (bool): Whether we should trigger onAfterResize callback
+         ***/
 
     }, {
       key: "resize",
@@ -2187,8 +2181,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** SCROLL ***/
 
       /***
-       Init our ScrollManager class object
-       ***/
+         Init our ScrollManager class object
+         ***/
 
     }, {
       key: "_initScroll",
@@ -2208,11 +2202,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         });
       }
       /***
-       Handles the different values associated with a scroll event (scroll and delta values)
-       If no plane watch the scroll then those values won't be retrieved to avoid unnecessary reflow calls
-       If at least a plane is watching, update all watching planes positions based on the scroll values
-       And force render for at least one frame to actually update the scene
-       ***/
+         Handles the different values associated with a scroll event (scroll and delta values)
+         If no plane watch the scroll then those values won't be retrieved to avoid unnecessary reflow calls
+         If at least a plane is watching, update all watching planes positions based on the scroll values
+         And force render for at least one frame to actually update the scene
+         ***/
 
     }, {
       key: "_updateScroll",
@@ -2229,13 +2223,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this._onScrollCallback && this._onScrollCallback();
       }
       /***
-       Updates the scroll manager X and Y scroll values as well as last X and Y deltas
-       Internally called by the scroll handler if at least one plane is watching the scroll
-       Could be called externally as well if the user wants to handle the scroll by himself
-         params:
-       @x (float): scroll value along X axis
-       @y (float): scroll value along Y axis
-       ***/
+         Updates the scroll manager X and Y scroll values as well as last X and Y deltas
+         Internally called by the scroll handler if at least one plane is watching the scroll
+         Could be called externally as well if the user wants to handle the scroll by himself
+          params:
+         @x (float): scroll value along X axis
+         @y (float): scroll value along Y axis
+         ***/
 
     }, {
       key: "updateScrollValues",
@@ -2243,10 +2237,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this._scrollManager.updateScrollValues(x, y);
       }
       /***
-       Returns last delta scroll values
-         returns:
-       @delta (object): an object containing X and Y last delta values
-       ***/
+         Returns last delta scroll values
+          returns:
+         @delta (object): an object containing X and Y last delta values
+         ***/
 
     }, {
       key: "getScrollDeltas",
@@ -2257,10 +2251,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         };
       }
       /***
-       Returns last window scroll values
-         returns:
-       @scrollValues (object): an object containing X and Y last scroll values
-       ***/
+         Returns last window scroll values
+          returns:
+         @scrollValues (object): an object containing X and Y last scroll values
+         ***/
 
     }, {
       key: "getScrollValues",
@@ -2273,8 +2267,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** ADDING / REMOVING OBJECTS TO THE RENDERER ***/
 
       /***
-       Always keep sync between renderer and Curtains scene objects when adding/removing objects
-       ***/
+         Always keep sync between renderer and Curtains scene objects when adding/removing objects
+         ***/
 
     }, {
       key: "_keepSync",
@@ -2286,8 +2280,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** UTILS ***/
 
       /***
-       Linear interpolation helper defined in utils
-       ***/
+         Linear interpolation helper defined in utils
+         ***/
 
     }, {
       key: "lerp",
@@ -2297,12 +2291,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** EVENTS ***/
 
       /***
-       This is called each time our container has been resized
-         params :
-       @callback (function) : a function to execute
-         returns :
-       @this: our Curtains element to handle chaining
-       ***/
+         This is called each time our container has been resized
+          params :
+         @callback (function) : a function to execute
+          returns :
+         @this: our Curtains element to handle chaining
+         ***/
 
     }, {
       key: "onAfterResize",
@@ -2314,12 +2308,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return this;
       }
       /***
-       This is called when an error has been detected
-         params:
-       @callback (function): a function to execute
-         returns:
-       @this: our Curtains element to handle chaining
-       ***/
+         This is called when an error has been detected
+          params:
+         @callback (function): a function to execute
+          returns:
+         @this: our Curtains element to handle chaining
+         ***/
 
     }, {
       key: "onError",
@@ -2331,8 +2325,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return this;
       }
       /***
-       This triggers the onError callback and is called by the renderer when an error has been detected
-       ***/
+         This triggers the onError callback and is called by the renderer when an error has been detected
+         ***/
 
     }, {
       key: "_onRendererError",
@@ -2349,12 +2343,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }, 0);
       }
       /***
-       This is called when the WebGL context has been successfully created
-         params:
-       @callback (function): a function to execute
-         returns:
-       @this: our Curtains element to handle chaining
-       ***/
+         This is called when the WebGL context has been successfully created
+          params:
+         @callback (function): a function to execute
+          returns:
+         @this: our Curtains element to handle chaining
+         ***/
 
     }, {
       key: "onSuccess",
@@ -2366,8 +2360,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return this;
       }
       /***
-       This triggers the onSuccess callback and is called by the renderer when the context has been successfully created
-       ***/
+         This triggers the onSuccess callback and is called by the renderer when the context has been successfully created
+         ***/
 
     }, {
       key: "_onRendererSuccess",
@@ -2379,12 +2373,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }, 0);
       }
       /***
-       This is called once our context has been lost
-         params:
-       @callback (function): a function to execute
-         returns:
-       @this: our Curtains element to handle chaining
-       ***/
+         This is called once our context has been lost
+          params:
+         @callback (function): a function to execute
+          returns:
+         @this: our Curtains element to handle chaining
+         ***/
 
     }, {
       key: "onContextLost",
@@ -2396,8 +2390,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return this;
       }
       /***
-       This triggers the onContextLost callback and is called by the renderer when the context has been lost
-       ***/
+         This triggers the onContextLost callback and is called by the renderer when the context has been lost
+         ***/
 
     }, {
       key: "_onRendererContextLost",
@@ -2405,12 +2399,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this._onContextLostCallback && this._onContextLostCallback();
       }
       /***
-       This is called once our context has been restored
-         params:
-       @callback (function): a function to execute
-         returns:
-       @this: our Curtains element to handle chaining
-       ***/
+         This is called once our context has been restored
+          params:
+         @callback (function): a function to execute
+          returns:
+         @this: our Curtains element to handle chaining
+         ***/
 
     }, {
       key: "onContextRestored",
@@ -2422,8 +2416,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return this;
       }
       /***
-       This triggers the onContextRestored callback and is called by the renderer when the context has been restored
-       ***/
+         This triggers the onContextRestored callback and is called by the renderer when the context has been restored
+         ***/
 
     }, {
       key: "_onRendererContextRestored",
@@ -2431,12 +2425,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this._onContextRestoredCallback && this._onContextRestoredCallback();
       }
       /***
-       This is called once at each request animation frame call
-         params:
-       @callback (function): a function to execute
-         returns:
-       @this: our Curtains element to handle chaining
-       ***/
+         This is called once at each request animation frame call
+          params:
+         @callback (function): a function to execute
+          returns:
+         @this: our Curtains element to handle chaining
+         ***/
 
     }, {
       key: "onRender",
@@ -2448,12 +2442,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return this;
       }
       /***
-       This is called each time window is scrolled and if our scrollManager is active
-         params :
-       @callback (function) : a function to execute
-         returns :
-       @this: our Curtains element to handle chaining
-       ***/
+         This is called each time window is scrolled and if our scrollManager is active
+          params :
+         @callback (function) : a function to execute
+          returns :
+         @this: our Curtains element to handle chaining
+         ***/
 
     }, {
       key: "onScroll",
@@ -2467,8 +2461,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** DESTROYING ***/
 
       /***
-       Dispose everything
-       ***/
+         Dispose everything
+         ***/
 
     }, {
       key: "dispose",
@@ -2476,8 +2470,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.renderer.dispose();
       }
       /***
-       This is called when the renderer has finished disposing all the WebGL stuff
-       ***/
+         This is called when the renderer has finished disposing all the WebGL stuff
+         ***/
 
     }, {
       key: "_onRendererDisposed",
@@ -2494,14 +2488,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   }();
   /***
    Uniforms class manages uniforms setting and updating
-     params:
+    params:
    @renderer (Renderer class object): our renderer class object
    @program (object): our mesh's Program (see Program class object)
-     @uniforms (object): our uniforms object:
+    @uniforms (object): our uniforms object:
    - name (string): uniform name to use in your shaders
    - type (uniform type): uniform type. Will try to detect it if not set (see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/uniform)
    - value (float / int / Vec2 / Vec3 / Mat4 / array): initial value of the uniform
-     returns:
+    returns:
    @this: our Uniforms manager
    ***/
 
@@ -2541,7 +2535,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }
     /***
      Set uniforms WebGL function based on their types
-       params :
+      params :
      @uniform (object): the uniform
      ***/
 
@@ -2633,7 +2627,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        Auto detect the format of the uniform (check if its a float, an integer, a Vector, a Matrix, an array...)
        Also set a lastValue property that we'll use to compare to our value property and update the uniform if it changed
-         params :
+        params :
        @uniform (object): the uniform
        ***/
 
@@ -2773,7 +2767,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Use appropriate WebGL uniform setting function based on the uniform type
-         params :
+        params :
        @uniform (object): the uniform
        ***/
 
@@ -2895,12 +2889,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    Program class that creates, compiles and links the shaders
    Use a cache system to get already compiled shaders and save some CPU
    Also responsible for the creation, setting and updating of the uniforms (see Uniforms class object)
-     params:
+    params:
    @renderer (Renderer class object): our renderer class object
-     @parent (Plane/ShaderPass class object): the mesh that will use that program
+    @parent (Plane/ShaderPass class object): the mesh that will use that program
    @vertexShader (string): vertex shader as a string
    @fragmentShader (string): fragment shader as a string
-     returns:
+    returns:
    @this: our newly created Program
    ***/
   // store programs id
@@ -2958,10 +2952,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }
     /***
      Compile our WebGL shaders based on our written shaders
-       params:
+      params:
      @shaderCode (string): shader code
      @shaderType (shaderType): WebGL shader type (vertex or fragment)
-       returns:
+      returns:
      @shader (compiled shader): our compiled shader
      ***/
 
@@ -3112,7 +3106,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Creates and attach the uniform handlers to our program
-         params:
+        params:
        @uniforms (object): an object describing our uniforms (see Uniforms class object)
        ***/
 
@@ -3151,13 +3145,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   }();
   /***
    Geometry class handles attributes, VertexArrayObjects (if available) and vertices/UVs set up
-     params:
+    params:
    @renderer (Renderer class object): our renderer class object
-     @program (object): our mesh's Program (see Program class object)
+    @program (object): our mesh's Program (see Program class object)
    @width (int): number of vertices along width
    @height (int): number of vertices along height
    @id (int): an integer based on geometry's width and height and used to avoid redundant buffer binding calls
-     returns:
+    returns:
    @this: our newly created Geometry
    ***/
 
@@ -3455,9 +3449,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    Here we create a Mat4 class object
    This is a really basic Matrix4 class used for matrix calculations
    Highly based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js and http://glmatrix.net/docs/mat4.js.html
-     params :
+    params :
    @elements (Float32Array of length 16): our matrix array. Default to identity matrix.
-     returns :
+    returns :
    @this: our Mat4 class object
    ***/
   // TODO lot of (unused at the time) methods are missing
@@ -3474,9 +3468,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }
     /***
      Sets the matrix values from an array
-       params:
+      params:
      @array (array): an array of at least 16 elements
-       returns:
+      returns:
      @this (Mat4 class object): this matrix after being set
      ***/
 
@@ -3492,9 +3486,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Copy another Mat4
-         params:
+        params:
        @matrix (Mat4 class object): matrix to copy
-         returns:
+        returns:
        @this (Mat4 class object): this matrix after copy
        ***/
 
@@ -3522,7 +3516,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Clone a matrix
-         returns:
+        returns:
        @clonedMatrix (Mat4 object): cloned matrix
        ***/
 
@@ -3533,9 +3527,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Simple matrix multiplication helper
-         params:
+        params:
        @matrix (Mat4 class object): Mat4 to multiply with
-         returns:
+        returns:
        @result (Mat4 class object): Mat4 after multiplication
        ***/
 
@@ -3565,7 +3559,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Get matrix inverse
-         returns:
+        returns:
        @result (Mat4 class object): inverted Mat4
        ***/
 
@@ -3631,9 +3625,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Simple Mat4 scaling helper
-         params :
+        params :
        @vector (Vec3 class object): Vec3 representing scale along X, Y and Z axis
-         returns :
+        returns :
        @result (Mat4 class object): Mat4 after scaling
        ***/
 
@@ -3659,11 +3653,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        Creates a matrix from a quaternion rotation, vector translation and vector scale
        Equivalent for applying translation, rotation and scale matrices but much faster
        Source code from: http://glmatrix.net/docs/mat4.js.html
-         params :
+        params :
        @translation (Vec3 class object): translation vector
        @quaternion (Quat class object): rotation quaternion
        @scale (Vec3 class object): scale vector
-         returns :
+        returns :
        @this (Mat4 class object): matrix after transformations
        ***/
 
@@ -3713,12 +3707,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        Creates a matrix from a quaternion rotation, vector translation and vector scale, rotating and scaling around the given origin
        Equivalent for applying translation, rotation and scale matrices but much faster
        Source code from: http://glmatrix.net/docs/mat4.js.html
-         params :
+        params :
        @translation (Vec3 class object): translation vector
        @quaternion (Quat class object): rotation quaternion
        @scale (Vec3 class object): scale vector
        @origin (Vec3 class object): origin vector around which to scale and rotate
-         returns :
+        returns :
        @this (Mat4 class object): matrix after transformations
        ***/
 
@@ -3785,10 +3779,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    Here we create a Vec2 class object
    This is a really basic Vector2 class used for vector calculations
    Highly based on https://github.com/mrdoob/three.js/blob/dev/src/math/Vector2.js and http://glmatrix.net/docs/vec2.js.html
-     params :
+    params :
    @x (float): X component of our vector
    @y (float): Y component of our vector
-     returns :
+    returns :
    @this: our Vec2 class object
    ***/
   // TODO lot of (unused at the time) methods are missing
@@ -3841,10 +3835,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Sets the vector from values
-         params:
+        params:
        @x (float): X component of our vector
        @y (float): Y component of our vector
-         returns:
+        returns:
        @this (Vec2): this vector after being set
        ***/
 
@@ -3857,9 +3851,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Adds a vector to this vector
-         params:
+        params:
        @vector (Vec2): vector to add
-         returns:
+        returns:
        @this (Vec2): this vector after addition
        ***/
 
@@ -3872,9 +3866,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Adds a scalar to this vector
-         params:
+        params:
        @value (float): number to add
-         returns:
+        returns:
        @this (Vec2): this vector after addition
        ***/
 
@@ -3887,9 +3881,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Subtracts a vector from this vector
-         params:
+        params:
        @vector (Vec2): vector to use for subtraction
-         returns:
+        returns:
        @this (Vec2): this vector after subtraction
        ***/
 
@@ -3902,9 +3896,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Subtracts a scalar to this vector
-         params:
+        params:
        @value (float): number to use for subtraction
-         returns:
+        returns:
        @this (Vec2): this vector after subtraction
        ***/
 
@@ -3917,9 +3911,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Multiplies a vector with this vector
-         params:
+        params:
        @vector (Vec2): vector to use for multiplication
-         returns:
+        returns:
        @this (Vec2): this vector after multiplication
        ***/
 
@@ -3932,9 +3926,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Multiplies a scalar with this vector
-         params:
+        params:
        @value (float): number to use for multiplication
-         returns:
+        returns:
        @this (Vec2): this vector after multiplication
        ***/
 
@@ -3947,9 +3941,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Copy a vector into this vector
-         params:
+        params:
        @vector (Vec2): vector to copy
-         returns:
+        returns:
        @this (Vec2): this vector after copy
        ***/
 
@@ -3962,7 +3956,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Clone this vector
-         returns:
+        returns:
        @vector (Vec2): cloned vector
        ***/
 
@@ -3973,9 +3967,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Merges this vector with a vector when values are NaN. Mostly used internally.
-         params:
+        params:
        @vector (Vec2): vector to use for sanitization
-         returns:
+        returns:
        @vector (Vec2): sanitized vector
        ***/
 
@@ -3988,9 +3982,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Apply max values to this vector
-         params:
+        params:
        @vector (Vec2): vector representing max values
-         returns:
+        returns:
        @vector (Vec2): vector with max values applied
        ***/
 
@@ -4003,9 +3997,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Apply min values to this vector
-         params:
+        params:
        @vector (Vec2): vector representing min values
-         returns:
+        returns:
        @vector (Vec2): vector with min values applied
        ***/
 
@@ -4018,9 +4012,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Checks if 2 vectors are equal
-         params:
+        params:
        @vector (Vec2): vector to compare
-         returns:
+        returns:
        @isEqual (bool): whether the vectors are equals or not
        ***/
 
@@ -4031,7 +4025,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Normalize this vector
-         returns:
+        returns:
        @this (Vec2): normalized vector
        ***/
 
@@ -4051,9 +4045,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Calculates the dot product of 2 vectors
-         params:
+        params:
        @vector (Vec2): vector to use for dot product
-         returns:
+        returns:
        @dotProduct (float): dot product of the 2 vectors
        ***/
 
@@ -4070,11 +4064,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    Here we create a Vec3 class object
    This is a really basic Vector3 class used for vector calculations
    Highly based on https://github.com/mrdoob/three.js/blob/dev/src/math/Vector3.js and http://glmatrix.net/docs/vec3.js.html
-     params :
+    params :
    @x (float): X component of our vector
    @y (float): Y component of our vector
    @z (float): Z component of our vector
-     returns :
+    returns :
    @this: our Vec3 class object
    ***/
   // TODO lot of (unused at the time) methods are missing
@@ -4139,11 +4133,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Sets the vector from values
-         params:
+        params:
        @x (float): X component of our vector
        @y (float): Y component of our vector
        @z (float): Z component of our vector
-         returns:
+        returns:
        @this (Vec2): this vector after being set
        ***/
 
@@ -4157,9 +4151,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Adds a vector to this vector
-         params:
+        params:
        @vector (Vec3): vector to add
-         returns:
+        returns:
        @this (Vec3): this vector after addition
        ***/
 
@@ -4173,9 +4167,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Adds a scalar to this vector
-         params:
+        params:
        @value (float): number to add
-         returns:
+        returns:
        @this (Vec3): this vector after addition
        ***/
 
@@ -4189,9 +4183,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Subtracts a vector from this vector
-         params:
+        params:
        @vector (Vec3): vector to use for subtraction
-         returns:
+        returns:
        @this (Vec3): this vector after subtraction
        ***/
 
@@ -4205,9 +4199,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Subtracts a scalar to this vector
-         params:
+        params:
        @value (float): number to use for subtraction
-         returns:
+        returns:
        @this (Vec3): this vector after subtraction
        ***/
 
@@ -4221,9 +4215,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Multiplies a vector with this vector
-         params:
+        params:
        @vector (Vec3): vector to use for multiplication
-         returns:
+        returns:
        @this (Vec3): this vector after multiplication
        ***/
 
@@ -4237,9 +4231,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Multiplies a scalar with this vector
-         params:
+        params:
        @value (float): number to use for multiplication
-         returns:
+        returns:
        @this (Vec3): this vector after multiplication
        ***/
 
@@ -4253,9 +4247,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Copy a vector into this vector
-         params:
+        params:
        @vector (Vec3): vector to copy
-         returns:
+        returns:
        @this (Vec3): this vector after copy
        ***/
 
@@ -4269,7 +4263,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Clone this vector
-         returns:
+        returns:
        @vector (Vec3): cloned vector
        ***/
 
@@ -4280,9 +4274,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Merges this vector with a vector when values are NaN. Mostly used internally.
-         params:
+        params:
        @vector (Vec3): vector to use for sanitization
-         returns:
+        returns:
        @vector (Vec3): sanitized vector
        ***/
 
@@ -4296,9 +4290,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Apply max values to this vector
-         params:
+        params:
        @vector (Vec3): vector representing max values
-         returns:
+        returns:
        @vector (Vec3): vector with max values applied
        ***/
 
@@ -4312,9 +4306,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Apply min values to this vector
-         params:
+        params:
        @vector (Vec3): vector representing min values
-         returns:
+        returns:
        @vector (Vec3): vector with min values applied
        ***/
 
@@ -4328,7 +4322,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Checks if 2 vectors are equal
-         returns:
+        returns:
        @isEqual (bool): whether the vectors are equals or not
        ***/
 
@@ -4339,7 +4333,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Normalize this vector
-         returns:
+        returns:
        @this (Vec3): normalized vector
        ***/
 
@@ -4360,7 +4354,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Calculates the dot product of 2 vectors
-         returns:
+        returns:
        @dotProduct (float): dot product of the 2 vectors
        ***/
 
@@ -4373,9 +4367,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        Apply a matrix 4 to a point (vec3)
        Useful to convert a point position from plane local world to webgl space using projection view matrix for example
        Source code from: http://glmatrix.net/docs/vec3.js.html
-         params :
+        params :
        @matrix (array): 4x4 matrix used
-         returns :
+        returns :
        @this (Vec3): this vector after matrix application
        ***/
 
@@ -4395,9 +4389,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Apply a quaternion (rotation in 3D space) to this vector
-         params :
+        params :
        @quaternion (Quat): quaternion to use
-         returns :
+        returns :
        @this (Vec3): this vector after applying the transformation
        ***/
 
@@ -4424,7 +4418,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Project 3D coordinate to 2D point
-         params:
+        params:
        @camera (Camera): camera to use for projection
        ***/
 
@@ -4436,7 +4430,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Unproject 2D point to 3D coordinate
-         params:
+        params:
        @camera (Camera): camera to use for projection
        ***/
 
@@ -4452,22 +4446,22 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   }();
   /***
    Texture class objects used by render targets, shader passes and planes.
-     params:
+    params:
    @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
-     @isFBOTexture (bool): Whether this texture is used by a render target/frame buffer object. Default to false
+    @isFBOTexture (bool): Whether this texture is used by a render target/frame buffer object. Default to false
    @fromTexture (bool): Whether this texture should copy another texture right from init (and avoid creating a new webgl texture). Default to false
    @loader (TextureLoader class object): loader used to create that texture and load its source. Default to null
-     @sampler (string): the texture sampler's name that will be used in the shaders
-     @floatingPoint (string): texture floating point to apply. Could be "float", "half-float" or "none". Default to "none"
-     @premultiplyAlpha (bool): Whether this texture should handle premultiplied alpha. Default to false
+    @sampler (string): the texture sampler's name that will be used in the shaders
+    @floatingPoint (string): texture floating point to apply. Could be "float", "half-float" or "none". Default to "none"
+    @premultiplyAlpha (bool): Whether this texture should handle premultiplied alpha. Default to false
    @anisotropy (int): Texture anisotropy (see https://developer.mozilla.org/en-US/docs/Web/API/EXT_texture_filter_anisotropic). Default to 1
    @generateMipmap (bool): Whether to generate texture mipmaps (see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/generateMipmap). Default to true except for frame buffer objects textures.
-     see https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/samplerParameter
+    see https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/samplerParameter
    @wrapS (GLenum): WebGL constant specifying the texture wrapping function for the texture coordinate S
    @wrapT (GLenum): WebGL constant specifying the texture wrapping function for the texture coordinate T
    @minFilter (GLenum): WebGL constant specifying the texture minification filter
    @magFilter (GLenum): WebGL constant specifying the texture magnification filter
-     returns:
+    returns:
    @this: our newly created Texture class object
    ***/
   // avoid reinstancing those during runtime
@@ -4602,9 +4596,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       this._initTexture();
     }
     /***
-     Init per-texture parameters state
-     Called on init and on context restoration to force parameters settings
-     ***/
+       Init per-texture parameters state
+       Called on init and on context restoration to force parameters settings
+       ***/
 
 
     _createClass(Texture, [{
@@ -4621,8 +4615,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         };
       }
       /***
-       Init our texture object
-       ***/
+         Init our texture object
+         ***/
 
     }, {
       key: "_initTexture",
@@ -4644,10 +4638,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** RESTORING CONTEXT ***/
 
       /***
-       Restore a WebGL texture that is a copy
-       Depending on whether it's a copy from start or not, just reset its uniforms or run the full init
-       And finally copy our original texture back again
-       ***/
+         Restore a WebGL texture that is a copy
+         Depending on whether it's a copy from start or not, just reset its uniforms or run the full init
+         And finally copy our original texture back again
+         ***/
 
     }, {
       key: "_restoreFromTexture",
@@ -4672,10 +4666,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this._canDraw = true;
       }
       /***
-       Restore our WebGL texture
-       If it is an original texture, just re run the init function and eventually reset its source
-       If it is a texture set from another texture, wait for the original texture to be ready first
-       ***/
+         Restore our WebGL texture
+         If it is an original texture, just re run the init function and eventually reset its source
+         If it is a texture set from another texture, wait for the original texture to be ready first
+         ***/
 
     }, {
       key: "_restoreContext",
@@ -4731,10 +4725,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** ADD PARENT ***/
 
       /***
-       Adds a parent to a texture
-       Sets its index, its parent and add it to the parent textures array as well
-       Then runs _setParent() to set the size and uniforms if needed
-       ***/
+         Adds a parent to a texture
+         Sets its index, its parent and add it to the parent textures array as well
+         Then runs _setParent() to set the size and uniforms if needed
+         ***/
 
     }, {
       key: "addParent",
@@ -4758,9 +4752,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this._setParent();
       }
       /***
-       Sets the parent
-       Basically sets the uniforms names and locations and sizes
-       ***/
+         Sets the parent
+         Basically sets the uniforms names and locations and sizes
+         ***/
 
     }, {
       key: "_setParent",
@@ -4827,10 +4821,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Checks if this texture has a parent
-         return:
-       @hasParent (bool): whether this texture has a parent or not
-       ***/
+         Checks if this texture has a parent
+          return:
+         @hasParent (bool): whether this texture has a parent or not
+         ***/
 
     }, {
       key: "hasParent",
@@ -4840,9 +4834,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** SEND DATA TO THE GPU ***/
 
       /***
-       Check if our textures is effectively used in our shaders
-       If so, set it to active, get its uniform locations and bind it to our texture unit
-       ***/
+         Check if our textures is effectively used in our shaders
+         If so, set it to active, get its uniform locations and bind it to our texture unit
+         ***/
 
     }, {
       key: "_setTextureUniforms",
@@ -4877,10 +4871,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       This copies an already existing Texture object to our texture
-         params:
-       @texture (Texture): texture to set from
-       ***/
+         This copies an already existing Texture object to our texture
+          params:
+         @texture (Texture): texture to set from
+         ***/
 
     }, {
       key: "copy",
@@ -4935,10 +4929,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** LOADING SOURCES ***/
 
       /***
-       This uses our source as texture
-         params:
-       @source (images/video/canvas): either an image, a video or a canvas
-       ***/
+         This uses our source as texture
+          params:
+         @source (images/video/canvas): either an image, a video or a canvas
+         ***/
 
     }, {
       key: "setSource",
@@ -5034,10 +5028,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** TEXTURE PARAMETERS ***/
 
       /***
-       Updates textures parameters that depends on global WebGL context state
-       Typically unpacking, flipY and premultiplied alpha
-       Usually called before uploading a texture to the GPU
-       ***/
+         Updates textures parameters that depends on global WebGL context state
+         Typically unpacking, flipY and premultiplied alpha
+         Usually called before uploading a texture to the GPU
+         ***/
 
     }, {
       key: "_updateGlobalTexParameters",
@@ -5062,30 +5056,30 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
         if (this._globalParameters.floatingPoint === "half-float") {
-          if (this.renderer._isWebGL2 && this.renderer.extensions['EXT_color_buffer_float']) {
+          if (this.renderer._isWebGL2 && this.renderer.extensions["EXT_color_buffer_float"]) {
             this._globalParameters.internalFormat = this.gl.RGBA16F;
             this._globalParameters.type = this.gl.HALF_FLOAT;
-          } else if (this.renderer.extensions['OES_texture_half_float']) {
-            this._globalParameters.type = this.renderer.extensions['OES_texture_half_float'].HALF_FLOAT_OES;
+          } else if (this.renderer.extensions["OES_texture_half_float"]) {
+            this._globalParameters.type = this.renderer.extensions["OES_texture_half_float"].HALF_FLOAT_OES;
           } else if (!this.renderer.production) {
             throwWarning(this.type + ": could not use half-float textures because the extension is not available");
           }
         } else if (this._globalParameters.floatingPoint === "float") {
-          if (this.renderer._isWebGL2 && this.renderer.extensions['EXT_color_buffer_float']) {
+          if (this.renderer._isWebGL2 && this.renderer.extensions["EXT_color_buffer_float"]) {
             this._globalParameters.internalFormat = this.gl.RGBA16F;
             this._globalParameters.type = this.gl.FLOAT;
-          } else if (this.renderer.extensions['OES_texture_float']) {
-            this._globalParameters.type = this.renderer.extensions['OES_texture_half_float'].FLOAT;
+          } else if (this.renderer.extensions["OES_texture_float"]) {
+            this._globalParameters.type = this.renderer.extensions["OES_texture_half_float"].FLOAT;
           } else if (!this.renderer.production) {
             throwWarning(this.type + ": could not use float textures because the extension is not available");
           }
         }
       }
       /***
-       Updates per-textures parameters
-       Wrapping, filters, anisotropy and mipmaps generation
-       Usually called after uploading a texture to the GPU
-       ***/
+         Updates per-textures parameters
+         Wrapping, filters, anisotropy and mipmaps generation
+         Usually called after uploading a texture to the GPU
+         ***/
 
     }, {
       key: "_updateTexParameters",
@@ -5189,7 +5183,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } // anisotropy
 
 
-        var anisotropyExt = this.renderer.extensions['EXT_texture_filter_anisotropic'];
+        var anisotropyExt = this.renderer.extensions["EXT_texture_filter_anisotropic"];
 
         if (anisotropyExt && this.parameters.anisotropy !== this._state.anisotropy) {
           var max = this.gl.getParameter(anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
@@ -5199,10 +5193,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Sets the texture wrapping for the texture coordinate S
-         params:
-       @wrapS (GLenum): WebGL constant specifying the texture wrapping function for the texture coordinate S
-       ***/
+         Sets the texture wrapping for the texture coordinate S
+          params:
+         @wrapS (GLenum): WebGL constant specifying the texture wrapping function for the texture coordinate S
+         ***/
 
     }, {
       key: "setWrapS",
@@ -5213,10 +5207,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Sets the texture wrapping for the texture coordinate T
-         params:
-       @wrapT (GLenum): WebGL constant specifying the texture wrapping function for the texture coordinate T
-       ***/
+         Sets the texture wrapping for the texture coordinate T
+          params:
+         @wrapT (GLenum): WebGL constant specifying the texture wrapping function for the texture coordinate T
+         ***/
 
     }, {
       key: "setWrapT",
@@ -5227,10 +5221,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Sets the texture minifaction filter value
-         params:
-       @minFilter (GLenum): WebGL constant specifying the texture minification filter
-       ***/
+         Sets the texture minifaction filter value
+          params:
+         @minFilter (GLenum): WebGL constant specifying the texture minification filter
+         ***/
 
     }, {
       key: "setMinFilter",
@@ -5241,10 +5235,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Sets the texture magnifaction filter value
-         params:
-       @magFilter (GLenum): WebGL constant specifying the texture magnifaction filter
-       ***/
+         Sets the texture magnifaction filter value
+          params:
+         @magFilter (GLenum): WebGL constant specifying the texture magnifaction filter
+         ***/
 
     }, {
       key: "setMagFilter",
@@ -5255,10 +5249,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Sets the texture anisotropy
-         params:
-       @anisotropy (int): Texture anisotropy value
-       ***/
+         Sets the texture anisotropy
+          params:
+         @anisotropy (int): Texture anisotropy value
+         ***/
 
     }, {
       key: "setAnisotropy",
@@ -5271,8 +5265,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       This forces a texture to be updated on the next draw call
-       ***/
+         This forces a texture to be updated on the next draw call
+         ***/
 
     }, {
       key: "needUpdate",
@@ -5280,8 +5274,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this._forceUpdate = true;
       }
       /***
-       This uses the requestVideoFrameCallback API to update the texture each time a new frame is displayed
-       ***/
+         This uses the requestVideoFrameCallback API to update the texture each time a new frame is displayed
+         ***/
 
     }, {
       key: "_videoFrameCallback",
@@ -5309,10 +5303,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       This updloads our texture to the GPU
-       Called on init or inside our drawing loop if shouldUpdate property is set to true
-       Typically used by videos or canvas
-       ***/
+         This updloads our texture to the GPU
+         Called on init or inside our drawing loop if shouldUpdate property is set to true
+         Typically used by videos or canvas
+         ***/
 
     }, {
       key: "_upload",
@@ -5340,10 +5334,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** TEXTURE SIZINGS ***/
 
       /***
-       This is used to calculate how to crop/center an texture
-         returns:
-       @sizes (obj): an object containing plane sizes, source sizes and x and y offset to center the source in the plane
-       ***/
+         This is used to calculate how to crop/center an texture
+          returns:
+         @sizes (obj): an object containing plane sizes, source sizes and x and y offset to center the source in the plane
+         ***/
 
     }, {
       key: "_getSizes",
@@ -5390,10 +5384,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         };
       }
       /***
-       Set the texture scale and then update its matrix
-         params:
-       @scale (Vec2 object): scale to apply on X and Y axes
-       ***/
+         Set the texture scale and then update its matrix
+          params:
+         @scale (Vec2 object): scale to apply on X and Y axes
+         ***/
 
     }, {
       key: "setScale",
@@ -5432,8 +5426,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       Gets our texture and parent sizes and tells our texture matrix to update based on those values
-       ***/
+         Gets our texture and parent sizes and tells our texture matrix to update based on those values
+         ***/
 
     }, {
       key: "_setSize",
@@ -5447,10 +5441,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       This is used to crop/center a texture
-       If the texture is using texture matrix then we just have to update its matrix
-       If it is a render pass texture we also upload the texture with its new size on the GPU
-       ***/
+         This is used to crop/center a texture
+         If the texture is using texture matrix then we just have to update its matrix
+         If it is a render pass texture we also upload the texture with its new size on the GPU
+         ***/
 
     }, {
       key: "resize",
@@ -5477,10 +5471,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this._setSize();
       }
       /***
-       This updates our textures matrix uniform based on plane and sources sizes
-         params:
-       @sizes (object): object containing plane sizes, source sizes and x and y offset to center the source in the plane
-       ***/
+         This updates our textures matrix uniform based on plane and sources sizes
+          params:
+         @sizes (object): object containing plane sizes, source sizes and x and y offset to center the source in the plane
+         ***/
 
     }, {
       key: "_updateTextureMatrix",
@@ -5499,8 +5493,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this._updateMatrixUniform();
       }
       /***
-       This updates our textures matrix GL uniform
-       ***/
+         This updates our textures matrix GL uniform
+         ***/
 
     }, {
       key: "_updateMatrixUniform",
@@ -5511,8 +5505,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       This calls our loading callback and set our media as texture source
-       ***/
+         This calls our loading callback and set our media as texture source
+         ***/
 
     }, {
       key: "_onSourceLoaded",
@@ -5527,10 +5521,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** DRAWING ***/
 
       /***
-       This is used to set the WebGL context active texture and bind it
-         params:
-       @texture (texture object): Our texture object containing our WebGL texture and its index
-       ***/
+         This is used to set the WebGL context active texture and bind it
+          params:
+         @texture (texture object): Our texture object containing our WebGL texture and its index
+         ***/
 
     }, {
       key: "_bindTexture",
@@ -5553,8 +5547,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
       }
       /***
-       This is called to draw the texture
-       ***/
+         This is called to draw the texture
+         ***/
 
     }, {
       key: "_draw",
@@ -5594,13 +5588,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** EVENTS ***/
 
       /***
-       This is called each time a source has been loaded for the first time
-       TODO useless?
-         params :
-       @callback (function) : a function to execute
-         returns :
-       @this: our texture to handle chaining
-       ***/
+         This is called each time a source has been loaded for the first time
+         TODO useless?
+          params :
+         @callback (function) : a function to execute
+          returns :
+         @this: our texture to handle chaining
+         ***/
 
     }, {
       key: "onSourceLoaded",
@@ -5612,12 +5606,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return this;
       }
       /***
-       This is called each time a texture has been uploaded to the GPU for the first time
-         params :
-       @callback (function) : a function to execute
-         returns :
-       @this: our texture to handle chaining
-       ***/
+         This is called each time a texture has been uploaded to the GPU for the first time
+          params :
+         @callback (function) : a function to execute
+          returns :
+         @this: our texture to handle chaining
+         ***/
 
     }, {
       key: "onSourceUploaded",
@@ -5631,11 +5625,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /*** DESTROYING ***/
 
       /***
-       This is used to destroy a texture and free the memory space
-       Usually used on a plane/shader pass/render target removal
-         params:
-       @force (bool, optional): force the texture to be deleted even if cached
-       ***/
+         This is used to destroy a texture and free the memory space
+         Usually used on a plane/shader pass/render target removal
+          params:
+         @force (bool, optional): force the texture to be deleted even if cached
+         ***/
 
     }, {
       key: "_dispose",
@@ -5650,9 +5644,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
           this.source = null;
-        } else if (this.sourceType === "canvas") {
+        } else if (this.sourceType === "canvas" && this.source) {
+          var _this$source;
+
           // clear all canvas states
-          this.source.width = this.source.width; // clear source
+          this.source.width = (_this$source = this.source) === null || _this$source === void 0 ? void 0 : _this$source.width; // clear source
 
           this.source = null;
         } // remove its parent
@@ -5680,10 +5676,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   /***
    An asset loader that handles images, videos and canvas loading
    Load the assets and create a Texture class object that will use those assets as sources
-     params:
+    params:
    @renderer (Curtains or Renderer class object): our curtains object OR our curtains renderer object
    @crossOrigin (string, optional): crossorigin policy to use
-     returns :
+    returns :
    @this: our TextureLoader element
    ***/
   // TODO load assets with a web worker?
@@ -5718,7 +5714,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     /***
      Keep a track of all sources loaded via this loader with an els array
      This allows to get clean refs to the event listeners to be able to remove them later
-       params:
+      params:
      @source (html element): html image, video or canvas element that has been loaded
      @texture (Texture class object): our newly created texture that will use that source
      @successCallback (function): reference to our success callback
@@ -5740,7 +5736,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Handles media loading errors
-         params:
+        params:
        @source (html element): html image or video element that has failed to load
        @callback (function): function to execute
        @error (object): loading error
@@ -5756,7 +5752,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Handles media loading success
-         params:
+        params:
        @source (html element): html image, video or canvas element that has been loaded
        @texture (Texture class object): our newly created texture that will use that source
        @callback (function): function to execute
@@ -5788,9 +5784,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Get the source type based on its file extension if it's a string or it's tag name if its a HTML element
-         params:
+        params:
        @source (html element or string): html image, video, canvas element or source url
-         returns :
+        returns :
        @sourceType (string): either "image", "video", "canvas" or null if source type cannot be determined
        ***/
 
@@ -5820,9 +5816,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Create an image HTML element based on an image source url
-         params:
+        params:
        @source (string): source url
-         returns :
+        returns :
        @image (HTML image element): an HTML image element
        ***/
 
@@ -5850,9 +5846,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Create a video HTML element based on a video source url
-         params:
+        params:
        @source (string): source url
-         returns :
+        returns :
        @video (HTML video element): an HTML video element
        ***/
 
@@ -5881,7 +5877,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This method loads one source
        It checks what type of source it is then use the right loader
-         params:
+        params:
        @source (html element): html image, video or canvas element
        @textureOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
        @successCallback (function): function to execute when the source has been loaded
@@ -5915,7 +5911,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This method loads an array of sources by calling loadSource() for each one of them
-         params:
+        params:
        @sources (array of html elements / sources url): array of html images, videos, canvases element or sources url
        @texturesOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
        @successCallback (function): function to execute when each source has been loaded
@@ -5932,7 +5928,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This method loads an image
        Creates a new texture object right away and once the image is loaded it uses it as our WebGL texture
-         params:
+        params:
        @source (image): html image element
        @textureOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
        @successCallback (function): function to execute when the source has been loaded
@@ -5999,7 +5995,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This method loads an array of images by calling loadImage() for each one of them
-         params:
+        params:
        @sources (array of images / images url): array of html images elements or images url
        @texturesOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
        @successCallback (function): function to execute when each source has been loaded
@@ -6016,7 +6012,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This method loads a video
        Creates a new texture object right away and once the video has enough data it uses it as our WebGL texture
-         params:
+        params:
        @source (video): html video element
        @textureOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
        @successCallback (function): function to execute when the source has been loaded
@@ -6072,7 +6068,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This method loads an array of images by calling loadVideo() for each one of them
-         params:
+        params:
        @sources (array of videos / videos url): array of html videos elements or videos url
        @texturesOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
        @successCallback (function): function to execute when each source has been loaded
@@ -6089,7 +6085,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This method loads a canvas
        Creates a new texture object right away and uses the canvas as our WebGL texture
-         params:
+        params:
        @source (canvas): html canvas element
        @textureOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
        @successCallback (function): function to execute when the source has been loaded
@@ -6121,7 +6117,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This method loads an array of images by calling loadCanvas() for each one of them
-         params:
+        params:
        @sources (array of canvas): array of html canvases elements
        @texturesOptions (object): parameters to apply to the textures, such as sampler name, repeat wrapping, filters, anisotropy...
        @successCallback (function): function to execute when each source has been loaded
@@ -6138,7 +6134,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Cleanly removes a texture source by removing its associated event listeners
-         params:
+        params:
        @texture (Texture class object): The texture that contains our source
        ***/
 
@@ -6178,14 +6174,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   /***
    Extends our TextureLoader class to add sources loaded count, handle onComplete event
    Also adds the sources and textures to its defined parent
-     params:
+    params:
    @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
    @parent (Plane or ShaderPass class object): The plane or shader pass that will use this loader
-     @sourcesLoaded (int): Number of sources loaded
+    @sourcesLoaded (int): Number of sources loaded
    @sourcesToLoad (int): Number of initial sources to load
    @complete (bool): Whether the loader has loaded all the initial sources
    @onComplete (function): Callback to execute when all the initial sources have been loaded
-     returns :
+    returns :
    @this: our PlaneTextureLoader element
    ***/
 
@@ -6229,7 +6225,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     /***
      Sets the total number of assets to load before firing the onComplete event
-       params:
+      params:
      @size (int): our curtains object OR our curtains renderer object
      ***/
 
@@ -6270,7 +6266,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Adds the source to the correct parent assets array
-         params:
+        params:
        @source (html element): html image, video or canvas element that has been loaded
        @sourceType (string): either "image", "video" or "canvas"
        ***/
@@ -6306,7 +6302,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        Adds the loader parent to the newly created texture
        Also adds the source to the correct parent assets array
-         params:
+        params:
        @texture (Texture class object): our newly created texture
        @source (html element): html image, video or canvas element that has been loaded
        @sourceType (string): either "image", "video" or "canvas"
@@ -6328,10 +6324,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    Here we create our Mesh object
    We will create an object containing the program that handles shaders and uniforms, a geometry that handles attributes
    Also handles anything that relates to textures creation and basic drawing operations
-     params:
+    params:
    @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
    @type (string): Object type (should be either "Plane" or "ShaderPass")
-     @vertexShaderID (string, optional): the vertex shader script ID. If not specified, will look for a data attribute data-vs-id on the plane HTML element.
+    @vertexShaderID (string, optional): the vertex shader script ID. If not specified, will look for a data attribute data-vs-id on the plane HTML element.
    @fragmentShaderID (string, optional): the fragment shader script ID. If not specified, will look for a data attribute data-fs-id on the plane HTML element.
    @vertexShader (string, optional): the vertex shader as a string. Will look for a vertexShaderID if not specified.
    @fragmentShader (string, optional): the fragment shader as a string. Will look for a fragmentShaderID if not specified.
@@ -6343,7 +6339,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    @cullFace (string, optional): which face of the mesh should be culled. Could either be "back", "front" or "none". Default to "back".
    @texturesOptions (object, optional): options and parameters to apply to the textures loaded by the mesh's loader. See the Texture class object.
    @crossorigin (string, optional): defines the crossOrigin process to load images if any (default to "anonymous").
-     returns:
+    returns:
    @this: our Mesh element
    ***/
 
@@ -6541,7 +6537,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This function adds a render target to a mesh
-         params :
+        params :
        @renderTarger (RenderTarget): the render target to add to that mesh
        ***/
 
@@ -6570,7 +6566,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Set the mesh render order to draw it above or behind other meshes
-         params :
+        params :
        @renderOrder (int): new render order to apply: higher number means a mesh is drawn on top of others
        ***/
 
@@ -6589,9 +6585,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        This method creates a new Texture and adds it to the mesh
-         params :
+        params :
        @textureOptions (object, optional) : Parameters to apply to that texture (see Texture class). Will be merged with the mesh default textures options
-         returns :
+        returns :
        @texture: our newly created texture
        ***/
 
@@ -6624,7 +6620,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This method handles the sources loading process
-         params :
+        params :
        @sourcesArray (array): array of html images, videos or canvases elements
        @texturesOptions (object, optional) : Parameters to apply to those textures (see Texture class). Will be merged with the mesh default textures options
        @successCallback (function): callback to execute on source loading success
@@ -6644,7 +6640,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This method loads one source using our mesh loader (see PlaneTextureLoader class)
-         params :
+        params :
        @source (html element) : html image, video or canvas element
        @textureOptions (object, optional) : Parameters to apply to that texture (see Texture class). Will be merged with the mesh default textures options
        @successCallback (function): callback to execute on source loading success
@@ -6671,7 +6667,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This method loads an image using our mesh loader (see PlaneTextureLoader class)
-         params :
+        params :
        @source (image) : html image element
        @textureOptions (object, optional) : Parameters to apply to that texture (see Texture class). Will be merged with the mesh default textures options
        @successCallback (function): callback to execute on source loading success
@@ -6698,7 +6694,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This method loads a video using the mesh loader (see PlaneTextureLoader class)
-         params :
+        params :
        @source (video) : html video element
        @textureOptions (object, optional) : Parameters to apply to that texture (see Texture class). Will be merged with the mesh default textures options
        @successCallback (function): callback to execute on source loading success
@@ -6725,7 +6721,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This method loads a canvas using the mesh loader (see PlaneTextureLoader class)
-         params :
+        params :
        @source (canvas) : html canvas element
        @textureOptions (object, optional) : Parameters to apply to that texture (see Texture class). Will be merged with the mesh default textures options
        @successCallback (function): callback to execute on source loading success
@@ -6744,7 +6740,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Loads an array of images
-         params :
+        params :
        @imagesArray (array) : array of html image elements
        @texturesOptions (object, optional) : Parameters to apply to those textures (see Texture class). Will be merged with the mesh default textures options
        @successCallback (function): callback to execute on source loading success
@@ -6764,7 +6760,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Loads an array of videos
-         params :
+        params :
        @videosArray (array) : array of html video elements
        @texturesOptions (object, optional) : Parameters to apply to those textures (see Texture class). Will be merged with the mesh default textures options
        @successCallback (function): callback to execute on source loading success
@@ -6784,7 +6780,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Loads an array of canvases
-         params :
+        params :
        @canvasesArray (array) : array of html canvas elements
        @texturesOptions (object, optional) : Parameters to apply to those textures (see Texture class). Will be merged with the mesh default textures options
        @successCallback (function): callback to execute on source loading success
@@ -6875,9 +6871,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        This is called each time a mesh can't be instanciated
-         params :
+        params :
        @callback (function) : a function to execute
-         returns :
+        returns :
        @this: our plane to handle chaining
        ***/
 
@@ -6892,9 +6888,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This is called each time a mesh's image has been loaded. Useful to handle a loader
-         params :
+        params :
        @callback (function) : a function to execute
-         returns :
+        returns :
        @this: our plane to handle chaining
        ***/
 
@@ -6909,9 +6905,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This is called when a mesh is ready to be drawn
-         params :
+        params :
        @callback (function) : a function to execute
-         returns :
+        returns :
        @this: our plane to handle chaining
        ***/
 
@@ -6926,9 +6922,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This is called at each requestAnimationFrame call
-         params :
+        params :
        @callback (function) : a function to execute
-         returns :
+        returns :
        @this: our plane to handle chaining
        ***/
 
@@ -6943,9 +6939,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This is called at each requestAnimationFrame call for each mesh after the draw call
-         params :
+        params :
        @callback (function) : a function to execute
-         returns :
+        returns :
        @this: our plane to handle chaining
        ***/
 
@@ -7022,7 +7018,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   /***
    Here we create our DOMGLObject object
    We will extend our Mesh class object by adding HTML sizes helpers (bounding boxes getter/setter and mouse to mesh positioning)
-     params:
+    params:
    @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
    @plane (html element): the html element that we will use for our DOMMesh object
    @type (string): Object type (should be either "Plane" or "ShaderPass")
@@ -7126,7 +7122,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Useful to get our plane HTML element bounding rectangle without triggering a reflow/layout
-         returns :
+        returns :
        @boundingRectangle (obj): an object containing our plane HTML element bounding rectangle (width, height, top, bottom, right and left properties)
        ***/
       function getBoundingRect() {
@@ -7178,9 +7174,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This function takes the mouse position relative to the document and returns it relative to our plane
        It ranges from -1 to 1 on both axis
-         params :
+        params :
        @mouseCoordinates (Vec2 object): coordinates of the mouse
-         returns :
+        returns :
        @mousePosition (Vec2 object): the mouse position relative to our plane in WebGL space coordinates
        ***/
 
@@ -7205,9 +7201,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        This is called each time a plane has been resized
-         params :
+        params :
        @callback (function) : a function to execute
-         returns :
+        returns :
        @this: our plane to handle chaining
        ***/
 
@@ -7228,14 +7224,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    Here we create our Camera object
    Creates a perspective camera and its projection matrix (which is used by Plane's class objects)
    Uses a dirty _shouldUpdate flag used to determine if we should update the matrix
-     params:
+    params:
    @fov (float, optional): the perspective field of view. Should be greater than 0 and lower than 180. Default to 50.
    @near (float, optional): near plane, the closest point where a mesh vertex is drawn. Default to 0.1.
    @far (float, optional): far plane, farthest point where a mesh vertex is drawn. Default to 150.
    @width (float, optional): width used to calculate the camera aspect ratio. Default to the renderer container's width.
    @height (float, optional): height used to calculate the camera aspect ratio. Default to the renderer container's height.
    @pixelRatio (float, optional): pixel ratio used to calculate the camera aspect ratio. Default to the renderer's pixel ratio.
-     returns:
+    returns:
    @this: our Mesh element
    ***/
 
@@ -7267,7 +7263,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     /***
      Sets the camera field of view
      Update the camera projection matrix only if the fov actually changed
-       params:
+      params:
      @fov (float, optional): field of view to use
      ***/
 
@@ -7290,7 +7286,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        Sets the camera near plane value
        Update the camera projection matrix only if the near plane actually changed
-         params:
+        params:
        @near (float, optional): near plane value to use
        ***/
 
@@ -7308,7 +7304,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        Sets the camera far plane value
        Update the camera projection matrix only if the far plane actually changed
-         params:
+        params:
        @far (float, optional): far plane value to use
        ***/
 
@@ -7326,7 +7322,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        Sets the camera pixel ratio value
        Update the camera projection matrix only if the pixel ratio actually changed
-         params:
+        params:
        @pixelRatio (float, optional): pixelRatio value to use
        ***/
 
@@ -7342,7 +7338,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        Sets the camera width and height
        Update the camera projection matrix only if the width or height actually changed
-         params:
+        params:
        @width (float, optional): width value to use
        @height (float, optional): height value to use
        ***/
@@ -7360,7 +7356,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        Sets the camera perspective
        Update the camera projection matrix if our _shouldUpdate flag is true
-         params:
+        params:
        @fov (float, optional): field of view to use
        @near (float, optional): near plane value to use
        @far (float, optional): far plane value to use
@@ -7408,7 +7404,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Returns visible width / height at a given z-depth from our camera parameters
-         Taken from: https://discourse.threejs.org/t/functions-to-calculate-the-visible-width-height-at-a-given-z-depth-from-a-perspective-camera/269
+        Taken from: https://discourse.threejs.org/t/functions-to-calculate-the-visible-width-height-at-a-given-z-depth-from-a-perspective-camera/269
        ***/
 
     }, {
@@ -7481,9 +7477,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    Here we create a Quat class object
    This is a really basic Quaternion class used for rotation calculations
    Highly based on https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js
-     params :
+    params :
    @elements (Float32Array of length 4): our quaternion array. Default to identity quaternion.
-     returns :
+    returns :
    @this: our Quat class object
    ***/
   // TODO lot of (unused at the time) methods are missing
@@ -7503,9 +7499,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }
     /***
      Sets the quaternion values from an array
-       params:
+      params:
      @array (array): an array of at least 4 elements
-       returns:
+      returns:
      @this (Quat class object): this quaternion after being set
      ***/
 
@@ -7521,9 +7517,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Sets the quaternion axis order
-         params:
+        params:
        @axisOrder (string): an array of at least 4 elements
-         returns:
+        returns:
        @this (Quat class object): this quaternion after axis order has been set
        ***/
 
@@ -7552,9 +7548,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Copy a quaternion into this quaternion
-         params:
+        params:
        @vector (Quat): quaternion to copy
-         returns:
+        returns:
        @this (Quat): this quaternion after copy
        ***/
 
@@ -7567,7 +7563,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Clone a quaternion
-         returns:
+        returns:
        @clonedQuaternion (Quat): cloned quaternion
        ***/
 
@@ -7578,7 +7574,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Checks if 2 quaternions are equal
-         returns:
+        returns:
        @isEqual (bool): whether the quaternions are equals or not
        ***/
 
@@ -7589,9 +7585,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Sets a rotation quaternion using Euler angles and its axis order
-         params:
+        params:
        @vector (Vec3 class object): rotation vector to set our quaternion from
-         returns :
+        returns :
        @this (Quat class object): quaternion after having applied the rotation
        ***/
 
@@ -7649,21 +7645,21 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   /***
    Here we create our Plane object
    We will extend our DOMMesh class that handles all the WebGL part and basic HTML sizings
-     Plane class will add:
+    Plane class will add:
    - sizing and positioning and everything that relates to the DOM like draw checks (frustum culling) and reenter/leave events
    - projection (using Camera class object) and view matrices and everything that is related like perspective, scale, rotation...
-     params :
+    params :
    @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
    @plane (html element): the html element that we will use for our Plane object
-     @Meshparams (object): see Mesh class object
-     @alwaysDraw (boolean, optionnal): if the plane should always be drawn or if it should use frustum culling. Default to false.
+    @Meshparams (object): see Mesh class object
+    @alwaysDraw (boolean, optionnal): if the plane should always be drawn or if it should use frustum culling. Default to false.
    @visible (boolean, optional): if the plane should be drawn or not. Default to true.
    @transparent (boolean, optional): if the plane should handle transparency. Default to false.
    @drawCheckMargins (object, optional): defines the margins in pixels to add to the frustum culling check to determine if the plane should be drawn. Default to 0.
    @autoloadSources (boolean, optional): if the sources should be loaded on init automatically. Default to true
    @watchScroll (boolean, optional): if the plane should auto update its position based on the scroll value. Default to true.
    @fov (float, optional): defines the perspective field of view used by the camera. Default to 50.
-     returns :
+    returns :
    @this: our Plane
    ***/
   // avoid reinstancing those during runtime
@@ -7886,7 +7882,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Reset our plane transformation values and HTML element if specified (and valid)
-         params :
+        params :
        @htmlElement (HTML element, optional) : if provided, new HTML element to use as a reference for sizes and position syncing.
        ***/
 
@@ -7988,7 +7984,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This will set our perspective matrix new parameters (fov, near plane and far plane)
        used internally but can be used externally as well to change fov for example
-         params :
+        params :
        @fov (float): the field of view
        @near (float): the nearest point where object are displayed
        @far (float): the farthest point where object are displayed
@@ -8075,9 +8071,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This function takes pixel values along X and Y axis and convert them to world space coordinates
-         params :
+        params :
        @vector (Vec3): position to convert on X, Y and Z axes
-         returns :
+        returns :
        @worldPosition: plane's position in WebGL space
        ***/
 
@@ -8131,7 +8127,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This will set our plane scale
        used internally but can be used externally as well
-         params :
+        params :
        @scale (Vec2 object): scale to apply on X and Y axes
        ***/
 
@@ -8172,7 +8168,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This will set our plane rotation
        used internally but can be used externally as well
-         params :
+        params :
        @rotation (Vec3 object): rotation to apply on X, Y and Z axes (in radians)
        ***/
 
@@ -8211,7 +8207,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        (0, 0, 0) means plane's top left corner
        (1, 1, 0) means plane's bottom right corner
        (0.5, 0.5, -1) means behind plane's center
-         params :
+        params :
        @origin (Vec3 object): coordinate of transformation origin X, Y and Z axes
        ***/
 
@@ -8258,7 +8254,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This function takes pixel values along X and Y axis and convert them to clip space coordinates, and then apply the corresponding translation
-         params :
+        params :
        @translation (Vec3): translation to apply on X, Y and Z axes
        ***/
 
@@ -8310,7 +8306,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This function updates the plane position based on the Curtains class scroll manager values
-         params:
+        params:
        @lastXDelta (float): last scroll value along X axis
        @lastYDelta (float): last scroll value along Y axis
        ***/
@@ -8331,10 +8327,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Find the intersection point by adding a vector starting from a corner till we reach the near plane
-         params:
+        params:
        @refPoint (Vec3 class object): corner of the plane from which we start to iterate from
        @secondPoint (Vec3 class object): second point near the refPoint to get a direction to use for iteration
-         returns:
+        returns:
        @intersection (Vec3 class object): intersection between our plane and the camera near plane
        ***/
 
@@ -8358,11 +8354,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        We need to find the intersection points using another approach
        Here I chose to use non clipped corners projected coords and a really small vector parallel to the plane's side
        We're adding that vector again and again to our corner projected coords until the Z coordinate matches the near plane: we got our intersection
-         params:
+        params:
        @corners (array): our original corners vertices coordinates
        @mvpCorners (array): the projected corners of our plane
        @clippedCorners (array): index of the corners that are clipped
-         returns:
+        returns:
        @mvpCorners (array): the corrected projected corners of our plane
        ***/
 
@@ -8472,7 +8468,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        Useful to get our WebGL plane bounding box in the world space
        Takes all transformations into account
        Used internally for frustum culling
-         returns :
+        returns :
        @boundingRectangle (obj): an object containing our plane WebGL element 4 corners coordinates: top left corner is [-1, 1] and bottom right corner is [1, -1]
        ***/
       function _getWorldCoords() {
@@ -8568,7 +8564,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Returns our plane WebGL bounding rect relative to document
-         returns :
+        returns :
        @boundingRectangle (obj): an object containing our plane WebGL element bounding rectangle (width, height, top, bottom, right and left properties)
        ***/
 
@@ -8585,7 +8581,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        Returns our plane WebGL bounding rectangle in document coordinates including additional drawCheckMargins
-         returns :
+        returns :
        @boundingRectangle (obj): an object containing our plane WebGL element bounding rectangle including the draw check margins (top, bottom, right and left properties)
        ***/
 
@@ -8648,7 +8644,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        This function set/unset the depth test for that plane
-         params :
+        params :
        @shouldEnableDepthTest (bool): enable/disable depth test for that plane
        ***/
 
@@ -8738,9 +8734,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       /***
        This function takes the mouse position relative to the document and returns it relative to our plane
        It ranges from -1 to 1 on both axis
-         params :
+        params :
        @mouseCoordinates (Vec2 object): coordinates of the mouse
-         returns :
+        returns :
        @mousePosition (Vec2 object): the mouse position relative to our plane in WebGL space coordinates
        ***/
 
@@ -8800,9 +8796,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        This is called each time a plane is entering again the view bounding box
-         params :
+        params :
        @callback (function) : a function to execute
-         returns :
+        returns :
        @this: our plane to handle chaining
        ***/
 
@@ -8817,9 +8813,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This is called each time a plane is leaving the view bounding box
-         params :
+        params :
        @callback (function) : a function to execute
-         returns :
+        returns :
        @this: our plane to handle chaining
        ***/
 
@@ -8838,15 +8834,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   }(DOMMesh);
   /***
    Here we create a RenderTarget class object
-     params :
+    params :
    @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
-     @shaderPass (ShaderPass class object): shader pass that will use that render target. Default to null
+    @shaderPass (ShaderPass class object): shader pass that will use that render target. Default to null
    @depth (bool, optional): whether to create a depth buffer (handle depth inside your render target). Default to false.
    @clear (bool, optional): whether the content of the render target should be cleared before being drawn. Should be set to false to handle ping-pong shading. Default to true.
-     @minWidth (float, optional): minimum width of the render target
+    @minWidth (float, optional): minimum width of the render target
    @minHeight (float, optional): minimum height of the render target
-     @texturesOptions (object, optional): options and parameters to apply to the render target texture. See the Texture class object.
-     returns :
+    @texturesOptions (object, optional): options and parameters to apply to the render target texture. See the Texture class object.
+    returns :
    @this: our RenderTarget class object
    ***/
 
@@ -9048,7 +9044,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        Returns the render target's texture
-         returns :
+        returns :
        @texture (Texture class object): our RenderTarget's texture
        ***/
 
@@ -9110,13 +9106,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    Here we create our ShaderPass object
    We will extend our DOMMesh class that handles all the WebGL part and basic HTML sizings
    ShaderPass class will add the frame buffer by creating a new RenderTarget class object
-     params :
+    params :
    @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
-     @Meshparams (object): see Mesh class object
-     @depth (boolean, optionnal): whether the shader pass render target should use a depth buffer (see RenderTarget class object). Default to false.
+    @Meshparams (object): see Mesh class object
+    @depth (boolean, optionnal): whether the shader pass render target should use a depth buffer (see RenderTarget class object). Default to false.
    @clear (boolean, optional): whether the shader pass render target content should be cleared before being drawn (see RenderTarget class object). Default to true.
    @renderTarget (RenderTarget class object, optional): an already existing render target to use. Default to null.
-     returns :
+    returns :
    @this: our ShaderPass element
    ***/
 
@@ -9322,10 +9318,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
    - create a texture onto which we'll draw
    - before drawing our plane (onRender callback), apply the write pass as our plane render target
    - after drawing our plane (onAfterRender callback), swap the read and write pass and copy the read pass texture again
-     params:
+    params:
    @sampler (string): sampler name used to create our texture and that will be used inside your shader
    @planeParams: see Plane class object
-     returns :
+    returns :
    @this: our PingPongPlane element
    ***/
 
@@ -9501,9 +9497,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       /***
        This is called at each requestAnimationFrame call
-         params :
+        params :
        @callback (function) : a function to execute
-         returns :
+        returns :
        @this: our plane to handle chaining
        ***/
 
@@ -9518,9 +9514,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }
       /***
        This is called at each requestAnimationFrame call
-         params :
+        params :
        @callback (function) : a function to execute
-         returns :
+        returns :
        @this: our plane to handle chaining
        ***/
 
@@ -9568,8 +9564,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   /***
    Here we create our FXAAPass object
    This is just a regular ShaderPass with preset shaders and a resolution uniform
-     params: see ShaderPas class object
-     returns :
+    params: see ShaderPas class object
+    returns :
    @this: our FXAAPass element
    ***/
 
@@ -9633,9 +9629,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }
     /***
      This is called each time the FXAAPass has been resized
-       params :
+      params :
      @callback (function) : a function to execute
-       returns :
+      returns :
      @this: our FXAAPass to handle chaining
      ***/
 
