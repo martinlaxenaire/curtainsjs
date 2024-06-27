@@ -398,7 +398,7 @@ export class Curtains {
     this._scrollManager = new ScrollManager({
       // init values
       xOffset: window.pageXOffset,
-      yOffset: window.pageYOffset,
+      yOffset: 0,
       lastXDelta: 0,
       lastYDelta: 0,
       shouldWatch: this._watchScroll,

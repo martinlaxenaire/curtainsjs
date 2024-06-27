@@ -2189,10 +2189,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function _initScroll() {
         var _this9 = this;
 
+        console.log("hi");
         this._scrollManager = new ScrollManager({
           // init values
           xOffset: window.pageXOffset,
-          yOffset: window.pageYOffset,
+          yOffset: 0,
           lastXDelta: 0,
           lastYDelta: 0,
           shouldWatch: this._watchScroll,
