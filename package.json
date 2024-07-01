@@ -35,5 +35,8 @@
   "scripts": {
     "build": "rollup -c",
     "prepare": "npm run build"
+  },
+  "dependencies": {
+    "geometry-extrude": "^0.2.1"
   }
 }
