@@ -1,5 +1,4 @@
 import { throwError } from "../utils/utils.js";
-import { extrudePolygon } from "geometry-extrude";
 
 /***
  Geometry class handles attributes, VertexArrayObjects (if available) and vertices/UVs set up
@@ -242,7 +241,7 @@ export class Geometry {
 
     // loop through our attributes
     for (const key in this.attributes) {
-      if (!this.attributes[key].isActive) return;
+      if (!this.attributes[key].isActive) continue;
 
       // bind attribute buffer
       this.gl.enableVertexAttribArray(this.attributes[key].location);
@@ -265,6 +264,17 @@ export class Geometry {
       );
     }
 
+    // bind indices if available
+    if (this.indices) {
+      this.indexBuffer = this.gl.createBuffer();
+      this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+      this.gl.bufferData(
+        this.gl.ELEMENT_ARRAY_BUFFER,
+        new Uint16Array(this.indices),
+        this.gl.STATIC_DRAW
+      );
+    }
+
     // update current buffers ID
     this.renderer.state.currentGeometryID = this.definition.id;
   }
@@ -284,7 +294,7 @@ export class Geometry {
     } else {
       // loop through our attributes to bind the buffers and set the attribute pointer
       for (const key in this.attributes) {
-        if (!this.attributes[key].isActive) return;
+        if (!this.attributes[key].isActive) continue;
 
         this.gl.enableVertexAttribArray(this.attributes[key].location);
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
@@ -307,11 +317,20 @@ export class Geometry {
      Draw a geometry
      ***/
   draw() {
-    this.gl.drawArrays(
-      this.gl.TRIANGLES,
-      0,
-      this.attributes.vertexPosition.numberOfItems
-    );
+    if (this.indices) {
+      this.gl.drawElements(
+        this.gl.TRIANGLES,
+        this.indices.length,
+        this.gl.UNSIGNED_SHORT,
+        0
+      );
+    } else {
+      this.gl.drawArrays(
+        this.gl.TRIANGLES,
+        0,
+        this.attributes.vertexPosition.numberOfItems
+      );
+    }
   }
 
   /***
@@ -342,98 +361,5 @@ export class Geometry {
 
     // update current buffers ID
     this.renderer.state.currentGeometryID = null;
-  }
-}
-
-export class ExtrudedGeometry extends Geometry {
-  constructor(
-    renderer,
-    {
-      program = null,
-      width = 1,
-      height = 1,
-      svgData = [],
-      depth = 2,
-      bevelSize = 0,
-      bevelSegments = 2,
-    } = {}
-  ) {
-    super(renderer, { program, width, height });
-
-    this.svgData = svgData;
-    this.depth = depth;
-    this.bevelSize = bevelSize;
-    this.bevelSegments = bevelSegments;
-
-    this.setExtrudedVerticesUVs();
-  }
-
-  setExtrudedVerticesUVs() {
-    const { indices, position, uv, normal } = extrudePolygon(this.svgData, {
-      depth: this.depth,
-      bevelSize: this.bevelSize,
-      bevelSegments: this.bevelSegments,
-    });
-
-    this.attributes.vertexPosition.array = position;
-    this.attributes.textureCoord.array = uv;
-
-    // Optionally store other data such as indices and normals if needed
-    this.indices = indices;
-    this.normals = normal;
-
-    this.initializeBuffers();
-  }
-
-  initializeBuffers() {
-    if (!this.attributes) return;
-
-    // Bind vertex attributes and buffers
-    for (const key in this.attributes) {
-      if (!this.attributes[key].isActive) return;
-
-      this.gl.enableVertexAttribArray(this.attributes[key].location);
-      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
-      this.gl.bufferData(
-        this.gl.ARRAY_BUFFER,
-        new Float32Array(this.attributes[key].array),
-        this.gl.STATIC_DRAW
-      );
-      this.gl.vertexAttribPointer(
-        this.attributes[key].location,
-        this.attributes[key].size,
-        this.gl.FLOAT,
-        false,
-        0,
-        0
-      );
-    }
-
-    // Bind indices if available
-    if (this.indices) {
-      this.indexBuffer = this.gl.createBuffer();
-      this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-      this.gl.bufferData(
-        this.gl.ELEMENT_ARRAY_BUFFER,
-        new Uint16Array(this.indices),
-        this.gl.STATIC_DRAW
-      );
-    }
-
-    // Update current buffers ID
-    this.renderer.state.currentGeometryID = this.definition.id;
-  }
-
-  draw() {
-    if (this.indices) {
-      this.gl.drawElements(
-        this.gl.TRIANGLES,
-        this.indices.length,
-        this.gl.UNSIGNED_SHORT,
-        0
-      );
-    } else {
-      super.draw();
-    }
   }
 }

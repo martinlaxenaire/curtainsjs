@@ -3366,13 +3366,20 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (!this.attributes) return; // loop through our attributes
 
         for (var key in this.attributes) {
-          if (!this.attributes[key].isActive) return; // bind attribute buffer
+          if (!this.attributes[key].isActive) continue; // bind attribute buffer
 
           this.gl.enableVertexAttribArray(this.attributes[key].location);
           this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
           this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.attributes[key].array), this.gl.STATIC_DRAW); // set where the attribute gets its data
 
           this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
+        } // bind indices if available
+
+
+        if (this.indices) {
+          this.indexBuffer = this.gl.createBuffer();
+          this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+          this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), this.gl.STATIC_DRAW);
         } // update current buffers ID
 
 
@@ -3394,7 +3401,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } else {
           // loop through our attributes to bind the buffers and set the attribute pointer
           for (var key in this.attributes) {
-            if (!this.attributes[key].isActive) return;
+            if (!this.attributes[key].isActive) continue;
             this.gl.enableVertexAttribArray(this.attributes[key].location);
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
             this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
@@ -3411,7 +3418,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "draw",
       value: function draw() {
-        this.gl.drawArrays(this.gl.TRIANGLES, 0, this.attributes.vertexPosition.numberOfItems);
+        if (this.indices) {
+          this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
+        } else {
+          this.gl.drawArrays(this.gl.TRIANGLES, 0, this.attributes.vertexPosition.numberOfItems);
+        }
       }
       /***
          Dispose a geometry (ie delete its vertex array objects and buffers)
@@ -3440,6 +3451,38 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.attributes = null; // update current buffers ID
 
         this.renderer.state.currentGeometryID = null;
+      }
+      /***
+         Add extrusion to the geometry
+         ***/
+
+    }, {
+      key: "addExtrusion",
+      value: function addExtrusion(svgData) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+        var _options$depth = options.depth,
+            depth = _options$depth === void 0 ? 2 : _options$depth,
+            _options$bevelSize = options.bevelSize,
+            bevelSize = _options$bevelSize === void 0 ? 0 : _options$bevelSize,
+            _options$bevelSegment = options.bevelSegments,
+            bevelSegments = _options$bevelSegment === void 0 ? 2 : _options$bevelSegment;
+
+        var _geometryExtrude$extr = geometryExtrude.extrudePolygon(svgData, {
+          depth: depth,
+          bevelSize: bevelSize,
+          bevelSegments: bevelSegments
+        }),
+            indices = _geometryExtrude$extr.indices,
+            position = _geometryExtrude$extr.position,
+            uv = _geometryExtrude$extr.uv,
+            normal = _geometryExtrude$extr.normal;
+
+        this.attributes.vertexPosition.array = position;
+        this.attributes.textureCoord.array = uv; // Store other data such as indices and normals if needed
+
+        this.indices = indices;
+        this.normals = normal;
+        this.initializeBuffers();
       }
     }]);
 
@@ -8832,104 +8875,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     return Plane;
   }(DOMMesh);
-
-  var ExtrudedGeometry = /*#__PURE__*/function (_Geometry) {
-    _inherits(ExtrudedGeometry, _Geometry);
-
-    var _super4 = _createSuper(ExtrudedGeometry);
-
-    function ExtrudedGeometry(renderer) {
-      var _this34;
-
-      var _ref12 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          _ref12$program = _ref12.program,
-          program = _ref12$program === void 0 ? null : _ref12$program,
-          _ref12$width = _ref12.width,
-          width = _ref12$width === void 0 ? 1 : _ref12$width,
-          _ref12$height = _ref12.height,
-          height = _ref12$height === void 0 ? 1 : _ref12$height,
-          _ref12$svgData = _ref12.svgData,
-          svgData = _ref12$svgData === void 0 ? [] : _ref12$svgData,
-          _ref12$depth = _ref12.depth,
-          depth = _ref12$depth === void 0 ? 2 : _ref12$depth,
-          _ref12$bevelSize = _ref12.bevelSize,
-          bevelSize = _ref12$bevelSize === void 0 ? 0 : _ref12$bevelSize,
-          _ref12$bevelSegments = _ref12.bevelSegments,
-          bevelSegments = _ref12$bevelSegments === void 0 ? 2 : _ref12$bevelSegments;
-
-      _classCallCheck(this, ExtrudedGeometry);
-
-      _this34 = _super4.call(this, renderer, {
-        program: program,
-        width: width,
-        height: height
-      });
-      _this34.svgData = svgData;
-      _this34.depth = depth;
-      _this34.bevelSize = bevelSize;
-      _this34.bevelSegments = bevelSegments;
-
-      _this34.setExtrudedVerticesUVs();
-
-      return _this34;
-    }
-
-    _createClass(ExtrudedGeometry, [{
-      key: "setExtrudedVerticesUVs",
-      value: function setExtrudedVerticesUVs() {
-        var _geometryExtrude$extr = geometryExtrude.extrudePolygon(this.svgData, {
-          depth: this.depth,
-          bevelSize: this.bevelSize,
-          bevelSegments: this.bevelSegments
-        }),
-            indices = _geometryExtrude$extr.indices,
-            position = _geometryExtrude$extr.position,
-            uv = _geometryExtrude$extr.uv,
-            normal = _geometryExtrude$extr.normal;
-
-        this.attributes.vertexPosition.array = position;
-        this.attributes.textureCoord.array = uv; // Optionally store other data such as indices and normals if needed
-
-        this.indices = indices;
-        this.normals = normal;
-        this.initializeBuffers();
-      }
-    }, {
-      key: "initializeBuffers",
-      value: function initializeBuffers() {
-        if (!this.attributes) return; // Bind vertex attributes and buffers
-
-        for (var key in this.attributes) {
-          if (!this.attributes[key].isActive) return;
-          this.gl.enableVertexAttribArray(this.attributes[key].location);
-          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
-          this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.attributes[key].array), this.gl.STATIC_DRAW);
-          this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
-        } // Bind indices if available
-
-
-        if (this.indices) {
-          this.indexBuffer = this.gl.createBuffer();
-          this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-          this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), this.gl.STATIC_DRAW);
-        } // Update current buffers ID
-
-
-        this.renderer.state.currentGeometryID = this.definition.id;
-      }
-    }, {
-      key: "draw",
-      value: function draw() {
-        if (this.indices) {
-          this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
-        } else {
-          _get(_getPrototypeOf(ExtrudedGeometry.prototype), "draw", this).call(this);
-        }
-      }
-    }]);
-
-    return ExtrudedGeometry;
-  }(Geometry);
   /***
    Here we create a RenderTarget class object
     params :
@@ -8947,20 +8892,20 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
   var RenderTarget = /*#__PURE__*/function () {
     function RenderTarget(renderer) {
-      var _ref13 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          shaderPass = _ref13.shaderPass,
-          _ref13$depth = _ref13.depth,
-          depth = _ref13$depth === void 0 ? false : _ref13$depth,
-          _ref13$clear = _ref13.clear,
-          clear = _ref13$clear === void 0 ? true : _ref13$clear,
-          maxWidth = _ref13.maxWidth,
-          maxHeight = _ref13.maxHeight,
-          _ref13$minWidth = _ref13.minWidth,
-          minWidth = _ref13$minWidth === void 0 ? 1024 : _ref13$minWidth,
-          _ref13$minHeight = _ref13.minHeight,
-          minHeight = _ref13$minHeight === void 0 ? 1024 : _ref13$minHeight,
-          _ref13$texturesOption = _ref13.texturesOptions,
-          texturesOptions = _ref13$texturesOption === void 0 ? {} : _ref13$texturesOption;
+      var _ref12 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          shaderPass = _ref12.shaderPass,
+          _ref12$depth = _ref12.depth,
+          depth = _ref12$depth === void 0 ? false : _ref12$depth,
+          _ref12$clear = _ref12.clear,
+          clear = _ref12$clear === void 0 ? true : _ref12$clear,
+          maxWidth = _ref12.maxWidth,
+          maxHeight = _ref12.maxHeight,
+          _ref12$minWidth = _ref12.minWidth,
+          minWidth = _ref12$minWidth === void 0 ? 1024 : _ref12$minWidth,
+          _ref12$minHeight = _ref12.minHeight,
+          minHeight = _ref12$minHeight === void 0 ? 1024 : _ref12$minHeight,
+          _ref12$texturesOption = _ref12.texturesOptions,
+          texturesOptions = _ref12$texturesOption === void 0 ? {} : _ref12$texturesOption;
 
       _classCallCheck(this, RenderTarget);
 
@@ -9218,29 +9163,29 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   var ShaderPass = /*#__PURE__*/function (_DOMMesh2) {
     _inherits(ShaderPass, _DOMMesh2);
 
-    var _super5 = _createSuper(ShaderPass);
+    var _super4 = _createSuper(ShaderPass);
 
     function ShaderPass(renderer) {
-      var _this35;
+      var _this34;
 
-      var _ref14 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          widthSegments = _ref14.widthSegments,
-          heightSegments = _ref14.heightSegments,
-          renderOrder = _ref14.renderOrder,
-          depthTest = _ref14.depthTest,
-          cullFace = _ref14.cullFace,
-          uniforms = _ref14.uniforms,
-          vertexShaderID = _ref14.vertexShaderID,
-          fragmentShaderID = _ref14.fragmentShaderID,
-          vertexShader = _ref14.vertexShader,
-          fragmentShader = _ref14.fragmentShader,
-          texturesOptions = _ref14.texturesOptions,
-          crossOrigin = _ref14.crossOrigin,
-          _ref14$depth = _ref14.depth,
-          depth = _ref14$depth === void 0 ? false : _ref14$depth,
-          _ref14$clear = _ref14.clear,
-          clear = _ref14$clear === void 0 ? true : _ref14$clear,
-          renderTarget = _ref14.renderTarget;
+      var _ref13 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          widthSegments = _ref13.widthSegments,
+          heightSegments = _ref13.heightSegments,
+          renderOrder = _ref13.renderOrder,
+          depthTest = _ref13.depthTest,
+          cullFace = _ref13.cullFace,
+          uniforms = _ref13.uniforms,
+          vertexShaderID = _ref13.vertexShaderID,
+          fragmentShaderID = _ref13.fragmentShaderID,
+          vertexShader = _ref13.vertexShader,
+          fragmentShader = _ref13.fragmentShader,
+          texturesOptions = _ref13.texturesOptions,
+          crossOrigin = _ref13.crossOrigin,
+          _ref13$depth = _ref13.depth,
+          depth = _ref13$depth === void 0 ? false : _ref13$depth,
+          _ref13$clear = _ref13.clear,
+          clear = _ref13$clear === void 0 ? true : _ref13$clear,
+          renderTarget = _ref13.renderTarget;
 
       _classCallCheck(this, ShaderPass);
 
@@ -9250,7 +9195,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       cullFace = "back"; // use the renderer container as our HTML element to create a DOMMesh object
 
-      _this35 = _super5.call(this, renderer, renderer.container, "ShaderPass", {
+      _this34 = _super4.call(this, renderer, renderer.container, "ShaderPass", {
         widthSegments: widthSegments,
         heightSegments: heightSegments,
         renderOrder: renderOrder,
@@ -9265,38 +9210,38 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         crossOrigin: crossOrigin
       }); // return if no gl context
 
-      if (!_this35.gl) {
-        return _possibleConstructorReturn(_this35);
+      if (!_this34.gl) {
+        return _possibleConstructorReturn(_this34);
       } // default to scene pass
 
 
-      _this35._isScenePass = true;
-      _this35.index = _this35.renderer.shaderPasses.length;
-      _this35._depth = depth;
-      _this35._shouldClear = clear;
-      _this35.target = renderTarget;
+      _this34._isScenePass = true;
+      _this34.index = _this34.renderer.shaderPasses.length;
+      _this34._depth = depth;
+      _this34._shouldClear = clear;
+      _this34.target = renderTarget;
 
-      if (_this35.target) {
+      if (_this34.target) {
         // if there's a target defined it's not a scene pass
-        _this35._isScenePass = false; // inherit clear param
+        _this34._isScenePass = false; // inherit clear param
 
-        _this35._shouldClear = _this35.target._shouldClear;
+        _this34._shouldClear = _this34.target._shouldClear;
       } // if the program is valid, go on
 
 
-      if (_this35._program.compiled) {
-        _this35._initShaderPass(); // add shader pass to our renderer shaderPasses array
+      if (_this34._program.compiled) {
+        _this34._initShaderPass(); // add shader pass to our renderer shaderPasses array
 
 
-        _this35.renderer.shaderPasses.push(_assertThisInitialized(_this35)); // wait one tick before adding our shader pass to the scene to avoid flickering black screen for one frame
+        _this34.renderer.shaderPasses.push(_assertThisInitialized(_this34)); // wait one tick before adding our shader pass to the scene to avoid flickering black screen for one frame
 
 
-        _this35.renderer.nextRender.add(function () {
-          _this35.renderer.scene.addShaderPass(_assertThisInitialized(_this35));
+        _this34.renderer.nextRender.add(function () {
+          _this34.renderer.scene.addShaderPass(_assertThisInitialized(_this34));
         });
       }
 
-      return _this35;
+      return _this34;
     }
     /*** RESTORING CONTEXT ***/
 
@@ -9427,33 +9372,33 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   var PingPongPlane = /*#__PURE__*/function (_Plane) {
     _inherits(PingPongPlane, _Plane);
 
-    var _super6 = _createSuper(PingPongPlane);
+    var _super5 = _createSuper(PingPongPlane);
 
     function PingPongPlane(curtains, htmlElement) {
-      var _this36;
+      var _this35;
 
-      var _ref15 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-          _ref15$sampler = _ref15.sampler,
-          sampler = _ref15$sampler === void 0 ? "uPingPongTexture" : _ref15$sampler,
-          widthSegments = _ref15.widthSegments,
-          heightSegments = _ref15.heightSegments,
-          renderOrder = _ref15.renderOrder,
-          depthTest = _ref15.depthTest,
-          cullFace = _ref15.cullFace,
-          uniforms = _ref15.uniforms,
-          vertexShaderID = _ref15.vertexShaderID,
-          fragmentShaderID = _ref15.fragmentShaderID,
-          vertexShader = _ref15.vertexShader,
-          fragmentShader = _ref15.fragmentShader,
-          texturesOptions = _ref15.texturesOptions,
-          crossOrigin = _ref15.crossOrigin,
-          alwaysDraw = _ref15.alwaysDraw,
-          visible = _ref15.visible,
-          transparent = _ref15.transparent,
-          drawCheckMargins = _ref15.drawCheckMargins,
-          autoloadSources = _ref15.autoloadSources,
-          watchScroll = _ref15.watchScroll,
-          fov = _ref15.fov;
+      var _ref14 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+          _ref14$sampler = _ref14.sampler,
+          sampler = _ref14$sampler === void 0 ? "uPingPongTexture" : _ref14$sampler,
+          widthSegments = _ref14.widthSegments,
+          heightSegments = _ref14.heightSegments,
+          renderOrder = _ref14.renderOrder,
+          depthTest = _ref14.depthTest,
+          cullFace = _ref14.cullFace,
+          uniforms = _ref14.uniforms,
+          vertexShaderID = _ref14.vertexShaderID,
+          fragmentShaderID = _ref14.fragmentShaderID,
+          vertexShader = _ref14.vertexShader,
+          fragmentShader = _ref14.fragmentShader,
+          texturesOptions = _ref14.texturesOptions,
+          crossOrigin = _ref14.crossOrigin,
+          alwaysDraw = _ref14.alwaysDraw,
+          visible = _ref14.visible,
+          transparent = _ref14.transparent,
+          drawCheckMargins = _ref14.drawCheckMargins,
+          autoloadSources = _ref14.autoloadSources,
+          watchScroll = _ref14.watchScroll,
+          fov = _ref14.fov;
 
       _classCallCheck(this, PingPongPlane);
 
@@ -9461,7 +9406,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       depthTest = false;
       autoloadSources = false; // create our plane
 
-      _this36 = _super6.call(this, curtains, htmlElement, {
+      _this35 = _super5.call(this, curtains, htmlElement, {
         widthSegments: widthSegments,
         heightSegments: heightSegments,
         renderOrder: renderOrder,
@@ -9483,30 +9428,30 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         fov: fov
       }); // return if no gl context
 
-      if (!_this36.gl) {
-        return _possibleConstructorReturn(_this36);
+      if (!_this35.gl) {
+        return _possibleConstructorReturn(_this35);
       } // remove from stack, update type to PingPongPlane and then stack again
 
 
-      _this36.renderer.scene.removePlane(_assertThisInitialized(_this36));
+      _this35.renderer.scene.removePlane(_assertThisInitialized(_this35));
 
-      _this36.type = "PingPongPlane";
+      _this35.type = "PingPongPlane";
 
-      _this36.renderer.scene.addPlane(_assertThisInitialized(_this36)); // create 2 render targets
+      _this35.renderer.scene.addPlane(_assertThisInitialized(_this35)); // create 2 render targets
 
 
-      _this36.readPass = new RenderTarget(curtains, {
+      _this35.readPass = new RenderTarget(curtains, {
         depth: false,
         clear: false,
         texturesOptions: texturesOptions
       });
-      _this36.writePass = new RenderTarget(curtains, {
+      _this35.writePass = new RenderTarget(curtains, {
         depth: false,
         clear: false,
         texturesOptions: texturesOptions
       }); // create a texture where we'll draw
 
-      _this36.createTexture({
+      _this35.createTexture({
         sampler: sampler
       }); // wait for both render targets textures to be ready and force a copy of the current target texture
       // even if the swap already began
@@ -9515,41 +9460,41 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       var nbPassesReady = 0;
 
-      _this36.readPass.getTexture().onSourceUploaded(function () {
+      _this35.readPass.getTexture().onSourceUploaded(function () {
         nbPassesReady++;
 
-        _this36._checkIfReady(nbPassesReady);
+        _this35._checkIfReady(nbPassesReady);
       });
 
-      _this36.writePass.getTexture().onSourceUploaded(function () {
+      _this35.writePass.getTexture().onSourceUploaded(function () {
         nbPassesReady++;
 
-        _this36._checkIfReady(nbPassesReady);
+        _this35._checkIfReady(nbPassesReady);
       }); // directly assign a render target
 
 
-      _this36.setRenderTarget(_this36.readPass); // override onRender and onAfterRender callbacks
+      _this35.setRenderTarget(_this35.readPass); // override onRender and onAfterRender callbacks
 
 
-      _this36._onRenderCallback = function () {
+      _this35._onRenderCallback = function () {
         // update the render target
-        if (_this36.readPass && _this36.writePass && _this36.textures[0] && _this36.textures[0]._uploaded) {
-          _this36.setRenderTarget(_this36.writePass);
+        if (_this35.readPass && _this35.writePass && _this35.textures[0] && _this35.textures[0]._uploaded) {
+          _this35.setRenderTarget(_this35.writePass);
         }
 
-        _this36._onPingPongRenderCallback && _this36._onPingPongRenderCallback();
+        _this35._onPingPongRenderCallback && _this35._onPingPongRenderCallback();
       };
 
-      _this36._onAfterRenderCallback = function () {
+      _this35._onAfterRenderCallback = function () {
         // swap FBOs and update texture
-        if (_this36.readPass && _this36.writePass && _this36.textures[0] && _this36.textures[0]._uploaded) {
-          _this36._swapPasses();
+        if (_this35.readPass && _this35.writePass && _this35.textures[0] && _this35.textures[0]._uploaded) {
+          _this35._swapPasses();
         }
 
-        _this36._onPingPongAfterRenderCallback && _this36._onPingPongAfterRenderCallback();
+        _this35._onPingPongAfterRenderCallback && _this35._onPingPongAfterRenderCallback();
       };
 
-      return _this36;
+      return _this35;
     }
     /***
      Copy the current target texture once both render targets textures have been uploaded
@@ -9560,11 +9505,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     _createClass(PingPongPlane, [{
       key: "_checkIfReady",
       value: function _checkIfReady(loadedTextures) {
-        var _this37 = this;
+        var _this36 = this;
 
         if (loadedTextures === 2) {
           this.renderer.nextRender.add(function () {
-            _this37.textures[0].copy(_this37.target.getTexture());
+            _this36.textures[0].copy(_this36.target.getTexture());
           });
         }
       }
@@ -9671,19 +9616,19 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   var FXAAPass = /*#__PURE__*/function (_ShaderPass) {
     _inherits(FXAAPass, _ShaderPass);
 
-    var _super7 = _createSuper(FXAAPass);
+    var _super6 = _createSuper(FXAAPass);
 
     function FXAAPass(curtains) {
-      var _this38;
+      var _this37;
 
-      var _ref16 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          renderOrder = _ref16.renderOrder,
-          depthTest = _ref16.depthTest,
-          texturesOptions = _ref16.texturesOptions,
-          crossOrigin = _ref16.crossOrigin,
-          depth = _ref16.depth,
-          clear = _ref16.clear,
-          renderTarget = _ref16.renderTarget;
+      var _ref15 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          renderOrder = _ref15.renderOrder,
+          depthTest = _ref15.depthTest,
+          texturesOptions = _ref15.texturesOptions,
+          crossOrigin = _ref15.crossOrigin,
+          depth = _ref15.depth,
+          clear = _ref15.clear,
+          renderTarget = _ref15.renderTarget;
 
       _classCallCheck(this, FXAAPass);
 
@@ -9697,7 +9642,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         }
       };
-      _this38 = _super7.call(this, curtains, {
+      _this37 = _super6.call(this, curtains, {
         fragmentShader: fragmentShader,
         uniforms: uniforms,
         // Mesh params
@@ -9710,20 +9655,20 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         renderTarget: renderTarget
       }); // return if no gl context
 
-      if (!_this38.gl) {
-        return _possibleConstructorReturn(_this38);
+      if (!_this37.gl) {
+        return _possibleConstructorReturn(_this37);
       } // update the resolution uniform
 
 
-      _this38.uniforms.resolution.value = [_this38.renderer._boundingRect.width, _this38.renderer._boundingRect.height]; // override onAfterResize callback
+      _this37.uniforms.resolution.value = [_this37.renderer._boundingRect.width, _this37.renderer._boundingRect.height]; // override onAfterResize callback
 
-      _this38._onAfterResizeCallback = function () {
+      _this37._onAfterResizeCallback = function () {
         // update the resolution uniform
-        _this38.uniforms.resolution.value = [_this38.renderer._boundingRect.width, _this38.renderer._boundingRect.height];
-        _this38._onFXAAPassAfterResizeCallback && _this38._onFXAAPassAfterResizeCallback();
+        _this37.uniforms.resolution.value = [_this37.renderer._boundingRect.width, _this37.renderer._boundingRect.height];
+        _this37._onFXAAPassAfterResizeCallback && _this37._onFXAAPassAfterResizeCallback();
       };
 
-      return _this38;
+      return _this37;
     }
     /***
      This is called each time the FXAAPass has been resized
@@ -9749,8 +9694,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   }(ShaderPass);
 
   exports.Curtains = Curtains;
-  exports.ExtrudedGeometry = ExtrudedGeometry;
   exports.FXAAPass = FXAAPass;
+  exports.Geometry = Geometry;
   exports.Mat4 = Mat4;
   exports.PingPongPlane = PingPongPlane;
   exports.Plane = Plane;
