@@ -25,8 +25,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 (function (global, factory) {
-  (typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? factory(exports, require('geometry-extrude')) : typeof define === 'function' && define.amd ? define(['exports', 'geometry-extrude'], factory) : (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.window = global.window || {}, global.geometryExtrude));
-})(this, function (exports, geometryExtrude) {
+  (typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? factory(exports) : typeof define === 'function' && define.amd ? define(['exports'], factory) : (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.window = global.window || {}));
+})(this, function (exports) {
   'use strict';
   /***
    Throw a console warning with the passed arguments
@@ -3451,38 +3451,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         this.attributes = null; // update current buffers ID
 
         this.renderer.state.currentGeometryID = null;
-      }
-      /***
-         Add extrusion to the geometry
-         ***/
-
-    }, {
-      key: "addExtrusion",
-      value: function addExtrusion(svgData) {
-        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-        var _options$depth = options.depth,
-            depth = _options$depth === void 0 ? 2 : _options$depth,
-            _options$bevelSize = options.bevelSize,
-            bevelSize = _options$bevelSize === void 0 ? 0 : _options$bevelSize,
-            _options$bevelSegment = options.bevelSegments,
-            bevelSegments = _options$bevelSegment === void 0 ? 2 : _options$bevelSegment;
-
-        var _geometryExtrude$extr = geometryExtrude.extrudePolygon(svgData, {
-          depth: depth,
-          bevelSize: bevelSize,
-          bevelSegments: bevelSegments
-        }),
-            indices = _geometryExtrude$extr.indices,
-            position = _geometryExtrude$extr.position,
-            uv = _geometryExtrude$extr.uv,
-            normal = _geometryExtrude$extr.normal;
-
-        this.attributes.vertexPosition.array = position;
-        this.attributes.textureCoord.array = uv; // Store other data such as indices and normals if needed
-
-        this.indices = indices;
-        this.normals = normal;
-        this.initializeBuffers();
       }
     }]);
 
