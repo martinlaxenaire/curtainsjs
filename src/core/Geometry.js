@@ -241,7 +241,7 @@ export class Geometry {
 
     // loop through our attributes
     for (const key in this.attributes) {
-      if (!this.attributes[key].isActive) continue;
+      if (!this.attributes[key].isActive) return;
 
       // bind attribute buffer
       this.gl.enableVertexAttribArray(this.attributes[key].location);
@@ -264,17 +264,6 @@ export class Geometry {
       );
     }
 
-    // bind indices if available
-    if (this.indices) {
-      this.indexBuffer = this.gl.createBuffer();
-      this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-      this.gl.bufferData(
-        this.gl.ELEMENT_ARRAY_BUFFER,
-        new Uint16Array(this.indices),
-        this.gl.STATIC_DRAW
-      );
-    }
-
     // update current buffers ID
     this.renderer.state.currentGeometryID = this.definition.id;
   }
@@ -294,7 +283,7 @@ export class Geometry {
     } else {
       // loop through our attributes to bind the buffers and set the attribute pointer
       for (const key in this.attributes) {
-        if (!this.attributes[key].isActive) continue;
+        if (!this.attributes[key].isActive) return;
 
         this.gl.enableVertexAttribArray(this.attributes[key].location);
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
@@ -317,20 +306,11 @@ export class Geometry {
      Draw a geometry
      ***/
   draw() {
-    if (this.indices) {
-      this.gl.drawElements(
-        this.gl.TRIANGLES,
-        this.indices.length,
-        this.gl.UNSIGNED_SHORT,
-        0
-      );
-    } else {
-      this.gl.drawArrays(
-        this.gl.TRIANGLES,
-        0,
-        this.attributes.vertexPosition.numberOfItems
-      );
-    }
+    this.gl.drawArrays(
+      this.gl.TRIANGLES,
+      0,
+      this.attributes.vertexPosition.numberOfItems
+    );
   }
 
   /***
