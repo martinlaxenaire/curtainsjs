@@ -3366,20 +3366,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         if (!this.attributes) return; // loop through our attributes
 
         for (var key in this.attributes) {
-          if (!this.attributes[key].isActive) continue; // bind attribute buffer
+          if (!this.attributes[key].isActive) return; // bind attribute buffer
 
           this.gl.enableVertexAttribArray(this.attributes[key].location);
           this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
           this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.attributes[key].array), this.gl.STATIC_DRAW); // set where the attribute gets its data
 
           this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
-        } // bind indices if available
-
-
-        if (this.indices) {
-          this.indexBuffer = this.gl.createBuffer();
-          this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-          this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), this.gl.STATIC_DRAW);
         } // update current buffers ID
 
 
@@ -3401,7 +3394,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         } else {
           // loop through our attributes to bind the buffers and set the attribute pointer
           for (var key in this.attributes) {
-            if (!this.attributes[key].isActive) continue;
+            if (!this.attributes[key].isActive) return;
             this.gl.enableVertexAttribArray(this.attributes[key].location);
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.attributes[key].buffer);
             this.gl.vertexAttribPointer(this.attributes[key].location, this.attributes[key].size, this.gl.FLOAT, false, 0, 0);
@@ -3418,11 +3411,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "draw",
       value: function draw() {
-        if (this.indices) {
-          this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
-        } else {
-          this.gl.drawArrays(this.gl.TRIANGLES, 0, this.attributes.vertexPosition.numberOfItems);
-        }
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, this.attributes.vertexPosition.numberOfItems);
       }
       /***
          Dispose a geometry (ie delete its vertex array objects and buffers)
@@ -9111,215 +9100,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     return RenderTarget;
   }();
-  /*** SHADERPASS CLASS ***/
-
-  /***
-   Here we create our ShaderPass object
-   We will extend our DOMMesh class that handles all the WebGL part and basic HTML sizings
-   ShaderPass class will add the frame buffer by creating a new RenderTarget class object
-    params :
-   @renderer (Curtains renderer or Renderer class object): our curtains object OR our curtains renderer object
-    @Meshparams (object): see Mesh class object
-    @depth (boolean, optionnal): whether the shader pass render target should use a depth buffer (see RenderTarget class object). Default to false.
-   @clear (boolean, optional): whether the shader pass render target content should be cleared before being drawn (see RenderTarget class object). Default to true.
-   @renderTarget (RenderTarget class object, optional): an already existing render target to use. Default to null.
-    returns :
-   @this: our ShaderPass element
-   ***/
-
-
-  var ShaderPass = /*#__PURE__*/function (_DOMMesh2) {
-    _inherits(ShaderPass, _DOMMesh2);
-
-    var _super4 = _createSuper(ShaderPass);
-
-    function ShaderPass(renderer) {
-      var _this34;
-
-      var _ref13 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          widthSegments = _ref13.widthSegments,
-          heightSegments = _ref13.heightSegments,
-          renderOrder = _ref13.renderOrder,
-          depthTest = _ref13.depthTest,
-          cullFace = _ref13.cullFace,
-          uniforms = _ref13.uniforms,
-          vertexShaderID = _ref13.vertexShaderID,
-          fragmentShaderID = _ref13.fragmentShaderID,
-          vertexShader = _ref13.vertexShader,
-          fragmentShader = _ref13.fragmentShader,
-          texturesOptions = _ref13.texturesOptions,
-          crossOrigin = _ref13.crossOrigin,
-          _ref13$depth = _ref13.depth,
-          depth = _ref13$depth === void 0 ? false : _ref13$depth,
-          _ref13$clear = _ref13.clear,
-          clear = _ref13$clear === void 0 ? true : _ref13$clear,
-          renderTarget = _ref13.renderTarget;
-
-      _classCallCheck(this, ShaderPass);
-
-      // force plane defintion to 1x1
-      widthSegments = 1;
-      heightSegments = 1; // always cull back face
-
-      cullFace = "back"; // use the renderer container as our HTML element to create a DOMMesh object
-
-      _this34 = _super4.call(this, renderer, renderer.container, "ShaderPass", {
-        widthSegments: widthSegments,
-        heightSegments: heightSegments,
-        renderOrder: renderOrder,
-        depthTest: depthTest,
-        cullFace: cullFace,
-        uniforms: uniforms,
-        vertexShaderID: vertexShaderID,
-        fragmentShaderID: fragmentShaderID,
-        vertexShader: vertexShader,
-        fragmentShader: fragmentShader,
-        texturesOptions: texturesOptions,
-        crossOrigin: crossOrigin
-      }); // return if no gl context
-
-      if (!_this34.gl) {
-        return _possibleConstructorReturn(_this34);
-      } // default to scene pass
-
-
-      _this34._isScenePass = true;
-      _this34.index = _this34.renderer.shaderPasses.length;
-      _this34._depth = depth;
-      _this34._shouldClear = clear;
-      _this34.target = renderTarget;
-
-      if (_this34.target) {
-        // if there's a target defined it's not a scene pass
-        _this34._isScenePass = false; // inherit clear param
-
-        _this34._shouldClear = _this34.target._shouldClear;
-      } // if the program is valid, go on
-
-
-      if (_this34._program.compiled) {
-        _this34._initShaderPass(); // add shader pass to our renderer shaderPasses array
-
-
-        _this34.renderer.shaderPasses.push(_assertThisInitialized(_this34)); // wait one tick before adding our shader pass to the scene to avoid flickering black screen for one frame
-
-
-        _this34.renderer.nextRender.add(function () {
-          _this34.renderer.scene.addShaderPass(_assertThisInitialized(_this34));
-        });
-      }
-
-      return _this34;
-    }
-    /*** RESTORING CONTEXT ***/
-
-    /***
-     Used internally to handle context restoration after the program has been successfully compiled again
-     ***/
-
-
-    _createClass(ShaderPass, [{
-      key: "_programRestored",
-      value: function _programRestored() {
-        // add the shader pass to our draw stack again as it have been emptied
-        this.renderer.scene.addShaderPass(this); // restore the textures
-
-        for (var i = 0; i < this.textures.length; i++) {
-          this.textures[i]._parent = this;
-
-          this.textures[i]._restoreContext();
-        }
-
-        this._canDraw = true;
-      }
-      /***
-       Here we init additionnal shader pass planes properties
-       This mainly consists in creating our render texture and add a frame buffer object
-       ***/
-
-    }, {
-      key: "_initShaderPass",
-      value: function _initShaderPass() {
-        // create our frame buffer
-        if (!this.target) {
-          this._createFrameBuffer();
-        } else {
-          // set the render target
-          this.setRenderTarget(this.target);
-          this.target._shaderPass = this;
-        } // create a texture from the render target texture
-
-
-        var texture = new Texture(this.renderer, {
-          sampler: "uRenderTexture",
-          isFBOTexture: true,
-          fromTexture: this.target.getTexture()
-        });
-        texture.addParent(this); // onReady callback
-
-        this.loader._setLoaderSize(0);
-
-        this._canDraw = true; // be sure we'll update the scene even if drawing is disabled
-
-        this.renderer.needRender();
-      }
-      /***
-       Here we create our frame buffer object
-       We're also adding a render buffer object to handle depth inside our shader pass
-       ***/
-
-    }, {
-      key: "_createFrameBuffer",
-      value: function _createFrameBuffer() {
-        var target = new RenderTarget(this.renderer, {
-          shaderPass: this,
-          clear: this._shouldClear,
-          depth: this._depth,
-          texturesOptions: this._texturesOptions
-        });
-        this.setRenderTarget(target);
-      }
-      /*** DRAWING ***/
-
-      /***
-       Specific instructions for the Shader pass class to execute before drawing it
-       ***/
-
-    }, {
-      key: "_startDrawing",
-      value: function _startDrawing() {
-        // check if our plane is ready to draw
-        if (this._canDraw) {
-          // even if our plane should not be drawn we still execute its onRender callback and update its uniforms
-          if (this._onRenderCallback) {
-            this._onRenderCallback();
-          } // to improve webgl pipeline performance, we might want to update each texture that needs an update here
-          // see https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#texImagetexSubImage_uploads_particularly_with_videos_can_cause_pipeline_flushes
-
-
-          if (this._isScenePass) {
-            // if this is a scene pass, check if theres one more coming next and eventually bind it
-            if (this.renderer.state.scenePassIndex + 1 < this.renderer.scene.stacks.scenePasses.length) {
-              this.renderer.bindFrameBuffer(this.renderer.scene.stacks.scenePasses[this.renderer.state.scenePassIndex + 1].target);
-              this.renderer.state.scenePassIndex++;
-            } else {
-              this.renderer.bindFrameBuffer(null);
-            }
-          } else if (this.renderer.state.scenePassIndex === null) {
-            // we are rendering a bunch of planes inside a render target, unbind it
-            this.renderer.bindFrameBuffer(null);
-          } // force attribute buffer bindings update
-
-
-          this.renderer.state.forceBufferUpdate = true; // now check if we really need to draw it and its textures
-
-          this._draw();
-        }
-      }
-    }]);
-
-    return ShaderPass;
-  }(DOMMesh);
   /*** FBO PING PONG PLANE CLASS ***/
 
   /***
@@ -9340,33 +9120,33 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   var PingPongPlane = /*#__PURE__*/function (_Plane) {
     _inherits(PingPongPlane, _Plane);
 
-    var _super5 = _createSuper(PingPongPlane);
+    var _super4 = _createSuper(PingPongPlane);
 
     function PingPongPlane(curtains, htmlElement) {
-      var _this35;
+      var _this34;
 
-      var _ref14 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-          _ref14$sampler = _ref14.sampler,
-          sampler = _ref14$sampler === void 0 ? "uPingPongTexture" : _ref14$sampler,
-          widthSegments = _ref14.widthSegments,
-          heightSegments = _ref14.heightSegments,
-          renderOrder = _ref14.renderOrder,
-          depthTest = _ref14.depthTest,
-          cullFace = _ref14.cullFace,
-          uniforms = _ref14.uniforms,
-          vertexShaderID = _ref14.vertexShaderID,
-          fragmentShaderID = _ref14.fragmentShaderID,
-          vertexShader = _ref14.vertexShader,
-          fragmentShader = _ref14.fragmentShader,
-          texturesOptions = _ref14.texturesOptions,
-          crossOrigin = _ref14.crossOrigin,
-          alwaysDraw = _ref14.alwaysDraw,
-          visible = _ref14.visible,
-          transparent = _ref14.transparent,
-          drawCheckMargins = _ref14.drawCheckMargins,
-          autoloadSources = _ref14.autoloadSources,
-          watchScroll = _ref14.watchScroll,
-          fov = _ref14.fov;
+      var _ref13 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+          _ref13$sampler = _ref13.sampler,
+          sampler = _ref13$sampler === void 0 ? "uPingPongTexture" : _ref13$sampler,
+          widthSegments = _ref13.widthSegments,
+          heightSegments = _ref13.heightSegments,
+          renderOrder = _ref13.renderOrder,
+          depthTest = _ref13.depthTest,
+          cullFace = _ref13.cullFace,
+          uniforms = _ref13.uniforms,
+          vertexShaderID = _ref13.vertexShaderID,
+          fragmentShaderID = _ref13.fragmentShaderID,
+          vertexShader = _ref13.vertexShader,
+          fragmentShader = _ref13.fragmentShader,
+          texturesOptions = _ref13.texturesOptions,
+          crossOrigin = _ref13.crossOrigin,
+          alwaysDraw = _ref13.alwaysDraw,
+          visible = _ref13.visible,
+          transparent = _ref13.transparent,
+          drawCheckMargins = _ref13.drawCheckMargins,
+          autoloadSources = _ref13.autoloadSources,
+          watchScroll = _ref13.watchScroll,
+          fov = _ref13.fov;
 
       _classCallCheck(this, PingPongPlane);
 
@@ -9374,7 +9154,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       depthTest = false;
       autoloadSources = false; // create our plane
 
-      _this35 = _super5.call(this, curtains, htmlElement, {
+      _this34 = _super4.call(this, curtains, htmlElement, {
         widthSegments: widthSegments,
         heightSegments: heightSegments,
         renderOrder: renderOrder,
@@ -9396,30 +9176,30 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         fov: fov
       }); // return if no gl context
 
-      if (!_this35.gl) {
-        return _possibleConstructorReturn(_this35);
+      if (!_this34.gl) {
+        return _possibleConstructorReturn(_this34);
       } // remove from stack, update type to PingPongPlane and then stack again
 
 
-      _this35.renderer.scene.removePlane(_assertThisInitialized(_this35));
+      _this34.renderer.scene.removePlane(_assertThisInitialized(_this34));
 
-      _this35.type = "PingPongPlane";
+      _this34.type = "PingPongPlane";
 
-      _this35.renderer.scene.addPlane(_assertThisInitialized(_this35)); // create 2 render targets
+      _this34.renderer.scene.addPlane(_assertThisInitialized(_this34)); // create 2 render targets
 
 
-      _this35.readPass = new RenderTarget(curtains, {
+      _this34.readPass = new RenderTarget(curtains, {
         depth: false,
         clear: false,
         texturesOptions: texturesOptions
       });
-      _this35.writePass = new RenderTarget(curtains, {
+      _this34.writePass = new RenderTarget(curtains, {
         depth: false,
         clear: false,
         texturesOptions: texturesOptions
       }); // create a texture where we'll draw
 
-      _this35.createTexture({
+      _this34.createTexture({
         sampler: sampler
       }); // wait for both render targets textures to be ready and force a copy of the current target texture
       // even if the swap already began
@@ -9428,41 +9208,41 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       var nbPassesReady = 0;
 
-      _this35.readPass.getTexture().onSourceUploaded(function () {
+      _this34.readPass.getTexture().onSourceUploaded(function () {
         nbPassesReady++;
 
-        _this35._checkIfReady(nbPassesReady);
+        _this34._checkIfReady(nbPassesReady);
       });
 
-      _this35.writePass.getTexture().onSourceUploaded(function () {
+      _this34.writePass.getTexture().onSourceUploaded(function () {
         nbPassesReady++;
 
-        _this35._checkIfReady(nbPassesReady);
+        _this34._checkIfReady(nbPassesReady);
       }); // directly assign a render target
 
 
-      _this35.setRenderTarget(_this35.readPass); // override onRender and onAfterRender callbacks
+      _this34.setRenderTarget(_this34.readPass); // override onRender and onAfterRender callbacks
 
 
-      _this35._onRenderCallback = function () {
+      _this34._onRenderCallback = function () {
         // update the render target
-        if (_this35.readPass && _this35.writePass && _this35.textures[0] && _this35.textures[0]._uploaded) {
-          _this35.setRenderTarget(_this35.writePass);
+        if (_this34.readPass && _this34.writePass && _this34.textures[0] && _this34.textures[0]._uploaded) {
+          _this34.setRenderTarget(_this34.writePass);
         }
 
-        _this35._onPingPongRenderCallback && _this35._onPingPongRenderCallback();
+        _this34._onPingPongRenderCallback && _this34._onPingPongRenderCallback();
       };
 
-      _this35._onAfterRenderCallback = function () {
+      _this34._onAfterRenderCallback = function () {
         // swap FBOs and update texture
-        if (_this35.readPass && _this35.writePass && _this35.textures[0] && _this35.textures[0]._uploaded) {
-          _this35._swapPasses();
+        if (_this34.readPass && _this34.writePass && _this34.textures[0] && _this34.textures[0]._uploaded) {
+          _this34._swapPasses();
         }
 
-        _this35._onPingPongAfterRenderCallback && _this35._onPingPongAfterRenderCallback();
+        _this34._onPingPongAfterRenderCallback && _this34._onPingPongAfterRenderCallback();
       };
 
-      return _this35;
+      return _this34;
     }
     /***
      Copy the current target texture once both render targets textures have been uploaded
@@ -9473,11 +9253,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     _createClass(PingPongPlane, [{
       key: "_checkIfReady",
       value: function _checkIfReady(loadedTextures) {
-        var _this36 = this;
+        var _this35 = this;
 
         if (loadedTextures === 2) {
           this.renderer.nextRender.add(function () {
-            _this36.textures[0].copy(_this36.target.getTexture());
+            _this35.textures[0].copy(_this35.target.getTexture());
           });
         }
       }
@@ -9570,106 +9350,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     return PingPongPlane;
   }(Plane);
-  /*** FXAAPASS CLASS ***/
-
-  /***
-   Here we create our FXAAPass object
-   This is just a regular ShaderPass with preset shaders and a resolution uniform
-    params: see ShaderPas class object
-    returns :
-   @this: our FXAAPass element
-   ***/
-
-
-  var FXAAPass = /*#__PURE__*/function (_ShaderPass) {
-    _inherits(FXAAPass, _ShaderPass);
-
-    var _super6 = _createSuper(FXAAPass);
-
-    function FXAAPass(curtains) {
-      var _this37;
-
-      var _ref15 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          renderOrder = _ref15.renderOrder,
-          depthTest = _ref15.depthTest,
-          texturesOptions = _ref15.texturesOptions,
-          crossOrigin = _ref15.crossOrigin,
-          depth = _ref15.depth,
-          clear = _ref15.clear,
-          renderTarget = _ref15.renderTarget;
-
-      _classCallCheck(this, FXAAPass);
-
-      // taken from https://github.com/spite/Wagner/blob/master/fragment-shaders/fxaa-fs.glsl
-      var fragmentShader = "\n            precision mediump float;\n            \n            varying vec3 vVertexPosition;\n            varying vec2 vTextureCoord;\n        \n            uniform sampler2D uRenderTexture;\n            \n            uniform vec2 uResolution;\n            \n            #define FXAA_REDUCE_MIN   (1.0/128.0)\n            #define FXAA_REDUCE_MUL   (1.0/8.0)\n            #define FXAA_SPAN_MAX     8.0\n            \n            void main() {\n                vec2 res = 1.0 / uResolution;\n            \n                vec3 rgbNW = texture2D(uRenderTexture, (vTextureCoord.xy + vec2(-1.0, -1.0) * res)).xyz;\n                vec3 rgbNE = texture2D(uRenderTexture, (vTextureCoord.xy + vec2(1.0, -1.0) * res)).xyz;\n                vec3 rgbSW = texture2D(uRenderTexture, (vTextureCoord.xy + vec2(-1.0, 1.0) * res)).xyz;\n                vec3 rgbSE = texture2D(uRenderTexture, (vTextureCoord.xy + vec2(1.0, 1.0) * res)).xyz;\n                vec4 rgbaM = texture2D(uRenderTexture, vTextureCoord.xy * res);\n                vec3 rgbM = rgbaM.xyz;\n                vec3 luma = vec3(0.299, 0.587, 0.114);\n            \n                float lumaNW = dot(rgbNW, luma);\n                float lumaNE = dot(rgbNE, luma);\n                float lumaSW = dot(rgbSW, luma);\n                float lumaSE = dot(rgbSE, luma);\n                float lumaM  = dot(rgbM,  luma);\n                float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));\n                float lumaMax = max(lumaM, max(max(lumaNW, lumaNE) , max(lumaSW, lumaSE)));\n            \n                vec2 dir;\n                dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));\n                dir.y = ((lumaNW + lumaSW) - (lumaNE + lumaSE));\n            \n                float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);\n            \n                float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);\n                dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX),\n                      max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),\n                            dir * rcpDirMin)) * res;\n                vec4 rgbA = (1.0/2.0) * (\n                texture2D(uRenderTexture, vTextureCoord.xy + dir * (1.0/3.0 - 0.5)) +\n                texture2D(uRenderTexture, vTextureCoord.xy + dir * (2.0/3.0 - 0.5)));\n                vec4 rgbB = rgbA * (1.0/2.0) + (1.0/4.0) * (\n                texture2D(uRenderTexture, vTextureCoord.xy + dir * (0.0/3.0 - 0.5)) +\n                texture2D(uRenderTexture, vTextureCoord.xy + dir * (3.0/3.0 - 0.5)));\n                float lumaB = dot(rgbB, vec4(luma, 0.0));\n            \n                if ((lumaB < lumaMin) || (lumaB > lumaMax)) {\n                    gl_FragColor = rgbA;\n                } else {\n                    gl_FragColor = rgbB;\n                }\n            }\n        ";
-      var uniforms = {
-        resolution: {
-          name: "uResolution",
-          type: "2f",
-          value: [0, 0] // will be updated after having called super()
-
-        }
-      };
-      _this37 = _super6.call(this, curtains, {
-        fragmentShader: fragmentShader,
-        uniforms: uniforms,
-        // Mesh params
-        renderOrder: renderOrder,
-        depthTest: depthTest,
-        texturesOptions: texturesOptions,
-        crossOrigin: crossOrigin,
-        depth: depth,
-        clear: clear,
-        renderTarget: renderTarget
-      }); // return if no gl context
-
-      if (!_this37.gl) {
-        return _possibleConstructorReturn(_this37);
-      } // update the resolution uniform
-
-
-      _this37.uniforms.resolution.value = [_this37.renderer._boundingRect.width, _this37.renderer._boundingRect.height]; // override onAfterResize callback
-
-      _this37._onAfterResizeCallback = function () {
-        // update the resolution uniform
-        _this37.uniforms.resolution.value = [_this37.renderer._boundingRect.width, _this37.renderer._boundingRect.height];
-        _this37._onFXAAPassAfterResizeCallback && _this37._onFXAAPassAfterResizeCallback();
-      };
-
-      return _this37;
-    }
-    /***
-     This is called each time the FXAAPass has been resized
-      params :
-     @callback (function) : a function to execute
-      returns :
-     @this: our FXAAPass to handle chaining
-     ***/
-
-
-    _createClass(FXAAPass, [{
-      key: "onAfterResize",
-      value: function onAfterResize(callback) {
-        if (callback) {
-          this._onFXAAPassAfterResizeCallback = callback;
-        }
-
-        return this;
-      }
-    }]);
-
-    return FXAAPass;
-  }(ShaderPass);
 
   exports.Curtains = Curtains;
-  exports.FXAAPass = FXAAPass;
   exports.Geometry = Geometry;
-  exports.Mat4 = Mat4;
   exports.PingPongPlane = PingPongPlane;
   exports.Plane = Plane;
-  exports.Quat = Quat;
   exports.RenderTarget = RenderTarget;
-  exports.ShaderPass = ShaderPass;
   exports.Texture = Texture;
   exports.TextureLoader = TextureLoader;
   exports.Vec2 = Vec2;
